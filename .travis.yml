@@ -1,0 +1,45 @@
+# vim ft=yaml
+
+# After changing this file, check it on:
+#   http://yaml-online-parser.appspot.com/
+
+# See doc/travis_notes.txt for some guidelines
+
+language: python
+
+sudo: false
+
+python:
+  - 2.7
+  - 3.5
+
+# See http://docs.travis-ci.com/user/caching/#pip-cache
+cache: pip
+
+before_install:
+  - pip install --upgrade pip
+  - mkdir libs
+
+install:
+  - pip install -r requirements.txt
+  - pip install nose codecov
+
+  - here=$PWD
+  - cd libs && git clone https://github.com/Borda/pyGCO.git
+  - cd $here/libs/pyGCO && pip install -r requirements.txt
+  - cd $here/libs/pyGCO && python setup.py install
+  - rm -r -f $here/libs/pyGCO
+  - cd $here
+
+before_script:
+  - mkdir results
+
+script:
+  - nosetests own_utils --exe --with-doctest --cover-package=own_utils
+  - nosetests segmentation --exe --with-doctest --with-coverage --cover-package=segmentation
+
+after_success:
+#  - codecov  # public repository on Travis CI
+  # private repository on Travis CI
+  - codecov -t 80efed4e-ac2b-4fea-a642-0a8b1c82e1c8
+  - coverage report

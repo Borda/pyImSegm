@@ -1,0 +1,32 @@
+machine:
+  python:
+    version: 2.7.9
+  post:
+    - pyenv global 2.7.9
+
+dependencies:
+  cache_directories:
+    - "~/.local"
+  pre:
+    - sudo apt-get install tk-dev
+    - sudo apt-get install pkg-config
+    - sudo apt-get install python-dev
+    - sudo apt-get install python-tk
+    - mkdir libs
+  override:
+    - pip install --upgrade setuptools
+    - pip install -r requirements.txt
+    - pip install pytest
+
+#    - here=$PWD
+    - cd libs && git clone https://github.com/Borda/pyGCO.git
+    - cd libs/pyGCO && pip install -r requirements.txt
+    - cd libs/pyGCO && python setup.py install
+    - rm -r -f libs/pyGCO
+#    - cd $here
+
+test:
+  pre:
+    - mkdir results
+  override:
+    - pytest own_utils segmentation --doctest-modules --junitxml=$CIRCLE_TEST_REPORTS/junit/pytest.xml
