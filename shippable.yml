@@ -1,0 +1,54 @@
+# vim ft=yaml
+
+# After changing this file, check it on:
+#   http://yaml-online-parser.appspot.com/
+
+language: python
+
+sudo: true
+
+python:
+  - 2.7
+  - 3.5
+
+cache: pip
+
+env:
+  - CI_REPORTS=shippable/testresults COVERAGE_REPORTS=shippable/codecoverage
+
+build:
+  ci:
+    - mkdir -p shippable/testresults
+    - mkdir -p shippable/codecoverage
+
+before_install:
+  - apt-get update # --fix-missing
+  - apt-get install freetype*
+  - apt-get install python-dev python-tk
+  - apt-get install pkg-config
+  - pip install --upgrade pip
+
+install:
+  - gcc --version
+  - pip install -r requirements.txt
+  - pip install nose codecov coverage pytest
+
+  - here=$PWD
+  - mkdir libs
+  - cd libs && git clone https://github.com/Borda/pyGCO.git
+  - cd $here/libs/pyGCO && pip install -r requirements.txt
+  - cd $here/libs/pyGCO && python setup.py install
+  - rm -r -f $here/libs/pyGCO
+  - cd $here
+
+script:
+  - mkdir results
+  - nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
+  - nosetests own_utils --exe --with-doctest --cover-package=own_utils
+  - nosetests segmentation --exe --with-doctest --with-coverage --cover-package=segmentation
+  - coverage xml -o shippable/codecoverage/coverage.xml
+#  - codecov
+
+after_success:
+  - codecov -t 80efed4e-ac2b-4fea-a642-0a8b1c82e1c8
+  - coverage report
