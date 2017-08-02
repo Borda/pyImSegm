@@ -9,7 +9,7 @@ sudo: true
 
 python:
   - 2.7
-  - 3.5
+  - 3.4
 
 cache: pip
 
@@ -24,16 +24,13 @@ build:
 before_install:
   - apt-get update # --fix-missing
   - apt-get install freetype*
-  - apt-get install python-dev python-tk
+  - apt-get install python-dev python-tk python3-tk
   - apt-get install pkg-config
   - pip install --upgrade pip
 
 install:
-  - gcc --version
-  - pip install -r requirements.txt
-  - pip install nose codecov coverage pytest
-
   - here=$PWD
+  - gcc --version
   - mkdir libs
   - cd libs && git clone https://github.com/Borda/pyGCO.git
   - cd $here/libs/pyGCO && pip install -r requirements.txt
@@ -41,11 +38,15 @@ install:
   - rm -r -f $here/libs/pyGCO
   - cd $here
 
+  - pip install -r requirements.txt
+  - pip install nose>=1.3.7 coverage codecov pytest>=3.0.5
+
 script:
+  - mkdir output
   - mkdir results
+  - python setup_cython.py build_ext --inplace
   - nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
-  - nosetests own_utils --exe --with-doctest --cover-package=own_utils
-  - nosetests segmentation --exe --with-doctest --with-coverage --cover-package=segmentation
+  - nosetests segmentation -v --exe --with-doctest --with-xunit --with-coverage --cover-package segmentation
   - coverage xml -o shippable/codecoverage/coverage.xml
 #  - codecov
 

@@ -21,9 +21,6 @@ before_install:
   - mkdir libs
 
 install:
-  - pip install -r requirements.txt
-  - pip install nose codecov
-
   - here=$PWD
   - cd libs && git clone https://github.com/Borda/pyGCO.git
   - cd $here/libs/pyGCO && pip install -r requirements.txt
@@ -31,12 +28,17 @@ install:
   - rm -r -f $here/libs/pyGCO
   - cd $here
 
+  - pip install -r requirements.txt
+  - pip install nose>=1.3.7 coverage codecov pytest>=3.0.5
+
 before_script:
+  - mkdir output
   - mkdir results
+  - python setup_cython.py build_ext --inplace
 
 script:
-  - nosetests own_utils --exe --with-doctest --cover-package=own_utils
-  - nosetests segmentation --exe --with-doctest --with-coverage --cover-package=segmentation
+#  - pytest segmentation -v --doctest-modules
+  - nosetests segmentation -v --exe --with-doctest --with-xunit --with-coverage --cover-package=segmentation
 
 after_success:
 #  - codecov  # public repository on Travis CI
