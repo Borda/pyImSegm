@@ -1,4 +1,13 @@
+data/
+libs/
+build/
+output/
 results/
-temp*
-.coverage
+temporary/
 .idea
+.coverage
+coverage.xml
+pytest.xml
+*.cpp
+*.pyc
+*.so

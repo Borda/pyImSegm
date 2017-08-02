@@ -5,8 +5,8 @@ machine:
     - pyenv global 2.7.9
 
 dependencies:
-  cache_directories:
-    - "~/.local"
+#  cache_directories:
+#    - "~/.local"
   pre:
     - sudo apt-get install tk-dev
     - sudo apt-get install pkg-config
@@ -14,19 +14,52 @@ dependencies:
     - sudo apt-get install python-tk
     - mkdir libs
   override:
-    - pip install --upgrade setuptools
-    - pip install -r requirements.txt
-    - pip install pytest
-
-#    - here=$PWD
     - cd libs && git clone https://github.com/Borda/pyGCO.git
-    - cd libs/pyGCO && pip install -r requirements.txt
-    - cd libs/pyGCO && python setup.py install
-    - rm -r -f libs/pyGCO
-#    - cd $here
+    - cd libs/pyGCO && pip install -r requirements.txt && python setup.py install
+    # - rm -r -f libs/pyGCO
+    # - pip install --upgrade setuptools
+    - pip install -r requirements.txt
+    - pip install nose coverage pytest pytest-cov
 
 test:
   pre:
-    - mkdir results
+    - mkdir data && mkdir output && mkdir results
+    - python setup.py build_ext --inplace
+    - mkdir -p $CIRCLE_TEST_REPORTS
+
   override:
-    - pytest own_utils segmentation --doctest-modules --junitxml=$CIRCLE_TEST_REPORTS/junit/pytest.xml
+    - unset DISPLAY && coverage run --source segmentation -m py.test segmentation -v --doctest-modules --junitxml=$CIRCLE_TEST_REPORTS/pytest_junit.xml
+
+  post:
+    - coverage report && coverage xml -o $CIRCLE_TEST_REPORTS/coverage.xml
+
+    # ANNOTATION section
+    - python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png"
+    - python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" -m position
+    - python handling_annotations/run_image_convert_label_color.py -imgs "images/drosophila_ovary_slice/segm/*.png" -out images/drosophila_ovary_slice/segm_rgb
+    - python handling_annotations/run_image_convert_label_color.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" -out images/drosophila_ovary_slice/segm
+    - python handling_annotations/run_overlap_images_segms.py  -imgs "images/drosophila_ovary_slice/image/*.jpg" -segs images/drosophila_ovary_slice/segm -out results/overlap_ovary_segment
+    - python handling_annotations/run_segm_annot_inpaint.py -imgs "images/drosophila_ovary_slice/segm/*.png" --label 0
+    - python handling_annotations/run_segm_annot_relabel.py -imgs "images/drosophila_ovary_slice/center_levels/*.png" -out results/relabel_center_levels
+
+    # SEGMENTATION section
+    - python experiments_segmentation/run_compute-stat_annot-segm.py
+    - python experiments_segmentation/run_segm_slic_model_graphcut.py --visual 1
+    - python experiments_segmentation/run_segm_slic_classif_graphcut.py --visual 1
+
+    # CENTER DETECT. section
+    - python experiments_ovary_centres/run_create_annotation.py
+    - python experiments_ovary_centres/run_center_candidate_training.py
+    - python experiments_ovary_centres/run_center_prediction.py
+    - python experiments_ovary_centres/run_center_clustering.py
+    - python experiments_ovary_centres/run_center_evaluation.py
+
+    # download MorphSnake
+    - cd libs && git clone https://github.com/Borda/morph-snakes.git
+    - cd libs/morph-snakes && pip install -r requirements.txt && python setup.py install
+    # REGION GROWING section
+    - python experiments_ovary_detect/run_RG2Sp_estim_shape-models.py
+    - python experiments_ovary_detect/run_ovary_egg-segmentation.py
+    - python experiments_ovary_detect/run_ovary_segm_evaluation.py
+    - python experiments_ovary_detect/run_export_user-annot-segm.py
+    - python experiments_ovary_detect/run_cut_segmented_objects.py
