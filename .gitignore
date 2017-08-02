@@ -1,4 +1,9 @@
+libs/
+output/
 results/
-temp*
+temporary/
 .coverage
 .idea
+*.cpp
+*.pyc
+*.so
