@@ -54,35 +54,35 @@ def read_struct(data, t):
     """ read a t type from data(str)"""
 #    vartype = (ord(data[0]), ord(data[1]))
 #    print t, vartype
-    next = data[2:] #skip vartype I16
+    next_data = data[2:]  # skip vartype I16
 
     if t is '?':
-        return [None, next]
+        return [None, next_data]
     if t is 'EMPTY':
-        return [None, next]
+        return [None, next_data]
     if t is 'NULL':
-        return [None, next]
+        return [None, next_data]
     if t is 'I2':
-        low = struct.unpack('<h', next[:2])
-        return [low[0], next[2:]]
+        low = struct.unpack('<h', next_data[:2])
+        return [low[0], next_data[2:]]
     if t is 'I4':
-        r = i32(next[:4])
-        return [r, next[4:]]
+        r = i32(next_data[:4])
+        return [r, next_data[4:]]
     if t is 'BLOB':
-        size = i32(next[:4])
-        r = next[4:4+size]
-        return [r, next[4+size:]]
+        size = i32(next_data[:4])
+        r = next_data[4:4+size]
+        return [r, next_data[4+size:]]
     if t is 'BSTR':
-        #! 4 extra bytes escaped
-        low, high = struct.unpack('<hh', next[:4])
+        # ! 4 extra bytes escaped
+        low, high = struct.unpack('<hh', next_data[:4])
         size = (high << 16) + low
         if size>0:
-            s = struct.unpack('s', next[4:4+size])
-            next = next[4+4+size:]
+            s = struct.unpack('s', next_data[4:4+size])
+            next_data = next_data[4+4+size:]
         else:
             s=''
-            next = next[4+4:]
-        return [s, next]
+            next_data = next_data[4+4:]
+        return [s, next_data]
     raise ValueError('unknown type:%s'%type)
 
 
@@ -96,31 +96,33 @@ ZviImageTuple = namedtuple(
 def read_image_container_content(stream):
     """ returns a ZviImageTuple from a stream"""
     data = stream.read()
-    content = {}
-    next = data
-    [version, next] = read_struct(next, 'I4')
+    next_data = data
+    [version, next_data] = read_struct(next_data, 'I4')
 #    [Type, next] = read_struct(next, 'I4')
 #    [TypeDescription, next] = read_struct(next, 'BSTR')
-    [filename, next] = read_struct(next, 'BSTR')
-    [width, next] = read_struct(next, 'I4')
-    [height, next] = read_struct(next, 'I4')
-    [depth, next] = read_struct(next, 'I4')
-    [pixel_format, next] = read_struct(next, 'I4')
-    [count, next] = read_struct(next, 'I4')
-    [valid_bits_per_pixel, next] = read_struct(next, 'I4')
-    [m_PluginCLSID, next] = read_struct(next, 'I4')
-    [others, next] = read_struct(next, 'I4')
-    [layers, next] = read_struct(next, 'I4')
-    [scaling, next] = read_struct(next, 'I2')
+    [filename, next_data] = read_struct(next_data, 'BSTR')
+    [width, next_data] = read_struct(next_data, 'I4')
+    [height, next_data] = read_struct(next_data, 'I4')
+    [depth, next_data] = read_struct(next_data, 'I4')
+    [pixel_format, next_data] = read_struct(next_data, 'I4')
+    [count, next_data] = read_struct(next_data, 'I4')
+    [valid_bits_per_pixel, next_data] = read_struct(next_data, 'I4')
+    [m_PluginCLSID, next_data] = read_struct(next_data, 'I4')
+    [others, next_data] = read_struct(next_data, 'I4')
+    [layers, next_data] = read_struct(next_data, 'I4')
+    [scaling, next_data] = read_struct(next_data, 'I2')
 
-    zvi_image = ZviImageTuple(version, filename, width, height, depth, pixel_format,
-                    count, valid_bits_per_pixel, m_PluginCLSID, others, layers, scaling)
+    zvi_image = ZviImageTuple(version, filename, width, height, depth,
+                              pixel_format, count, valid_bits_per_pixel,
+                              m_PluginCLSID, others, layers, scaling)
     return zvi_image
 
 
-ZviItemTuple = namedtuple('ZviItemTuple',
-                          'Version FileName Width Height Depth PIXEL_FORMAT Count '
-                          'ValidBitsPerPixel Others Layers Scaling Image')
+ZviItemTuple = namedtuple(
+    'ZviItemTuple',
+    'Version FileName Width Height Depth PIXEL_FORMAT Count '
+    'ValidBitsPerPixel Others Layers Scaling Image'
+)
 
 
 PIXEL_FORMAT = {
@@ -139,33 +141,36 @@ PIXEL_FORMAT = {
 def read_item_storage_content(stream):
     """ returns ZviItemTuple from the stream"""
     data = stream.read()
-    next = data
-    [version, next] = read_struct(next, 'I4')
+    next_data = data
+    [version, next_data] = read_struct(next_data, 'I4')
 #    [Type, next] = read_struct(next, 'I4')
 #    [TypeDescription, next] = read_struct(next, 'BSTR')
-    [filename, next] = read_struct(next, 'BSTR')
-    [width, next] = read_struct(next, 'I4')
-    [height, next] = read_struct(next, 'I4')
-    [depth, next] = read_struct(next, 'I4')
-    [pixel_format, next] = read_struct(next, 'I4')
-    [count, next] = read_struct(next, 'I4')
-    [valid_bits_per_pixel, next] = read_struct(next, 'I4')
-    [others, next] = read_struct(next, 'BLOB')
-    [layers, next] = read_struct(next, 'BLOB')
-    [scaling, next] = read_struct(next, 'BLOB')
+    [filename, next_data] = read_struct(next_data, 'BSTR')
+    [width, next_data] = read_struct(next_data, 'I4')
+    [height, next_data] = read_struct(next_data, 'I4')
+    [depth, next_data] = read_struct(next_data, 'I4')
+    [pixel_format, next_data] = read_struct(next_data, 'I4')
+    [count, next_data] = read_struct(next_data, 'I4')
+    [valid_bits_per_pixel, next_data] = read_struct(next_data, 'I4')
+    [others, next_data] = read_struct(next_data, 'BLOB')
+    [layers, next_data] = read_struct(next_data, 'BLOB')
+    [scaling, next_data] = read_struct(next_data, 'BLOB')
     # offset is image size + header size(28)
     offset = width*height * PIXEL_FORMAT[pixel_format][0] + 28
-    #parse the actual image data
+    # parse the actual image data
     image = parse_image(data[-offset:])
-    #group results into one single structure (namedtuple)
-    zvi_item = ZviItemTuple(version, filename, width, height, depth, pixel_format,
-                    count, valid_bits_per_pixel, others, layers, scaling, image)
+    # group results into one single structure (namedtuple)
+    zvi_item = ZviItemTuple(version, filename, width, height, depth,
+                            pixel_format, count, valid_bits_per_pixel, others,
+                            layers, scaling, image)
     return zvi_item
 
 
-ImageTuple = namedtuple('ImageTuple',
-                        'Version Width Height Depth PixelWidth PIXEL_FORMAT '
-                        'ValidBitsPerPixel Array')
+ImageTuple = namedtuple(
+    'ImageTuple',
+    'Version Width Height Depth PixelWidth PIXEL_FORMAT '
+    'ValidBitsPerPixel Array'
+)
 
 
 def parse_image(data):
@@ -179,8 +184,8 @@ def parse_image(data):
     valid_bits_per_pixel = i32(data[24:28])
     raw = np.fromstring(data[28:], 'uint16')
     array = np.reshape(raw, (height, width))
-    image = ImageTuple(version, width, height, depth, pixel_width, pixel_format,
-                        valid_bits_per_pixel, array)
+    image = ImageTuple(version, width, height, depth, pixel_width,
+                       pixel_format, valid_bits_per_pixel, array)
     return image
 
 
@@ -197,13 +202,13 @@ def get_layer_count(file_name, ole=None):
 def get_dir(file_name, ole=None):
     """ returns the content structure(streams) of the zvi file
     + length of each streams """
-    dir = []
+    dirs = []
     if ole is None:
         ole = OleFileIO_PL.OleFileIO(file_name)
     for s in ole.listdir():
         stream = ole.openstream(s)
-        dir.append('%10d %s'%(len(stream.read()), s))
-    return dir
+        dirs.append('%10d %s'%(len(stream.read()), s))
+    return dirs
 
 
 def zvi_read(fname, plane, ole=None):
@@ -225,4 +230,3 @@ def load_image(path_img):
         image.append(zvi.Image.Array)
     image = np.array(image)
     return image
-

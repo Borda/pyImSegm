@@ -1,26 +1,32 @@
 """
+Framework for superpixels
+ * wrapper over skimage.SLIC
+ * other related functions
+
+SEE:
+* http://scikit-image.org/docs/dev/auto_examples/plot_segmentations.html
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-# http://scikit-image.org/docs/dev/auto_examples/plot_segmentations.html#example-plot-segmentations-py
 
 import logging
 
 import numpy as np
-from skimage import measure
 import skimage.segmentation as ski_segm
-from skimage.measure import regionprops
+from skimage import measure
 
-DEFAULT_SPACE = (1, 1, 1)
+IMAGE_SPACING = (1, 1, 1)
 
 
-def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1):
-    """ segmentation by SLIC superpixels using originla SLIC implementation
+def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1, slico=False):
+    """ segmentation by SLIC superpixels using original SLIC implementation
 
-    :param ndarray im: input image
+    :param ndarray im: input color image
     :param int sp_size: superpixel initial size
-    :param float rltv_compact: relative regularisation
+    :param float rltv_compact: relative regularisation in range (0, 1)
+        where 0 is for free form and 1 for nearly rectangular superpixels
+    :param bool slico: whether use parameter free version ASLIC/SLICO
     :return:
     
     >>> np.random.seed(0)
@@ -54,25 +60,30 @@ def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1):
     # run SLIC segmentation
     slic_segments = ski_segm.slic(img, n_segments=slic_nb_spx,
                                   compactness=slic_compact,
-                                  sigma=1, enforce_connectivity=True)
+                                  sigma=1, enforce_connectivity=True,
+                                  slic_zero=slico)
     logging.debug('SLIC finished')
     # slic_segments, _, _ = ski_segm.relabel_sequential(slic_segments)
-    # fix: unconnected segments - [ndimage.label(slic==i)[1] for i in range(slic.max() + 1)]
+    # fix: unconnected segments - [ndimage.label(slic==i)[1]
+    #                              for i in range(slic.max() + 1)]
     # slic_segments = measure.label(slic_segments, neighbors=4)
     return np.array(slic_segments)
 
 
-def segment_slic_img3d_gray(im, space=DEFAULT_SPACE, sp_size=50, rltv_compact=0.1):
+def segment_slic_img3d_gray(im, sp_size=50, rltv_compact=0.1,
+                            space=IMAGE_SPACING):
     """ segmentation by SLIC superpixels using originla SLIC implementation
 
-    :param ndarray im: input image
+    :param ndarray im: input 3D grascale image
     :param int sp_size: superpixel initial size
-    :param float rltv_compact: relative regularisation
+    :param float rltv_compact: relative regularisation in range (0, 1)
+        where 0 is for free form and 1 for nearly rectangular superpixels
+    :param (int, int, int) space: spacing in 3d image may not be equal
     :return:
 
     >>> np.random.seed(0)
     >>> img = np.random.random((100, 100, 10))
-    >>> slic = segment_slic_img3d_gray(img, (1, 1, 5), 20, 0.2)
+    >>> slic = segment_slic_img3d_gray(img, 20, 0.2, (1, 1, 5))
     >>> slic.shape
     (100, 100, 10)
     """
@@ -94,12 +105,19 @@ def segment_slic_img3d_gray(im, space=DEFAULT_SPACE, sp_size=50, rltv_compact=0.
                                   spacing=space, sigma=1)
     logging.debug('SLIC superpixels estimated.')
     # slic_segments, _, _ = ski_segm.relabel_sequential(slic_segments)
-    # fix: unconnected segments - [ndimage.label(slic==i)[1] for i in range(slic.max() + 1)]
+    # fix: unconnected segments - [ndimage.label(slic==i)[1]
+    #                              for i in range(slic.max() + 1)]
     slic_segments = measure.label(slic_segments)
     return np.array(slic_segments)
 
 
 def make_graph_segment_connect_edges(vertices, all_edges):
+    """
+
+    :param vertices:
+    :param all_edges:
+    :return:
+    """
     # SEE http://peekaboo-vision.blogspot.cz/2011/08/region-connectivity-graphs-in-python.html
     all_edges = all_edges[all_edges[:, 0] != all_edges[:, 1],:]
     all_edges = np.sort(all_edges, axis=1)
@@ -114,12 +132,22 @@ def make_graph_segment_connect_edges(vertices, all_edges):
 
 
 def get_segment_diffs_2d_conn4(grid):
+    """ wrapper for getting 4-connected in 2D image plane
+
+    :param ndarray grid: segmentation
+    :return [(int, int)]:
+    """
     down = np.c_[grid[:-1,:].ravel(), grid[1:,:].ravel()]
     right = np.c_[grid[:,:-1].ravel(), grid[:, 1:].ravel()]
     return np.vstack([right, down])
 
 
 def get_segment_diffs_3d_conn6(grid):
+    """ wrapper for getting 6-connected in 3D image plane
+
+    :param ndarray grid: segmentation
+    :return [(int, int, int)]:
+    """
     bellow = np.c_[grid[:-1,:,:].ravel(), grid[1:,:,:].ravel()]
     down = np.c_[grid[:,:-1,:].ravel(), grid[:, 1:,:].ravel()]
     right = np.c_[grid[:,:,:-1].ravel(), grid[:,:, 1:].ravel()]
@@ -127,10 +155,10 @@ def get_segment_diffs_3d_conn6(grid):
 
 
 def make_graph_segm_connect2d_conn4(grid):
-    """
+    """ construct graph of connected components
 
-    :param grid:
-    :return:
+    :param ndarray grid: segmentation
+    :return [int], [(int, int)]:
 
     >>> grid = np.array([[0] * 5 + [1] * 5, [2] * 5 + [3] * 5])
     >>> v, edges = make_graph_segm_connect2d_conn4(grid)
@@ -150,6 +178,20 @@ def make_graph_segm_connect2d_conn4(grid):
 
 
 def make_graph_segm_connect3d_conn6(grid):
+    """ construct graph of connected components
+
+    :param ndarray grid: segmentation
+    :return [int], [(int, int)]:
+
+    >>> grid_2d = np.array([[0] * 5 + [1] * 5, [2] * 5 + [3] * 5])
+    >>> grid = np.array([grid_2d, grid_2d + 4])
+    >>> v, edges = make_graph_segm_connect3d_conn6(grid)
+    >>> v
+    array([0, 1, 2, 3, 4, 5, 6, 7])
+    >>> edges  # doctest: +NORMALIZE_WHITESPACE
+    [[0, 1], [0, 2], [1, 3], [2, 3], [0, 4], [1, 5], [4, 5], [2, 6], [4, 6],
+    [3, 7], [5, 7], [6, 7]]
+    """
     # get unique labels
     logging.debug('make graph segment connect edges - 3d conn6')
     vertices = np.unique(grid)
@@ -163,8 +205,8 @@ def make_graph_segm_connect3d_conn6(grid):
 def superpixel_centers(segments):
     """ estimate centers of each superpixel
 
-    :param segments: np.array<h, w>
-    :return: [(float, float)]
+    :param ndarray segments: segmentation np.array<h, w>
+    :return [(float, float)]:
 
     >>> segm = np.array([[0] * 6 + [1] * 5, [0] * 6 + [2] * 5])
     >>> superpixel_centers(segm)
@@ -177,7 +219,7 @@ def superpixel_centers(segments):
 
     if segments.ndim <= 2:
         # regionprops works for labels from 1
-        regions = regionprops(segments + 1)
+        regions = measure.regionprops(segments + 1)
         for region in regions:
             centers[region['label'] - 1] = region['centroid']
     elif segments.ndim == 3:
@@ -198,10 +240,11 @@ def superpixel_centers(segments):
 
 
 def get_neighboring_segments(edges):
-    """
+    """ get the indexes of neighboring superpixels for each superpixel
+    the input is list edges of all neighboring segments
 
-    :param edges:
-    :return:
+    :param [[int, int]] edges:
+    :return [[int]]:
 
     >>> get_neighboring_segments([[0, 1], [1, 2], [1, 3], [2, 3]])
     [[1], [0, 2, 3], [1, 3], [1, 2]]

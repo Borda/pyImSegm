@@ -1,15 +1,42 @@
 """
-Quantize annotation and so remove some noise
+Framework for handling annotations
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import os, sys
 import logging
 
+import tqdm
 import numpy as np
+import pandas as pd
 from PIL import Image
 from skimage import io
 from scipy import interpolate
+
+sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+COLUMNS_POSITION = ('ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y')
+SLICE_NAME_GROUPING = 'stack_path'
+# set distance in Z axis whether near sliuce may still belong to the same egg
+ANNOT_SLICE_DIST_TOL = {  # stage : distance in z-axis
+    1: 1,
+    2: 2,
+    3: 2,
+    4: 3,
+    5: 3,
+    6: 0,
+}
+# default colors for particular label
+DICT_COLOURS = {
+    0: (0, 0, 255),
+    1: (255, 0, 0),
+    2: (0, 255, 0),
+    3: (255, 229, 0),  # yellow
+    4: (142, 68, 173),  # purple
+    5: (127, 140, 141),  # gray
+    6: (0, 212, 255),  # blue
+    7: (128, 0, 0),  # brown
+}
 
 
 def unique_image_colors(img):
@@ -23,9 +50,17 @@ def unique_image_colors(img):
     >>> unique_image_colors(img)  # doctest: +NORMALIZE_WHITESPACE
     [(1, 0, 0), (1, 1, 0), (0, 1, 0), (1, 1, 1),
      (0, 1, 1), (0, 0, 1), (1, 0, 1), (0, 0, 0)]
+    >>> img = np.random.randint(0, 256, (150, 150, 3))
+    >>> unique_image_colors(img)  # doctest: +ELLIPSIS
+    [...]
     """
     image = Image.fromarray(np.asarray(img, dtype=np.uint8))
-    uq_colors = [clr for nb, clr in image.getcolors()]
+    colors = image.convert('RGB').getcolors()
+    if colors is None:
+        logging.warning('selected image contains more then 256 colors')
+        nb_pixels = np.prod(img.shape[:2])
+        colors = image.convert('RGB').getcolors(maxcolors=nb_pixels)
+    uq_colors = [clr for nb, clr in colors]
     return uq_colors
 
 
@@ -112,7 +147,7 @@ def convert_img_labels_to_colors(segm, dict_label_colors):
     nb_labels = np.max(segm) - min_label + 1
     lut = [None] * nb_labels
     # convert Look-Up-Table
-    for i in range(len(lut)):
+    for i, _ in enumerate(lut):
         label = i + min_label
         if label in dict_label_colors:
             lut[i] = dict_label_colors[label]
@@ -125,8 +160,9 @@ def convert_img_labels_to_colors(segm, dict_label_colors):
 def image_frequent_colors(img, ratio_treshold=1e-3):
     """ look  all images and estimate most frequent colours
 
-    :param imgs: np.array<h, w, 3>
-    :param float pixel_treshold: percentage of nb clr pixels to be assumed as important
+    :param ndarray img: np.array<h, w, 3>
+    :param float ratio_treshold: percentage of nb color pixels to be assumed
+        as important
     :return:
 
     >>> np.random.seed(0)
@@ -153,32 +189,33 @@ def image_frequent_colors(img, ratio_treshold=1e-3):
     return dict_clrs
 
 
-def dir_images_frequent_colors(paths_img, raratio_treshold=1e-3):
+def dir_images_frequent_colors(paths_img, ratio_treshold=1e-3):
     """ look  all images and estimate most frequent colours
 
-    :param imgs: [np.array<h, w, 3>]
-    :param pixel_treshold: float, percentage of nb clr pixels to be assumed as important
+    :param paths_img: [np.array<h, w, 3>]
+    :param ratio_treshold: float, percentage of nb clr pixels to be assumed
+        as important
     :return:
     """
     logging.debug('passing %i images', len(paths_img))
-    dict_clrs = dict()
+    dict_colors = dict()
     for path_im in paths_img:
         img = io.imread(path_im)
-        local_dict_colors = image_frequent_colors(img, raratio_treshold)
+        local_dict_colors = image_frequent_colors(img, ratio_treshold)
         for clr in local_dict_colors:
-            if clr not in dict_clrs:
-                dict_clrs[clr] = 0
-            dict_clrs[clr] += local_dict_colors[clr]
-    logging.info('img folder colours: %s', repr(dict_clrs))
-    return dict_clrs
+            if clr not in dict_colors:
+                dict_colors[clr] = 0
+            dict_colors[clr] += local_dict_colors[clr]
+    logging.info('img folder colours: %s', repr(dict_colors))
+    return dict_colors
 
 
 def image_color_2_labels(img, list_colors=None):
     """ quantize input image according given list of possible colours
 
-    :param img: np.array<h, w, 3>, input image
+    :param ndarray img: np.array<h, w, 3>, input image
     :param [(int, int, int)] list_colors: list of possible colours
-    :return: np.array<h, w>
+    :return ndarray: np.array<h, w>
 
     >>> np.random.seed(0)
     >>> rand = np.random.randint(0, 2, (5, 7)).astype(np.uint8)
@@ -193,7 +230,8 @@ def image_color_2_labels(img, list_colors=None):
     if list_colors is None:
         list_colors = image_frequent_colors(img).keys()
     pixels = img.reshape(-1, 3)
-    dist = [np.sum(np.abs(np.subtract(pixels, clr)), axis=1) for clr in list_colors]
+    dist = [np.sum(np.abs(np.subtract(pixels, clr)), axis=1)
+            for clr in list_colors]
     lut = np.argmin(np.asarray(dist), axis=0)
     seg = lut.reshape(img.shape[:2])
     return seg
@@ -202,9 +240,9 @@ def image_color_2_labels(img, list_colors=None):
 def quantize_image_nearest_color(img, list_colors):
     """ quantize input image according given list of possible colours
 
-    :param img: np.array<h, w, 3>, input image
+    :param ndarray img: np.array<h, w, 3>, input image
     :param [(int, int, int)] list_colors: list of possible colours
-    :return: np.array<h, w, 3>
+    :return ndarray: np.array<h, w, 3>
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (5, 7, 3)).astype(np.uint8)
@@ -239,9 +277,9 @@ def image_inpaint_pixels(img, valid_mask):
 def quantize_image_nearest_pixel(img, list_colors):
     """ quantize input image according given list of possible colours
 
-    :param img: np.array<h, w, 3>, input image
+    :param ndarray img: np.array<h, w, 3>, input image
     :param [(int, int, int)] list_colors: list of possible colours
-    :return: np.array<h, w, 3>
+    :return ndarray: np.array<h, w, 3>
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (5, 7, 3)).astype(np.uint8)
@@ -259,7 +297,7 @@ def quantize_image_nearest_pixel(img, list_colors):
     labels.fill(np.nan)
 
     for i, clr in enumerate(list_colors):
-        # male hogenious images of this single color
+        # male homogenious images of this single color
         color = np.tile(clr, labels.shape + (1,))
         # find different pixels
         diff = np.sum(abs(img - color), axis=-1)
@@ -271,170 +309,50 @@ def quantize_image_nearest_pixel(img, list_colors):
     return img_inpaint
 
 
-def compute_labels_overlap_matrix(seg1, seg2):
-    """ compute overlap between tho segmentation atlasess) with same sizes
+def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
+                              dict_slice_tol=ANNOT_SLICE_DIST_TOL):
+    """ load all info and group position info according name if stack
 
-    :param seg1: np.array<height, width>
-    :param seg2: np.array<height, width>
-    :return: np.array<height, width>
+    :param str path_txt:
+    :param [str] pos_columns:
+    :return: DF
 
-    >>> seg1 = np.zeros((7, 15), dtype=int)
-    >>> seg1[1:4, 5:10] = 3
-    >>> seg1[5:7, 6:13] = 2
-    >>> seg2 = np.zeros((7, 15), dtype=int)
-    >>> seg2[2:5, 7:12] = 1
-    >>> seg2[4:7, 7:14] = 3
-    >>> compute_labels_overlap_matrix(seg1, seg1)
-    array([[76,  0,  0,  0],
-           [ 0,  0,  0,  0],
-           [ 0,  0, 14,  0],
-           [ 0,  0,  0, 15]])
-    >>> compute_labels_overlap_matrix(seg1, seg2)
-    array([[63,  4,  0,  9],
-           [ 0,  0,  0,  0],
-           [ 2,  0,  0, 12],
-           [ 9,  6,  0,  0]])
+    >>> import segmentation.utils.data_io as tl_io
+    >>> path_txt = os.path.join(tl_io.update_path('images'),
+    ...                 'drosophila_ovary_slice', 'info_ovary_images.txt')
+    >>> load_info_group_by_slices(path_txt, [4]) # doctest: +NORMALIZE_WHITESPACE
+                ant_x  ant_y  lat_x  lat_y post_x post_y
+    image
+    insitu7569  [298]  [327]  [673]  [411]  [986]  [155]
     """
-    logging.debug('computing overlap of two seg_pipe of shapes %s <-> %s',
-                  repr(seg1.shape), repr(seg2.shape))
-    assert np.array_equal(seg1.shape, seg2.shape)
-    maxims = [np.max(seg1) + 1, np.max(seg2) + 1]
-    overlap = np.zeros(maxims, dtype=int)
-    for i in range(seg1.shape[0]):
-        for j in range(seg1.shape[1]):
-            lb1, lb2 = seg1[i, j], seg2[i, j]
-            overlap[lb1, lb2] += 1
-    # logging.debug(res)
-    return overlap
+    logging.info('loading info file and filter stages...')
+    df = pd.DataFrame().from_csv(path_txt, sep='\t')
+    logging.debug('loaded %i records', len(df))
+    df = df[df['stage'].isin(list(stages))]
+    logging.debug('filtered %i records', len(df))
 
+    # solving issue with different pandas versiona
+    if hasattr(df, 'sort_values'):
+        df.sort_values(['stage'], ascending=False, inplace=True)
+    elif hasattr(df, 'sort'):
+        df.sort(['stage'], ascending=False, inplace=True)
 
-def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
-    """ relabel the second segmentation cu that maximise relative overlap
-    for each pattern (object), the relation among patterns is 1-1
-    NOTE: it skips background class - 0
-
-    :param seg1:
-    :param seg2:
-    :return:
-
-    >>> atlas1 = np.zeros((7, 15), dtype=int)
-    >>> atlas1[1:4, 5:10] = 1
-    >>> atlas1[5:7, 3:13] = 2
-    >>> atlas2 = np.zeros((7, 15), dtype=int)
-    >>> atlas2[0:3, 7:12] = 1
-    >>> atlas2[3:7, 1:7] = 2
-    >>> atlas2[4:7, 7:14] = 3
-    >>> atlas2[:2, :3] = 5
-    >>> relabel_max_overlap_unique(atlas1, atlas2, keep_bg=True)
-    array([[5, 5, 5, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [5, 5, 5, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [0, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
-           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
-           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0]])
-    >>> relabel_max_overlap_unique(atlas2, atlas1, keep_bg=True)
-    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],
-           [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0]])
-    >>> relabel_max_overlap_unique(atlas1, atlas2, keep_bg=False)
-    array([[5, 5, 5, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [5, 5, 5, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [0, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
-           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
-           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0]])
-    """
-    assert seg_ref.shape == seg_relabel.shape
-    overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
-
-    lut = [-1] * (np.max(seg_relabel) + 1)
-    if keep_bg:  # keep the background label
-        lut[0] = 0
-        overlap[0, :] = 0
-        overlap[:, 0] = 0
-    for i in range(max(overlap.shape) + 1):
-        if np.sum(overlap) == 0: break
-        lb_ref, lb_est = np.argwhere(overlap.max() == overlap)[0]
-        lut[lb_est] = lb_ref
-        overlap[lb_ref, :] = 0
-        overlap[:, lb_est] = 0
-
-    for i, lb in enumerate(lut):
-        if lb == -1 and i not in lut:
-            lut[i] = i
-    for i, lb in enumerate(lut):
-        if lb > -1: continue
-        for j in range(len(lut)):
-            if j not in lut:
-                lut[i] = j
-
-    seg_new = np.array(lut)[seg_relabel]
-    return seg_new
-
-
-def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
-    """ relabel the second segmentation cu that maximise relative overlap
-    for each pattern (object), if one pattern in reference atlas is likely
-    composed from multiple patterns in relabel atlas, it merge them
-    NOTE: it skips background class - 0
-
-    :param seg1:
-    :param seg2:
-    :return:
-
-    >>> atlas1 = np.zeros((7, 15), dtype=int)
-    >>> atlas1[1:4, 5:10] = 1
-    >>> atlas1[5:7, 3:13] = 2
-    >>> atlas2 = np.zeros((7, 15), dtype=int)
-    >>> atlas2[0:3, 7:12] = 1
-    >>> atlas2[3:7, 1:7] = 2
-    >>> atlas2[4:7, 7:14] = 3
-    >>> atlas2[:2, :3] = 5
-    >>> relabel_max_overlap_merge(atlas1, atlas2, keep_bg=True)
-    array([[1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
-           [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
-           [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0]])
-    >>> relabel_max_overlap_merge(atlas2, atlas1, keep_bg=True)
-    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0],
-           [0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0]])
-    >>> relabel_max_overlap_merge(atlas1, atlas2, keep_bg=False)
-    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0],
-           [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0],
-           [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0]])
-    """
-    assert seg_ref.shape == seg_relabel.shape
-    overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
-    # ref_ptn_size = np.bincount(seg_ref.ravel())
-    # overlap = overlap.astype(float) / np.tile(ref_ptn_size, (overlap.shape[1], 1)).T
-    # overlap = np.nan_to_num(overlap)
-    max_axis = 1 if overlap.shape[0] > overlap.shape[1] else 0
-    if keep_bg:
-        id_max = np.argmax(overlap[1:, 1:], axis=max_axis) + 1
-        lut = np.array([0] + id_max.tolist())
-    else:
-        lut = np.argmax(overlap, axis=max_axis)
-    # in case there is no overlap
-    ptn_sum = np.sum(overlap, axis=0)
-    if 0 in ptn_sum:
-        lut[ptn_sum == 0] = np.arange(len(lut))[ptn_sum == 0]
-    seg_new = lut[seg_relabel]
-    return seg_new
+    df_marked = pd.DataFrame()
+    logging.info('grouping info by stacks...')
+    tqdm_bar = tqdm.tqdm(total=len(df[SLICE_NAME_GROUPING].unique()))
+    for _, df_group in df.groupby(SLICE_NAME_GROUPING):
+        slice_idxs = df_group['slice_index'].values
+        slice_tols = np.array([dict_slice_tol[i]
+                               for i in df_group['stage'].values])
+        for _, row in df_group.iterrows():
+            sl_idx = row['slice_index']
+            diff = abs(slice_idxs - sl_idx)
+            filter_slice = (diff <= slice_tols)
+            dict_slice = {col: df_group[col].values[filter_slice]
+                          for col in pos_columns}
+            dict_slice['image'] = os.path.splitext(row['image_path'])[0]
+            df_marked = df_marked.append(dict_slice, ignore_index=True)
+        tqdm_bar.update()
+    if len(df_marked) > 0:
+        df_marked.set_index('image', inplace=True)
+    return df_marked

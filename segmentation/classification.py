@@ -29,7 +29,7 @@ from sklearn import ensemble, neighbors, svm, tree
 from sklearn import pipeline, linear_model, neural_network
 from sklearn import model_selection
 
-import segmentation.annotation as tl_annot
+import segmentation.labeling as seg_lbs
 
 # NAME_FILE_RESULTS = 'results.csv'
 TEMPLATE_NAME_CLF = 'classifier_{}.pkl'
@@ -42,7 +42,8 @@ NAME_CSV_FEATURES_SELECT = 'feature_selection.csv'
 NAME_CSV_CLASSIF_CV_SCORES = 'classif_{}_cross-val_scores-{}.csv'
 NAME_CSV_CLASSIF_CV_ROC = 'classif_{}_cross-val_ROC-{}.csv'
 NAME_TXT_CLASSIF_CV_AUC = 'classif_{}_cross-val_AUC-{}.txt'
-METRIC_AVERAGES = ['macro', 'weighted']
+METRIC_AVERAGES = ('macro', 'weighted')
+METRIC_SCORING = ('f1_macro', 'accuracy', 'precision_macro', 'recall_macro')
 
 
 def create_classifiers(nb_jobs=-1):
@@ -51,11 +52,19 @@ def create_classifiers(nb_jobs=-1):
     :param nb_jobs: int, number of parallel if possible
     :return: {str: clf}
 
-    >>> create_classifiers()  # doctest: +ELLIPSIS
+    >>> classifs = create_classifiers()
+    >>> classifs  # doctest: +ELLIPSIS
     {...}
+    >>> sum([isinstance(create_clf_param_search_grid(k), dict)
+    ...      for k in classifs.keys()])
+    7
+    >>> sum([isinstance(create_clf_param_search_distrib(k), dict)
+    ...      for k in classifs.keys()])
+    7
     """
     clfs = {
-        'RandForest': ensemble.RandomForestClassifier(n_estimators=20,  # oob_score=True,
+        'RandForest': ensemble.RandomForestClassifier(n_estimators=20,
+                                                      # oob_score=True,
                                                       min_samples_leaf=2,
                                                       min_samples_split=3,
                                                       n_jobs=nb_jobs),
@@ -70,7 +79,7 @@ def create_classifiers(nb_jobs=-1):
         'SVM': svm.SVC(kernel='rbf', probability=True),
         'DecTree': tree.DecisionTreeClassifier(),
         # 'RBM': create_pipeline_neuron_net(),
-        # 'Adaboost':   ensemble.AdaBoostClassifier(n_estimators=5),
+        'Adaboost':   ensemble.AdaBoostClassifier(n_estimators=5),
         # 'NuSVM-rbf': svm.NuSVC(kernel='rbf', probability=True),
     }
     return clfs
@@ -97,79 +106,111 @@ def create_clf_pipeline(name_classif=DEFAULT_CLASSIF_NAME, pca_coef=0.95):
 def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
     """ create parameter grid for search
 
-    :param name_classif: str, key name of classif
+    :param str name_classif: key name of selected classifier
     :return: {str: ...}
 
-    >>> create_clf_param_search_grid()  # doctest: +ELLIPSIS
-    {...}
+    >>> create_clf_param_search_grid('RandForest') # doctest: +ELLIPSIS
+    {'classif__...': ...}
     """
+    def log_space(b, e, n):
+        return np.unique(np.logspace(b, e, n).astype(int)).tolist()
+
     clf_params = {
-        'RandForest': {'clf__n_estimators': range(2, 25, 1)},
-        'KNN': {'clf__n_neighbors': range(5, 20, 3)},
-        'SVM': {'clf__kernel': ('poly', 'rbf', 'sigmoid')},
-        'DecTree': {'clf__criterion': ('gini', 'entropy')},
-        'GradBoost': {'clf__n_estimators': range(10, 250, 20)},
-        'LogReg': {'clf__penalty': ('l1', 'l2')}}
-        # if this classif is not set use no params
+        'RandForest': {
+            'classif__n_estimators': log_space(0, 2, 40),
+            'classif__min_samples_split': [2, 3, 5, 7, 9],
+            'classif__min_samples_leaf': [1, 2, 4, 6, 9],
+            'classif__criterion': ('gini', 'entropy'),
+        },
+        'KNN': {
+            'classif__n_neighbors': log_space(0, 2, 20),
+            'classif__algorithm': ('ball_tree', 'kd_tree'),  # , 'brute'
+            'classif__weights': ('uniform', 'distance'),
+            'classif__leaf_size': log_space(0, 1.5, 10),
+        },
+        'SVM': {
+            'classif__C': np.linspace(0.2, 1., 8).tolist(),
+            'classif__kernel': ('poly', 'rbf', 'sigmoid'),
+            'classif__degree': [1, 2, 4, 6, 9],
+        },
+        'DecTree': {
+            'classif__criterion': ('gini', 'entropy'),
+            'classif__min_samples_split': [2, 3, 5, 7, 9],
+            'classif__min_samples_leaf': range(1, 7, 2),
+        },
+        'GradBoost': {
+            # 'clf__loss': ('deviance', 'exponential'), # only for 2 cls
+            'classif__n_estimators': log_space(0, 2, 25),
+            'classif__max_depth': range(1, 7, 2),
+            'classif__min_samples_split': [2, 3, 5, 7, 9],
+            'classif__min_samples_leaf': range(1, 7, 2),
+        },
+        'LogReg': {
+            'classif__C': np.linspace(0., 1., 5).tolist(),
+            # 'classif__penalty': ('l1', 'l2'),
+            # 'classif__dual': (False, True),
+            'classif__solver': ('lbfgs', 'sag'),
+            # 'classif__loss': ('deviance', 'exponential'), # only for 2 cls
+        },
+        'Adaboost': {
+            'classif__n_estimators': log_space(0, 2, 20),
+        }
+    }
     if name_classif not in clf_params.keys():
         clf_params[name_classif] = {}
+        logging.warning('not defined classifier name "%s"', name_classif)
     return clf_params[name_classif]
 
 
-def create_clf_param_search_dist(name_classif=DEFAULT_CLASSIF_NAME):
+def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
     """ create parameter distribution for random search
-    http://scikit-learn.org/stable/auto_examples/ensemble/plot_adaboost_multiclass.html
-    http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
-    http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
-    http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC
-    http://scikit-learn.org/stable/modules/generated/sklearn.svm.NuSVC.html
-    http://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
-    http://scikit-learn.org/stable/modules/generated/sklearn.neural_network.BernoulliRBM.html
-    http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
 
     :param name_classif: str, key name of classif
     :return: {str: ...}
 
-    >>> create_clf_param_search_dist()  # doctest: +ELLIPSIS
+    >>> create_clf_param_search_distrib()  # doctest: +ELLIPSIS
     {...}
     """
     clf_params = {
-    'RandForest': {
-        'classif__n_estimators': sp_randint(2, 25),
-        'classif__min_samples_split': sp_randint(2, 9),
-        'classif__min_samples_leaf': sp_randint(1, 7),
-    },
-    'KNN': {
-        'classif__n_neighbors': sp_randint(5, 25),
-        'classif__algorithm': ('ball_tree', 'kd_tree'), # , 'brute'
-        'classif__weights': ('uniform', 'distance'),
-        # 'clf__p': [1, 2],
-    },
-    'SVM': {
-        'classif__C': sp_random(0., 1.),
-        'classif__kernel': ('poly', 'rbf', 'sigmoid'),
-        'classif__degree': sp_randint(2, 9),
-    },
-    'DecTree': {
-        'classif__criterion': ('gini', 'entropy'),
-        'classif__min_samples_split': sp_randint(2, 9),
-        'classif__min_samples_leaf': sp_randint(1, 7),
-    },
-    'GradBoost': {
-        # 'clf__loss': ('deviance', 'exponential'), # only for 2 cls
-        'classif__n_estimators': sp_randint(10, 200),
-        'classif__max_depth': sp_randint(1, 7),
-        'classif__min_samples_split': sp_randint(2, 9),
-        'classif__min_samples_leaf': sp_randint(1, 7),
-    },
-    'LogReg': {
-        'classif__C': sp_random(0., 1.),
-        # 'classif__penalty': ('l1', 'l2'),
-        # 'classif__dual': (False, True),
-        'classif__solver': ('newton-cg', 'lbfgs', 'sag'),
-        # 'classif__loss': ('deviance', 'exponential'), # only for 2 cls
-    }}
+        'RandForest': {
+            'classif__n_estimators': sp_randint(2, 25),
+            'classif__min_samples_split': sp_randint(2, 9),
+            'classif__min_samples_leaf': sp_randint(1, 7),
+        },
+        'KNN': {
+            'classif__n_neighbors': sp_randint(5, 25),
+            'classif__algorithm': ('ball_tree', 'kd_tree'),  # , 'brute'
+            'classif__weights': ('uniform', 'distance'),
+            # 'clf__p': [1, 2],
+        },
+        'SVM': {
+            'classif__C': sp_random(0., 1.),
+            'classif__kernel': ('poly', 'rbf', 'sigmoid'),
+            'classif__degree': sp_randint(2, 9),
+        },
+        'DecTree': {
+            'classif__criterion': ('gini', 'entropy'),
+            'classif__min_samples_split': sp_randint(2, 9),
+            'classif__min_samples_leaf': sp_randint(1, 7),
+        },
+        'GradBoost': {
+            # 'clf__loss': ('deviance', 'exponential'),  # only for 2 cls
+            'classif__n_estimators': sp_randint(10, 200),
+            'classif__max_depth': sp_randint(1, 7),
+            'classif__min_samples_split': sp_randint(2, 9),
+            'classif__min_samples_leaf': sp_randint(1, 7),
+        },
+        'LogReg': {
+            'classif__C': sp_random(0., 1.),
+            # 'classif__penalty': ('l1', 'l2'),
+            # 'classif__dual': (False, True),
+            'classif__solver': ('newton-cg', 'lbfgs', 'sag'),
+            # 'classif__loss': ('deviance', 'exponential'),  # only for 2 cls
+        },
+        'Adaboost': {
+            'classif__n_estimators': sp_randint(2, 100),
+        }
+    }
     # if this classif is not set use no params
     if name_classif not in clf_params.keys():
         clf_params[name_classif] = {}
@@ -284,12 +325,13 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
 
 def compute_classif_stat_segm_annot(set_annot_segm_name, relabel=False):
     annot, segm, name = set_annot_segm_name
-    assert segm.shape == annot.shape, \
-        'dimension do not match: %s - %s' % (repr(segm.shape), repr(annot.shape))
+    assert segm.shape == annot.shape, 'dimension do not match: %s - %s' \
+                                      % (repr(segm.shape), repr(annot.shape))
     if relabel:
-        segm = tl_annot.relabel_max_overlap_unique(annot, segm, keep_bg=False)
+        segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=False)
     y_true, y_pred = annot.ravel(), segm.ravel()
-    dict_stat = compute_classif_metrics(y_true, y_pred, metric_averages=['macro'])
+    dict_stat = compute_classif_metrics(y_true, y_pred,
+                                        metric_averages=['macro'])
     dict_stat['name'] = name
     return dict_stat
 
@@ -307,7 +349,7 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
     >>> np.random.seed(0)
     >>> img_true = np.random.randint(0, 3, (50, 100))
     >>> img_pred = np.random.randint(0, 2, (50, 100))
-    >>> df = compute_stat_per_image([img_true], [img_true])
+    >>> df = compute_stat_per_image([img_true], [img_true], nb_jobs=2)
     >>> df.iloc[0]  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ARS                                                         1
     accuracy                                                    1
@@ -334,8 +376,8 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
     df_stat = pd.DataFrame()
     if nb_jobs > 1:
         mproc_pool = mproc.Pool(nb_jobs)
-        for dict_stat in mproc_pool.imap_unordered(compute_classif_stat_segm_annot,
-                                                   zip(annots, segms, names)):
+        for dict_stat in mproc_pool.imap_unordered(
+                compute_classif_stat_segm_annot, zip(annots, segms, names)):
             df_stat = df_stat.append(dict_stat, ignore_index=True)
         mproc_pool.close()
         mproc_pool.join()
@@ -379,7 +421,8 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     array([1, 0, 3, 4, 2])
     """
     logging.info('Feature selection for %s', repr(names))
-    logging.debug('Features: %s and labels: %s', repr(features.shape), repr(labels.shape))
+    logging.debug('Features: %s and labels: %s',
+                  repr(features.shape), repr(labels.shape))
     if not isinstance(features, np.ndarray):
         features = np.array(features)
     # Build a forest and compute the feature importances
@@ -388,12 +431,12 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     f_test, _ = feature_selection.f_regression(features, labels)
     k_best = feature_selection.SelectKBest(feature_selection.f_classif, k='all')
     k_best.fit(features, labels)
-    vars = feature_selection.VarianceThreshold().fit(features, labels)
+    variances = feature_selection.VarianceThreshold().fit(features, labels)
     imp = {
         'ExtTree': forest.feature_importances_,
         # 'Lasso': np.abs(lars_cv.coef_),
         'k-Best': k_best.scores_,
-        'variance': vars.variances_,
+        'variance': variances.variances_,
         'F-test': f_test
     }
     # std = np.std([t.feature_importances_ for t in forest.estimators_], axis=0)
@@ -420,14 +463,12 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None,
                     label_names=None):
     """ estimate classif for all data and export it
 
-    :param feature_names: [str]
-    :param path_out: str
+    :param str path_out: path for exporting trained classofier
     :param classif: sklearn classif.
-    :param clf_name: str, name
-    :param fts_train: [np.array<m, k>]
-    :param y_train: [int]
-    :param label_names: [str] list of string names of label_names
-    :return: str
+    :param str clf_name: name of selected classifier
+    :param [str] feature_names: list of string names
+    :param [str] label_names: list of string names of label_names
+    :return str:
 
     >>> clf = create_classifiers()['RandForest']
     >>> p_clf = save_classifier('.', clf, 'TESTINNG', {})
@@ -442,7 +483,7 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None,
     'TESTINNG'
     >>> os.remove(p_clf)
     """
-    assert os.path.exists(path_out)
+    assert os.path.isdir(path_out), 'missing %s' % repr(path_out)
     dict_classif = {
         'params': params,
         'name': clf_name,
@@ -460,13 +501,12 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None,
 
 
 def load_classifier(path_classif):
-    """ estimate classif. for all data and export it
+    """ estimate classifier for all data and export it
 
-    :param str path_classif:
+    :param str path_classif: path to the exported classifier
     :return {str: ...}:
     """
     assert os.path.exists(path_classif), 'missing "%s"' % path_classif
-    # path_classif = os.path.join(path_out, TEMPLATE_NAME_CLF.format(classif_name))
     logging.info('import classif from "%s"', path_classif)
     if not os.path.exists(path_classif):
         logging.debug('classif does not exist')
@@ -478,22 +518,24 @@ def load_classifier(path_classif):
     return dict_clf
 
 
-def export_results_clf_search(path_out, name_clf, clf_search):
+def export_results_clf_search(path_out, clf_name, clf_search):
     """ do the final testing and save all results
 
-    :param path_out: str
-    :param name_clf: str, name
-    :param clf_search: object
+    :param str path_out: path to directory for exporting classifier
+    :param str clf_name: name of selected classifier
+    :param object clf_search:
     """
-    assert os.path.exists(path_out)
-    fn_path_out = lambda s: os.path.join(path_out, 'classif_%s_%s.txt' % (name_clf, s))
+    assert os.path.isdir(path_out), 'missing %s' % repr(path_out)
+    fn_path_out = lambda s: os.path.join(path_out,
+                                         'classif_%s_%s.txt' % (clf_name, s))
 
     with open(fn_path_out('search_params_scores'), 'w') as f:
         f.write('\n'.join([repr(gs) for gs in clf_search.grid_scores_]))
 
     with open(fn_path_out('search_params_best'), 'w') as f:
         params = clf_search.best_params_
-        rows = ['{:30s} {}'.format('"{}":'.format(k), params[k]) for k in params]
+        rows = ['{:30s} {}'.format('"{}":'.format(k), params[k])
+                for k in params]
         f.write('\n'.join(rows))
 
 
@@ -505,27 +547,28 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
     """ create classifier and train it once or find best parameters.
     whether tha path out is given export it for later use
 
-    :param str clf_name:
-    :param features: np.array<nb_samples, nb_features>
-    :param [int] labels:
+    :param str clf_name: name of selected classifier
+    :param ndarray features: features in dimension nb_samples x nb_features
+    :param [int] labels: annotation for samples
     :param cross_val:
-    :param int nb_search_iter:
-    :param str path_out:
-    :param dict params: {str: ...}
-    :param [str] feature_names:
-    :param [str] label_names:
-    :return: (obj, str): classif, path
+    :param int nb_search_iter: number of searcher for hyper-parameters
+    :param str path_out: path to directory for exporting classifier
+    :param {str: ...} dict params: dictionary of paramters
+    :param [str] feature_names: list of extracted features - names
+    :param [str] label_names: list of label names
+    :return: (obj, str): classifier, path to the exported classifier
 
     >>> np.random.seed(0)
     >>> lbs = np.random.randint(0, 3, 150)
     >>> fts = np.random.random((150, 5)) + np.tile(lbs, (5, 1)).T
-    >>> clf, p_clf = create_classif_train_export(DEFAULT_CLASSIF_NAME, fts, lbs)
+    >>> clf, p_clf = create_classif_train_export('Adaboost', fts, lbs,
+    ...                 path_out='', search_type='grid')  # doctest: +ELLIPSIS
+    Fitting ...
     >>> clf  # doctest: +ELLIPSIS
     Pipeline(...)
-    >>> clf, p_clf = create_classif_train_export(DEFAULT_CLASSIF_NAME,
-    ...                                          fts, lbs, path_out='.',
-    ...                                          nb_search_iter=2)
-    Fitting 10 folds for each of 2 candidates, totalling 20 fits
+    >>> clf, p_clf = create_classif_train_export('RandForest', fts, lbs,
+    ...                 path_out='.', nb_search_iter=2)  # doctest: +ELLIPSIS
+    Fitting ...
     >>> clf  # doctest: +ELLIPSIS
     Pipeline(...)
     >>> p_clf
@@ -548,12 +591,13 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
     logging.info('create Classifier: %s', clf_name)
     clf_pipeline = create_clf_pipeline(clf_name, pca_coef)
     logging.debug('pipeline: %s', repr(clf_pipeline.steps))
-    if nb_search_iter > 1:
+    if nb_search_iter > 1 or search_type == 'grid':
         # find the best params for the classif.
         logging.debug('Performing param search...')
         nb_labels = len(np.unique(labels))
         clf_search = create_classif_search(clf_name, clf_pipeline, nb_labels,
-                                           search_type, cross_val, nb_search_iter, nb_jobs)
+                                           search_type, cross_val,
+                                           nb_search_iter, nb_jobs)
         clf_search.fit(features, labels)
 
         logging.info('Best score: %s', repr(clf_search.best_score_))
@@ -561,13 +605,13 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
         best_parameters = clf_pipeline.get_params()
 
         logging.info('Best parameters set: \n %s', repr(best_parameters))
-        if path_out is not None:
+        if path_out is not None and os.path.isdir(path_out):
             export_results_clf_search(path_out, clf_name, clf_search)
     else:
         # while there is no search, just train the best one
         clf_pipeline.fit(features, labels)
 
-    if path_out is not None:
+    if path_out is not None and os.path.isdir(path_out):
         path_classif = save_classifier(path_out, clf_pipeline, clf_name,
                                        params, feature_names, label_names)
     else:
@@ -576,72 +620,79 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
     return clf_pipeline, path_classif
 
 
-# # fixme, fix failing cros-val for multilabel
-# def eval_classif_cross_val_scores(clf_name, classif, features, labels,
-#                                   cross_val=10, path_out=None,
-#                                   scorings=['f1_macro', 'accuracy', 'precision', 'recall']):
-#     """ compute statistic on cross-validation schema
-#
-#     http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_val_score.html
-#
-#     :param str clf_name:
-#     :param classif:
-#     :param features:
-#     :param [int] labels:
-#     :param object cross_val:
-#     :param str path_out:
-#     :param [str] scorings:
-#     :return:
-#
-#     >>> labels = np.array([0] * 150 + [1] * 100 + [2] * 50)
-#     >>> data = np.tile(labels, (6, 1)).T.astype(float)
-#     >>> data += 0.5 - np.random.random(data.shape)
-#     >>> data.shape
-#     (300, 6)
-#     >>> from sklearn.cross_validation import StratifiedKFold
-#     >>> cv = StratifiedKFold(labels, n_folds=5, random_state=0)
-#     >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
-#     >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
-#     ...                               data, labels, cv)
-#        f1_macro  accuracy  precision  recall
-#     0         1         1          1       1
-#     1         1         1          1       1
-#     2         1         1          1       1
-#     3         1         1          1       1
-#     4         1         1          1       1
-#     >>> labels[labels == 1] = 2
-#     >>> cv = StratifiedKFold(labels, n_folds=3, random_state=0)
-#     >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
-#     ...                               data, labels, cv)
-#        f1_macro  accuracy
-#     0       1.0       1.0
-#     1       1.0       1.0
-#     2       1.0       1.0
-#     """
-#     df_scoring = pd.DataFrame()
-#     for scoring in scorings:
-#         try:
-#             # ValueError: pos_label=1 is not a valid label: array([0, 2])
-#             scores = model_selection.cross_val_score(classif, features, labels,
-#                                                      cv=cross_val, scoring=scoring)
-#             logging.info('Cross-Val score (%s = %f):\n %s',
-#                          scoring, np.mean(scores), repr(scores))
-#             df_scoring[scoring] = scores
-#         except:
-#             logging.error(traceback.format_exc())
-#     df_stat = df_scoring.describe()
-#
-#     if path_out is not None:
-#         assert os.path.exists(path_out), 'missing "%s"' % path_out
-#         name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'all-folds')
-#         path_csv = os.path.join(path_out, name_csv)
-#         df_scoring.to_csv(path_csv)
-#
-#         name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'statistic')
-#         path_csv = os.path.join(path_out, name_csv)
-#         df_stat.to_csv(path_csv)
-#     logging.info('cross_val scores: \n %s', repr(df_stat))
-#     return df_scoring
+def eval_classif_cross_val_scores(clf_name, classif, features, labels,
+                                  cross_val=10, path_out=None,
+                                  scorings=METRIC_SCORING):
+    """ compute statistic on cross-validation schema
+
+    http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_val_score.html
+
+    :param str clf_name: name of selected classifier
+    :param obj classif: sklearn classifier
+    :param ndarray features: features in dimension nb_samples x nb_features
+    :param [int] labels: annotation for samples
+    :param object cross_val:
+    :param str path_out: path for exporting statistic
+    :param [str] scorings: list of used scorings
+    :return DF:
+
+    >>> labels = np.array([0] * 150 + [1] * 100 + [2] * 50)
+    >>> data = np.tile(labels, (6, 1)).T.astype(float)
+    >>> data += 0.5 - np.random.random(data.shape)
+    >>> data.shape
+    (300, 6)
+    >>> from sklearn.cross_validation import StratifiedKFold
+    >>> cv = StratifiedKFold(labels, n_folds=5, random_state=0)
+    >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
+    >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
+    ...                               data, labels, cv)
+       f1_macro  accuracy  precision_macro  recall_macro
+    0       1.0       1.0              1.0           1.0
+    1       1.0       1.0              1.0           1.0
+    2       1.0       1.0              1.0           1.0
+    3       1.0       1.0              1.0           1.0
+    4       1.0       1.0              1.0           1.0
+    >>> labels[labels == 1] = 2
+    >>> cv = StratifiedKFold(labels, n_folds=3, random_state=0)
+    >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
+    ...                               data, labels, cv, path_out='.')
+       f1_macro  accuracy  precision_macro  recall_macro
+    0       1.0       1.0              1.0           1.0
+    1       1.0       1.0              1.0           1.0
+    2       1.0       1.0              1.0           1.0
+    >>> import glob
+    >>> p_files = glob.glob(NAME_CSV_CLASSIF_CV_SCORES.replace('{}', '*'))
+    >>> sorted(p_files)  # doctest: +NORMALIZE_WHITESPACE
+    ['classif_RandForest_cross-val_scores-all-folds.csv',
+     'classif_RandForest_cross-val_scores-statistic.csv']
+    >>> [os.remove(p) for p in p_files]  # doctest: +ELLIPSIS
+    [...]
+    """
+    df_scoring = pd.DataFrame()
+    for scoring in scorings:
+        try:
+            # ValueError: pos_label=1 is not a valid label: array([0, 2])
+            scores = model_selection.cross_val_score(classif, features, labels,
+                                                     cv=cross_val,
+                                                     scoring=scoring)
+            logging.info('Cross-Val score (%s = %f):\n %s',
+                         scoring, np.mean(scores), repr(scores))
+            df_scoring[scoring] = scores
+        except:
+            logging.error(traceback.format_exc())
+    df_stat = df_scoring.describe()
+
+    if path_out is not None:
+        assert os.path.exists(path_out), 'missing "%s"' % path_out
+        name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'all-folds')
+        path_csv = os.path.join(path_out, name_csv)
+        df_scoring.to_csv(path_csv)
+
+        name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'statistic')
+        path_csv = os.path.join(path_out, name_csv)
+        df_stat.to_csv(path_csv)
+    logging.info('cross_val scores: \n %s', repr(df_stat))
+    return df_scoring
 
 
 def eval_classif_cross_val_roc(clf_name, classif, features, labels,
@@ -650,12 +701,12 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
 
     http://scikit-learn.org/0.15/auto_examples/plot_roc_crossval.html
 
-    :param ste clf_name:
-    :param object classif:
-    :param features:
-    :param [int] labels:
+    :param str clf_name: name of selected classifier
+    :param obj classif: sklearn classifier
+    :param ndarray features: features in dimension nb_samples x nb_features
+    :param [int] labels: annotation for samples
     :param object cross_val:
-    :param str path_out:
+    :param str path_out: path for exporting statistic
     :return:
 
     >>> np.random.seed(0)
@@ -707,7 +758,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
         labels_bin[:, lb] = (labels == lb)
 
     count = 0
-    for i, (train, test) in enumerate(cross_val):
+    for train, test in cross_val:
         features_train = np.copy(features[train], order='C')
         labels_train = np.copy(labels[train], order='C')
         features_test = np.copy(features[test], order='C')
@@ -715,10 +766,9 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
         proba = classif.predict_proba(features_test)
         # Compute ROC curve and area the curve
         for i, j in enumerate(unique_labels):
-            fpr, tpr, thresholds = metrics.roc_curve(labels_bin[test, j],
-                                                     proba[:, i])
-            fpr = [0] + fpr.tolist()
-            tpr = [0] + tpr.tolist()
+            fpr, tpr, _ = metrics.roc_curve(labels_bin[test, j], proba[:, i])
+            fpr = [0.] + fpr.tolist() + [1.]
+            tpr = [0.] + tpr.tolist() + [1.]
             mean_tpr += interp(mean_fpr, fpr, tpr)
             mean_tpr[0] = 0.0
             count += 1.
@@ -741,7 +791,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
         name_txt = NAME_TXT_CLASSIF_CV_AUC.format(clf_name, 'mean')
         with open(os.path.join(path_out, name_txt), 'w') as fp:
             fp.write(str(auc))
-    logging.info('cross_val ROC: \n %s', repr(df_roc))
+    logging.debug('cross_val ROC: \n %s', repr(df_roc))
     return df_roc, auc
 
 
@@ -764,8 +814,9 @@ def search_params_cut_down_max_nb_iter(clf_parameters, nb_iter):
     return nb_iter
 
 
-def create_classif_search(name_clf, clf_pipeline, nb_labels, search_type='random',
-                          cross_val=10, nb_iter=NB_CLASSIF_SEARCH_ITER,
+def create_classif_search(name_clf, clf_pipeline, nb_labels,
+                          search_type='random', cross_val=10,
+                          nb_iter=NB_CLASSIF_SEARCH_ITER,
                           nb_jobs=NB_JOBS_CLASSIF_SEARCH):
     """ create sklearn search depending on spec. random or grid
 
@@ -783,15 +834,18 @@ def create_classif_search(name_clf, clf_pipeline, nb_labels, search_type='random
         clf_parameters = create_clf_param_search_grid(name_clf)
         logging.info('init Grid search...')
         clf_search = grid_search.GridSearchCV(clf_pipeline, clf_parameters,
-                              scoring=f1_scoring, cv=cross_val, n_jobs=nb_jobs,
-                              verbose=1, refit=True)  #
+                                              scoring=f1_scoring, cv=cross_val,
+                                              n_jobs=nb_jobs, verbose=1,
+                                              refit=True)
     else:
-        clf_parameters = create_clf_param_search_dist(name_clf)
+        clf_parameters = create_clf_param_search_distrib(name_clf)
         nb_iter = search_params_cut_down_max_nb_iter(clf_parameters, nb_iter)
         logging.info('init Randomized search...')
         clf_search = grid_search.RandomizedSearchCV(clf_pipeline, clf_parameters,
-                            scoring=f1_scoring, cv=cross_val, n_jobs=nb_jobs,
-                            n_iter=nb_iter, verbose=1, refit=True)
+                                                    scoring=f1_scoring,
+                                                    cv=cross_val, n_jobs=nb_jobs,
+                                                    n_iter=nb_iter, verbose=1,
+                                                    refit=True)
     return clf_search
 
 
@@ -799,8 +853,8 @@ def shuffle_features_labels(features, labels):
     """ take the set of features and labels and shuffle them together
     while keeping link between feature and its label
 
-    :param features: np.array<nb_samples, nb_features>
-    :param labels: [int]
+    :param ndarray features: features in dimension nb_samples x nb_features
+    :param [int] labels: annotation for samples
     :return: np.array<nb_samples, nb_features>, np.array,<nb_samples>
 
     >>> np.random.seed(0)
@@ -839,8 +893,8 @@ def compose_dict_label_features(features, labels):
     """ convert vector of features and related labels
     to a dictionary of features where key is the lables
 
-    :param features: np.array<nb_samples, nb_features>
-    :param labels: [int]
+    :param ndarray features: features in dimension nb_samples x nb_features
+    :param [int] labels: annotation for samples
     :return: {int: np.array<nb, nb_features>}
     """
     dict_features = dict()
@@ -907,7 +961,8 @@ def down_sample_dict_features_kmean(dict_features, nb_samples):
 
 # def unique_rows(matrix):
 #     matrix = np.ascontiguousarray(matrix)
-#     unique_matrix = np.unique(matrix.view([('', matrix.dtype)] * matrix.shape[1]))
+#     unique_matrix = np.unique(matrix.view([('', matrix.dtype)]
+#                                           * matrix.shape[1]))
 #     unique_shape = (unique_matrix.shape[0], matrix.shape[1])
 #     unique_matrix = unique_matrix.view(matrix.dtype).reshape(unique_shape)
 #     return unique_matrix
@@ -948,13 +1003,14 @@ def down_sample_dict_features_unique(dict_features):
     return dict_features_new
 
 
-def balance_dataset_by_(features, labels, type='random', min_samples=None):
+def balance_dataset_by_(features, labels, balance_type='random',
+                        min_samples=None):
     """ balance number of training examples per class by several method
 
-    :param features: [[float]]
-    :param labels: [int]
-    :param type: str
-    :param min_samples: int or Nnone, if Noner take the smallest class
+    :param ndarray features: features in dimension nb_samples x nb_features
+    :param [int] labels: annotation for samples
+    :param str type: balance_type of balancing dataset
+    :param min_samples: int or None, if None take the smallest class
     :return:
 
     >>> np.random.seed(0)
@@ -965,20 +1021,22 @@ def balance_dataset_by_(features, labels, type='random', min_samples=None):
     >>> lbs
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     """
-    logging.debug('balance dataset using "%s"', type)
+    logging.debug('balance dataset using "%s"', balance_type)
     hist_labels = collections.Counter(labels)
     if min_samples is None:
         min_samples = min(hist_labels.values())
     dict_features = compose_dict_label_features(features, labels)
 
-    if type == 'random':
-        dict_features = down_sample_dict_features_random(dict_features, min_samples)
-    elif type == 'kmeans':
-        dict_features = down_sample_dict_features_kmean(dict_features, min_samples)
-    elif type == 'unique':
+    if balance_type == 'random':
+        dict_features = down_sample_dict_features_random(dict_features,
+                                                         min_samples)
+    elif balance_type == 'kmeans':
+        dict_features = down_sample_dict_features_kmean(dict_features,
+                                                        min_samples)
+    elif balance_type == 'unique':
         dict_features = down_sample_dict_features_unique(dict_features)
     else:
-        logging.warning('not defined balacing method "%s"', type)
+        logging.warning('not defined balacing method "%s"', balance_type)
 
     features, labels = convert_dict_label_features_2_vectors(dict_features)
     # features, labels = shuffle_features_labels(features, labels)
@@ -990,8 +1048,8 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
     """ with dictionary for each image we concentrate all features over images
     and labels into simple form
 
-    :param imgs_features:
-    :param imgs_labels:
+    :param {str: ndarray} imgs_features: dictionary of name and features
+    :param {str: ndarray} imgs_labels: dictionary of name and labels
     :param balance: bool, wether balance number of sampler per class
     :return:
 
@@ -1012,8 +1070,8 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
     assert all(k in imgs_labels.keys() for k in imgs_features.keys())
     features_all, labels_all, sizes = list(), list(), list()
     for name in sorted(imgs_features.keys()):
-        features = imgs_features[name]
-        labels = imgs_labels[name]
+        features = np.array(imgs_features[name])
+        labels = np.array(imgs_labels[name])
 
         if drop_labels is not None:
             for lb in drop_labels:
@@ -1023,12 +1081,44 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
         if balance is not None:
             # balance dataset to have comparable nb of samples
             features, labels = balance_dataset_by_(features, labels,
-                                                   type=balance)
+                                                   balance_type=balance)
         features_all += features.tolist()
         labels_all += np.asarray(labels).tolist()
         sizes.append(len(labels))
 
     return np.array(features_all), np.array(labels_all, dtype=int), sizes
+
+
+# def stat_weight_by_support(dict_vals, id_val, id_sup):
+#     val = [v * s for v, s in zip(dict_vals[id_val], dict_vals[id_sup])]
+#     n = np.sum(val) / np.sum(dict_vals[id_sup])
+#     return n
+#
+#
+# def format_classif_stat(y_true, y_pred):
+#     """ format classification statistic
+#
+#     :param [int] y_true: annotation
+#     :param [int] y_pred: predictions
+#     :return:
+#
+#     >>> np.random.seed(0)
+#     >>> y_true = np.random.randint(0, 2, 25)
+#     >>> y_pred = np.random.randint(0, 2, 25)
+#     >>> stat = format_classif_stat(y_true, y_pred)
+#     >>> pd.Series(stat)
+#     f1_score      0.586667
+#     precision     0.605882
+#     recall        0.600000
+#     support      25.000000
+#     dtype: float64
+#     """
+#     vals = metrics.precision_recall_fscore_support(y_true, y_pred)
+#     stat = {'precision':    stat_weight_by_support(vals, 0, 3),
+#             'recall':       stat_weight_by_support(vals, 1, 3),
+#             'f1_score':     stat_weight_by_support(vals, 2, 3),
+#             'support':      np.sum(vals[3])}
+#     return stat
 
 
 class HoldOut:
@@ -1120,9 +1210,9 @@ class CrossValidatePOut:
     def __init__(self, nb_samples, nb_hold_out, rand_seed=None):
         """
 
-        :param [int] set_sizes:
-        :param int nb_hold_out:
-        :param obj random_order:
+        :param [int] nb_samples: list of sizes
+        :param int nb_hold_out: how much hold out
+        :param obj rand_seed: int or None
         """
         assert nb_samples > nb_hold_out, \
             'nb of out has to be smaller then total size'
@@ -1131,7 +1221,7 @@ class CrossValidatePOut:
 
         self.indexes = list(range(self.nb_samples))
 
-        if not rand_seed is False:
+        if rand_seed is not False:
             np.random.seed(rand_seed)
             np.random.shuffle(self.indexes)
         logging.debug('sets ordering: %s', repr(self.indexes))
@@ -1143,8 +1233,8 @@ class CrossValidatePOut:
 
         :return ([int], [int]):
         """
-        for iter in range(0, self.nb_samples, self.nb_hold_out):
-            inds_test = self.indexes[iter:iter + self.nb_hold_out]
+        for i in range(0, self.nb_samples, self.nb_hold_out):
+            inds_test = self.indexes[i:i + self.nb_hold_out]
             inds_train = [i for i in self.indexes if i not in inds_test]
             yield inds_train, inds_test
 
@@ -1195,12 +1285,13 @@ class CrossValidatePSetsOut:
     def __init__(self, set_sizes, nb_hold_out, rand_seed=None):
         """
 
-        :param [int] set_sizes:
-        :param int nb_hold_out:
-        :param obj random_order:
+        :param [int] set_sizes: list of sizes
+        :param int nb_hold_out: how much hold out
+        :param obj rand_seed: int or None
         """
         assert len(set_sizes) > nb_hold_out, \
-            'nb of out has to be smaller then total size'
+            'nb of hold out (%i) has to be smaller then total size %i' \
+            % (nb_hold_out, len(set_sizes))
         self.set_sizes = list(set_sizes)
         self.total = np.sum(self.set_sizes)
         self.nb_hold_out = nb_hold_out
@@ -1215,7 +1306,7 @@ class CrossValidatePSetsOut:
 
         self.sets_order = list(range(len(self.set_sizes)))
 
-        if not rand_seed is False:
+        if rand_seed is not False:
             np.random.seed(rand_seed)
             np.random.shuffle(self.sets_order)
         logging.debug('sets ordering: %s', repr(self.sets_order))
@@ -1227,8 +1318,8 @@ class CrossValidatePSetsOut:
 
         :return ([int], [int]):
         """
-        for iter in range(0, len(self.set_sizes), self.nb_hold_out):
-            test = self.sets_order[iter:iter + self.nb_hold_out]
+        for i in range(0, len(self.set_sizes), self.nb_hold_out):
+            test = self.sets_order[i:i + self.nb_hold_out]
             inds_train, inds_test = [], []
             for i in self.sets_order:
                 if i in test:
@@ -1251,10 +1342,8 @@ class CrossValidatePSetsOut:
 
 # def check_exist_labels_dataset(dataset, lut):
 #     u_lbs = np.unique(lut.values())
-#     logger.debug('labels in dataset are {} and LUT contains {}'.format(dataset.keys(), u_lbs))
 #     for l in u_lbs:
 #         if not l in dataset:
-#             logger.debug('add missing label {} in dataset of {}'.format(l, dataset.keys()))
 #             dataset[l] = []
 #     return dataset
 
@@ -1274,7 +1363,8 @@ class CrossValidatePSetsOut:
 #         clt = cluster.AgglomerativeClustering(nb_clts, linkage='ward',
 #                                               memory='tmpMemoryDump')
 #         clt.fit(data)
-#         words = [np.mean(data[clt.labels_ == l], axis=0) for l in np.unique(clt.labels_)]
+#         words = [np.mean(data[clt.labels_ == l], axis=0)
+#                  for l in np.unique(clt.labels_)]
 #     if method == 'AffPr':
 #         clt = cluster.AffinityPropagation(convergence_iter=7)
 #         clt.fit(data)
@@ -1284,11 +1374,10 @@ class CrossValidatePSetsOut:
 #         clt.fit(data)
 #         words = clt.subcluster_centers_
 #     elif method == 'kMeans':
-#         # http://www.spectralpython.net/class_func_ref.html?highlight=kmeans#spectral.kmeans
-#         # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.manhattan_distances.html
 #         clt = cluster.KMeans(init='random', n_clusters=nb_clts, n_init=3,
 #                              max_iter=35, n_jobs=5)
-#         # clt = cluster.KMeans(init='k-means++', n_clusters=nb_clts, n_init=7, n_jobs=-1)
+#         # clt = cluster.KMeans(init='k-means++', n_clusters=nb_clts,
+#                                n_init=7, n_jobs=-1)
 #         clt.fit(data)
 #         words = clt.cluster_centers_
 #     else: # random
@@ -1298,7 +1387,6 @@ class CrossValidatePSetsOut:
 
 # def segm_features_classif_general(dataset_dict, ft, clf, prob=False):
 #     X, y = convert_standard_dataset(dataset_dict)
-#     logger.info('training dataset dims: X -> #{}, y -> #{}'.format(X.shape, y.shape))
 #     assert len(X) == len(y)
 #     clf.fit(X, y)
 #     lbs = clf.predict(ft)
@@ -1306,7 +1394,6 @@ class CrossValidatePSetsOut:
 #         probs = clf.predict_proba(ft)
 #     else:
 #         probs=None
-#     logger.debug('results labeling dim: {} and vals: {}'.format(lbs.shape, lbs))
 #     return lbs, probs
 
 

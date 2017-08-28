@@ -1,5 +1,7 @@
 """
-
+Framework for region growing
+ * general GraphCut segmentation with and without shape model
+ * region growing with shape prior - greedy & GraphCut
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -8,19 +10,19 @@ import os
 import logging
 
 import numpy as np
-from scipy import stats, ndimage, interpolate, spatial
-from sklearn import cluster, mixture, metrics
-from skimage import morphology, measure
-from pygco import cut_general_graph, cut_grid_graph, cut_grid_graph_simple
+from scipy import stats, ndimage, interpolate
+from sklearn import cluster, mixture
+from skimage import morphology
+from gco import cut_general_graph, cut_grid_graph
 
-import segmentation.graph_cuts as tl_gc
-import segmentation.labeling as tl_lb
-import segmentation.descriptors as tl_fts
-import segmentation.superpixels as tl_spx
+import segmentation.graph_cuts as seg_gc
+import segmentation.labeling as seg_lb
+import segmentation.descriptors as seg_fts
+import segmentation.superpixels as seg_spx
 
 GC_REPLACE_INF = 1e5
 MIN_SHAPE_PROB = 1e-2
-DEFAULT_RG2SP_THRESHOLDS = {
+RG2SP_THRESHOLDS = {
     'centre': 30,
     'shift': 15,
     'volume': 0.1,
@@ -28,16 +30,26 @@ DEFAULT_RG2SP_THRESHOLDS = {
 }
 
 
-def object_segmentation_graphcut_slic(slic, segm, centres, labels_fg_prob=[0.1, 0.9],
-                                      gc_regul=1, edge_coef=0.5, edge_type='model',
+def object_segmentation_graphcut_slic(slic, segm, centres,
+                                      labels_fg_prob=(0.1, 0.9),
+                                      gc_regul=1, edge_coef=0.5,
+                                      edge_type='model',
                                       coef_shape=0., shape_mean_std=(50., 10.),
-                                      add_neighbours=False, dict_debug_imgs=None):
+                                      add_neighbours=False,
+                                      dict_debug_imgs=None):
     """ object segmentation using Graph Cut directly on super-pixel level
 
-    :param [[int]] slic:
-    :param [[int]] segm:
-    :param [(int)] centres:
-    :param [int] labels_fg_prob:
+    :param ndarray slic: superpixel pre-segmentation
+    :param ndarray segm: input structure segmentation
+    :param [(int, int)] centres: superpixel centres
+    :param [float] labels_fg_prob: weight for particular label belongs to FG
+    :param float gc_regul: regularisation for GC
+    :param float edge_coef: weight og edges on GC
+    :param str edge_type: select the egde weights on graph
+    :param float coef_shape: set the weight of shape prior
+    :param shape_mean_std: mean and STD for shape prior
+    :param bool add_neighbours: add also neighboring supepixels to the center
+    :param {} dict_debug_imgs: dictionary with some intermediate results
     :return [[int]]:
 
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3 + [3] * 3 + [4] * 3,
@@ -51,7 +63,7 @@ def object_segmentation_graphcut_slic(slic, segm, centres, labels_fg_prob=[0.1, 
     array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0], dtype=int32)
     """
     assert np.min(labels_fg_prob) < 1, 'non label can ce strictly 1'
-    label_hist = tl_lb.histogram_regions_labels_norm(slic, segm)
+    label_hist = seg_lb.histogram_regions_labels_norm(slic, segm)
     labels = np.argmax(label_hist, axis=1)
 
     assert segm.max() <= len(labels_fg_prob), \
@@ -61,7 +73,7 @@ def object_segmentation_graphcut_slic(slic, segm, centres, labels_fg_prob=[0.1, 
 
     assert len(centres) > 0, 'at least one center has to be given'
     centres = [np.round(c).astype(int) for c in centres]
-    slic_points = tl_spx.superpixel_centers(slic)
+    slic_points = seg_spx.superpixel_centers(slic)
 
     proba = np.ones((len(labels), len(centres) + 1))
     proba[:, 0] = labels_bg_prob[labels]
@@ -80,7 +92,7 @@ def object_segmentation_graphcut_slic(slic, segm, centres, labels_fg_prob=[0.1, 
             cum = 1. - cdf + 1e-9
             shape[:, i + 1] = cum[dist.astype(int)]
 
-    _, edges = tl_gc.get_vertexes_edges(slic)
+    _, edges = seg_gc.get_vertexes_edges(slic)
     edges = np.array(edges)
 
     unary_cost = - np.log(proba) - coef_shape * np.log(shape)
@@ -102,9 +114,10 @@ def object_segmentation_graphcut_slic(slic, segm, centres, labels_fg_prob=[0.1, 
         vertex_2 = proba_fg[edges[:, 1]]
         dist = np.abs(vertex_1 - vertex_2)
         edge_weights = np.exp(- dist / (2 * np.std(dist) ** 2))
-        slic_centres = tl_spx.superpixel_centers(slic)
-        spatial = tl_gc.compute_spatial_dist(slic_centres, edges, relative=True)
-        edge_weights /= spatial
+        slic_centres = seg_spx.superpixel_centers(slic)
+        spatial_dist = seg_gc.compute_spatial_dist(slic_centres, edges,
+                                                   relative=True)
+        edge_weights /= spatial_dist
     else:
         edge_weights = np.ones(len(edges))
 
@@ -114,9 +127,9 @@ def object_segmentation_graphcut_slic(slic, segm, centres, labels_fg_prob=[0.1, 
 
     # run GraphCut
     logging.debug('perform GraphCut')
-    labels = np.argmax(proba, axis=1)
-    graph_labels = cut_general_graph(edges, edge_weights, unary_cost, pairwise_cost,
-                                     n_iter=999)
+    # labels = np.argmax(proba, axis=1)
+    graph_labels = cut_general_graph(edges, edge_weights, unary_cost,
+                                     pairwise_cost, n_iter=999)
 
     if dict_debug_imgs is not None:
         list_unary_imgs = []
@@ -127,15 +140,22 @@ def object_segmentation_graphcut_slic(slic, segm, centres, labels_fg_prob=[0.1, 
     return graph_labels
 
 
-def object_segmentation_graphcut_pixels(segm, centres, labels_fg_prob=[0.1, 0.9],
+def object_segmentation_graphcut_pixels(segm, centres,
+                                        labels_fg_prob=(0.1, 0.9),
                                         gc_regul=1, seed_size=0, coef_shape=0.,
-                                        shape_mean_std=(50., 10.), dict_debug_imgs=None):
+                                        shape_mean_std=(50., 10.),
+                                        dict_debug_imgs=None):
     """ object segmentation using Graph Cut directly on pixel level
 
-    :param [[int]] slic:
-    :param [[int]] segm:
-    :param [(int)] centres:
-    :param [int] labels_fg_prob:
+    :param ndarray slic: superpixel pre-segmentation
+    :param ndarray segm: input structure segmentation
+    :param [(int, int)] centres: superpixel centres
+    :param [float] labels_fg_prob: set how much particular label belongs to foreground
+    :param float gc_regul: regularisation for GC
+    :param int seed_size: create circular neighoing around initaial centre
+    :param float coef_shape: set the weight of shape prior
+    :param shape_mean_std: mean and STD for shape prior
+    :param {} dict_debug_imgs: dictionary with some intermediate results
     :return [[int]]:
 
     >>> segm = np.array([[0] * 10,
@@ -215,15 +235,17 @@ def object_segmentation_graphcut_pixels(segm, centres, labels_fg_prob=[0.1, 0.9]
     return segm_obj
 
 
-def compute_segm_object_shape(img_object, ray_step=5, interp_order=3, smooth_coef=0):
+def compute_segm_object_shape(img_object, ray_step=5, interp_order=3,
+                              smooth_coef=0):
     """ assuming single object in image and compute gravity centre and for
     this point compute Ray featuresand optionaly:
     - interpolate missing values
     - smooth the Ray features
 
-    :param [[int]] img_object:
-    :param int ray_step:
-    :param int interp_order: if None, no interpolation perform
+    :param ndarray img_object: binary segmentation of single object
+    :param int ray_step: select the angular step for Ray features
+    :param int interp_order: if None, no interpolation is performed
+    :param float smooth_coef: smoothing the ray features
     :return [int], int:
 
     >>> img = np.zeros((100, 100))
@@ -234,12 +256,13 @@ def compute_segm_object_shape(img_object, ray_step=5, interp_order=3, smooth_coe
     """
     centre = ndimage.measurements.center_of_mass(img_object)
     centre = [int(round(c)) for c in centre]
-    ray_dist = tl_fts.compute_ray_features_segm_2d(img_object, centre, ray_step, 0, edge='down')
+    ray_dist = seg_fts.compute_ray_features_segm_2d(img_object, centre,
+                                                    ray_step, 0, edge='down')
     if interp_order is not None and -1 in ray_dist:
-        ray_dist = tl_fts.interpolate_ray_dist(ray_dist, interp_order)
+        ray_dist = seg_fts.interpolate_ray_dist(ray_dist, interp_order)
     if smooth_coef > 0:
         ray_dist = ndimage.filters.gaussian_filter1d(ray_dist, smooth_coef)
-    ray_dist, shift = tl_fts.shift_ray_features(ray_dist)
+    ray_dist, shift = seg_fts.shift_ray_features(ray_dist)
     return ray_dist.tolist(), shift
 
 
@@ -248,8 +271,10 @@ def compute_object_shapes(list_img_objects, ray_step=5, interp_order=3,
     """ for all object in all images compute gravity center and Ray beatures
     (if object are not split already by different label is made here)
 
-    :param [[[int]]]l ist_img_objects:
-    :param int ray_step:
+    :param [nadarray] list_img_objects: list of binary segmentation
+    :param int ray_step: select the angular step for Ray features
+    :param int interp_order: if None, no interpolation is performed
+    :param float smooth_coef: smoothing the ray features
     :return [[int]], [int]:
 
     >>> img1 = np.zeros((100, 100))
@@ -288,13 +313,13 @@ def compute_object_shapes(list_img_objects, ray_step=5, interp_order=3,
 
 
 def compute_cumulative_distrib(means, stds, weights, max_dist):
-    """ comput einvers cumulative distribution based given means,
+    """ compute invers cumulative distribution based given means,
     covariance and weights for each segment
 
-    :param [[float]] means:
-    :param [[float]] stds:
-    :param [float] weights:
-    :param float max_dist:
+    :param [[float]] means: mean values for each model and ray direction
+    :param [[float]] stds: STD for each model and ray direction
+    :param [float] weights: model wights
+    :param float max_dist: maxim distance for shape model
     :return [[float]]:
 
     >>> cdist = compute_cumulative_distrib(np.array([[1, 2]]),
@@ -307,8 +332,8 @@ def compute_cumulative_distrib(means, stds, weights, max_dist):
     samples = range(int(max_dist) + 1)
     for i in range(means.shape[1]):
         cdf = np.zeros(int(max_dist + 1))
-        for j in range(len(weights)):
-            cdf += stats.norm.cdf(samples, means[j, i], stds[j, i]) * weights[j]
+        for j, w in enumerate(weights):
+            cdf += stats.norm.cdf(samples, means[j, i], stds[j, i]) * w
         cdf = (cdf - cdf.min()) / (cdf.max() - cdf.min())
         cum = 1. - cdf + 1e-9
         list_cdist.append(cum.tolist())
@@ -320,8 +345,9 @@ def compute_cumulative_distrib(means, stds, weights, max_dist):
 def transform_rays_model_cdf_mixture(list_rays, coef_components=1):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays:
-    :return any, [[int]]:
+    :param [[int]] list_rays: list ray features (distances)
+    :param int coef_components: multiplication for number of components
+    :return any, [[int]]: mixture model, cumulative distribution
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
@@ -355,17 +381,20 @@ def transform_rays_model_cdf_mixture(list_rays, coef_components=1):
     return mm, cdist.tolist()
 
 
-def transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_components=5, slic_size=15):
+def transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_components=5,
+                                               slic_size=15):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays:
-    :return any, [[int]]:
+    :param [[int]] list_rays: list ray features (distances)
+    :param int nb_components: number components in mixture model
+    :param int slic_size: superpixel size
+    :return any, [[int]]:  mixture model, list of stat/param of models
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
     ...              [9, 11, 8], [4, 8, 5], [8, 10, 6], [9, 7, 11]]
-    >>> mm, list_mean_cdf = transform_rays_model_sets_mean_cdf_mixture(list_rays, 2)
-    >>> len(list_mean_cdf)
+    >>> mm, mean_cdf = transform_rays_model_sets_mean_cdf_mixture(list_rays, 2)
+    >>> len(mean_cdf)
     2
     """
     rays = np.array(list_rays)
@@ -396,14 +425,15 @@ def transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_components=5, slic_
 def transform_rays_model_sets_mean_cdf_kmeans(list_rays, nb_components=5):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays:
-    :return any, [[int]]:
+    :param [[int]] list_rays: list ray features (distances)
+    :param int nb_components: number components in mixture model
+    :return any, [[int]]:  mixture model, list of stat/param of models
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
     ...              [9, 11, 8], [4, 8, 5], [8, 10, 6], [9, 7, 11]]
-    >>> mm, list_mean_cdf = transform_rays_model_sets_mean_cdf_kmeans(list_rays, 2)
-    >>> len(list_mean_cdf)
+    >>> mm, mean_cdf = transform_rays_model_sets_mean_cdf_kmeans(list_rays, 2)
+    >>> len(mean_cdf)
     2
     """
     rays = np.array(list_rays)
@@ -428,8 +458,9 @@ def transform_rays_model_sets_mean_cdf_kmeans(list_rays, nb_components=5):
 def transform_rays_model_cdf_spectral(list_rays, nb_components=5):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays:
-    :return any, [[int]]:
+    :param [[int]] list_rays: list ray features (distances)
+    :param int nb_components: number components in mixture model
+    :return any, [[int]]:  mixture model, list of stat/param of models
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
@@ -467,8 +498,9 @@ def transform_rays_model_cdf_spectral(list_rays, nb_components=5):
 def transform_rays_model_cdf_kmeans(list_rays, nb_components=None):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays:
-    :return any, [[int]]:
+    :param [[int]] list_rays: list ray features (distances)
+    :param int nb_components: number components in mixture model
+    :return any, [[int]]:  mixture model, list of stat/param of models
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
@@ -510,7 +542,8 @@ def transform_rays_model_cdf_kmeans(list_rays, nb_components=None):
 def transform_rays_model_cdf_histograms(list_rays, nb_bins=10):
     """ from list of all measured rays create cumulative histogram for each ray
 
-    :param list_rays:
+    :param [[int]] list_rays: list ray features (distances)
+    :param int nb_bins: binarise histogram
     :return:
 
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
@@ -541,14 +574,14 @@ def transform_rays_model_cdf_histograms(list_rays, nb_bins=10):
     return list_chist
 
 
-def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0):
+def compute_shape_prior_table_cdf(point, cum_distribution, centre,
+                                  angle_shift=0):
     """ compute shape prior for a point based on centre, rotation shift
     and cumulative histogram
 
-    :param (int, int) point:
-    :param (int, int) centre:
-    :param [[float]] cum_hist:
-    :param float shift:
+    :param (int, int) point: single points
+    :param (int, int) centre: center of model
+    :param [[float]] cum_hist: cumulative histogram
     :return float:
 
     >>> chist = [[1.0, 1.0, 0.8, 0.7, 0.6, 0.5, 0.3, 0.0, 0.0],
@@ -623,8 +656,8 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 #     >>> np.round(priors, 3)
 #     [1.0, 0.0, 0.847, 0.418, 0.514]
 #     """
-#     raise Exception('This function "compute_shape_priors_table_cdfs" require fix'
-#                     ' in scipy interpolation part, return strange values.')
+#     raise Exception('This function "compute_shape_priors_table_cdfs" require '
+#                     'fix in scipy interpolation part, return strange values.')
 #     if not isinstance(points, np.ndarray):
 #         points = np.array(points)
 #     if not isinstance(cum_hist, np.ndarray):
@@ -646,14 +679,14 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 #
 #     grid_points = np.array((x.flatten(), y.flatten())).T
 #     values = cum_hist.flatten()
-#     # fixme: do not return correct values eve for the "input points"
+#     # FIX: do not return correct values eve for the "input points"
 #     priors[in_range] = interpolate.griddata(grid_points, values,
-#                                             (angle_norm[in_range], dist[in_range]))
+#                                     (angle_norm[in_range], dist[in_range]))
 #     return priors
 
 
 def compute_centre_moment_points(points):
-    """ compute centrea and moment from set of points
+    """ compute centre and moment from set of points
 
     :param [(float, float)] points:
     :return:
@@ -701,14 +734,25 @@ def compute_centre_moment_points(points):
 def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
                                                 init_centres, centres, shifts,
                                                 volumes, shape_chist,
-                                                selected_idx=None, swap_shift=False,
-                                                dict_thresholds=DEFAULT_RG2SP_THRESHOLDS):
+                                                selected_idx=None,
+                                                swap_shift=False,
+                                                dict_thresholds=RG2SP_THRESHOLDS):
     """ update the shape prior for given segmentation (new centre is computed),
     set of points and cumulative histogram representing the shape model
 
-    :param [[int]] segm_binary:
-    :param [(int, int)] slic_points:
-    :param [[float]] shape_model:
+    :param lut_shape_cost: look-up-table for shape cost for GC
+    :param [[int, int]] points: subsample space, points = superpixel centres
+    :param [int] labels: labels for points to be assigned to an object
+    :param [[int, int]] init_centres: initial centre position for compute
+        center shift during the iteretions
+    :param [[int, int]] centres: actual centre postion
+    :param [int] shifts: orientation for each region / object
+    :param [int] volumes: size / volume for each region
+    :param shape_chist: represent the shape prior and histograms
+    :param [int] selected_idx: selected object for update
+    :param bool swap_shift: allow swapping orientation by 90 degree,
+        try to get out from local optima
+    :param {str: ...} dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
 
     >>> cdf = np.zeros((8, 20))
@@ -716,15 +760,15 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     >>> cdf[:4] = 1.0
     >>> points = np.array([[13, 16], [1, 5], [10, 15], [15, 25], [10, 5]])
     >>> labels = np.ones(len(points))
-    >>> shape_costs = np.zeros((len(points), 2))
-    >>> shape_costs, centres, shifts, _ = compute_update_shape_costs_points_table_cdf(
-    ...                                     shape_costs, points, labels, [(0, 0)], 
-    ...                                     [(np.Inf, np.Inf)], [0], [0], (None, cdf))
+    >>> s_costs = np.zeros((len(points), 2))
+    >>> s_costs, centres, shifts, _ = compute_update_shape_costs_points_table_cdf(
+    ...                             s_costs, points, labels, [(0, 0)],
+    ...                             [(np.Inf, np.Inf)], [0], [0], (None, cdf))
     >>> centres
     array([[10, 13]])
     >>> shifts
     array([ 209.])
-    >>> np.round(shape_costs, 3)
+    >>> np.round(s_costs, 3)
     array([[ 0.   ,  0.673],
            [ 0.   , -0.01 ],
            [ 0.   ,  0.184],
@@ -733,15 +777,15 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     """
     assert len(points) == len(labels)
     if selected_idx is None:
-        selected_idx = range(len(points))
+        selected_idx = list(range(len(points)))
     model, cdf = shape_chist
     # segm_obj = labels[slic]
     for i, centre in enumerate(centres):
         # segm_binary = (segm_obj == i + 1)
         # centre_new = ndimage.measurements.center_of_mass(segm_binary)
-        # ray = tl_fts.compute_ray_features_segm_2d(segm_binary, centre_new,
+        # ray = seg_fts.compute_ray_features_segm_2d(segm_binary, centre_new,
         #                                           edge='down', angle_step=10)
-        # _, shift = tl_fts.shift_ray_features(ray)
+        # _, shift = seg_fts.shift_ray_features(ray)
         centre_new, shift = compute_centre_moment_points(points[labels == i + 1])
         centre_new = np.round(centre_new).astype(int)
 
@@ -750,7 +794,8 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
             shifts[i] = shift
 
         # shift it to the edge of max init distance
-        cdist_init_2 = np.sum((np.array(centre_new) - np.array(init_centres[i])) ** 2)
+        cdist_init_2 = np.sum((np.array(centre_new)
+                               - np.array(init_centres[i])) ** 2)
         if cdist_init_2 > dict_thresholds['centre_init'] ** 2:
             centre_new = init_centres[i] + \
                          (dict_thresholds['centre_init'] / np.sqrt(cdist_init_2)) \
@@ -777,17 +822,27 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     return lut_shape_cost, np.array(centres), np.array(shifts), volumes
 
 
-def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic, points, labels,
-                                                     init_centres, centres, shifts,
-                                                     volumes, shape_model_cdfs,
-                                                     selected_idx=None, swap_shift=False,
-                                                     dict_thresholds=DEFAULT_RG2SP_THRESHOLDS):
+def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
+                         points, labels, init_centres, centres, shifts,
+                         volumes, shape_model_cdfs, selected_idx=None,
+                         swap_shift=False, dict_thresholds=RG2SP_THRESHOLDS):
     """ update the shape prior for given segmentation (new centre is computed),
     set of points and cumulative histogram representing the shape model
 
-    :param [[int]] segm_binary:
-    :param [(int, int)] slic_points:
-    :param [[float]] shape_model:
+    :param lut_shape_cost: look-up-table for shape cost for GC
+    :param ndarray slic: superpixel segmentation
+    :param [[int, int]] points: subsample space, points = superpixel centres
+    :param [int] labels: labels for points to be assigned to an object
+    :param [[int, int]] init_centres: initial centre position for compute
+        center shift during the iteretions
+    :param [[int, int]] centres: actual centre postion
+    :param [int] shifts: orientation for each region / object
+    :param [int] volumes: size / volume for each region
+    :param shape_model_cdfs: represent the shape prior and histograms
+    :param [int] selected_idx: selected object for update
+    :param bool swap_shift: allow swapping orientation by 90 degree,
+        try to get out from local optima
+    :param {str: ...} dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
 
     >>> np.random.seed(0)
@@ -809,16 +864,16 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic, point
     >>> cdf1[:4] = 1.0
     >>> cdf2[:6] = 1.0
     >>> set_m_cdf = [([4] * 8, cdf1), ([5] * 8, cdf2)]
-    >>> shape_costs = np.zeros((len(points), 2))
+    >>> s_costs = np.zeros((len(points), 2))
     >>> mm = mixture.GaussianMixture(2).fit(np.random.random((100, 8)))
-    >>> shape_costs, centres, shifts, _ = compute_update_shape_costs_points_close_mean_cdf(
-    ...           shape_costs, slic, points, labels, [(0, 0)], [(np.Inf, np.Inf)], [0], [0],
-    ...           (mm, set_m_cdf))
+    >>> s_costs, centres, shifts, _ = compute_update_shape_costs_points_close_mean_cdf(
+    ...                         s_costs, slic, points, labels, [(0, 0)],
+    ...                         [(np.Inf, np.Inf)], [0], [0], (mm, set_m_cdf))
     >>> centres
     array([[3, 3]])
     >>> shifts
     array([ 90.])
-    >>> np.round(shape_costs, 3)  # doctest: +ELLIPSIS
+    >>> np.round(s_costs, 3)  # doctest: +ELLIPSIS
     array([[ 0.   , -0.01 ],
            [ 0.   , -0.01 ],
            [ 0.   , -0.01 ],
@@ -843,7 +898,8 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic, point
         segm_binary = (segm_obj == i + 1)
         centre_new, shift = compute_centre_moment_points(points[labels == i + 1])
         centre_new = np.round(centre_new).astype(int)
-        rays, _ = compute_segm_object_shape(segm_binary, angle_step, smooth_coef=0)
+        rays, _ = compute_segm_object_shape(segm_binary, angle_step,
+                                            smooth_coef=0)
         if swap_shift:
             shift = (shift + 90) % 360
             shifts[i] = shift
@@ -852,7 +908,8 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic, point
         volume_diff = np.abs(volume - volumes[i]) / float(volumes[i])
 
         # shift it to the edge of max init distance
-        cdist_init_2 = np.sum((np.array(centre_new) - np.array(init_centres[i])) ** 2)
+        cdist_init_2 = np.sum((np.array(centre_new)
+                               - np.array(init_centres[i])) ** 2)
         if cdist_init_2 > dict_thresholds['centre_init'] ** 2:
             centre_new = init_centres[i] + \
                          (dict_thresholds['centre_init'] / np.sqrt(cdist_init_2)) \
@@ -893,13 +950,13 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic, point
 
 
 def compute_data_costs_points(slic, slic_labels, centres, labels, prob_fg_labels):
-    """ comote Look up Table ro date term costs
+    """ compute Look up Table ro date term costs
 
-    :param slic:
-    :param slic_labels:
-    :param centres:
-    :param labels:
-    :param prob_fg_labels:
+    :param nadarray slic: superpixel segmentation
+    :param [int] slic_labels: label for each superpixel
+    :param [[int, int]] centres: actual centre postion
+    :param [int] labels: labels for points to be assigned to an object
+    :param [float] prob_fg_labels: weight for particular label belongs to FG
     :return:
     """
     data_proba = np.empty((len(labels), len(centres) + 1))
@@ -916,20 +973,31 @@ def compute_data_costs_points(slic, slic_labels, centres, labels, prob_fg_labels
 def update_shape_costs_points(lut_shape_cost, slic, points, labels, init_centres,
                               centres, shifts, volumes, shape_model, shape_type,
                               selected_idx=None, swap_shift=False,
-                              dict_thresholds={'centre': 30, 'shift': 15,
-                                               'volume': 0.05, 'centre_init': 50}):
+                              dict_thresholds=RG2SP_THRESHOLDS):
     """ update the shape prior for given segmentation (new centre is computed),
     set of points and shape model
 
-    :param [[int]] segm_binary:
-    :param [(int, int)] slic_points:
-    :param [[float]] shape_model:
+    :param lut_shape_cost: look-up-table for shape cost for GC
+    :param nadarray slic: superpixel segmentation
+    :param [[int, int]] points: subsample space, points = superpixel centres
+    :param [int] labels: labels for points to be assigned to an object
+    :param [[int, int]] init_centres: initial centre position for compute
+        center shift during the iteretions
+    :param [[int, int]] centres: actual centre postion
+    :param [int] shifts: orientation for each region / object
+    :param [int] volumes: size / volume for each region
+    :param shape_model: represent the shape prior and histograms
+    :param str shape_type: type or shape model
+    :param [int] selected_idx: selected object for update
+    :param bool swap_shift: allow swapping orientation by 90 degree,
+        try to get out from local optima
+    :param {str: ...} dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
     """
     if shape_type == 'cdf':
         return compute_update_shape_costs_points_table_cdf(
-            lut_shape_cost, points, labels, init_centres, centres, shifts, volumes,
-            shape_model, selected_idx, swap_shift, dict_thresholds)
+            lut_shape_cost, points, labels, init_centres, centres, shifts,
+            volumes, shape_model, selected_idx, swap_shift, dict_thresholds)
     elif shape_type == 'set_cdfs':
         # select closest by distance and use cdf
         return compute_update_shape_costs_points_close_mean_cdf(
@@ -942,10 +1010,10 @@ def update_shape_costs_points(lut_shape_cost, slic, points, labels, init_centres
 def compute_pairwise_penalty(edges, labels, prob_bg_fg=0.05, prob_fg1_fg2=0.01):
     """ compute cost of neighboring labels pionts
 
-    :param [(int, int)] edges:
-    :param [int] labels:
-    :param float prob_bg_fg:
-    :param float prob_fg1_fg2:
+    :param [(int, int)] edges: graph edges, connectivity
+    :param [int] labels: labels for vertexes
+    :param float prob_bg_fg: penalty between background and foreground
+    :param float prob_fg1_fg2: penaly between two different foreground classes
     :return:
 
     >>> edges = np.array([[0, 1], [1, 2], [0, 3], [2, 3], [2, 4]])
@@ -962,13 +1030,16 @@ def compute_pairwise_penalty(edges, labels, prob_bg_fg=0.05, prob_fg1_fg2=0.01):
     return costs
 
 
-def get_neighboring_candidates(slic_neighbours, labels, object_idx, use_other_obj=True):
-    """
+def get_neighboring_candidates(slic_neighbours, labels, object_idx,
+                               use_other_obj=True):
+    """ get neighboring candidates from background
+    and optionally also from foreground if it is allowed
 
-    :param slic_neighbours:
-    :param labels:
-    :param object_idx:
-    :return:
+    :param [[int]] slic_neighbours: list of neighboring superpixel for each one
+    :param [int] labels: labels for each superpixel
+    :param int object_idx:
+    :param bool use_other_obj: allowing use another foreground object
+    :return [int]:
 
     >>> neighbours = [[1], [0, 2, 3], [1, 3], [1, 2]]
     >>> labels = np.array([0, 0, 1, 1])
@@ -999,28 +1070,29 @@ def compute_energy(labels, lut_data_cost, lut_shape_cost, slic_weights, edges,
     return energy
 
 
-def region_growing_shape_slic_greedy(segm, slic, centres, shape_model, shape_type='cdf',
-                                     prob_fg_labels=[0.1, 0.9],
+def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
+                                     shape_type='cdf', prob_fg_labels=(.1, .9),
                                      coef_shape=1, coef_pairwise=1,
-                                     prob_label_trans=[0.1, 0.01],
+                                     prob_label_trans=(.1, .01),
                                      allow_obj_swap=True, greedy_tol=1e-3,
-                                     dict_thresholds=DEFAULT_RG2SP_THRESHOLDS,
-                                     nb_iter=9999, dict_debug_history=None):
+                                     dict_thresholds=RG2SP_THRESHOLDS,
+                                     nb_iter=999, dict_debug_history=None):
     """ Region growing method with given shape prior on pre-segmented images
+    it uses the Greedy strategy and set some stopping criterion
 
-
-    :param [[int]] segm:
-    :param [[int]] slic:
-    :param [(int, int)] centres:
-    :param shape_model:
-    :param str shape_type:
-    :param [float] prob_fg_labels:
-    :param float coef_shape:
-    :param float coef_pairwise:
+    :param ndarray segm: initial structure segmentation
+    :param ndarray slic: superpixel segmentation
+    :param [(int, int)] centres: list of initial centres
+    :param shape_model: represent the shape prior and histograms
+    :param str shape_type: identification of used shape model
+    :param [float] prob_fg_labels: weight for particular label belongs to FG
+    :param float coef_shape: weight for shape prior
+    :param float coef_pairwise: setting for pairwise cost
     :param (float, float) prob_label_trans:
-    :param float centre_shift_thr:
-    :param bool allow_obj_swap:
-    :param int nb_iter:
+    :param bool allow_obj_swap: allow swapping foreground object labels
+    :param float greedy_tol: stoping criterion - energy change between inters
+    :param int nb_iter: maximal number of iterations
+    :param {str: ...} dict_thresholds: set some threshold updating shape prior
     :return:
 
     >>> h, w, step = 15, 20, 2
@@ -1043,8 +1115,8 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model, shape_typ
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> slic = np.zeros((h, w), dtype=int)
-    >>> for i in range(int(h / step)):
-    ...     for j in range(int(w / step)):
+    >>> for i in range(int(np.ceil(h / float(step)))):
+    ...     for j in range(int(np.ceil(w / float(step)))):
     ...         val = i * (w / step) + j
     ...         i_step, j_step = int(i * step), int(j * step)
     ...         slic[i_step:int(i_step + step), j_step:int(j_step + step)] = val
@@ -1056,8 +1128,8 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model, shape_typ
     >>> labels_prob = [0.1, 0.9]
     >>> dict_debug = {}
     >>> labels = region_growing_shape_slic_greedy(segm, slic, centres,
-    ...                      (None, chist), prob_fg_labels=labels_prob, coef_pairwise=0,
-    ...                      dict_debug_history=dict_debug)
+    ...                      (None, chist), prob_fg_labels=labels_prob,
+    ...                      coef_pairwise=0, dict_debug_history=dict_debug)
     >>> np.round(dict_debug['energy'], 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [396.7, 324.6, 306.7, 288.8, 271.9, 237.7, 204.1, 187.9, 172.8, 158.5,
     138.7, 122.0, 106.2, 81.1, 81.1]
@@ -1078,8 +1150,8 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model, shape_typ
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> labels = region_growing_shape_slic_greedy(segm, slic, centres,
-    ...                      (None, chist), prob_fg_labels=labels_prob, coef_pairwise=1,
-    ...                      dict_debug_history=dict_debug)
+    ...                      (None, chist), prob_fg_labels=labels_prob,
+    ...                      coef_pairwise=1, dict_debug_history=dict_debug)
     >>> np.round(dict_debug['energy'], 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [405.9, 352.2, 334.3, 316.5, 299.5, 282.7, 270.0, 254.0, 237.7, 226.0,
     209.5, 193.6, 171.9, 152.0, 122.5, 122.5]
@@ -1103,7 +1175,8 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model, shape_typ
     >>> chist = np.zeros((16, 9))
     >>> chist[:, :5] = 1.
     >>> labels = region_growing_shape_slic_greedy(segm, slic, [(6.5, 9)],
-    ...                      (None, chist), prob_fg_labels=labels_prob, coef_shape=10, coef_pairwise=1,
+    ...                      (None, chist), prob_fg_labels=labels_prob,
+    ...                      coef_shape=10, coef_pairwise=1,
     ...                      dict_debug_history=dict_debug)
     >>> np.round(dict_debug['energy'], 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [7506.5, 7119.7, 6714.5, 6327.8, 5719.1, 5719.1]
@@ -1126,20 +1199,21 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model, shape_typ
     """
     assert segm.shape == slic.shape, 'dims of segm %s and slic %s not match' \
                                      % (repr(segm.shape),  repr(slic.shape))
-    slic_points = tl_spx.superpixel_centers(slic)
+    slic_points = seg_spx.superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
-    label_hist = tl_lb.histogram_regions_labels_norm(slic, segm)
+    label_hist = seg_lb.histogram_regions_labels_norm(slic, segm)
     slic_labels = np.argmax(label_hist, axis=1)
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
-    _, edges = tl_spx.make_graph_segm_connect2d_conn4(slic)
-    slic_neighbours = tl_spx.get_neighboring_segments(edges)
+    _, edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+    slic_neighbours = seg_spx.get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
     prob_fg_labels = np.array(prob_fg_labels)
 
-    lut_data_cost, labels = compute_data_costs_points(slic, slic_labels, init_centres,
-                                                      labels, prob_fg_labels)
+    lut_data_cost, labels = compute_data_costs_points(slic, slic_labels,
+                                                      init_centres, labels,
+                                                      prob_fg_labels)
 
     lut_shape_cost = np.empty((len(labels), len(init_centres) + 1))
     lut_shape_cost[:, 0] = - np.log(1 - prob_fg_labels[slic_labels])
@@ -1157,7 +1231,7 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model, shape_typ
                                    'lut_data_cost': lut_data_cost.copy(),
                                    'lut_shape_cost': []})
 
-    for it in range(nb_iter):
+    for _ in range(nb_iter):
         energy = compute_energy(labels, lut_data_cost, lut_shape_cost,
             slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
         if dict_debug_history is not None:
@@ -1170,7 +1244,8 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model, shape_typ
         # todo, do it as only update
         candidates, objs_idx = [], []
         for i in range(len(centres)):
-            near = get_neighboring_candidates(slic_neighbours, labels, i + 1, allow_obj_swap)
+            near = get_neighboring_candidates(slic_neighbours, labels, i + 1,
+                                              allow_obj_swap)
             candidates += near
             objs_idx += [i + 1] * len(near)
 
@@ -1186,11 +1261,14 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model, shape_typ
         for idx, lb in zip(objs_idx, candidates):
             labels_new = labels.copy()
             labels_new[lb] = idx
-            energy_new = compute_energy(labels_new, lut_data_cost, lut_shape_cost,
-                slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
+            energy_new = compute_energy(labels_new, lut_data_cost,
+                                        lut_shape_cost, slic_weights, edges,
+                                        coef_shape, coef_pairwise,
+                                        prob_label_trans)
             energy_change = energy - energy_new
             candidates_scores.append((idx, lb, energy_change))
-        candidates_scores = sorted(candidates_scores, key=lambda x: x[2], reverse=True)
+        candidates_scores = sorted(candidates_scores, key=lambda x: x[2],
+                                   reverse=True)
 
         if len(candidates_scores) == 0 or candidates_scores[0][2] < 0:
             # break
@@ -1216,17 +1294,25 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     """ for boundary get connected points in BG and FG
     construct graph and set potentials and hard connect BG and FG in unary
 
-    :param candidates:
-    :param slic_neighbours:
-    :param slic_weights:
-    :param labels:
-    :param nb_centres:
-    :param lut_data_cost:
-    :param lut_shape_cost:
-    :param coef_shape:
+    :param [int] candidates: list of candidates, neighbours of actual objects
+    :param [[int]] slic_neighbours: list of neighboring superpixel for each one
+    :param [float] slic_weights: weight for each superpixel
+    :param [int] labels: labels for each superpixel
+    :param int nb_centres: number of centres - classes
+    :param ndarray lut_data_cost: look-up-table for data cost for each
+        object (class) with superpixel as first index
+    :param ndarray lut_shape_cost: look-up-table for shape cost for each
+        object (class) with superpixel as first index
+    :param float coef_shape: weight for shape priors
     :param prob_label_trans:
     :return:
     """
+    assert np.max(candidates) < len(slic_points), \
+        'max candidate idx: %d for %d centres' \
+        % (np.max(candidates), len(slic_points))
+    assert max(max(l) for l in slic_neighbours) < len(slic_points), \
+        'max slic neighbours idx: %d for %d centres' \
+        % (max(max(l) for l in slic_neighbours), len(slic_points))
     unary = np.zeros((len(candidates), nb_centres + 1))
     vertexes, edges = list(candidates), []
     for i, idx in enumerate(candidates):
@@ -1237,16 +1323,18 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
         for lb in range(unary.shape[-1]):
             if lb not in near_labels:
                 unary[i, lb] = GC_REPLACE_INF
-        for j in near_idx:
-            if j not in candidates:
-                vertexes.append(j)
+        for n_idx in near_idx:
+            if n_idx not in vertexes:
+                vertexes.append(n_idx)
                 u = np.ones(unary.shape[-1]) * GC_REPLACE_INF
-                u[labels[j]] = 0
+                u[labels[n_idx]] = 0
                 unary = np.vstack((unary, u))
-            edges.append((i, vertexes.index(j)))
+            j = vertexes.index(n_idx)
+            edges.append((i, j))
 
-    spatial = tl_gc.compute_spatial_dist(slic_points, edges, relative=True)
-    edge_weights = np.ones(len(edges)) / spatial
+    spatial_dist = seg_gc.compute_spatial_dist(slic_points[vertexes], edges,
+                                               relative=True)
+    edge_weights = np.ones(len(edges)) / spatial_dist
 
     pairwise = np.empty((unary.shape[-1], unary.shape[-1]))
     pairwise[:, :] = - np.log(prob_label_trans[0])
@@ -1257,14 +1345,30 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     return vertexes, np.array(edges), edge_weights, unary, pairwise
 
 
-def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model, shape_type='cdf',
-                                       prob_fg_labels=[0.1, 0.9],
+def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
+                                       shape_type='cdf',
+                                       prob_fg_labels=(0.1, 0.9),
                                        coef_shape=1, coef_pairwise=2,
-                                       prob_label_trans=[0.1, 0.03],
+                                       prob_label_trans=(0.1, 0.03),
                                        optim_global=True, allow_obj_swap=True,
-                                       dict_thresholds=DEFAULT_RG2SP_THRESHOLDS,
-                                       nb_iter=9999, dict_debug_history=None):
+                                       dict_thresholds=RG2SP_THRESHOLDS,
+                                       nb_iter=999, dict_debug_history=None):
     """ Region growing method with given shape prior on pre-segmented images
+    it uses the GraphCut strategy on neigbouring superpixels
+
+    :param ndarray segm: initial structure segmentation
+    :param ndarray slic: superpixel segmentation
+    :param [(int, int)] centres: list of initial centres
+    :param shape_model: represent the shape prior and histograms
+    :param str shape_type: identification of used shape model
+    :param [float] prob_fg_labels: weight for particular label belongs to FG
+    :param float coef_shape: weight for shape prior
+    :param float coef_pairwise: setting for pairwise cost
+    :param (float, float) prob_label_trans:
+    :param bool optim_global: optimise the GC as global or per object
+    :param bool allow_obj_swap: allow swapping foreground object labels
+    :param int nb_iter: maximal number of iterations
+    :param {str: ...} dict_thresholds: set some threshold updating shape prior
 
     >>> h, w, step = 15, 20, 2
     >>> segm = np.zeros((h, w), dtype=int)
@@ -1286,8 +1390,8 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model, shape_t
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> slic = np.zeros((h, w), dtype=int)
-    >>> for i in range(int(h / step)):
-    ...     for j in range(int(w / step)):
+    >>> for i in range(int(np.ceil(h / float(step)))):
+    ...     for j in range(int(np.ceil(w / float(step)))):
     ...         val = i * (w / step) + j
     ...         i_step, j_step = int(i * step), int(j * step)
     ...         slic[i_step:int(i_step + step), j_step:int(j_step + step)] = val
@@ -1299,7 +1403,8 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model, shape_t
     >>> labels_prob = [0.1, 0.9]
     >>> dict_debug = {}
     >>> labels = region_growing_shape_slic_graphcut(segm, slic, centres,
-    ...                      (None, chist), prob_fg_labels=labels_prob, coef_pairwise=0,
+    ...                      (None, chist), prob_fg_labels=labels_prob,
+    ...                      coef_pairwise=0,
     ...                      dict_debug_history=dict_debug)
     >>> np.round(dict_debug['energy'], 1).tolist()
     [396.7, 324.6, 205.9, 110.6, 81.1, 81.1]
@@ -1320,7 +1425,8 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model, shape_t
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> labels = region_growing_shape_slic_graphcut(segm, slic, centres,
-    ...                      (None, chist), prob_fg_labels=labels_prob, coef_pairwise=2,
+    ...                      (None, chist), prob_fg_labels=labels_prob,
+    ...                      coef_pairwise=2,
     ...                      dict_debug_history=dict_debug)
     >>> np.round(dict_debug['energy'], 1).tolist()
     [415.2, 379.8, 288.8, 193.5, 164.0, 164.0]
@@ -1345,7 +1451,8 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model, shape_t
     >>> chist[:, :5] = 1.
     >>> dict_debug = {}
     >>> labels = region_growing_shape_slic_graphcut(segm, slic, [(6.5, 9)],
-    ...                      (None, chist), prob_fg_labels=labels_prob, coef_shape=10., coef_pairwise=1,
+    ...                      (None, chist), prob_fg_labels=labels_prob,
+    ...                      coef_shape=10., coef_pairwise=1,
     ...                      dict_debug_history=dict_debug)
     >>> np.round(dict_debug['energy'], 1).tolist()
     [7506.5, 7119.7, 6327.8, 5719.1, 5719.1]
@@ -1368,15 +1475,15 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model, shape_t
     """
     assert segm.shape == slic.shape, 'dims of segm %s and slic %s not match' \
                                      % (repr(segm.shape), repr(slic.shape))
-    slic_points = tl_spx.superpixel_centers(slic)
+    slic_points = seg_spx.superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
-    label_hist = tl_lb.histogram_regions_labels_norm(slic, segm)
+    label_hist = seg_lb.histogram_regions_labels_norm(slic, segm)
     slic_labels = np.argmax(label_hist, axis=1)
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
-    _, edges = tl_spx.make_graph_segm_connect2d_conn4(slic)
-    slic_neighbours = tl_spx.get_neighboring_segments(edges)
+    _, edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+    slic_neighbours = seg_spx.get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
     prob_fg_labels = np.array(prob_fg_labels)
     labels_history = [labels.copy()]
@@ -1400,7 +1507,7 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model, shape_t
                                    'lut_data_cost': lut_data_cost.copy(),
                                    'lut_shape_cost': []})
 
-    for it in range(nb_iter):
+    for _ in range(nb_iter):
         energy = compute_energy(labels, lut_data_cost, lut_shape_cost,
             slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
         if dict_debug_history is not None:
@@ -1409,6 +1516,8 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model, shape_t
             dict_debug_history['centres'].append(centres.copy())
             dict_debug_history['shifts'].append(shifts.tolist())
             dict_debug_history['lut_shape_cost'].append(lut_shape_cost.copy())
+
+        labels_gc = labels.copy()
 
         if optim_global:
             candidates, labels_gc = [], labels.copy()
@@ -1432,7 +1541,6 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model, shape_t
             labels_gc[gc_vestexes] = graph_labels
 
         else:
-            labels_gc = labels.copy()
             for i in range(len(centres)):
                 candidates = get_neighboring_candidates(slic_neighbours,labels,
                                                         i + 1, allow_obj_swap)

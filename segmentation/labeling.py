@@ -1,15 +1,14 @@
 """
+Framework for labeling
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
-import warnings
 
 import numpy as np
-# from collections import Counter
 from scipy import ndimage
-# from numba import jit, autojit
+import skimage.segmentation as sk_segm
 
 
 def contour_binary_map(seg, label=1, include_boundary=False):
@@ -75,7 +74,7 @@ def contour_coords(seg, label=1, include_boundary=False):
     >>> contour_coords(img)
     [[1, 2], [1, 3], [1, 4], [2, 2], [3, 2], [4, 2], [4, 3], [4, 4]]
     >>> contour_coords(img, include_boundary=True)  #doctest: +NORMALIZE_WHITESPACE
-    [[1, 2], [1, 3], [1, 4], [2, 2], [3, 2], [4, 2], [4, 3], [4, 4], \
+    [[1, 2], [1, 3], [1, 4], [2, 2], [3, 2], [4, 2], [4, 3], [4, 4],
      [1, 5], [2, 5], [3, 5], [4, 5]]
     """
     w, h = seg.shape[:2]
@@ -133,7 +132,7 @@ def compute_distance_map(seg, label=1):
 
     :param ndarray seg: integer images, typically a segmentation
     :param int label: selected singe label in segmentation
-    :return:
+    :return ndarray:
 
     >>> img = np.zeros((6, 6), dtype=int)
     >>> img[1:5, 2:] = 1
@@ -154,18 +153,18 @@ def compute_distance_map(seg, label=1):
     return dist
 
 
-def segm_labels_assignemet(segm, segm_gt):
-    """
+def segm_labels_assignment(segm, segm_gt):
+    """ create labels assign to the particular regions
 
-    :param seg:
-    :param segm_gt:
+    :param ndarray seg: input segmentation
+    :param ndarray segm_gt: true segmentation
     :return:
 
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3 + [3] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3 + [7] * 3] * 4)
     >>> segm = np.zeros(slic.shape, dtype=int)
     >>> segm[4:, 6:] = 1
-    >>> segm_labels_assignemet(slic, segm)  #doctest: +NORMALIZE_WHITESPACE
+    >>> segm_labels_assignment(slic, segm)  #doctest: +NORMALIZE_WHITESPACE
     {0: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
      1: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
      2: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -190,11 +189,12 @@ def segm_labels_assignemet(segm, segm_gt):
 
 # @autojit
 def histogram_regions_labels_counts(slic, segm):
-    """
+    """ histogram or overlaping region between two segmentations,
+    the typical usage is label superpixel from annotation
 
     :param ndarray slic: input superpixel segmenatation
     :param ndarray segm: reference segmentation
-    :return:
+    :return ndarray:
 
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3] * 4)
@@ -223,11 +223,12 @@ def histogram_regions_labels_counts(slic, segm):
 
 
 def histogram_regions_labels_norm(slic, segm):
-    """
+    """ nosmalised histogram or overlaping region between two segmentations,
+    the typical usage is label superpixel from annotation - relative ouverlap
 
     :param ndarray slic: input superpixel segmenatation
     :param ndarray segm: reference segmentation
-    :return:
+    :return ndarray:
 
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3] * 4)
@@ -257,7 +258,7 @@ def histogram_regions_labels_norm(slic, segm):
 #     :param seg_pipe: np.array
 #     :return: np.array<max_regions, max_label>
 #     """
-#     label_hist = segm_labels_assignemet(slic, seg_pipe)
+#     label_hist = segm_labels_assignment(slic, seg_pipe)
 #     idx_max = slic.max()
 #     label_max = seg_pipe.max()
 #     matrix_hist = np.zeros((idx_max + 1, label_max + 1))
@@ -268,19 +269,19 @@ def histogram_regions_labels_norm(slic, segm):
 #     return matrix_hist
 
 
-def assigne_label_by_threshold(dict_label_hist, thresh=0.75):
-    """
+def assign_label_by_threshold(dict_label_hist, thresh=0.75):
+    """ assign label if the purity reach certain threshold
 
-    :param dict_lb_hist:
-    :param thresh:
-    :return:
+    :param {int: [int]} dict_lb_hist: dictionary of label histogram
+    :param float thresh: threshold for region purity
+    :return [int]: resulting LookUpTable
 
     >>> slic = np.array([[0] * 4 + [1] * 3 + [2] * 3 + [3] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3 + [7] * 4] * 4)
     >>> segm = np.zeros(slic.shape, dtype=int)
     >>> segm[4:, 6:] = 1
-    >>> lb_hist = segm_labels_assignemet(slic, segm)
-    >>> assigne_label_by_threshold(lb_hist)
+    >>> lb_hist = segm_labels_assignment(slic, segm)
+    >>> assign_label_by_threshold(lb_hist)
     array([0, 0, 0, 0, 0, 0, 1, 1])
     """
     lut = np.zeros(max(dict_label_hist.keys()) + 1, dtype=int) - 1
@@ -295,18 +296,18 @@ def assigne_label_by_threshold(dict_label_hist, thresh=0.75):
     return lut
 
 
-def assigne_label_by_max(dict_label_hist):
-    """
+def assign_label_by_max(dict_label_hist):
+    """ assign label according maximal label count in particular region
 
-    :param label_hist:
-    :return:
+    :param {int: [int]} dict_lb_hist: dictionary of label histogram
+    :return [int]: resulting LookUpTable
 
     >>> slic = np.array([[0] * 4 + [1] * 3 + [2] * 3 + [3] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3 + [7] * 4] * 4)
     >>> segm = np.zeros(slic.shape, dtype=int)
     >>> segm[4:, 6:] = 1
-    >>> lb_hist = segm_labels_assignemet(slic, segm)
-    >>> assigne_label_by_max(lb_hist)
+    >>> lb_hist = segm_labels_assignment(slic, segm)
+    >>> assign_label_by_max(lb_hist)
     array([0, 0, 0, 0, 0, 0, 1, 1])
     """
     lut = np.zeros(max(dict_label_hist.keys()) + 1, dtype=int) - 1
@@ -318,9 +319,10 @@ def assigne_label_by_max(dict_label_hist):
 
 
 def convert_segms_2_list(segms):
-    """
+    """ convert segmentation to a list tha can be simpy user for standard
+    evaluation (classification or clustering metrics)
 
-    :param ndarray segms:
+    :param [ndarray] segms: list of segmentations
     :return [int]:
 
     >>> seg_pipe = np.ones((2, 3), dtype=int)
@@ -335,10 +337,10 @@ def mask_segm_labels(im_labeling, labels, mask_init=None):
     """ with given labels image and list of desired labels it create mask finding
     all labels in the list (perform logical or on image with a list of labels)
 
-    :param im_labeling: np.array<height, width> input labeling
-    :param labels: [int] list of wanted labels to be detected in image
-    :param mask_init: np.array<height, width> initial bool mask on the beginning
-    :return: np.array<height, width> bool mask
+    :param ndarray im_labeling: np.array<height, width> input labeling
+    :param [int] labels: list of wanted labels to be detected in image
+    :param ndarray mask_init: np.array<height, width> initial bool mask on the beginning
+    :return ndarray: np.array<height, width> bool mask
     """
     if mask_init is None:
         mask = np.full(im_labeling.shape, False, dtype=bool)
@@ -396,9 +398,9 @@ def relabel_by_dict(labels, dict_labels):
 
 
 def merge_probab_labeling_2d(proba, dict_labels):
-    """
+    """ merging probability labeling
 
-    :param proba:
+    :param ndarray proba: probabilities
     :param {int: [int]} dict_labels:
     :return:
 
@@ -422,3 +424,208 @@ def merge_probab_labeling_2d(proba, dict_labels):
         lbs_old = dict_labels[lb_new]
         proba_new[:, :, lb_new] = np.sum(proba[:, :, lbs_old], axis=-1)
     return proba_new
+
+
+def compute_labels_overlap_matrix(seg1, seg2):
+    """ compute overlap between tho segmentation atlasess) with same sizes
+
+    :param ndarray seg1: np.array<height, width>
+    :param ndarray seg2: np.array<height, width>
+    :return ndarray: np.array<height, width>
+
+    >>> seg1 = np.zeros((7, 15), dtype=int)
+    >>> seg1[1:4, 5:10] = 3
+    >>> seg1[5:7, 6:13] = 2
+    >>> seg2 = np.zeros((7, 15), dtype=int)
+    >>> seg2[2:5, 7:12] = 1
+    >>> seg2[4:7, 7:14] = 3
+    >>> compute_labels_overlap_matrix(seg1, seg1)
+    array([[76,  0,  0,  0],
+           [ 0,  0,  0,  0],
+           [ 0,  0, 14,  0],
+           [ 0,  0,  0, 15]])
+    >>> compute_labels_overlap_matrix(seg1, seg2)
+    array([[63,  4,  0,  9],
+           [ 0,  0,  0,  0],
+           [ 2,  0,  0, 12],
+           [ 9,  6,  0,  0]])
+    """
+    logging.debug('computing overlap of two seg_pipe of shapes %s <-> %s',
+                  repr(seg1.shape), repr(seg2.shape))
+    assert np.array_equal(seg1.shape, seg2.shape)
+    maxims = [np.max(seg1) + 1, np.max(seg2) + 1]
+    overlap = np.zeros(maxims, dtype=int)
+    for i in range(seg1.shape[0]):
+        for j in range(seg1.shape[1]):
+            lb1, lb2 = seg1[i, j], seg2[i, j]
+            overlap[lb1, lb2] += 1
+    # logging.debug(res)
+    return overlap
+
+
+def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
+    """ relabel the second segmentation cu that maximise relative overlap
+    for each pattern (object), the relation among patterns is 1-1
+    NOTE: it skips background class - 0
+
+    :param ndarray seg_ref: np.array<height, width>
+    :param ndarray seg_relabel: np.array<height, width>
+    :return ndarray: np.array<height, width>
+
+    >>> atlas1 = np.zeros((7, 15), dtype=int)
+    >>> atlas1[1:4, 5:10] = 1
+    >>> atlas1[5:7, 3:13] = 2
+    >>> atlas2 = np.zeros((7, 15), dtype=int)
+    >>> atlas2[0:3, 7:12] = 1
+    >>> atlas2[3:7, 1:7] = 2
+    >>> atlas2[4:7, 7:14] = 3
+    >>> atlas2[:2, :3] = 5
+    >>> relabel_max_overlap_unique(atlas1, atlas2, keep_bg=True)
+    array([[5, 5, 5, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [5, 5, 5, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [0, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
+           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
+           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0]])
+    >>> relabel_max_overlap_unique(atlas2, atlas1, keep_bg=True)
+    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],
+           [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0]])
+    >>> relabel_max_overlap_unique(atlas1, atlas2, keep_bg=False)
+    array([[5, 5, 5, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [5, 5, 5, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [0, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
+           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
+           [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0]])
+    """
+    assert seg_ref.shape == seg_relabel.shape
+    overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
+
+    lut = [-1] * (np.max(seg_relabel) + 1)
+    if keep_bg:  # keep the background label
+        lut[0] = 0
+        overlap[0, :] = 0
+        overlap[:, 0] = 0
+    for i in range(max(overlap.shape) + 1):
+        if np.sum(overlap) == 0: break
+        lb_ref, lb_est = np.argwhere(overlap.max() == overlap)[0]
+        lut[lb_est] = lb_ref
+        overlap[lb_ref, :] = 0
+        overlap[:, lb_est] = 0
+
+    for i, lb in enumerate(lut):
+        if lb == -1 and i not in lut:
+            lut[i] = i
+    for i, lb in enumerate(lut):
+        if lb > -1: continue
+        for j in range(len(lut)):
+            if j not in lut:
+                lut[i] = j
+
+    seg_new = np.array(lut)[seg_relabel]
+    return seg_new
+
+
+def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
+    """ relabel the second segmentation cu that maximise relative overlap
+    for each pattern (object), if one pattern in reference atlas is likely
+    composed from multiple patterns in relabel atlas, it merge them
+    NOTE: it skips background class - 0
+
+    :param ndarray seg_ref: np.array<height, width>
+    :param ndarray seg_relabel: np.array<height, width>
+    :param bool keep_bg: the label 0 holds
+    :return ndarray: np.array<height, width>
+
+    >>> atlas1 = np.zeros((7, 15), dtype=int)
+    >>> atlas1[1:4, 5:10] = 1
+    >>> atlas1[5:7, 3:13] = 2
+    >>> atlas2 = np.zeros((7, 15), dtype=int)
+    >>> atlas2[0:3, 7:12] = 1
+    >>> atlas2[3:7, 1:7] = 2
+    >>> atlas2[4:7, 7:14] = 3
+    >>> atlas2[:2, :3] = 5
+    >>> relabel_max_overlap_merge(atlas1, atlas2, keep_bg=True)
+    array([[1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
+           [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0],
+           [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0]])
+    >>> relabel_max_overlap_merge(atlas2, atlas1, keep_bg=True)
+    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0],
+           [0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0]])
+    >>> relabel_max_overlap_merge(atlas1, atlas2, keep_bg=False)
+    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0],
+           [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0],
+           [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0]])
+    """
+    assert seg_ref.shape == seg_relabel.shape
+    overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
+    # ref_ptn_size = np.bincount(seg_ref.ravel())
+    # overlap = overlap.astype(float) / np.tile(ref_ptn_size, (overlap.shape[1], 1)).T
+    # overlap = np.nan_to_num(overlap)
+    max_axis = 1 if overlap.shape[0] > overlap.shape[1] else 0
+    if keep_bg:
+        id_max = np.argmax(overlap[1:, 1:], axis=max_axis) + 1
+        lut = np.array([0] + id_max.tolist())
+    else:
+        lut = np.argmax(overlap, axis=max_axis)
+    # in case there is no overlap
+    ptn_sum = np.sum(overlap, axis=0)
+    if 0 in ptn_sum:
+        lut[ptn_sum == 0] = np.arange(len(lut))[ptn_sum == 0]
+    seg_new = lut[seg_relabel]
+    return seg_new
+
+
+def compute_boundary_distances(segm_ref, segm):
+    """ compute distances among boundaries of two segmentation
+
+    :param ndarray segm_ref:
+    :param ndarray segm:
+    :return ndarray:
+
+    >>> segm_ref = np.zeros((6, 10), dtype=int)
+    >>> segm_ref[3:4, 4:5] = 1
+    >>> segm = np.zeros((6, 10), dtype=int)
+    >>> segm[:, 2:9] = 1
+    >>> pts, dist = compute_boundary_distances(segm_ref, segm)
+    >>> pts
+    array([[2, 4],
+           [3, 3],
+           [3, 4],
+           [3, 5],
+           [4, 4]])
+    >>> dist.tolist()
+    [2.0, 1.0, 2.0, 3.0, 2.0]
+    """
+    assert segm_ref.shape == segm.shape
+    grid_y, grid_x = np.meshgrid(range(segm_ref.shape[1]),
+                                 range(segm_ref.shape[0]))
+    segr_boundary = sk_segm.find_boundaries(segm_ref, mode='thick')
+    points = np.array([grid_x[segr_boundary].ravel(),
+                            grid_y[segr_boundary].ravel()]).T
+    segm_boundary = sk_segm.find_boundaries(segm, mode='thick')
+    segm_distance = ndimage.distance_transform_edt(~segm_boundary)
+    dist = segm_distance[segr_boundary].ravel()
+
+    assert len(points) == len(dist)
+    return points, dist
