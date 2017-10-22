@@ -141,7 +141,7 @@ def arg_parse_params(params=SEGM_PARAMS):
                         help='type of image to be loaded')
     parser.add_argument('--nb_classes', type=int, required=False,
                         help='number of classes for segmentation',
-                        default=params['nb_classes'])
+                        default=params.get('nb_classes', 2))
     parser.add_argument('--nb_jobs', type=int, required=False,
                         default=NB_THREADS,
                         help='number of processes in parallel')

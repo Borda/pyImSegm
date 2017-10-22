@@ -199,17 +199,18 @@ def histogram_regions_labels_counts(slic, segm):
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3] * 4)
     >>> segm = np.zeros(slic.shape, dtype=int)
-    >>> segm[4:, 5:] = 1
+    >>> segm[4:, 5:] = 2
     >>> histogram_regions_labels_counts(slic, segm)
-    array([[ 12.,   0.],
-           [ 12.,   0.],
-           [ 12.,   0.],
-           [  0.,   0.],
-           [ 12.,   0.],
-           [  8.,   4.],
-           [  0.,  12.]])
+    array([[ 12.,   0.,   0.],
+           [ 12.,   0.,   0.],
+           [ 12.,   0.,   0.],
+           [  0.,   0.,   0.],
+           [ 12.,   0.,   0.],
+           [  8.,   0.,   4.],
+           [  0.,   0.,  12.]])
     """
     assert slic.shape == segm.shape, 'dimension does not agree'
+    assert np.sum(np.unique(segm) < 0) == 0, 'only positive labels are allowed'
     segm_flat = slic.ravel()
     annot_flat = segm.ravel()
     idx_max = slic.max()
@@ -223,26 +224,28 @@ def histogram_regions_labels_counts(slic, segm):
 
 
 def histogram_regions_labels_norm(slic, segm):
-    """ nosmalised histogram or overlaping region between two segmentations,
-    the typical usage is label superpixel from annotation - relative ouverlap
+    """ normalised histogram or overlapping region between two segmentation,
+    the typical usage is label superpixel from annotation - relative overlap
 
-    :param ndarray slic: input superpixel segmenatation
+    :param ndarray slic: input superpixel segmentation
     :param ndarray segm: reference segmentation
     :return ndarray:
 
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3] * 4)
     >>> segm = np.zeros(slic.shape, dtype=int)
-    >>> segm[4:, 5:] = 1
+    >>> segm[4:, 5:] = 2
     >>> histogram_regions_labels_norm(slic, segm)  # doctest: +ELLIPSIS
-    array([[ 1.        ,  0.        ],
-           [ 1.        ,  0.        ],
-           [ 1.        ,  0.        ],
-           [ 0.        ,  0.        ],
-           [ 1.        ,  0.        ],
-           [ 0.66666667,  0.33333333],
-           [ 0.        ,  1.        ]])
+    array([[ 1.        ,  0.        ,  0.        ],
+           [ 1.        ,  0.        ,  0.        ],
+           [ 1.        ,  0.        ,  0.        ],
+           [ 0.        ,  0.        ,  0.        ],
+           [ 1.        ,  0.        ,  0.        ],
+           [ 0.66666667,  0.        ,  0.33333333],
+           [ 0.        ,  0.        ,  1.        ]])
     """
+    assert slic.shape == segm.shape, 'dimension does not agree'
+    assert np.sum(np.unique(segm) < 0) == 0, 'only positive labels are allowed'
     matrix_hist = histogram_regions_labels_counts(slic, segm)
     region_sums = np.tile(np.sum(matrix_hist, axis=1),
                           (matrix_hist.shape[1], 1)).T

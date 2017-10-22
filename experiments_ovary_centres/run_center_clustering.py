@@ -30,6 +30,7 @@ import segmentation.utils.data_io as tl_io
 import segmentation.utils.experiments as tl_expt
 import segmentation.utils.drawing as tl_visu
 import run_center_candidate_training as run_train
+# import run_center_prediction as run_pred
 
 # Set experiment folders
 FOLDER_CENTER = 'centers'
@@ -39,6 +40,7 @@ LIST_SUBDIRS = [FOLDER_CENTER, FOLDER_CLUSTER_VISUAL]
 IMAGE_EXTENSIONS = ['.png', '.jpg']
 # subfigure size for visualisations
 MAX_FIGURE_SIZE = 12
+FOLDER_EXPERIMENT = 'detect-centers-predict_%s'
 
 # The asumtion is that the max distance is about 3 * sampling distance
 CLUSTER_PARAMS = {
@@ -48,9 +50,13 @@ CLUSTER_PARAMS = {
 PARAMS = run_train.CENTER_PARAMS
 PARAMS.update(CLUSTER_PARAMS)
 PARAMS.update({
+    'path_expt': os.path.join(PARAMS['path_output'],
+                              FOLDER_EXPERIMENT % PARAMS['name']),
     'path_images': os.path.join(run_train.PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(run_train.PATH_IMAGES, 'segm', '*.png'),
-    'path_centers': os.path.join(PARAMS['path_output'], 'candidates', '*.csv')
+    'path_centers': os.path.join(PARAMS['path_output'],
+                                 FOLDER_EXPERIMENT % PARAMS['name'],
+                                 'candidates', '*.csv')
 })
 
 
@@ -190,17 +196,17 @@ def main(params):
     """
     logging.info('running...')
 
-    with open(os.path.join(params['path_output'],
+    with open(os.path.join(params['path_expt'],
                            'config_clustering.json'), 'w') as fp:
         json.dump(params, fp)
 
-    tl_expt.create_subfolders(params['path_output'], LIST_SUBDIRS)
+    tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 
     list_paths = [params[k] for k in ['path_images', 'path_segms', 'path_centers']]
     df_paths = tl_io.find_files_match_names_across_dirs(list_paths)
     df_paths.columns = ['path_image', 'path_segm', 'path_points']
     df_paths.index = range(1, len(df_paths) + 1)
-    path_cover = os.path.join(params['path_output'], run_train.NAME_CSV_TRIPLES)
+    path_cover = os.path.join(params['path_expt'], run_train.NAME_CSV_TRIPLES)
     df_paths.to_csv(path_cover)
 
     logging.info('run clustering...')
@@ -208,7 +214,7 @@ def main(params):
     tqdm_bar = tqdm.tqdm(total=len(df_paths))
     if params['nb_jobs'] > 1:
         wrapper_clustering = partial(cluster_points_draw_export, params=params,
-                                     path_out=params['path_output'])
+                                     path_out=params['path_expt'])
         pool = mproc.Pool(params['nb_jobs'])
         for dict_center in pool.imap_unordered(wrapper_clustering,
                                    (dict(row) for idx, row in df_paths.iterrows())):
@@ -219,7 +225,7 @@ def main(params):
     else:
         for dict_row in (dict(row) for idx, row in df_paths.iterrows()):
             dict_center = cluster_points_draw_export(dict_row, params,
-                                                     params['path_output'])
+                                                     params['path_expt'])
             df_paths_new = df_paths_new.append(dict_center, ignore_index=True)
             tqdm_bar.update()
 

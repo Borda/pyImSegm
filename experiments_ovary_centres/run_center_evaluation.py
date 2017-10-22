@@ -4,10 +4,10 @@ The output is list of potential center candidates
 
 SAMPLE run:
 >> python run_center_evaluation.py -list none \
-    -imgs "~/Medical-drosophila/ovary_all_slices/png/*.png" \
-    -segs "results/segment_ovary_slices_selected/*.png" \
-    -centers results/detect_ovary_centers/classifier_RandForest.pkl \
-    -out ~/Medical-drosophila/RESULTS/detect_ovary_centers
+    -segs "images/drosophila_ovary_slice/segm/*.png" \
+    -imgs "images/drosophila_ovary_slice/image/*.jpg" \
+    -centers "results/detect-centers-predict_ovary/centers/*.csv" \
+    -out results/detect-centers-predict_ovary
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -58,8 +58,12 @@ PARAMS.update({
                (2, 3, 4, 5),
                (1, ), (2, ), (3, ), (4, ), (5, )],
     'path_list': '',
-    'path_centers': os.path.join(os.path.dirname(PARAMS['path_centers']), '*.csv'),
-    'path_infofile': os.path.join(run_train.PATH_IMAGES, 'info_ovary_images.txt')
+    'path_centers': os.path.join(os.path.dirname(PARAMS['path_centers']),
+                                 '*.csv'),
+    'path_infofile': os.path.join(run_train.PATH_IMAGES,
+                                  'info_ovary_images.txt'),
+    'path_expt': os.path.join(PARAMS['path_output'],
+                              run_detect.FOLDER_EXPERIMENT % PARAMS['name']),
 })
 
 NAME_CSV_TRIPLES = run_train.NAME_CSV_TRIPLES
@@ -257,14 +261,13 @@ def main(params):
     """
     logging.info('running...')
 
-    # run_train.check_pathes_patterns(paths)
-    tl_expt.set_experiment_logger(params['path_output'])
-    # tl_expt.create_subfolders(params['path_output'], LIST_SUBDIRS)
+    tl_expt.set_experiment_logger(params['path_expt'])
+    # tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
-    path_csv = os.path.join(params['path_output'], NAME_CSV_TRIPLES)
-    df_paths = run_detect.get_csv_triplets(params['path_list'],
-                                           path_csv, params['path_images'],
+    path_csv = os.path.join(params['path_expt'], NAME_CSV_TRIPLES)
+    df_paths = run_detect.get_csv_triplets(params['path_list'], path_csv,
+                                           params['path_images'],
                                            params['path_segms'],
                                            params['path_centers'], FORCE_RELOAD)
 
@@ -272,18 +275,18 @@ def main(params):
     for stage in params['stages']:
         df_eval = evaluate_detection_stage(df_eval, stage,
                                            params['path_infofile'],
-                                           params['path_output'],
+                                           params['path_expt'],
                                            params['nb_jobs'])
         if len(df_eval) > 0 and 'image' in df_eval.columns:
             df_eval.set_index('image', inplace=True)
-        df_eval.to_csv(os.path.join(params['path_output'], NAME_CSV_TRIPLES_STAT))
+        df_eval.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_STAT))
         gc.collect()
         time.sleep(1)
 
     if len(df_eval) > 0:
         df_stat = df_eval.describe().transpose()
         logging.info('STATISTIC: \n %s', repr(df_stat))
-        df_stat.to_csv(os.path.join(params['path_output'], NAME_CSV_STATISTIC))
+        df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STATISTIC))
 
     logging.info('DONE')
 

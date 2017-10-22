@@ -166,12 +166,12 @@ def visu_histogram_labels(params, dict_label_hist, fig_name=NAME_FIG_LABEL_HISTO
 
 
 def load_image_annot_compute_features_labels(idx_row, params,
-                                             show_imgs=SHOW_DEBUG_IMAGES):
+                                             show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ load image and annotation, and compute superpixel features and labels
 
     :param (int, {...}) idx_row: row from table with paths
     :param {str: ...} params: segmentation parameters
-    :param bool show_imgs: whether show debug images
+    :param bool show_debug_imgs: whether show debug images
     :return (...):
     """
     def path_out_img(params, dir_name, name):
@@ -186,7 +186,7 @@ def load_image_annot_compute_features_labels(idx_row, params,
         'individual size of image %s and seg_pipe %s for "%s" - "%s"' % \
         (repr(img.shape), repr(annot.shape), row['path_image'],
          row['path_annot'])
-    if show_imgs:
+    if show_debug_imgs:
         plt.imsave(path_out_img(params, FOLDER_IMAGE, idx_name), img,
                    cmap=plt.cm.gray)
         plt.imsave(path_out_img(params, FOLDER_ANNOT, idx_name), annot)
@@ -198,7 +198,7 @@ def load_image_annot_compute_features_labels(idx_row, params,
                                       rltv_compact=params['slic_regul'])
     img = seg_pipe.convert_img_color_space(img, params.get('clr_space', 'rgb'))
     logging.debug('computed SLIC with %i labels', slic.max())
-    if show_imgs:
+    if show_debug_imgs:
         img_slic = segmentation.mark_boundaries(img / float(img.max()), slic,
                                                 color=(1, 0, 0), mode='subpixel')
         plt.imsave(path_out_img(params, FOLDER_SLIC, idx_name), img_slic)
@@ -208,19 +208,19 @@ def load_image_annot_compute_features_labels(idx_row, params,
     label_hist = seg_label.histogram_regions_labels_norm(slic, annot)
     labels = np.argmax(label_hist, axis=1)
     slic_annot = labels[slic]
-    if show_imgs:
+    if show_debug_imgs:
         plt.imsave(path_out_img(params, FOLDER_SLIC_ANNOT, idx_name), slic_annot)
     return idx_name, img, annot, slic, features, labels, label_hist, ft_names
 
 
 def dataset_load_images_annot_compute_features(params,
-                                               show_imgs=SHOW_DEBUG_IMAGES):
+                                               show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ for all datasets perform the following steps:
     1) load image and annotation
     2) compute superpixel features and labels
 
     :param {str: ...} params: segmentation parameters
-    :param bool show_imgs: whether show debug images
+    :param bool show_debug_imgs: whether show debug images
     :return ({str: ndarray} * 6, [str]):
     """
     dict_images, dict_annots = dict(), dict()
@@ -234,7 +234,7 @@ def dataset_load_images_annot_compute_features(params,
         'missing required columns in loaded csv file'
     tqdm_bar = tqdm.tqdm(total=len(df_paths), desc='extract training data')
     wrapper_load_compute = partial(load_image_annot_compute_features_labels,
-                                   params=params, show_imgs=show_imgs)
+                                   params=params, show_debug_imgs=show_debug_imgs)
     mproc_pool = mproc.Pool(params['nb_jobs'])
     for name, img, annot, slic, features, labels, label_hist, feature_names \
             in mproc_pool.imap_unordered(wrapper_load_compute, df_paths.iterrows()):
@@ -301,7 +301,8 @@ def export_draw_image_segm_contour(img, segm, path_out, name, posix=''):
     plt.close(fig)
 
 
-def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None):
+def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
+                  show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ perform image segmentation on input image with given paramters
     and trained classifier, and save results
 
@@ -366,9 +367,10 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None):
         # io.imsave(path_img, segm_gc)
 
         if path_visu is not None and os.path.isdir(path_visu):
-            export_draw_image_segm_contour(img, segm_gc, path_visu, idx_name, '_gc')
+            export_draw_image_segm_contour(img, segm_gc, path_visu,
+                                           idx_name, '_gc')
 
-            if SHOW_DEBUG_IMAGES:
+            if show_debug_imgs:
                 labels_map = np.argmax(proba, axis=1)
                 plt.imsave(os.path.join(path_visu, idx_name + '_map.png'),
                            labels_map[slic])
@@ -645,9 +647,12 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
     path_classif = os.path.join(params['path_exp'], fname_classif)
     if os.path.isfile(path_classif) and not FORCE_RETRAIN_CLASSIF:
         logging.info('loading classifier: %s', path_classif)
+        params_local = params.copy()
         dict_classif = seg_clf.load_classifier(path_classif)
         classif = dict_classif['clf_pipeline']
         params = dict_classif['params']
+        params.update({k: params_local[k] for k in params_local
+                       if k.startswith('path_') or k.startswith('gc_')})
         logging.debug('loaded PARAMETERS: %s', repr(params))
     else:
         classif, path_classif = seg_clf.create_classif_train_export(
@@ -713,7 +718,8 @@ def main_train(params):
 
     if params['gc_use_trans']:
         params['label_transitions'] = \
-            seg_gc.count_label_transitions_connected_segments(dict_slics, dict_labels)
+            seg_gc.count_label_transitions_connected_segments(dict_slics,
+                                                              dict_labels)
         logging.info('summary on edge-label transitions: \n %s',
                      repr(params['label_transitions']))
 
@@ -772,15 +778,19 @@ def prepare_output_dir(path_pattern_imgs, path_out, name):
     return path_out, path_visu
 
 
-def try_segment_image(img_idx_path, params, classif, path_out, path_visu):
+def try_segment_image(img_idx_path, params, classif, path_out, path_visu,
+                      show_debug_imgs=False):
     try:
-        return segment_image(img_idx_path, params, classif, path_out, path_visu)
+        return segment_image(img_idx_path, params, classif,
+                             path_out, path_visu,
+                             show_debug_imgs=show_debug_imgs)
     except:
         logging.error(traceback.format_exc())
         return '', None, None
 
 
-def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_'):
+def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
+                 params_local=None):
     """ given trained classifier segment new images
 
     :param str path_classif:
@@ -795,16 +805,19 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_'):
     dict_classif = seg_clf.load_classifier(path_classif)
     classif = dict_classif['clf_pipeline']
     params = dict_classif['params']
+    if params_local is not None:
+        params.update({k: params_local[k] for k in params_local
+                       if k.startswith('path_') or k.startswith('gc_')})
 
     path_out, path_visu = prepare_output_dir(path_pattern_imgs, path_out, name)
     tl_expt.set_experiment_logger(path_out)
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     paths_img = sorted(glob.glob(path_pattern_imgs))
-    logging.info('found %i images on path "%s"', len(paths_img), path_pattern_imgs)
+    logging.info('found %i images on path "%s"', len(paths_img),
+                 path_pattern_imgs)
 
-    logging.info('run prediction...')
-    # perfom on new images
+    logging.debug('run prediction...')
     tqdm_bar = tqdm.tqdm(total=len(paths_img), desc='segmenting images')
     wrapper_segment = partial(try_segment_image, params=params, classif=classif,
                               path_out=path_out, path_visu=path_visu)
@@ -827,8 +840,7 @@ if __name__ == '__main__':
 
     params = main_train(params)
 
-    SHOW_DEBUG_IMAGES = False
     main_predict(params['path_classif'], params['path_predict_imgs'],
-                 params['path_exp'])
+                 params['path_exp'], params_local=params)
 
     logging.info('all DONE')
