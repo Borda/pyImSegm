@@ -689,6 +689,7 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
         ax.imshow(img, alpha=0.3, cmap=plt.cm.gist_earth)
     else:
         ax.imshow(img)
+
     if slic is not None:
         ax.contour(slic, levels=np.unique(slic), alpha=0.5, colors=clr_slic,
                    linewidth=0.5)

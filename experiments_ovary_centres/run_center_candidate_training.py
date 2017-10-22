@@ -2,7 +2,7 @@
 Attempt to detect egg centers in the segmented images from annotated data
 The input is
 1) 4-class segmentation of ovary images
-    (background, nurse, fulicul cells and cytoplasm)
+    (background, nurse, follicular cells and cytoplasm)
 2) annotation of egg centers as
   2a) csv list of centers
   2b) 3-class annotation:
@@ -17,7 +17,7 @@ SAMPLE run:
     -imgs "images/drosophila_ovary_slice/image/*.jpg" \
     -segs "images/drosophila_ovary_slice/segm/*.png" \
     -centers "images/drosophila_ovary_slice/center_levels/*.png" \
-    -out results/detect_centers_ovary
+    -out results -n ovary
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -59,6 +59,7 @@ EXPORT_TRAINING_DATA = True
 # perform the Leave-One-Out experiment
 RUN_LEAVE_ONE_OUT = True
 # Set experiment folders
+FOLDER_EXPERIMENT = 'detect-centers-train_%s'
 FOLDER_INPUT = 'inputs_annot'
 FOLDER_POINTS = 'candidates'
 FOLDER_POINTS_VISU = 'candidates_visul'
@@ -101,10 +102,12 @@ CENTER_PARAMS = {
     'center_dist_thr': 50,  # distance to from annotated center as a point
 }
 
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = os.path.join(tl_io.update_path('images'),
+                           'drosophila_ovary_slice')
 PATH_RESULTS = tl_io.update_path('results', absolute=True)
 CENTER_PARAMS.update({
-    'path_list': os.path.join(PATH_IMAGES, 'list_imgs-segm-center-levels_short.csv'),
+    'path_list': os.path.join(PATH_IMAGES,
+                              'list_imgs-segm-center-levels_short.csv'),
     'path_images': '',
     'path_segms': '',
     'path_centers': '',
@@ -112,7 +115,8 @@ CENTER_PARAMS.update({
     # 'path_segms': os.path.join(PATH_IMAGES, 'segm', '*.png'),
     # 'path_centers': os.path.join(PATH_IMAGES, 'center_levels', '*.png'),
     'path_infofile': '',
-    'path_output': os.path.join(PATH_RESULTS, 'detect_centers_ovary'),
+    'path_output': PATH_RESULTS,
+    'name': 'ovary',
 })
 
 
@@ -152,13 +156,13 @@ def arg_parse_params(params=CENTER_PARAMS):
         if not isinstance(params[k], str) or params[k].lower() == 'none':
             paths[k] = ''
             continue
-        if '*' in params[k] or k == 'path_output':
+        if '*' in params[k] or k == 'path_expt':
             p_dir = tl_io.update_path(os.path.dirname(params[k]))
             paths[k] = os.path.join(p_dir, os.path.basename(params[k]))
         else:
             paths[k] = tl_io.update_path(params[k], absolute=True)
             p_dir = paths[k]
-        assert os.path.exists(p_dir), 'missing %s' % p_dir
+        assert os.path.exists(p_dir), 'missing (%s) %s' % (k, p_dir)
     # load saved configuration
     if params['path_config'] is not None:
         assert os.path.splitext(params['path_config'])[-1] == '.json', \
@@ -239,6 +243,8 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
                                                            im_range=None)
     # img_rgb = np.array(Image.open(row_path['path_img']))
     img_rgb = tl_io.merge_image_channels(img_struc, img_gene)
+    if np.max(img_rgb) > 1:
+        img_rgb = img_rgb / float(np.max(img_rgb))
 
     seg_ext = os.path.splitext(os.path.basename(row_path['path_segm']))[-1]
     if seg_ext == '.npz':
@@ -251,7 +257,7 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
         if dict_relabel is not None:
             segm = seg_lbs.relabel_by_dict(segm, dict_relabel)
 
-    if isinstance(row_path['path_centers'], str) \
+    if row_path['path_centers'] is not None \
             and os.path.isfile(row_path['path_centers']):
         posix = os.path.splitext(os.path.basename(row_path['path_centers']))[-1]
         if posix == '.csv':
@@ -321,6 +327,7 @@ def export_show_image_points_labels(path_out, img_name, img, seg, points,
     points = np.array(points)
 
     fig, axarr = plt.subplots(ncols=2, figsize=(9 * 2, 6))
+    img = img / float(np.max(img)) if np.max(img) > 1 else img
     tl_visu.draw_image_segm_points(axarr[0], img, points, labels,
                                    seg_contour=seg_centers,
                                    dict_label_marker=dict_label_marker)
@@ -426,7 +433,7 @@ def label_close_points(centers, points, params):
         labels = centers[mx_points[:, 0], mx_points[:, 1]]
     else:
         logging.warning('not relevant centers info of type "%s"', type(centers))
-        labels = [None] * len(points)
+        labels = [-1] * len(points)
     assert len(points) == len(labels), \
         'not equal lenghts of points (%i) and labels (%i)' \
         % (len(points),len(labels))
@@ -450,7 +457,7 @@ def dataset_load_images_segms_compute_features(params, df_paths,
     """
     dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
     logging.info('loading input data (images, segmentation and centers)')
-    path_show_in = os.path.join(params['path_output'], FOLDER_INPUT)
+    path_show_in = os.path.join(params['path_expt'], FOLDER_INPUT)
     tqdm_bar = tqdm.tqdm(total=len(df_paths), desc='loading input data')
     wrapper_load_data = partial(load_image_segm_center, path_out=path_show_in,
                                 dict_relabel=params['dict_relabel'])
@@ -485,7 +492,7 @@ def dataset_load_images_segms_compute_features(params, df_paths,
 
     dict_labels = dict()
     logging.info('assign labels according close distance to center')
-    path_points_train = os.path.join(params['path_output'], FOLDER_POINTS_TRAIN)
+    path_points_train = os.path.join(params['path_expt'], FOLDER_POINTS_TRAIN)
     tqdm_bar = tqdm.tqdm(total=len(dict_center), desc='labels assignment')
     for name in dict_center:
         dict_labels[name] = label_close_points(dict_center[name],
@@ -644,15 +651,57 @@ def save_dump_data(path_dump_data, imgs, segms, slics, points, centers,
                         feature_names=feature_names, encoding='bytes')
 
 
-# def check_pathes_patterns(paths):
-#     """ check if all paths of path patterns exists
-#
-#     :param {str: str} paths:
-#     """
-#     for _, p in paths.iteritems():
-#         if p is not None:
-#             p = os.path.dirname(p) if '*' in p else p
-#             assert os.path.exists(os.path.dirname(p)), '%s' % p
+def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
+                   dict_points, dict_features, feature_names):
+    logging.info('run LOO prediction on training data...')
+    # test classif on images
+    gener_data = ((n, dict_imgs[n], dict_segms[n], dict_centers[n],
+                   dict_slics[n], dict_points[n], dict_features[n],
+                   feature_names) for n in dict_imgs)
+    wrapper_detection = partial(wrapper_detect_center_candidates,
+                                params=params, classif=classif,
+                                path_output=params['path_expt'])
+    df_stat = pd.DataFrame()
+    tqdm_bar = tqdm.tqdm(total=len(dict_imgs), desc='experiment LOO')
+    pool = mproc.Pool(params['nb_jobs'])
+    for dict_stat in pool.imap_unordered(wrapper_detection, gener_data):
+        df_stat = df_stat.append(dict_stat, ignore_index=True)
+        df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STAT_TRAIN))
+        tqdm_bar.update()
+    pool.close()
+    pool.join()
+
+    df_stat.set_index(['image'], inplace=True)
+    df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STAT_TRAIN))
+    logging.info('STATISTIC: \n %s', repr(df_stat.describe().transpose()))
+
+
+def prepare_experiment_folder(params, dir_template):
+    params['path_expt'] = os.path.join(params['path_output'],
+                                       dir_template % params['name'])
+    if not os.path.exists(params['path_expt']):
+        assert os.path.isdir(os.path.dirname(params['path_expt'])), \
+            'missing: %s' % os.path.dirname(params['path_expt'])
+        logging.debug('creating missing folder: %s', params['path_expt'])
+        os.mkdir(params['path_expt'])
+    return params
+
+
+def load_df_paths(params):
+    path_csv = os.path.join(params['path_expt'], NAME_CSV_TRIPLES)
+    if os.path.isfile(path_csv) and not FORCE_RELOAD:
+        logging.info('loading path pairs "%s"', path_csv)
+        df_paths = pd.DataFrame.from_csv(path_csv, encoding='utf-8')
+    else:
+        if os.path.isfile(params['path_list']):
+            df_paths = pd.DataFrame.from_csv(params['path_list'], encoding='utf-8')
+        else:
+            df_paths = find_match_images_segms_centers(params['path_images'],
+                                                       params['path_segms'],
+                                                       params['path_centers'])
+        df_paths.to_csv(path_csv, encoding='utf-8')
+    df_paths.index = list(range(len(df_paths)))
+    return df_paths, path_csv
 
 
 def main_train(params=CENTER_PARAMS):
@@ -665,40 +714,24 @@ def main_train(params=CENTER_PARAMS):
     :param {str: any} params:
     """
     logging.info('run TRAINING...')
+    params = prepare_experiment_folder(params, FOLDER_EXPERIMENT)
 
-    # check_paths_patterns(paths)
-    if not os.path.exists(params['path_output']):
-        assert os.path.isdir(os.path.dirname(params['path_output'])), \
-            'missing: %s' % params['path_output']
-        logging.debug('creating missing folder: %s', params['path_output'])
-        os.mkdir(params['path_output'])
-
-    tl_expt.set_experiment_logger(params['path_output'])
+    tl_expt.set_experiment_logger(params['path_expt'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
-    with open(os.path.join(params['path_output'], NAME_JSON_PARAMS), 'w') as f:
+    with open(os.path.join(params['path_expt'], NAME_JSON_PARAMS), 'w') as f:
         json.dump(params, f)
 
-    tl_expt.create_subfolders(params['path_output'], LIST_SUBDIRS)
+    tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 
-    path_csv = os.path.join(params['path_output'], NAME_CSV_TRIPLES)
-    if not os.path.isfile(path_csv) or FORCE_RELOAD:
-        # df_paths = find_match_images_segms_centers(params['path_images'],
-        #                                            params['path_segms'],
-        #                                            params['path_centers'])
-        logging.info('loading path pairs "%s"', path_csv)
-        df_paths = pd.DataFrame.from_csv(params['path_list'])
-        df_paths.to_csv(path_csv)
-    else:
-        logging.info('loading path pairs "%s"', path_csv)
-        df_paths = pd.DataFrame.from_csv(path_csv)
-    df_paths.index = list(range(len(df_paths)))
+    df_paths, path_csv = load_df_paths(params)
 
-    path_dump_data = os.path.join(params['path_output'], NAME_DUMP_TRAIN_DATA)
+    path_dump_data = os.path.join(params['path_expt'], NAME_DUMP_TRAIN_DATA)
     if not os.path.isfile(path_dump_data) or FORCE_RECOMP_DATA:
         dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, \
         dict_features, dict_labels, feature_names = \
-            dataset_load_images_segms_compute_features(params, df_paths, params['nb_jobs'])
+            dataset_load_images_segms_compute_features(params, df_paths,
+                                                       params['nb_jobs'])
         assert len(dict_imgs) > 0, 'missing images'
         save_dump_data(path_dump_data, dict_imgs, dict_segms, dict_slics, dict_points,
                        dict_centers, dict_features, dict_labels, feature_names)
@@ -706,8 +739,8 @@ def main_train(params=CENTER_PARAMS):
         dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, dict_features, \
         dict_labels, feature_names = load_dump_data(path_dump_data)
 
-    if is_drawing(params['path_output']) and EXPORT_TRAINING_DATA:
-        export_dataset_visual(params['path_output'], dict_imgs, dict_segms, dict_slics,
+    if is_drawing(params['path_expt']) and EXPORT_TRAINING_DATA:
+        export_dataset_visual(params['path_expt'], dict_imgs, dict_segms, dict_slics,
                               dict_points, dict_labels, params['nb_jobs'])
 
     # concentrate features, labels
@@ -727,36 +760,17 @@ def main_train(params=CENTER_PARAMS):
         params['classif'], features, labels, cross_val=cv, params=params,
         feature_names=feature_names, nb_search_iter=params['nb_classif_search'],
         pca_coef=params.get('pca_coef', None), nb_jobs=params['nb_jobs'],
-        path_out=params['path_output'])
+        path_out=params['path_expt'])
     nb_holdout = int(np.ceil(len(sizes) * CROSS_VAL_LEAVE_OUT_EVAL))
     cv = seg_clf.CrossValidatePSetsOut(sizes, nb_holdout)
     seg_clf.eval_classif_cross_val_scores(params['classif'], classif, features, labels,
-                                          cross_val=cv, path_out=params['path_output'])
+                                          cross_val=cv, path_out=params['path_expt'])
     seg_clf.eval_classif_cross_val_roc(params['classif'], classif, features, labels,
-                                       cross_val=cv, path_out=params['path_output'])
+                                       cross_val=cv, path_out=params['path_expt'])
 
     if RUN_LEAVE_ONE_OUT :
-        logging.info('run LOO prediction on training data...')
-        # test classif on images
-        gener_data = ((name, dict_imgs[name], dict_segms[name], dict_centers[name],
-                       dict_slics[name], dict_points[name], dict_features[name],
-                       feature_names) for name in dict_imgs)
-        wrapper_detection = partial(wrapper_detect_center_candidates,
-                                    params=params, classif=classif,
-                                    path_output=params['path_output'])
-        df_stat = pd.DataFrame()
-        tqdm_bar = tqdm.tqdm(total=len(dict_imgs), desc='experiment LOO')
-        pool = mproc.Pool(params['nb_jobs'])
-        for dict_stat in pool.imap_unordered(wrapper_detection, gener_data):
-            df_stat = df_stat.append(dict_stat, ignore_index=True)
-            df_stat.to_csv(os.path.join(params['path_output'], NAME_CSV_STAT_TRAIN))
-            tqdm_bar.update()
-        pool.close()
-        pool.join()
-
-        df_stat.set_index(['image'], inplace=True)
-        df_stat.to_csv(os.path.join(params['path_output'], NAME_CSV_STAT_TRAIN))
-        logging.info('STATISTIC: \n %s', repr(df_stat.describe().transpose()))
+        experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
+                       dict_points, dict_features, feature_names)
 
     logging.info('DONE')
 

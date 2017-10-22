@@ -1,0 +1,46 @@
+@article{Segmentation2017,
+    author = {Ji{\v{r}}{\'i} Borovec,
+              Jan {\v{S}}vihl{\'i}k,
+              Jan Kybic,
+              David Habart},
+    title = {Supervised and unsupervised segmentation using superpixels, model estimation, and graph cut},
+    abstract={{Image segmentation is widely used as an initial phase of many image analysis tasks. It is often advantageous to first group pixels into compact, edge-respecting superpixels, because these reduce the size of the segmentation problem and thus the segmentation time by an order of magnitudes. In addition, features calculated from superpixel regions are more robust than features calculated from fixed pixel neighborhoods. We present a fast and general multiclass image segmentation method consisting of the following steps: (i) computation of superpixels; (ii) extraction of superpixel-based descriptors; (iii) calculating image-based class probabilities in a supervised or unsupervised manner; and (iv) regularized superpixel classification using graph cut. We apply this segmentation pipeline to five real-world medical imaging applications and compare the results with three baseline methods: pixelwise graph cut segmentation, supertexton-based segmentation, and classical superpixel-based segmentation. On all datasets, we outperform the baseline results. We also show that unsupervised segmentation is surprisingly efficient in many situations. Unsupervised segmentation provides similar results to the supervised method but does not require manually annotated training data, which is often expensive to obtain.}}
+    journal = {Journal of Electronic Imaging},
+    volume = {26},
+    number = {6},
+    year = {2017},
+    doi = {10.1117/1.JEI.26.6.061610},
+    URL = {http://dx.doi.org/10.1117/1.JEI.26.6.061610}
+}
+@incollection{OvaryDetect2017,
+    author="Borovec, Ji{\v{r}}{\'i}
+            and Kybic, Jan
+            and Nava, Rodrigo",
+    editor="Wang, Qian
+            and Shi, Yinghuan
+            and Suk, Heung-Il
+            and Suzuki, Kenji",
+    title="Detection and Localization of Drosophila Egg Chambers in Microscopy Images",
+    abstract="Drosophila melanogaster is a well-known model organism that can be used for studying oogenesis (egg chamber development) including gene expression patterns. Standard analysis methods require manual segmentation of individual egg chambers, which is a difficult and time-consuming task. We present an image processing pipeline to detect and localize Drosophila egg chambers that consists of the following steps: (i) superpixel-based image segmentation into relevant tissue classes; (ii) detection of egg center candidates using label histograms and ray features; (iii) clustering of center candidates and; (iv) area-based maximum likelihood ellipse model fitting. Our proposal is able to detect 96{\%} of human-expert annotated egg chambers at relevant developmental stages with less than 1{\%} false-positive rate, which is adequate for the further analysis.",
+    bookTitle="Machine Learning in Medical Imaging: 8th International Workshop, MLMI 2017, Held in Conjunction with MICCAI 2017, Quebec City, QC, Canada, September 10, 2017, Proceedings",
+    year="2017",
+    publisher="Springer International Publishing",
+    address="Cham",
+    pages="19--26",
+    isbn="978-3-319-67389-9",
+    doi="10.1007/978-3-319-67389-9_3",
+    url="http://doi.org/10.1007/978-3-319-67389-9_3"
+}
+@article{RegionGrowing2017,
+    author = {Ji{\v{r}}{\'i} Borovec,
+              Jan Kybic,
+              Akihiro Sugimoto},
+    title = {{Region growing using superpixels with learned shape prior}},
+    abstract={{Region growing is a classical image segmentation method based on hierarchical region aggregation using local similarity rules. Our proposed method differs from classical region growing in three important aspects. First, it works on the level of superpixels instead of pixels, which leads to a substantial speed-up. Second, our method uses learned statistical shape properties that encourage plausible shapes. In particular, we use ray features to describe the object boundary. Third, our method can segment multiple objects and ensure that the segmentations do not overlap. The problem is represented as an energy minimization and is solved either greedily or iteratively using graph cuts. We demonstrate the performance of the proposed method and compare it with alternative approaches on the task of segmenting individual eggs in microscopy images of Drosophila ovaries.}}
+    journal = {Journal of Electronic Imaging},
+    volume = {26},
+    number = {6},
+    year = {2017},
+    doi = {10.1117/1.JEI.26.6.061611},
+    URL = {http://dx.doi.org/10.1117/1.JEI.26.6.061611}
+}

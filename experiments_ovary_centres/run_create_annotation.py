@@ -41,10 +41,10 @@ matplotlib.use('Agg')
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import run_center_candidate_training as run_train
 
+NAME_DIR = 'annot_centres'
 PARAMS = run_train.CENTER_PARAMS
 PARAMS.update({
     'path_segms': os.path.join(run_train.PATH_IMAGES, 'annot_eggs', '*.png'),
-    'path_output': os.path.join(run_train.PATH_RESULTS, 'annot_centres')
 })
 # setting relative distances from object boundary for 3 levels of annotation
 DISTANCE_LEVELS = [0., 0.4, 0.8]
@@ -195,4 +195,5 @@ def main(path_segs, path_out, nb_jobs):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     params = run_train.arg_parse_params(PARAMS)
-    main(params['path_segms'], params['path_output'], params['nb_jobs'])
+    path_out = os.path.join(params['path_output'], NAME_DIR)
+    main(params['path_segms'], path_out, params['nb_jobs'])
