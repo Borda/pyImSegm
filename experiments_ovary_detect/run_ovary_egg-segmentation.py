@@ -10,7 +10,17 @@ Require installation of Morph. Snakes - https://github.com/Borda/morph-snakes
 SAMPLE run:
 >> python run_ovary_egg-segmentation.py \
     -list images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
-    -out output -n ovary_image --nb_jobs 1
+    -out output -n ovary_image --nb_jobs 1 \
+    -m ellipse_moments \
+       ellipse_ransac_mmt \
+       ellipse_ransac_crit \
+       GC_pixels-large \
+       GC_pixels-shape \
+       GC_slic-large \
+       GC_slic-shape \
+       rg2sp_greedy-mixture \
+       rg2sp_rg2sp_GC-mixture \
+       watershed_morph
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -86,6 +96,13 @@ RG2SP_THRESHOLDS = {'centre': 20,
 PATH_DATA = tl_data.update_path('data', absolute=True)
 PATH_IMAGES = os.path.join(tl_data.update_path('images'),
                            'drosophila_ovary_slice')
+# sample segmentation methods
+LIST_SAMPLE_METHODS = (
+    'ellipse_moments', 'ellipse_ransac_mmt', 'ellipse_ransac_crit',
+    'GC_pixels-large', 'GC_pixels-shape', 'GC_slic-large', 'GC_slic-shape',
+    'rg2sp_greedy-mixture', 'rg2sp_rg2sp_GC-mixture',
+    'watershed_morph'
+)
 # default segmentation configuration
 SEGM_PARAMS = {
     'tab_proba-ellipse': [[0.01, 0.75, 0.95, 0.9],
@@ -127,6 +144,8 @@ def arg_parse_params(params):
                         help='path to the configuration', default=None)
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
+    parser.add_argument('-m', '--methods', type=str, required=False, nargs='+',
+                        help='list of segment. methods', default=None)
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
     if not isinstance(arg_params['path_config'], str) \
@@ -191,9 +210,9 @@ def export_draw_image_segm(path_fig, img, segm=None, segm_obj=None, centers=None
         ax.contour(segm)
     if segm_obj is not None:
         ax.imshow(segm_obj, alpha=0.1)
-        assert len(np.unique(segm_obj)) < 1e2
+        assert len(np.unique(segm_obj)) < 1e2, 'too many labeled objects'
         ax.contour(segm_obj, levels=np.unique(segm_obj).tolist(),
-                   cmap=plt.cm.jet, linewidths=(5,))
+                   cmap=plt.cm.jet_r, linewidths=(10, ))
     if centers is not None:
         ax.plot(np.array(centers)[:, 1], np.array(centers)[:, 0], 'o', color='r')
 
@@ -305,7 +324,7 @@ def segment_morphsnakes(img, centers, init_center=True, smoothing=5,
     :param bb_dist:
     :return ndarray, [[int, int]]: resulting segmentation, updated centres
     """
-    logging.debug('segment: morphsnakes...')
+    logging.debug('segment: morph-snakes...')
     if img.ndim == 3:
         img = img[:, :, 0]
     if init_center:
@@ -347,7 +366,7 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points,
     :param ndarray seg: input image / segmentation
     :param [[int, int]] centers: position of centres / seeds
     :param fn_preproc_points: function for detection boundary points
-    :param float thr_overlap: threshold for removing overlapping segmentations
+    :param float thr_overlap: threshold for removing overlapping segmentation
     :return ndarray, [[int, int]]: resulting segmentation, updated centres
     """
     points_centers = fn_preproc_points(seg, centers)
@@ -432,7 +451,8 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
         if ransac_model is None:
             continue
         logging.debug('ellipse params: %s', repr(ransac_model.params))
-        segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb, thr_overlap)
+        segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb,
+                                           thr_overlap)
 
         if np.any(segm == lb):
             centres_new.append(centers[i])
@@ -560,7 +580,7 @@ def simplify_segm_3cls(seg, lut=(0., 0.8, 1.), smooth=True):
     return segm
 
 
-def create_dict_segmentations(params, slic, segm, centers):
+def create_dict_segmentation(params, slic, segm, img, centers):
     """ create dictionary of segmentation function hash, function and parameters
 
     :param {str: ...} params:
@@ -578,6 +598,10 @@ def create_dict_segmentations(params, slic, segm, centers):
                        params['path_multi-models'], params['RG2SP-shape'],
                        params['RG2SP-pairwise'], params['RG2SP-swap'],
                        params['label_trans'], params['RG2SP_theshold'])
+    tab_proba_gc = params['tab_proba-graphcut']
+    gc_regul_px = params['gc-pixel_regul']
+    gc_regul_slic = params['gc-slic_regul']
+    seg_simple = simplify_segm_3cls(segm) if segm is not None else None
 
     dict_segment = {
         'ellipse_moments': (segment_fit_ellipse,
@@ -591,51 +615,47 @@ def create_dict_segmentations(params, slic, segm, centers):
                                  ell_fit.prepare_boundary_points_ray_edge,
                                  params['tab_proba-ellipse'])),
 
-        # 'ellipse_ransac_crit2': (segment_fit_ellipse_ransac_segm,
-        #                         (segm, centers,
-        #                          ell_fit.prepare_boundary_points_ray_join,
-        #                          params['tab_proba-ellipse'])),
-        # 'ellipse_ransac_crit3': (segment_fit_ellipse_ransac_segm,
-        #                         (segm, centers,
-        #                          ell_fit.prepare_boundary_points_ray_mean,
-        #                          params['tab_proba-ellipse'])),
+        'ellipse_ransac_crit2': (segment_fit_ellipse_ransac_segm,
+                                (segm, centers,
+                                 ell_fit.prepare_boundary_points_ray_join,
+                                 params['tab_proba-ellipse'])),
+        'ellipse_ransac_crit3': (segment_fit_ellipse_ransac_segm,
+                                (segm, centers,
+                                 ell_fit.prepare_boundary_points_ray_mean,
+                                 params['tab_proba-ellipse'])),
 
-        'graphcut_pixels-samll': (segment_graphcut_pixels,
-                                  (segm, centers, params['tab_proba-graphcut'],
-                                   params['gc-pixel_regul'], 10)),
-        'graphcut_pixels-large': (segment_graphcut_pixels,
-                                  (segm, centers, params['tab_proba-graphcut'],
-                                   params['gc-pixel_regul'], 30)),
-        'graphcut_pixels-shape': (segment_graphcut_pixels,
-                                  (segm, centers, params['tab_proba-graphcut'],
-                                   params['gc-pixel_regul'], 10, 0.1)),
-        'graphcut_slic-samll': (segment_graphcut_slic,
-                                (slic, segm, centers,
-                                 params['tab_proba-graphcut'],
-                                 params['gc-slic_regul'], False)),
-        'graphcut_slic-large': (segment_graphcut_slic,
-                                (slic, segm, centers,
-                                 params['tab_proba-graphcut'],
-                                 params['gc-slic_regul'], True)),
-        'graphcut_slic-shape': (segment_graphcut_slic,
-                                (slic, segm, centers,
-                                 params['tab_proba-graphcut'],
-                                 1., False, 0.1)),
+        'GC_pixels-small': (segment_graphcut_pixels,
+                            (segm, centers, tab_proba_gc, gc_regul_px, 10)),
+        'GC_pixels-large': (segment_graphcut_pixels,
+                            (segm, centers, tab_proba_gc, gc_regul_px, 30)),
+        'GC_pixels-shape': (segment_graphcut_pixels, (segm, centers,
+                            tab_proba_gc, gc_regul_px, 10, 0.1)),
+        'GC_slic-small': (segment_graphcut_slic, (slic, segm, centers,
+                          tab_proba_gc, gc_regul_slic, False)),
+        'GC_slic-large': (segment_graphcut_slic, (slic, segm, centers,
+                          tab_proba_gc, gc_regul_slic, True)),
+        'GC_slic-shape': (segment_graphcut_slic,
+                          (slic, segm, centers, tab_proba_gc, 1., False, 0.1)),
 
         'rg2sp_greedy-single': (segment_rg2sp_greedy, params_rg_single),
-        'rg2sp_greedy-multi': (segment_rg2sp_greedy, params_rg_multi),
-        'rg2sp_graphcut-single': (segment_rg2sp_graphcut, params_rg_single),
-        'rg2sp_graphcut-multi': (segment_rg2sp_graphcut, params_rg_multi),
+        'rg2sp_greedy-mixture': (segment_rg2sp_greedy, params_rg_multi),
+        'rg2sp_GC-single': (segment_rg2sp_graphcut, params_rg_single),
+        'rg2sp_GC-mixture': (segment_rg2sp_graphcut, params_rg_multi),
 
         'watershed': (segment_watershed, (segm, centers)),
-        'watershed_morpho': (segment_watershed, (segm, centers, True)),
+        'watershed_morph': (segment_watershed, (segm, centers, True)),
 
         # NOTE, this method takes to long for run in CI
-        # 'morphsnakes_seg': (segment_morphsnakes,
-        #                     (seg_simple, centers, True, 3, [2, 1])),
-        # 'morphsnakes_img': (segment_morphsnakes, (img, centers)),
+        'morphsnakes_seg': (segment_morphsnakes,
+                            (seg_simple, centers, True, 3, [2, 1])),
+        'morphsnakes_img': (segment_morphsnakes, (img, centers)),
     }
-    return dict_segment
+    if params['methods'] is not None:
+        dict_segment_filter = {n: dict_segment[n] for n in params['methods']
+                               if n in dict_segment}
+    else:
+        dict_segment_filter = dict_segment
+    return dict_segment_filter
 
 
 def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
@@ -648,7 +668,8 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     """
     _, row_path = idx_row
     for k in dict(row_path):
-        row_path[k] = tl_data.update_path(row_path[k], absolute=True)
+        if isinstance(k, str) and k.startswith('path_'):
+            row_path[k] = tl_data.update_path(row_path[k], absolute=True)
     logging.debug('segmenting image: "%s"', row_path['path_image'])
     name = os.path.splitext(os.path.basename(row_path['path_image']))[0]
 
@@ -678,7 +699,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     path_segm = os.path.join(params['path_exp'], 'simple', name + '.png')
     export_draw_image_segm(path_segm, seg_simple - 1.)
 
-    dict_segment = create_dict_segmentations(params, slic, seg, centers)
+    dict_segment = create_dict_segmentation(params, slic, seg, img, centers)
 
     image_name = name + '.png'
     centre_name = name + '.csv'
@@ -739,7 +760,7 @@ def main(params, debug_export=DEBUG_EXPORT):
 
     # create sub-folders if required
     tl_expt.create_subfolders(params['path_exp'], ['input', 'simple'])
-    dict_segment = create_dict_segmentations(params, None, None, None)
+    dict_segment = create_dict_segmentation(params, None, None, None, None)
     tl_expt.create_subfolders(params['path_exp'], [n for n in dict_segment]
                               + [n + DIR_CENTRE_POSIX for n in dict_segment]
                               + [n + DIR_VISUAL_POSIX for n in dict_segment])

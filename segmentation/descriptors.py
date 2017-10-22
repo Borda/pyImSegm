@@ -28,8 +28,8 @@ except:
     logging.warning('descriptors: using pure python libraries')
     USE_CYTHON = False
 
-DEFAULT_FILTERS_SIGMAS = [np.sqrt(2), 2, 2 * np.sqrt(2), 4]
-SHORT_FILTERS_SIGMAS = [np.sqrt(2), 2, 4]
+DEFAULT_FILTERS_SIGMAS = (np.sqrt(2), 2, 2 * np.sqrt(2), 4)
+SHORT_FILTERS_SIGMAS = (np.sqrt(2), 2, 4)
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'eng', 'median'),
                     'tLM': ('mean', 'std', 'eng', 'mG')}
 FEATURES_SET_COLOR = {'color': ('mean', 'std', 'eng')}

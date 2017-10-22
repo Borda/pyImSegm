@@ -55,13 +55,12 @@ def parse_arg_params():
     parser.add_argument('--nb_jobs', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
-    p_dir = tl_io.update_path(os.path.dirname(args['path_images']))
-    assert os.path.isdir(p_dir), '%s' % args['path_images']
-    args['path_images'] = os.path.join(p_dir, os.path.basename(args['path_images']))
-    args['path_out'] = tl_io.update_path(args['path_out'])
+    for n in ['path_images', 'path_out']:
+        p_dir = tl_io.update_path(os.path.dirname(args[n]))
+        assert os.path.isdir(p_dir), 'missing: %s' % args[n]
+        args[n] = os.path.join(p_dir, os.path.basename(args[n]))
     if args['path_colors'] is not None:
         args['path_colors'] = tl_io.update_path(args['path_colors'])
-    assert os.path.exists(args['path_out']), '%s' % args['path_out']
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args
 
@@ -144,6 +143,9 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_jobs=1):
         'input folder does not exist'
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
+    if not os.path.exists(path_out):
+        assert os.path.isdir(os.path.dirname(path_out))
+        os.mkdir(path_out)
 
     dict_colors = load_dict_colours(path_json)
     logging.debug('loaded dictionary %s', repr(dict_colors))

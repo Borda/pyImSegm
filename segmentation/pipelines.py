@@ -207,7 +207,7 @@ def segment_color2d_slic_features_model_graphcut(img, scaler, pca, model,
     if dict_debug_imgs is not None:
         if img.ndim == 2:  # duplicate channels to be like RGB
             img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
-        dict_debug_imgs['img'] = img
+        dict_debug_imgs['image'] = img
         dict_debug_imgs['slic'] = slic
         dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, img, kind='avg')
 
@@ -273,10 +273,16 @@ def wrapper_compute_color2d_slic_features_labels(img_annot, clr_space,
                                                           sp_size, sp_regul,
                                                           dict_features,
                                                           fts_norm=False)
+    neg_label = np.max(annot) + 1 if np.sum(annot < 0) > 0 else None
+    if neg_label is not None:
+        annot[annot < 0] = neg_label
 
     label_hist = seg_lbs.histogram_regions_labels_norm(slic, annot)
     labels = np.argmax(label_hist, axis=1)
     purity = np.max(label_hist, axis=1)
+
+    if neg_label is not None:
+        labels[labels == neg_label] = -1
     labels[purity < label_purity] = -1
     return slic, features, labels
 
@@ -311,6 +317,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, clr_space='rgb
     list_slic, list_features, list_labels = list(), list(), list()
 
     mproc_pool = mproc.Pool(nb_jobs)
+    logging.debug('run feature extraction in parallel - %i threads', nb_jobs)
     wrapper_compute = partial(wrapper_compute_color2d_slic_features_labels,
                               clr_space=clr_space, sp_size=sp_size,
                               sp_regul=sp_regul, dict_features=dict_features,
@@ -339,7 +346,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, clr_space='rgb
     #     labels[purity < label_purity] = -1
     #     list_labels.append(labels)
 
-    logging.debug('prepare features...')
+    logging.debug('concentrate features...')
     # concentrate features, labels
     features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
         dict(zip(range(len(list_features)), list_features)),
@@ -492,7 +499,7 @@ def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4, spacing=(12, 1, 
 #     if dict_debug_imgs is not None:
 #         if img.ndim == 2:  # duplicate channels to be like RGB
 #             img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
-#         dict_debug_imgs['img'] = img
+#         dict_debug_imgs['image'] = img
 #         dict_debug_imgs['slic'] = slic
 #         dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, img, kind='avg')
 #
