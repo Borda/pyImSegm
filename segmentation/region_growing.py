@@ -243,7 +243,7 @@ def compute_segm_object_shape(img_object, ray_step=5, interp_order=3,
     - smooth the Ray features
 
     :param ndarray img_object: binary segmentation of single object
-    :param int ray_step: select the angular step for Ray features
+    :param int ray_step: select the angular step    for Ray features
     :param int interp_order: if None, no interpolation is performed
     :param float smooth_coef: smoothing the ray features
     :return [int], int:
@@ -297,11 +297,11 @@ def compute_object_shapes(list_img_objects, ray_step=5, interp_order=3,
     """
     list_rays, list_shifts = [], []
     for img_objects in list_img_objects:
-        uq_labels = sorted(np.unique(img_objects))
+        uq_labels = np.unique(img_objects)
         if len(uq_labels) <= 2:
             # selects individual object
             img_objects, _ = ndimage.measurements.label(img_objects)
-            uq_labels = sorted(np.unique(img_objects))
+            uq_labels = np.unique(img_objects)
         for label in uq_labels[1:]:
             img_object = (img_objects == label)
             rays, shift = compute_segm_object_shape(img_object, ray_step,
@@ -1232,6 +1232,7 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
                                    'lut_shape_cost': []})
 
     for _ in range(nb_iter):
+        labels = enforce_center_labels(slic, labels, centres)
         energy = compute_energy(labels, lut_data_cost, lut_shape_cost,
             slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
         if dict_debug_history is not None:
@@ -1343,6 +1344,21 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     pairwise *= coef_pairwise
 
     return vertexes, np.array(edges), edge_weights, unary, pairwise
+
+
+def enforce_center_labels(slic, labels, centres):
+    """ force the labels to hold label of the center,
+    prevention of desepearing labels of any center in list
+
+    :param slic:
+    :param labels:
+    :param centres:
+    :return:
+    """
+    for i, center in enumerate(centres):
+        idx = slic[int(center[0]), int(center[1])]
+        labels[idx] = i + 1
+    return labels
 
 
 def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
@@ -1508,6 +1524,7 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
                                    'lut_shape_cost': []})
 
     for _ in range(nb_iter):
+        labels = enforce_center_labels(slic, labels, centres)
         energy = compute_energy(labels, lut_data_cost, lut_shape_cost,
             slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
         if dict_debug_history is not None:
