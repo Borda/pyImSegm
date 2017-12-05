@@ -10,16 +10,15 @@ Require installation of Morph. Snakes - https://github.com/Borda/morph-snakes
 SAMPLE run:
 >> python run_ovary_egg-segmentation.py \
     -list images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
-    -out output -n ovary_image --nb_jobs 1 \
+    -out results -n ovary_slices --nb_jobs 1 \
     -m ellipse_moments \
        ellipse_ransac_mmt \
        ellipse_ransac_crit \
        GC_pixels-large \
        GC_pixels-shape \
-       GC_slic-large \
        GC_slic-shape \
        rg2sp_greedy-mixture \
-       rg2sp_rg2sp_GC-mixture \
+       rg2sp_GC-mixture \
        watershed_morph
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -89,10 +88,14 @@ SLIC_SIZE = 40
 SLIC_REGUL = 0.3
 # Region Growing configuration
 DEBUG_EXPORT = False
-RG2SP_THRESHOLDS = {'centre': 20,
-                    'shift': 10,
-                    'volume': 0.05,
-                    'centre_init': 50}
+
+RG2SP_THRESHOLDS = {  # thresholds for updating between iterations
+    'centre': 20,
+    'shift': 10,
+    'volume': 0.05,
+    'centre_init': 50
+}
+
 PATH_DATA = tl_data.update_path('data', absolute=True)
 PATH_IMAGES = os.path.join(tl_data.update_path('images'),
                            'drosophila_ovary_slice')
@@ -100,21 +103,21 @@ PATH_IMAGES = os.path.join(tl_data.update_path('images'),
 LIST_SAMPLE_METHODS = (
     'ellipse_moments', 'ellipse_ransac_mmt', 'ellipse_ransac_crit',
     'GC_pixels-large', 'GC_pixels-shape', 'GC_slic-large', 'GC_slic-shape',
-    'rg2sp_greedy-mixture', 'rg2sp_rg2sp_GC-mixture',
+    'rg2sp_greedy-mixture', 'rg2sp_GC-mixture',
     'watershed_morph'
 )
 # default segmentation configuration
 SEGM_PARAMS = {
-    'tab_proba-ellipse': [[0.01, 0.75, 0.95, 0.9],
-                          [0.99, 0.25, 0.05, 0.1]],
-    'tab_proba-graphcut':  [0.01, 0.7, 0.9, 0.9],
-    'tab_proba-RG2SP':  [0.01, 0.7, 0.9, 0.9],
+    # ovary labels: background, funicular cells, nurse cells, cytoplasm
+    'tab-proba_ellipse': [0.01, 0.95, 0.95, 0.85],
+    'tab-proba_graphcut':  [0.01, 0.6, 0.99, 0.75],
+    'tab-proba_RG2SP':  [0.01, 0.6, 0.95, 0.75],
     'path_single-model': os.path.join(PATH_DATA, 'RG2SP_single-model.pkl'),
     'path_multi-models': os.path.join(PATH_DATA, 'RG2SP_mixture-model.pkl'),
-    'gc-pixel_regul': 2.,
+    'gc-pixel_regul': 3.,
     'gc-slic_regul': 2.,
-    'RG2SP-shape': 3,
-    'RG2SP-pairwise': 15.,
+    'RG2SP-shape': 5.,
+    'RG2SP-pairwise': 3.,
     'RG2SP-swap': True,
     'label_trans': [0.1, 0.03],
     'overlap_theshold': SEGM_OVERLAP,
@@ -137,7 +140,8 @@ def arg_parse_params(params):
                         help='path to the list of image',
                         default=params['path_list'])
     parser.add_argument('-out', '--path_out', type=str, required=False,
-                        help='path to the output directory', default=params['path_out'])
+                        help='path to the output directory',
+                        default=params['path_out'])
     parser.add_argument('-n', '--name', type=str, required=False,
                         help='name of the experiment', default='ovary')
     parser.add_argument('-config', '--path_config', type=str, required=False,
@@ -152,11 +156,13 @@ def arg_parse_params(params):
             or arg_params['path_config'].lower() == 'none':
         params['path_config'] = ''
     else:
+        params['path_config'] = tl_data.update_path(params['path_config'])
         assert os.path.isfile(params['path_config']), '%s' % params['path_config']
         assert os.path.splitext(params['path_config'])[-1] == '.json'
         with open(params['path_config'], 'r') as fd:
             data = json.load(fd)
         params.update(data)
+        params.update(arg_params)
     for k in (k for k in arg_params if 'path' in k):
         if arg_params[k] is None: continue
         params[k] = tl_data.update_path(arg_params[k], absolute=True)
@@ -244,7 +250,7 @@ def segment_watershed(seg, centers, post_morph=False):
 
     # if morphological postprocessing was not selected, ends here
     if not post_morph:
-        return segm, centers
+        return segm, centers, None
 
     segm_clean = np.zeros_like(segm)
     for lb in range(1, np.max(segm) + 1):
@@ -256,7 +262,7 @@ def segment_watershed(seg, centers, post_morph=False):
         # seg_lb = morphology.remove_small_holes(seg_lb, min_size=thr_area)
         seg_lb = morphology.binary_opening(seg_lb, selem=morphology.disk(15))
         segm_clean[seg_lb] = lb
-    return segm_clean, centers
+    return segm_clean, centers, None
 
 
 def create_circle_center(img_shape, centers, radius=10):
@@ -309,7 +315,7 @@ def segment_active_contour(img, centers):
         logging.debug('bounding box area: %d', bb_area)
         seg = morphology.remove_small_holes(seg, min_size=bb_area)
         segm[seg] = i + 1
-    return segm, centers
+    return segm, centers, None
 
 
 def segment_morphsnakes(img, centers, init_center=True, smoothing=5,
@@ -339,7 +345,7 @@ def segment_morphsnakes(img, centers, init_center=True, smoothing=5,
     diag = np.sqrt(img.shape[0] ** 2 + img.shape[1] ** 2)
     ms.run(int(diag / 2.))
     segm = ms.levelset
-    return segm, centers
+    return segm, centers, None
 
 
 # def segment_chanvese(img, centers, init_center=False, bb_dist=INIT_MASK_BORDER):
@@ -356,7 +362,7 @@ def segment_morphsnakes(img, centers, init_center=True, smoothing=5,
 #     segm, phi, its = chanvese.chanvese(img, init_mask, alpha=0.2,
 #                                        max_its=nb_iter, thresh=0)
 #     segm = measure.label(segm)
-#     return segm, centers
+#     return segm, centers, None
 
 
 def segment_fit_ellipse(seg, centers, fn_preproc_points,
@@ -371,7 +377,7 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points,
     """
     points_centers = fn_preproc_points(seg, centers)
 
-    centres_new = []
+    centres_new, ell_params = [], []
     segm = np.zeros_like(seg)
     for i, points in enumerate(points_centers):
         lb = i + 1
@@ -381,9 +387,15 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points,
             continue
         logging.debug('ellipse params: %s', repr(ellipse.params))
         segm = ell_fit.add_overlap_ellipse(segm, ellipse.params, lb, thr_overlap)
+
         if np.any(segm == lb):
             centres_new.append(centers[i])
-    return segm, np.array(centres_new)
+            ell_params.append(ellipse.params)
+
+    dict_export = {'ellipses.csv':
+                       pd.DataFrame(ell_params,
+                                    columns=['xc', 'yc', 'a', 'b', 'theta'])}
+    return segm, np.array(centres_new), dict_export
 
 
 def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
@@ -399,7 +411,7 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
     """
     points_centers = fn_preproc_points(seg, centers)
 
-    centres_new = []
+    centres_new, ell_params = [], []
     segm = np.zeros_like(seg)
     for i, points in enumerate(points_centers):
         lb = i + 1
@@ -416,7 +428,12 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
 
         if np.any(segm == lb):
             centres_new.append(centers[i])
-    return segm, np.array(centres_new)
+            ell_params.append(ransac_model.params)
+
+    dict_export = {'ellipses.csv':
+                       pd.DataFrame(ell_params,
+                                    columns=['xc', 'yc', 'a', 'b', 'theta'])}
+    return segm, np.array(centres_new), dict_export
 
 
 def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
@@ -437,7 +454,7 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
     points_centers = fn_preproc_points(seg, centers)
     weights = np.bincount(slic.ravel())
 
-    centres_new = []
+    centres_new, ell_params = [], []
     segm = np.zeros_like(seg)
     for i, points in enumerate(points_centers):
         lb = i + 1
@@ -456,7 +473,12 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
 
         if np.any(segm == lb):
             centres_new.append(centers[i])
-    return segm, np.array(centres_new)
+            ell_params.append(ransac_model.params)
+
+    dict_export = {'ellipses.csv':
+                       pd.DataFrame(ell_params,
+                                    columns=['xc', 'yc', 'a', 'b', 'theta'])}
+    return segm, np.array(centres_new), dict_export
 
 
 def segment_graphcut_pixels(seg, centers, labels_fg_prob, gc_regul=1.,
@@ -476,7 +498,7 @@ def segment_graphcut_pixels(seg, centers, labels_fg_prob, gc_regul=1.,
     segm_obj = seg_rg.object_segmentation_graphcut_pixels(
                             seg, centers, labels_fg_prob, gc_regul, seed_size,
                             coef_shape, shape_mean_std=shape_mean_std)
-    return segm_obj, centers
+    return segm_obj, centers, None
 
 
 def segment_graphcut_slic(slic, seg, centers, labels_fg_prob, gc_regul=1.,
@@ -500,7 +522,7 @@ def segment_graphcut_slic(slic, seg, centers, labels_fg_prob, gc_regul=1.,
                     add_neighbours=multi_seed, coef_shape=coef_shape,
                     shape_mean_std=shape_mean_std)
     segm_obj = np.array(gc_labels)[slic]
-    return segm_obj, centers
+    return segm_obj, centers, None
 
 
 def segment_rg2sp_greedy(slic, seg, centers, labels_fg_prob, path_model,
@@ -529,7 +551,7 @@ def segment_rg2sp_greedy(slic, seg, centers, labels_fg_prob, path_model,
             plt.close(fig)
 
     segm_obj = labels_greedy[slic]
-    return segm_obj, centers
+    return segm_obj, centers, None
 
 
 def segment_rg2sp_graphcut(slic, seg, centers, labels_fg_prob, path_model,
@@ -558,7 +580,7 @@ def segment_rg2sp_graphcut(slic, seg, centers, labels_fg_prob, path_model,
             plt.close(fig)
 
     segm_obj = labels_gc[slic]
-    return segm_obj, centers
+    return segm_obj, centers, None
 
 
 def simplify_segm_3cls(seg, lut=(0., 0.8, 1.), smooth=True):
@@ -590,15 +612,15 @@ def create_dict_segmentation(params, slic, segm, img, centers):
     :return {str: (function, (...))}:
     """
     # parameters for Region Growing
-    params_rg_single = (slic, segm, centers, params['tab_proba-RG2SP'],
+    params_rg_single = (slic, segm, centers, params['tab-proba_RG2SP'],
                         params['path_single-model'], params['RG2SP-shape'],
                         params['RG2SP-pairwise'], params['RG2SP-swap'],
                         params['label_trans'], params['RG2SP_theshold'])
-    params_rg_multi = (slic, segm, centers, params['tab_proba-RG2SP'],
+    params_rg_multi = (slic, segm, centers, params['tab-proba_RG2SP'],
                        params['path_multi-models'], params['RG2SP-shape'],
                        params['RG2SP-pairwise'], params['RG2SP-swap'],
                        params['label_trans'], params['RG2SP_theshold'])
-    tab_proba_gc = params['tab_proba-graphcut']
+    tab_proba_gc = params['tab-proba_graphcut']
     gc_regul_px = params['gc-pixel_regul']
     gc_regul_slic = params['gc-slic_regul']
     seg_simple = simplify_segm_3cls(segm) if segm is not None else None
@@ -613,16 +635,16 @@ def create_dict_segmentation(params, slic, segm, img, centers):
         'ellipse_ransac_crit': (segment_fit_ellipse_ransac_segm,
                                 (segm, centers,
                                  ell_fit.prepare_boundary_points_ray_edge,
-                                 params['tab_proba-ellipse'])),
+                                 params['tab-proba_ellipse'])),
 
         'ellipse_ransac_crit2': (segment_fit_ellipse_ransac_segm,
                                 (segm, centers,
                                  ell_fit.prepare_boundary_points_ray_join,
-                                 params['tab_proba-ellipse'])),
+                                 params['tab-proba_ellipse'])),
         'ellipse_ransac_crit3': (segment_fit_ellipse_ransac_segm,
                                 (segm, centers,
                                  ell_fit.prepare_boundary_points_ray_mean,
-                                 params['tab_proba-ellipse'])),
+                                 params['tab-proba_ellipse'])),
 
         'GC_pixels-small': (segment_graphcut_pixels,
                             (segm, centers, tab_proba_gc, gc_regul_px, 10)),
@@ -637,22 +659,23 @@ def create_dict_segmentation(params, slic, segm, img, centers):
         'GC_slic-shape': (segment_graphcut_slic,
                           (slic, segm, centers, tab_proba_gc, 1., False, 0.1)),
 
-        'rg2sp_greedy-single': (segment_rg2sp_greedy, params_rg_single),
-        'rg2sp_greedy-mixture': (segment_rg2sp_greedy, params_rg_multi),
-        'rg2sp_GC-single': (segment_rg2sp_graphcut, params_rg_single),
-        'rg2sp_GC-mixture': (segment_rg2sp_graphcut, params_rg_multi),
+        'RG2SP_greedy-single': (segment_rg2sp_greedy, params_rg_single),
+        'RG2SP_greedy-mixture': (segment_rg2sp_greedy, params_rg_multi),
+        'RG2SP_GC-single': (segment_rg2sp_graphcut, params_rg_single),
+        'RG2SP_GC-mixture': (segment_rg2sp_graphcut, params_rg_multi),
 
         'watershed': (segment_watershed, (segm, centers)),
         'watershed_morph': (segment_watershed, (segm, centers, True)),
 
         # NOTE, this method takes to long for run in CI
-        'morphsnakes_seg': (segment_morphsnakes,
+        'morph-snakes_seg': (segment_morphsnakes,
                             (seg_simple, centers, True, 3, [2, 1])),
-        'morphsnakes_img': (segment_morphsnakes, (img, centers)),
+        'morph-snakes_img': (segment_morphsnakes, (img, centers)),
     }
     if params['methods'] is not None:
-        dict_segment_filter = {n: dict_segment[n] for n in params['methods']
-                               if n in dict_segment}
+        params['methods'] = [n.lower() for n in params['methods']]
+        dict_segment_filter = {n: dict_segment[n] for n in dict_segment
+                               if n.lower() in params['methods']}
     else:
         dict_segment_filter = dict_segment
     return dict_segment_filter
@@ -705,25 +728,29 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     centre_name = name + '.csv'
 
     # iterate over segmentation methods and perform segmentation on this image
-    for n in dict_segment:
-        (fn, args) = dict_segment[n]
-        logging.debug(' -> %s on "%s"', n, name)
-        path_dir = os.path.join(params['path_exp'], n)  # n.split('_')[0]
-        path_segm = os.path.join(params['path_exp'], path_dir, image_name)
-        path_centre = os.path.join(params['path_exp'],
-                                   path_dir + DIR_CENTRE_POSIX, centre_name)
-        path_fig = os.path.join(params['path_exp'],
-                                path_dir + DIR_VISUAL_POSIX, image_name)
-        path_debug = os.path.join(params['path_exp'],
-                                  path_dir + DIR_DEBUG_POSIX, name)
+    for method in dict_segment:
+        (fn, args) = dict_segment[method]
+        logging.debug(' -> %s on "%s"', method, name)
+        path_dir = os.path.join(params['path_exp'], method)  # n.split('_')[0]
+        path_segm = os.path.join(path_dir, image_name)
+        path_centre = os.path.join(path_dir + DIR_CENTRE_POSIX, centre_name)
+        path_fig = os.path.join(path_dir + DIR_VISUAL_POSIX, image_name)
+        path_debug = os.path.join(path_dir + DIR_DEBUG_POSIX, name)
         # assuming that segmentation may fail
         try:
             t = time.time()
-            if debug_export and 'rg2sp' in n:
+            if debug_export and 'rg2sp' in method:
                 os.mkdir(path_debug)
-                segm_obj, centers = fn(*args, debug_export=path_debug)
+                segm_obj, centers, dict_export = fn(*args,
+                                                    debug_export=path_debug)
             else:
-                segm_obj, centers = fn(*args)
+                segm_obj, centers, dict_export = fn(*args)
+
+            # also export ellipse params here or inside the segm fn
+            if dict_export is not None:
+                for k in dict_export:
+                    export_partial(k, dict_export[k], path_dir, name)
+
             logging.info('running time of %s on image "%s" is %d s',
                          repr(fn.__name__), image_name, time.time() - t)
             Image.fromarray(segm_obj.astype(np.uint8)).save(path_segm)
@@ -733,9 +760,20 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
             tl_data.save_landmarks_csv(path_centre, centers)
         except:
             logging.error('segment fail for "%s" via %s with \n %s',
-                          name, n, traceback.format_exc())
+                          name, method, traceback.format_exc())
 
     return name
+
+
+def export_partial(str_key, obj_content, path_dir, name):
+    key, posix = os.path.splitext(str_key)
+    path_out = os.path.join(path_dir + '___%s' % key)
+    if not os.path.isdir(path_out):
+        os.mkdir(path_out)
+    path_file = os.path.join(path_out, name + posix)
+    if posix.endswith('.csv'):
+        obj_content.to_csv(path_file)
+    return path_file
 
 
 def main(params, debug_export=DEBUG_EXPORT):

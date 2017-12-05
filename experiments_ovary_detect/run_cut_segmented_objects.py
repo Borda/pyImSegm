@@ -5,7 +5,7 @@ SAMPLE run:
 >> python run_cut_segmented_objects.py \
     -annot "images/drosophila_ovary_slice/annot_eggs/*.png" \
     -img "images/drosophila_ovary_slice/segm/*.png" \
-    -out results/cut_images --padding 50
+    -out results/cut_images --padding 20
 
 """
 
@@ -57,6 +57,10 @@ def arg_parse_params(dict_paths=PATHS):
                         default=dict_paths['output'])
     parser.add_argument('--padding', type=int, required=False,
                         help='crop padding [px]', default=25)
+    parser.add_argument('--mask', type=int, required=False,
+                        help='mask by the segmentation', default=1)
+    parser.add_argument('-bg', '--background', type=int, required=False,
+                        help='using background color', default=None, nargs='+')
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     args = parser.parse_args()
@@ -75,7 +79,7 @@ def arg_parse_params(dict_paths=PATHS):
     return dict_paths, args
 
 
-def export_cut_objects(df_row, path_out, padding):
+def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
     """ cut and expert objects in image according given segmentation
 
     :param df_row:
@@ -84,11 +88,16 @@ def export_cut_objects(df_row, path_out, padding):
     """
     annot, _ = tl_io.load_image_2d(df_row['path_1'])
     img, name = tl_io.load_image_2d(df_row['path_2'])
+    assert annot.shape[:2] == img.shape[:2], \
+        'image sizes not match %s vs %s' % (repr(annot.shape), repr(img.shape))
 
     uq_objects = np.unique(annot)
-    for i, idx in enumerate(uq_objects[1:]):
-        img_new = cut_object(img, annot == idx, padding)
-        path_img = os.path.join(path_out, '%s_%i.png' % (name, i + 1))
+    if len(uq_objects) == 1:
+        return
+
+    for idx in uq_objects[1:]:
+        img_new = cut_object(img, annot == idx, padding, use_mask, bg_color)
+        path_img = os.path.join(path_out, '%s_%i.png' % (name, idx))
         logging.debug('saving image "%s"', path_img)
         Image.fromarray(img_new).save(path_img)
 
@@ -111,7 +120,7 @@ def add_padding(img_size, padding, min_row, min_col, max_row, max_col):
     return min_row, min_col, max_row, max_col
 
 
-def cut_object(img, mask, padding):
+def cut_object(img, mask, padding, use_mask=False, bg_color=None):
     """ cut an object fro image according binary object segmentation
 
     :param ndarray img:
@@ -119,25 +128,51 @@ def cut_object(img, mask, padding):
     :param int padding: set padding around segmented object
     :return:
     """
+    assert mask.shape[:2] == img.shape[:2]
+
     prop = measure.regionprops(mask.astype(int))[0]
-    shift = prop.centroid - (np.array(mask.shape) / 2.)
+    bg_pixels = np.hstack([mask[0, :], mask[:, 0], mask[-1, :], mask[:, -1]])
+    bg_mask = np.argmax(np.bincount(bg_pixels))
+
+    if bg_color is None:
+        if img.ndim == 2:
+            bg_pixels = np.hstack([img[0, :], img[:, 0],
+                                   img[-1, :], img[:, -1]])
+            bg_color = np.argmax(np.bincount(bg_pixels))
+        else:
+            bg_pixels = np.vstack([img[0, :, ...], img[:, 0, ...],
+                                   img[-1, :, ...], img[:, -1, ...]])
+            bg_color = np.median(bg_pixels, axis=0)
+    bg_color = bg_color.astype(img.dtype)
+
     rotate = np.rad2deg(prop.orientation)
-    mask = ndimage.interpolation.shift(mask, -shift, order=0)
-    mask = ndimage.rotate(mask, -rotate, order=0, mode='constant',
-                          cval=mask[0, 0])
+    shift = prop.centroid - (np.array(mask.shape) / 2.)
     shift = np.append(shift, np.zeros(img.ndim - mask.ndim))
-    img_cut = ndimage.interpolation.shift(img, -shift, order=0)
+
+    mask = ndimage.interpolation.shift(mask, -shift[:mask.ndim], order=0)
+    mask = ndimage.rotate(mask, -rotate, order=0, mode='constant',
+                          cval=np.nan)
+
+    img_cut = ndimage.interpolation.shift(img, -shift[:img.ndim], order=0)
     img_cut = ndimage.rotate(img_cut, -rotate, order=0, mode='constant',
-                             cval=img.ravel()[0])
+                             cval=np.nan)
+    img_cut[np.isnan(mask), ...] = bg_color
+    mask[np.isnan(mask)] = bg_mask
 
     prop = measure.regionprops(mask.astype(int))[0]
     min_row, min_col, max_row, max_col = add_padding(img_cut.shape, padding,
                                                      *prop.bbox)
     img_cut = img_cut[min_row:max_row, min_col:max_col, ...]
+
+    if use_mask:
+        use_mask = mask[min_row:max_row, min_col:max_col, ...]
+        img_cut[~use_mask, ...] = bg_color
+
     return img_cut
 
 
-def main(dict_paths, padding=0, nb_jobs=NB_THREADS):
+def main(dict_paths, padding=0, use_mask=False, bg_color=None,
+         nb_jobs=NB_THREADS):
     """ the main executable
 
     :param dict_paths:
@@ -156,7 +191,7 @@ def main(dict_paths, padding=0, nb_jobs=NB_THREADS):
     logging.info('start cutting images')
     tqdm_bar = tqdm.tqdm(total=len(df_paths))
     wrapper_cutting = partial(export_cut_objects, path_out=dict_paths['output'],
-                              padding=padding)
+                              padding=padding, use_mask=use_mask, bg_color=bg_color)
     mproc_pool = mproc.Pool(nb_jobs)
     for _ in mproc_pool.imap_unordered(wrapper_cutting,
                                        (row for idx, row in df_paths.iterrows())):
@@ -170,4 +205,4 @@ def main(dict_paths, padding=0, nb_jobs=NB_THREADS):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     dict_paths, args = arg_parse_params()
-    main(dict_paths, args.padding, args.nb_jobs)
+    main(dict_paths, args.padding, args.mask, args.background, args.nb_jobs)
