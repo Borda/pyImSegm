@@ -73,9 +73,18 @@ class EllipseModelSegm(sk_fit.EllipseModel):
             2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.,  2.])
     """
 
-    def criterion(self, points, weights, labels,
-                  table_p=((0.1, 0.9), (0.9, 0.1))):
+    def criterion(self, points, weights, labels, table_prob=(0.1, 0.9)):
         """ Determine residuals of data to model.
+
+        :param points: points coordinates
+        :param weights: weight for each point represent the region size
+        :param labels: vector of labels for each point
+        :param table_prob: is a vector or foreground probabilities for each class
+            and being background is supplement to 1. Another option is define
+            a matrix with number of columns related to number of classes and
+            the first row denote probability being foreground and second being
+            background
+        :return:
 
         Example
         -------
@@ -85,27 +94,31 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         >>> el.params = [4, 7, 3, 6, np.deg2rad(10)]
         >>> weights = np.ones(seg.ravel().shape)
         >>> seg[4:5, 6:8] = 1
-        >>> table_p = [[0.1, 0.9], [0.9, 0.1]]
+        >>> table_prob = [[0.1, 0.9]]
         >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(),
-        ...              table_p)  # doctest: +ELLIPSIS
+        ...              table_prob)  # doctest: +ELLIPSIS
         87.888...
         >>> seg[2:7, 4:11] = 1
         >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(),
-        ...              table_p)  # doctest: +ELLIPSIS
+        ...              table_prob)  # doctest: +ELLIPSIS
         17.577...
         >>> seg[1:9, 1:14] = 1
         >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(),
-        ...              table_p)   # doctest: +ELLIPSIS
+        ...              table_prob)   # doctest: +ELLIPSIS
         -70.311...
         """
         assert len(points) == len(weights) == len(labels), \
             'different sizes for points %i and weights %i and labels %i' \
             % (len(points), len(weights), len(labels))
-        table_p = np.array(table_p)
-        assert table_p.shape[0] == 2, 'table shape %s' % repr(table_p.shape)
-        assert np.max(labels) < table_p.shape[1], \
+        table_prob = np.array(table_prob)
+        if table_prob.ndim == 1 or table_prob.shape[0] == 1:
+            if table_prob.shape[0] == 1:
+                table_prob = table_prob[0]
+            table_prob = np.array([table_prob, 1. - table_prob])
+        assert table_prob.shape[0] == 2, 'table shape %s' % repr(table_prob.shape)
+        assert np.max(labels) < table_prob.shape[1], \
             'labels (%i) exceed the table %s' % \
-            (np.max(labels), repr(table_p.shape))
+            (np.max(labels), repr(table_prob.shape))
 
         r_pos, c_pos = points[:, 0], points[:, 1]
         r_org, c_org, r_rad, c_rad, phi = self.params
@@ -119,7 +132,7 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         # plt.imshow(labels.reshape((10, 15)), interpolation='nearest')
         # plt.contour(inside.reshape((10, 15)))
 
-        table_q = - np.log(table_p)
+        table_q = - np.log(table_prob)
         labels_in = labels[inside].astype(int)
 
         residual = np.sum(weights[labels_in] *

@@ -222,7 +222,8 @@ def main(params):
         os.mkdir(params['path_output'])
 
     mproc_pool = mproc.Pool(params['nb_jobs'])
-    df_slices_info = seg_annot.load_info_group_by_slices(params['path_infofile'], params['stages'])
+    df_slices_info = seg_annot.load_info_group_by_slices(params['path_infofile'],
+                                                         params['stages'])
     wrapper_export = partial(export_figure, df_slices_info=df_slices_info,
                              path_out=params['path_output'])
     tqdm_bar = tqdm.tqdm(total=len(df_paths))

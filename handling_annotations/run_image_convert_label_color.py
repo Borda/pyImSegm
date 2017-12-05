@@ -51,7 +51,7 @@ def parse_arg_params():
     parser.add_argument('-out', '--path_out', type=str, required=True,
                         help='path to output dir', default=PATH_OUTPUT)
     parser.add_argument('-clrs', '--path_colors', type=str, required=False,
-                        help='json wiith colour-label dict', default=None)
+                        help='json with colour-label dict', default=None)
     parser.add_argument('--nb_jobs', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
