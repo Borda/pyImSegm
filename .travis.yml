@@ -5,13 +5,19 @@
 
 # See doc/travis_notes.txt for some guidelines
 
+env:
+  global:
+    - CODACY_PROJECT_TOKEN=ec5bccd4620f466d945905ed45461569
+
 language: python
 
 sudo: false
 
 python:
   - 2.7
+  - 3.4
   - 3.5
+  - 3.6
 
 # See http://docs.travis-ci.com/user/caching/#pip-cache
 cache: pip
@@ -21,27 +27,28 @@ before_install:
   - mkdir libs
 
 install:
-  - here=$PWD
-  - cd libs && git clone https://github.com/Borda/pyGCO.git
-  - cd $here/libs/pyGCO && pip install -r requirements.txt
-  - cd $here/libs/pyGCO && python setup.py install
-  - rm -r -f $here/libs/pyGCO
-  - cd $here
+  - root=$PWD
+  - cd $root/libs && git clone https://github.com/Borda/pyGCO.git
+  - cd $root/libs/pyGCO && pip install -r requirements.txt
+  - cd $root/libs/pyGCO && python setup.py install
+#  - rm -r -f $here/libs/pyGCO
+  - cd $root
 
   - pip install -r requirements.txt
-  - pip install nose>=1.3.7 coverage codecov pytest>=3.0.5
+  - pip install nose>=1.3.7 coverage codecov pytest>=3.0.5 codacy-coverage
 
 before_script:
-  - mkdir output
-  - mkdir results
-  - python setup_cython.py build_ext --inplace
+  - mkdir data && mkdir output && mkdir results
+  - python setup.py build_ext --inplace
 
 script:
-#  - pytest segmentation -v --doctest-modules
+  # - pytest segmentation -v --doctest-modules
   - nosetests segmentation -v --exe --with-doctest --with-xunit --with-coverage --cover-package=segmentation
 
 after_success:
-#  - codecov  # public repository on Travis CI
+  # - codecov  # public repository on Travis CI
   # private repository on Travis CI
   - codecov -t 80efed4e-ac2b-4fea-a642-0a8b1c82e1c8
+  - coverage xml
+  - python-codacy-coverage -r coverage.xml
   - coverage report

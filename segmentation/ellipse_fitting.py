@@ -4,21 +4,15 @@ Framework for ellipse fitting
 Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import logging
-
-import math
 import numpy as np
-from scipy import optimize
 from scipy import ndimage, spatial
-from skimage import segmentation, morphology, feature
+from skimage import morphology
 
-from skimage import draw as sk_draw
 from skimage.measure import fit as sk_fit
 # from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
-import segmentation.descriptors as tl_fts
-import segmentation.superpixels as tl_spx
 import segmentation.utils.drawing as tl_visu
-
+import segmentation.descriptors as seg_fts
+import segmentation.superpixels as seg_spx
 
 INIT_MASK_BORDER = 50.
 MIN_ELLIPSE_DAIM = 25.
@@ -80,7 +74,7 @@ class EllipseModelSegm(sk_fit.EllipseModel):
     """
 
     def criterion(self, points, weights, labels,
-                  table_p=[[0.1, 0.9], [0.9, 0.1]]):
+                  table_p=((0.1, 0.9), (0.9, 0.1))):
         """ Determine residuals of data to model.
 
         Example
@@ -110,7 +104,8 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         table_p = np.array(table_p)
         assert table_p.shape[0] == 2, 'table shape %s' % repr(table_p.shape)
         assert np.max(labels) < table_p.shape[1], \
-            'labels exceed the table %s' % (np.max(labels), repr(table_p.shape))
+            'labels (%i) exceed the table %s' % \
+            (np.max(labels), repr(table_p.shape))
 
         r_pos, c_pos = points[:, 0], points[:, 1]
         r_org, c_org, r_rad, c_rad, phi = self.params
@@ -142,8 +137,8 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
     points : [list, tuple of] (N, D) array
         Data set to which the model is fitted, where N is the number of points
         points and D the dimensionality of the points.
-        If the model class requires multiple input points arrays (e.g. source and
-        destination coordinates of  ``skimage.transform.AffineTransform``),
+        If the model class requires multiple input points arrays (e.g. source
+        and destination coordinates of  ``skimage.transform.AffineTransform``),
         they can be optionally passed as tuple or list. Note, that in this case
         the functions ``estimate(*points)``, ``residuals(*points)``,
         ``is_model_valid(model, *random_data)`` and
@@ -157,7 +152,7 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
 
         where `success` indicates whether the model estimation succeeded
         (`True` or `None` for success, `False` for failure).
-    min_samples : int
+    min_samples : int float
         The minimum number of points points to fit a model to.
     residual_threshold : float
         Maximum distance for a points point to be classified as an inlier.
@@ -185,7 +180,8 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
     >>> seg = np.zeros((120, 150), dtype=int)
     >>> ell_params = 60, 75, 40, 65, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)
-    >>> slic, points_all, labels = get_slic_points_labels(seg, size=10, regul=0.3)
+    >>> slic, points_all, labels = get_slic_points_labels(seg, slic_size=10,
+    ...                                                   slic_regul=0.3)
     >>> points = prepare_boundary_points_ray_dist(seg, [(40, 90)], 2,
     ...                                           sel_bg=1, sel_fg=0)[0]
     >>> table_prob = [[0.01, 0.75, 0.95, 0.9], [0.99, 0.25, 0.05, 0.1]]
@@ -217,7 +213,7 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
     # make sure points is list and not tuple, so it can be modified below
     points = np.array(points)
 
-    for i in range(max_trials):
+    for _ in range(max_trials):
         # choose random sample set
         random_idxs = np.random.randint(0, len(points), min_samples)
         samples = points[random_idxs]
@@ -254,22 +250,33 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
     return best_model, best_inliers
 
 
-def get_slic_points_labels(segm, img=None, size=20, regul=0.05):
+def get_slic_points_labels(segm, img=None, slic_size=20, slic_regul=0.1):
+    """ run SLIC on image or supepixels and return superpixels, their centers
+    and also lebels (label from segmentation in position of superpixel centre)
+
+    :param ndarray segm:
+    :param ndarray img:
+    :param int slic_size: superpixel size
+    :param float slic_regul: regularisation in range (0, 1)
+    :return:
+    """
     if img is None:
         img = segm / float(segm.max())
-    slic = tl_spx.segment_slic_img2d(img, sp_size=size, rltv_compact=regul)
-    slic_centers = np.array(tl_spx.superpixel_centers(slic)).astype(int)
+    slic = seg_spx.segment_slic_img2d(img, sp_size=slic_size,
+                                      rltv_compact=slic_regul)
+    slic_centers = np.array(seg_spx.superpixel_centers(slic)).astype(int)
     labels = segm[slic_centers[:, 0], slic_centers[:, 1]]
     return slic, slic_centers, labels
 
 
 def add_overlap_ellipse(segm, ellipse_params, label, thr_overlap=1.):
-    """
+    """ add to existing image ellipse with specific label
+    if the new ellipse does not ouvelap with already existing object / ellipse
 
-    :param segm:
-    :param ellipse_params:
-    :param label:
-    :param thr_overlap:
+    :param ndarray segm:
+    :param () ellipse_params:
+    :param int label:
+    :param float thr_overlap: relative overlap with existing objects
     :return:
 
     >>> seg = np.zeros((15, 20), dtype=int)
@@ -343,23 +350,25 @@ def prepare_boundary_points_ray_join(seg, centers, close_points=5,
     seg_bg, seg_fg = split_segm_background_foreground(seg, sel_bg, sel_fg)
 
     points_centers = []
-    for i, center in enumerate(centers):
-        ray_bg = tl_fts.compute_ray_features_segm_2d(seg_bg, center)
+    for center in centers:
+        ray_bg = seg_fts.compute_ray_features_segm_2d(seg_bg, center)
         ray_bg[ray_bg < min_diam] = min_diam
-        points_bg = tl_fts.reconstruct_ray_features_2d(center, ray_bg)
-        points_bg = tl_fts.reduce_close_points(points_bg, close_points)
+        points_bg = seg_fts.reconstruct_ray_features_2d(center, ray_bg)
+        points_bg = seg_fts.reduce_close_points(points_bg, close_points)
 
-        ray_fc = tl_fts.compute_ray_features_segm_2d( seg_fg, center, edge='down')
+        ray_fc = seg_fts.compute_ray_features_segm_2d(seg_fg, center,
+                                                      edge='down')
         ray_fc[ray_fc < min_diam] = min_diam
-        points_fc = tl_fts.reconstruct_ray_features_2d(center, ray_fc)
-        points_fc = tl_fts.reduce_close_points(points_fc, close_points)
+        points_fc = seg_fts.reconstruct_ray_features_2d(center, ray_fc)
+        points_fc = seg_fts.reduce_close_points(points_fc, close_points)
 
         points_both = np.vstack((points_bg, points_fc))
         points_centers.append(points_both)
     return points_centers
 
 
-def split_segm_background_foreground(seg, sel_bg=STRUC_ELEM_BG, sel_fg=STRUC_ELEM_FG):
+def split_segm_background_foreground(seg, sel_bg=STRUC_ELEM_BG,
+                                     sel_fg=STRUC_ELEM_FG):
     """ smoothing segmentation with morphological operation
 
     :param ndarray seg: input segmentation
@@ -432,10 +441,11 @@ def prepare_boundary_points_ray_edge(seg, centers, close_points=5,
     seg_bg, seg_fc = split_segm_background_foreground(seg, sel_bg, sel_fg)
 
     points_centers = []
-    for i, center in enumerate(centers):
-        ray_bg = tl_fts.compute_ray_features_segm_2d(seg_bg, center)
+    for center in centers:
+        ray_bg = seg_fts.compute_ray_features_segm_2d(seg_bg, center)
 
-        ray_fc = tl_fts.compute_ray_features_segm_2d(seg_fc, center, edge='down')
+        ray_fc = seg_fts.compute_ray_features_segm_2d(seg_fc, center,
+                                                      edge='down')
 
         # replace not found (-1) by large values
         rays = np.array([ray_bg, ray_fc], dtype=float)
@@ -443,8 +453,8 @@ def prepare_boundary_points_ray_edge(seg, centers, close_points=5,
         rays[rays < min_diam] = min_diam
         # take the smallesr from both
         ray_close = np.min(rays, axis=0)
-        points_close = tl_fts.reconstruct_ray_features_2d(center, ray_close)
-        points_close = tl_fts.reduce_close_points(points_close, close_points)
+        points_close = seg_fts.reconstruct_ray_features_2d(center, ray_close)
+        points_close = seg_fts.reduce_close_points(points_close, close_points)
 
         points_centers.append(points_close)
     return points_centers
@@ -477,10 +487,11 @@ def prepare_boundary_points_ray_mean(seg, centers, close_points=5,
     seg_bg, seg_fc = split_segm_background_foreground(seg, sel_bg, sel_fg)
 
     points_centers = []
-    for i, center in enumerate(centers):
-        ray_bg = tl_fts.compute_ray_features_segm_2d(seg_bg, center)
+    for center in centers:
+        ray_bg = seg_fts.compute_ray_features_segm_2d(seg_bg, center)
 
-        ray_fc = tl_fts.compute_ray_features_segm_2d(seg_fc, center, edge='down')
+        ray_fc = seg_fts.compute_ray_features_segm_2d(seg_fc, center,
+                                                      edge='down')
 
         # replace not found (-1) by large values
         rays = np.array([ray_bg, ray_fc], dtype=float)
@@ -492,8 +503,8 @@ def prepare_boundary_points_ray_mean(seg, centers, close_points=5,
         ray_mean = np.mean(rays, axis=0)
         ray_mean[np.isinf(ray_mean)] = ray_min[np.isinf(ray_mean)]
 
-        points_close = tl_fts.reconstruct_ray_features_2d(center, ray_mean)
-        points_close = tl_fts.reduce_close_points(points_close, close_points)
+        points_close = seg_fts.reconstruct_ray_features_2d(center, ray_mean)
+        points_close = seg_fts.reduce_close_points(points_close, close_points)
 
         points_centers.append(points_close)
     return points_centers
@@ -528,10 +539,10 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1,
     seg_bg, _ = split_segm_background_foreground(seg, sel_bg, sel_fg)
 
     points = np.array((0, np.asarray(centers).shape[1]))
-    for i, center in enumerate(centers):
-        ray = tl_fts.compute_ray_features_segm_2d(seg_bg, center)
-        points_bg = tl_fts.reconstruct_ray_features_2d(center, ray, 0)
-        points_bg = tl_fts.reduce_close_points(points_bg, close_points)
+    for center in centers:
+        ray = seg_fts.compute_ray_features_segm_2d(seg_bg, center)
+        points_bg = seg_fts.reconstruct_ray_features_2d(center, ray, 0)
+        points_bg = seg_fts.reduce_close_points(points_bg, close_points)
 
         points = np.vstack((points, points_bg))
 
@@ -546,10 +557,10 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1,
 
 
 def filter_boundary_points(segm, slic):
-    slic_centers = np.array(tl_spx.superpixel_centers(slic)).astype(int)
+    slic_centers = np.array(seg_spx.superpixel_centers(slic)).astype(int)
     labels = segm[slic_centers[:, 0], slic_centers[:, 1]]
 
-    vertices, edges = tl_spx.make_graph_segm_connect2d_conn4(slic)
+    vertices, edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
     nb_labels = labels.max() + 1
 
     neighbour_labels = np.zeros((len(vertices), nb_labels))
@@ -557,8 +568,9 @@ def filter_boundary_points(segm, slic):
         # print e1, labels[e2], e2, labels[e1]
         neighbour_labels[e1, labels[e2]] += 1
         neighbour_labels[e2, labels[e1]] += 1
-    neighbour_labels = neighbour_labels / np.tile(np.sum(neighbour_labels, axis=1),
-                                                  (nb_labels, 1)).T
+    neighbour_labels = neighbour_labels \
+                       / np.tile(np.sum(neighbour_labels, axis=1),
+                                 (nb_labels, 1)).T
 
     # border point nex to foreground
     filter_bg = np.logical_and(labels == 0, neighbour_labels[:, 0] < 1)
@@ -584,8 +596,8 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, rltv_compact=0.3):
     [[[6, 85], [8, 150], [16, 109], [27, 139], [32, 77], [36, 41], [34, 177],
     [59, 161], [54, 135], [67, 62], [64, 33], [84, 150], [91, 48], [92, 118]]]
     """
-    slic = tl_spx.segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
-                                     rltv_compact=rltv_compact)
+    slic = seg_spx.segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
+                                      rltv_compact=rltv_compact)
     points_all = filter_boundary_points(seg, slic)
 
     dists = spatial.distance.cdist(points_all, centers, metric='euclidean')
@@ -625,7 +637,7 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, rltv_compact=0.3):
 #      [19, 107], [21, 119], [24, 62], [28, 129], [33, 51], [46, 47],
 #      [60, 50], [70, 60], [74, 71], [80, 81], [83, 93]]]
 #     """
-#     slic = tl_spx.segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
+#     slic = seg_spx.segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
 #                                      rltv_compact=rltv_compact)
 #     points_all = filter_boundary_points(seg, slic)
 #
@@ -640,4 +652,3 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, rltv_compact=0.3):
 #                                        dist_min <= dist_thr)]
 #         points_centers.append(points)
 #     return points_centers
-

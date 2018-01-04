@@ -1,9 +1,13 @@
+data/
 libs/
+build/
 output/
 results/
 temporary/
-.coverage
 .idea
+.coverage
+coverage.xml
+pytest.xml
 *.cpp
 *.pyc
 *.so

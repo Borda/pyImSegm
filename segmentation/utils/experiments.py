@@ -1,4 +1,5 @@
 """
+Framework for general experiments
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -7,13 +8,10 @@ import os
 import json
 import copy
 import time
-import random
-import shutil
 import logging
 import traceback
 
 import numpy as np
-import pandas as pd
 from sklearn import metrics
 
 FILE_RESULTS = 'resultStat.txt'
@@ -27,6 +25,7 @@ FILE_LOGS = 'logging.txt'
 class Experiment(object):
     """
 
+    >>> import shutil
     >>> params = {'path_out': '.', 'name': 'My-Sample'}
     >>> expt = Experiment(params, time_stamp=False)
     >>> expt.run()
@@ -41,7 +40,7 @@ class Experiment(object):
         self.__check_exist_path()
         self.__create_folder(time_stamp)
         set_experiment_logger(self.params['path_exp'])
-        logging.info('PARAMS: \n%s', string_dict(self.params))
+        logging.info(string_dict(self.params, desc='PARAMETERS'))
 
     def run(self, gt=True):
         self._load_data(gt)
@@ -64,7 +63,7 @@ class Experiment(object):
 
     def __check_exist_path(self):
         for p in [self.params[n] for n in self.params
-                  if 'dir' in n.lower() or 'path' in n.lower()]:
+                  if 'dir_name' in n.lower() or 'path' in n.lower()]:
             if not os.path.exists(p):
                 raise Exception('given folder "{}" does not exist!'.format(p))
         for p in [self.params[n] for n in self.params if 'file' in n.lower()]:
@@ -76,7 +75,7 @@ class Experiment(object):
         """
         # create results folder for experiments
         if not os.path.exists(self.params.get('path_out')):
-            logging.error('no results folder "{}"'.format(self.p.get('path_out')))
+            logging.error('no results folder: %s', repr(self.p.get('path_out')))
             self.params['path_exp'] = ''
             return
         self.params = create_experiment_folder(self.params,
@@ -87,7 +86,7 @@ class Experiment(object):
 # def check_exist_dirs_files(params):
 #     res = True
 #     for p in [params[total] for total in params
-#               if 'dir' in total.lower() or 'path' in total.lower()]:
+#               if 'dir_name' in total.lower() or 'path' in total.lower()]:
 #         if not os.path.exists(p):
 #             logging.error('given folder "{}" does not exist!'.format(p))
 #             res = False
@@ -107,6 +106,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     :param bool skip_load:
     :return {str: any}:
 
+    >>> import shutil
     >>> p = {'path_out': '.'}
     >>> p = create_experiment_folder(p, 'my_test', False, skip_load=True)
     >>> 'computer' in p
@@ -126,7 +126,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     path_expt = os.path.join(params.get('path_out'), dir_name)
     while stamp_unique and os.path.exists(path_expt):
         logging.warning('particular out folder already exists')
-        path_expt += ':' + str(random.randint(0, 9))
+        path_expt += ':' + str(np.random.randint(0, 9))
     logging.info('creating experiment folder "{}"'.format(path_expt))
     if not os.path.exists(path_expt):
         os.mkdir(path_expt)
@@ -139,6 +139,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
             params = json.load(fp)
         params.update({'computer': os.uname(),
                        'path_exp': path_expt})
+        logging.info('loaded following PARAMETERS: %s', string_dict(params))
     logging.debug('saving params to file "%s"', CONFIG_JSON)
     with open(path_config, 'w') as f:
         json.dump(params, f)
@@ -158,30 +159,33 @@ def set_experiment_logger(path_out, file_name=FILE_LOGS, reset=True):
     log.addHandler(fh)
 
 
-def string_dict(d, offset=30):
+def string_dict(d, offset=30, desc='DICTIONARY'):
     """ transform dictionary to a formatted string
 
     :param {} d:
+    :param int offset: length between name and value
+    :param str desc: dictionary title
     :return str:
 
     >>> string_dict({'abc': 123})  #doctest: +NORMALIZE_WHITESPACE
     \'DICTIONARY: \\n"abc": 123\'
     """
-    s = 'DICTIONARY: \n'
+    s = desc + ': \n'
     tmp_name = '{:' + str(offset) + 's} {}'
     rows = [tmp_name.format('"{}":'.format(n), d[n]) for n in sorted(d)]
     s += '\n'.join(rows)
     return str(s)
 
 
-def append_final_stat(out_dir, y_true, y_pred, time_sec, file_name=FILE_RESULTS):
+def append_final_stat(out_dir, y_true, y_pred, time_sec,
+                      file_name=FILE_RESULTS):
     """ append (export) statistic to existing default file
 
     :param str out_dir:
     :param [int] y_true: annotation
     :param [int] y_pred: predictions
-    :param int t_secunds:
-    :param str file_path:
+    :param int time_sec:
+    :param str file_name:
     :return str:
 
     >>> np.random.seed(0)
@@ -206,38 +210,6 @@ def append_final_stat(out_dir, y_true, y_pred, time_sec, file_name=FILE_RESULTS)
     return file_path
 
 
-def stat_weight_by_support(vals, id_val, id_sup):
-    val = [v * s for v, s in zip(vals[id_val], vals[id_sup])]
-    n = np.sum(val) / np.sum(vals[id_sup])
-    return n
-
-
-def format_classif_stat(y_true, y_pred):
-    """ format classofication statistic
-
-    :param [int] y_true: annotation
-    :param [int] y_pred: predictions
-    :return:
-
-    >>> np.random.seed(0)
-    >>> y_true = np.random.randint(0, 2, 25)
-    >>> y_pred = np.random.randint(0, 2, 25)
-    >>> stat = format_classif_stat(y_true, y_pred)
-    >>> pd.Series(stat)
-    f1_score      0.586667
-    precision     0.605882
-    recall        0.600000
-    support      25.000000
-    dtype: float64
-    """
-    vals = metrics.precision_recall_fscore_support(y_true, y_pred)
-    stat = {'precision':    stat_weight_by_support(vals, 0, 3),
-            'recall':       stat_weight_by_support(vals, 1, 3),
-            'f1_score':     stat_weight_by_support(vals, 2, 3),
-            'support':      np.sum(vals[3])}
-    return stat
-
-
 def extend_list_params(list_params, name_param, list_options):
     """ extend the parameter list by all sub-datasets
 
@@ -246,6 +218,7 @@ def extend_list_params(list_params, name_param, list_options):
     :param list_options: list
     :return: [{str: ...}]
 
+    >>> import pandas as pd
     >>> params = extend_list_params([{'a': 1}], 'a', [3, 4])
     >>> pd.DataFrame(params)  # doctest: +NORMALIZE_WHITESPACE
        a param_idx
@@ -266,22 +239,23 @@ def extend_list_params(list_params, name_param, list_options):
 
 
 def create_subfolders(path_out, list_folders):
-    """
+    """ create subfolders in rood directory
 
-    :param path_out:
-    :param list_folders:
+    :param str path_out: root dictionary
+    :param [str] list_folders: list of subfolders
     :return:
 
-    >>> dir = 'sample_dir'
-    >>> create_subfolders('.', [dir])
+    >>> import shutil
+    >>> dir_name = 'sample_dir'
+    >>> create_subfolders('.', [dir_name])
     1
-    >>> os.path.exists(dir)
+    >>> os.path.exists(dir_name)
     True
-    >>> shutil.rmtree(dir)
+    >>> shutil.rmtree(dir_name)
     """
     count = 0
-    for dir in list_folders:
-        path_dir = os.path.join(path_out, dir)
+    for dir_name in list_folders:
+        path_dir = os.path.join(path_out, dir_name)
         if not os.path.exists(path_dir):
             try:
                 os.mkdir(path_dir)

@@ -1,13 +1,5 @@
 """
-
-LINKS:
-* http://peekaboo-vision.blogspot.cz/2012/05/graphcuts-for-python-pygco.html
-* http://scikit-learn.org/0.11/auto_examples/cluster/plot_segmentation_toy.html
-* http://mygsoc.blogspot.cz/2013/07/graph-cuts.html
-* http://www.bogotobogo.com/python/OpenCV_Python/python_opencv3_Image_Segmentation_by_Foreground_Extraction_Grabcut_Algorithm_based_on_Graph_cuts.php
-* http://pmneila.github.io/PyMaxflow/maxflow.html
-* pygco - https://github.com/amueller/gco_python
-* pygco - https://github.com/yujiali/pygco
+Framework for GraphCut
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -15,33 +7,56 @@ Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import logging
 
 import numpy as np
-from pygco import cut_general_graph
+from gco import cut_general_graph
 from sklearn import metrics, mixture, cluster, preprocessing
 
-import segmentation.superpixels as tl_spx
-import segmentation.descriptors as tl_fts
 import segmentation.utils.drawing as tl_visu
+import segmentation.superpixels as seg_spx
+import segmentation.descriptors as seg_fts
 
 DEFAULT_GC_ITERATIONS = 25
 COEF_INT_CONVERSION = 1e6
 DEBUG_NB_SHOW_SAMPLES = 15
 
 
-def estim_gmm_segm_params(fts, prob):
-    nb_spl, nb_cls = prob.shape
-    lut = np.argmax(prob, axis=1)
+def estim_gmm_params(features, prob):
+    """ with given soft labeling (take the maxim) get the GMM parameters
+
+    :param ndarray features:
+    :param ndarray prob:
+    :return:
+
+    >>> np.random.seed(0)
+    >>> prob = np.array([[1, 0]] * 30 + [[0, 1]] * 40)
+    >>> fts = prob + np.random.random(prob.shape)
+    >>> gmm = estim_gmm_params(fts, prob)
+    >>> gmm['weights']
+    [0.42857142857142855, 0.5714285714285714]
+    >>> gmm['means']
+    array([[ 1.49537196,  0.53745455],
+           [ 0.54199936,  1.42606497]])
+    """
+    nb_samples, nb_classes = prob.shape
+    labels = np.argmax(prob, axis=1)
     gmm_params = {'weights': [], 'means': [], 'covars': []}
-    for lb in range(nb_cls):
-        lb_sel = lut == lb
-        gmm_params['weights'].append(np.sum(lb_sel) / float(nb_spl))
-        gmm_params['means'].append(np.mean(fts[lb_sel], axis=0))
-        gmm_params['covars'].append(np.cov(fts[lb_sel]))
+    for lb in range(nb_classes):
+        labels_sel = (labels == lb)
+        gmm_params['weights'].append(np.sum(labels_sel) / float(nb_samples))
+        gmm_params['means'].append(np.mean(features[labels_sel], axis=0))
+        gmm_params['covars'].append(np.cov(features[labels_sel]))
     for n in ['means', 'covars']:
         gmm_params[n] = np.array([m.tolist() for m in gmm_params[n]])
     return gmm_params
 
 
 def estim_class_model(features, nb_classes, proba_type):
+    """ wrapper over several options how to cluster samples
+
+    :param ndarray features:
+    :param int nb_classes:
+    :param str proba_type:
+    :return:
+    """
     if proba_type == 'GMM':
         model = estim_class_model_gmm(features, nb_classes)
     elif proba_type == 'quantiles':
@@ -96,10 +111,11 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
                   repr(features.shape), nb_classes)
     # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
     gmm = mixture.GaussianMixture(n_components=nb_classes,
-                                  covariance_type='full', max_iter=999)
+                                  covariance_type='full', max_iter=99)
     if init == 'kmeans':
-        # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-        kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
+    # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+        kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++',
+                                n_jobs=-1)
         y = kmeans.fit_predict(features)
         gmm.fit(features, y)
     else:
@@ -111,9 +127,16 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
 def estim_class_model_kmeans(features, nb_classes, init_type='k-means++'):
     """ from all features estimate Gaussian from k-means clustering
 
-    :param features: float[][], list of features per segment
-    :param nb_classes: int, number of classes
-    :return:flaot[][] probabilities that each feature belongs to each class
+    :param [[float]] features: list of features per segment
+    :param int nb_classes:, number of classes
+    :return [[float]]: probabilities that each feature belongs to each class
+
+    >>> np.random.seed(0)
+    >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
+    ...                     np.random.random((50, 3)) + 1])
+    >>> gmm = estim_class_model_kmeans(fts, 2)
+    >>> gmm.predict_proba(fts).shape
+    (100, 2)
     """
     logging.debug('estimate Gaussian from k-means clustering for all given '
                   'features %s and %i component', repr(features.shape), nb_classes)
@@ -128,21 +151,21 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++'):
     logging.info('compute probability of each feature to all component')
     # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
     gmm = mixture.GaussianMixture(n_components=nb_classes,
-                                  covariance_type='full', max_iter=0)
+                                  covariance_type='full', max_iter=1)
     gmm.fit(features, y)
     return gmm
 
 
 def get_vertexes_edges(segments):
-    """ get list of vertexes edges for 2D / 3D images
+    """ wrapper - get list of vertexes edges for 2D / 3D images
 
-    :param segments:
+    :param ndarray segments:
     :return:
     """
     if segments.ndim == 3:
-        vertices, edges = tl_spx.make_graph_segm_connect3d_conn6(segments)
+        vertices, edges = seg_spx.make_graph_segm_connect3d_conn6(segments)
     elif segments.ndim == 2:
-        vertices, edges = tl_spx.make_graph_segm_connect2d_conn4(segments)
+        vertices, edges = seg_spx.make_graph_segm_connect2d_conn4(segments)
     else:
         return None, None
     return vertices, edges
@@ -151,14 +174,14 @@ def get_vertexes_edges(segments):
 def compute_spatial_dist(centres, edges, relative=False):
     """ compute spatial distance between all neighbouring segments
 
-    :param centres:
-    :param edges:
-    :param norm:
+    :param [[int, int]] centres: superpixel centres
+    :param [[int, int]] edges:
+    :param bool relative: normalise the distances to mean distance
     :return:
 
     >>> segments = np.array([[0] * 3 + [1] * 2 + [2] * 5,
     ...                      [4] * 4 + [5] * 2 + [6] * 4])
-    >>> centres = tl_spx.superpixel_centers(segments)
+    >>> centres = seg_spx.superpixel_centers(segments)
     >>> edges = [[0, 1], [1, 2], [4, 5], [5, 6], [0, 4], [1, 5], [2, 6]]
     >>> np.round(compute_spatial_dist(centres, edges), 2)
     array([ 2.5 ,  3.5 ,  3.  ,  3.  ,  1.12,  1.41,  1.12])
@@ -166,7 +189,8 @@ def compute_spatial_dist(centres, edges, relative=False):
     array([ 1.12,  1.57,  1.34,  1.34,  0.5 ,  0.63,  0.5 ])
     """
     assert np.max(edges) < len(centres), \
-        'max vertex %i exceed size of centres %i' % (np.max(edges), len(centres))
+        'max vertex %i exceed size of centres %i'\
+        % (np.max(edges), len(centres))
     ndim = np.max([len(c) for c in centres if c is not None])
     # replace empy segments by a empty vector
     for i, c in enumerate(centres):
@@ -181,7 +205,6 @@ def compute_spatial_dist(centres, edges, relative=False):
     if relative:
         dist = dist / np.mean(dist)
     return dist
-
 
 
 # def segment_graph_cut_int_vals(segments, probs, gc_regul):
@@ -241,7 +264,24 @@ def compute_edge_model(edges, proba, metric='l_T'):
 
     :param [(int, int)] edges:
     :param [[float]] features:
-    :return: [float]
+    :return [float]:
+
+
+    >>> segments = np.array([[0] * 3 + [1] * 5 + [2] * 4,
+    ...                      [4] * 4 + [5] * 5 + [6] * 3])
+    >>> edges = np.array(get_vertexes_edges(segments)[1], dtype=int)
+    >>> np.random.seed(0)
+    >>> img = np.random.random(segments.shape + (3,)) * 255
+    >>> proba = np.random.random((segments.max() + 1, 2))
+    >>> weights = compute_edge_model(edges, proba, metric='l1')
+    >>> np.round(weights, 3).tolist()
+    [0.002, 0.015, 0.001, 0.002, 0.0, 0.002, 0.015, 0.034, 0.001]
+    >>> weights = compute_edge_model(edges, proba, metric='l2')
+    >>> np.round(weights, 3).tolist()
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.002, 0.005, 0.0]
+    >>> weights = compute_edge_model(edges, proba, metric='lT')
+    >>> np.round(weights, 3).tolist()
+    [0.0, 0.002, 0.0, 0.005, 0.0, 0.0, 0.101, 0.092, 0.001]
     """
     assert np.max(edges) < len(proba), \
         'max vertex %i exceed size of proba %s' % (np.max(edges), repr(proba.shape))
@@ -249,13 +289,13 @@ def compute_edge_model(edges, proba, metric='l_T'):
     vertex_2 = proba[edges[:, 1]]
     # pp 32, http://www.coe.utah.edu/~cs7640/readings/graph_cuts_intro.pdf
 
-    if metric == 'l_1':
+    if metric == 'l1':
         dist = metrics.pairwise.paired_manhattan_distances(vertex_1, vertex_2)
         edge_weights = np.exp(- dist / (2 * np.std(dist) ** 2))
-    elif metric == 'l_2':
+    elif metric == 'l2':
         dist = metrics.pairwise.paired_euclidean_distances(vertex_1, vertex_2)
         edge_weights = np.exp(- dist / (2 * np.std(dist) ** 2))
-    elif metric == 'l_T':
+    elif metric == 'lT':
         # exp(- norm value diff) * (geom dist vertex)**-1
         diff = (vertex_1 - vertex_2) ** 2
         # small differences are large weights, diff close 0 appears to be 1
@@ -263,19 +303,14 @@ def compute_edge_model(edges, proba, metric='l_T'):
         dist = np.max(diff, axis=1)
         edge_weights = np.exp(- dist / (2 * np.std(dist) ** 2))
     return edge_weights
-    # see if it works in such formulation
-    # weights = np.exp(- diff / (2 * std ** 2))
-    # # setting min weight ~ max difference in proba as weight
-    # edge_weights = np.min(weights, axis=1)
-    # return edge_weights
 
 
 def create_pairwise_matrix_uniform(gc_reg, nb_classes):
-    """
+    """ create GC pairwise matrix - uniform with zeros on diagonal
 
     :param float gc_reg:
     :param int nb_classes:
-    :return:
+    :return ndarray:
 
     >>> create_pairwise_matrix_uniform(0.2, 3)
     array([[ 0. ,  0.2,  0.2],
@@ -288,10 +323,10 @@ def create_pairwise_matrix_uniform(gc_reg, nb_classes):
 
 
 def create_pairwise_matrix_specif(pos_weights, nb_classes=None):
-    """
+    """ create GC pairwise matrix wih specific values on particular positions
 
-    :param [((int, int), float)] pos_weights:
-    :param int nb_classes:
+    :param [((int, int), float)] pos_weights: pair of coord in matrix and values
+    :param int nb_classes: initialise as empty matrix
     :return: np.array<nb_classes, nb_classes>
 
     >>> create_pairwise_matrix_specif([((1, 2), 0.5), ((1, 0), 0.7)], 4)
@@ -314,7 +349,7 @@ def create_pairwise_matrix_specif(pos_weights, nb_classes=None):
 
 
 def create_pairwise_matrix(gc_regul, nb_classes):
-    """
+    """ wrapper for create pairwise matrix - uniform or specific
 
     :param gc_regul:
     :param int nb_classes:
@@ -349,6 +384,14 @@ def create_pairwise_matrix(gc_regul, nb_classes):
 
 
 def compute_unary_cost(proba):
+    """ compute the GC unary cost with some threshold on minimal values
+
+    :param ndarray proba:
+    :return ndarray:
+
+    >>> compute_unary_cost(np.random.random((50, 2))).shape
+    (50, 2)
+    """
     proba = proba.copy()
     proba[proba < 1e-99] = 1e-99
     # unary_cost = np.array(1. / proba , dtype=np.float64)
@@ -357,6 +400,12 @@ def compute_unary_cost(proba):
 
 
 def compute_pairwise_cost(gc_regul, proba_shape):
+    """ wrapper for creating GC pairwise cost
+
+    :param gc_regul:
+    :param (int, int) proba_shape:
+    :return ndarray:
+    """
     # original and the right way...
     pairwise = create_pairwise_matrix(gc_regul, proba_shape[1])
     pairwise_cost = np.array(pairwise, dtype=np.float64)
@@ -365,14 +414,16 @@ def compute_pairwise_cost(gc_regul, proba_shape):
 
 def insert_gc_debug_images(dict_debug_imgs, segments, graph_labels, unary_cost,
                            edges, edge_weights):
-    if dict_debug_imgs is None: return
+    """ wrapper for placing intermediate variable to a dictionary """
+    if dict_debug_imgs is None:
+        return
     dict_debug_imgs['segments'] = segments
     dict_debug_imgs['edges'] = edges
     dict_debug_imgs['edge_weights'] = edge_weights
     dict_debug_imgs['imgs_unary_cost'] = \
         tl_visu.draw_graphcut_unary_cost_segments(segments, unary_cost)
     img = dict_debug_imgs.get('slic_mean', None)
-    list_centres = tl_spx.superpixel_centers(segments)
+    list_centres = seg_spx.superpixel_centers(segments)
     dict_debug_imgs['img_graph_edges'] = \
         tl_visu.draw_graphcut_weighted_edges(segments, list_centres, edges,
                                              edge_weights, img_bg=img)
@@ -380,17 +431,19 @@ def insert_gc_debug_images(dict_debug_imgs, segments, graph_labels, unary_cost,
         tl_visu.draw_color_labeling(segments, graph_labels)
 
 
-def compute_edge_weights(segments, image=None, features=None, proba=None, edge_type=''):
+def compute_edge_weights(segments, image=None, features=None, proba=None,
+                         edge_type=''):
     """
     pp 32, http://www.coe.utah.edu/~cs7640/readings/graph_cuts_intro.pdf
     exp(- norm value diff) * (geom dist vertex)**-1
 
-    :param segments:
-    :param image:
-    :param features:
-    :param proba:
-    :param edge_type:
-    :return:
+    :param ndarry segments: superpixels
+    :param ndarry image: input image
+    :param ndarry features: features for each segment (superpixel)
+    :param ndarry proba: probability of each superpixel and class
+    :param str edge_type: contains edge type, if 'model', after '_' you can
+        specify the metric, eg. 'model_l2'
+    :return [[int, int]], [float]:
 
     >>> segments = np.array([[0] * 3 + [1] * 5 + [2] * 4,
     ...                      [4] * 4 + [5] * 5 + [6] * 3])
@@ -421,22 +474,23 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
     [0.0, 0.028, 1.122, 0.038, 0.117, 0.688, 0.487, 1.152, 0.282]
     """
     logging.debug('extraction segment connectivity...')
-    vertices, edges = get_vertexes_edges(segments)
+    _, edges = get_vertexes_edges(segments)
     # convert variables
     edges = np.array(edges, dtype=np.int32)
-    logging.debug('graph edges {}: \n{}'.format(edges.shape, edges))
+    logging.debug('graph edges %s', repr(edges.shape))
 
-    if edge_type == 'model':
+    if edge_type.startswith('model'):
         assert proba is not None
-        edge_weights = compute_edge_model(edges, proba)
+        metric = edge_type.split('_')[-1] if '_' in edge_type else 'lT'
+        edge_weights = compute_edge_model(edges, proba, metric)
     elif edge_type == 'color':
         assert image is not None
         # {'color': ['mean', 'median']}
         image_float = np.array(image, dtype=float)
         if np.max(image) > 1:
             image_float /= 255.
-        color, _ = tl_fts.compute_selected_features_img2d(image_float, segments,
-                                                       {'color': ['mean']})
+        color, _ = seg_fts.compute_selected_features_img2d(image_float, segments,
+                                                           {'color': ['mean']})
         vertex_1 = color[edges[:, 0]]
         vertex_2 = color[edges[:, 1]]
         dist = metrics.pairwise.paired_manhattan_distances(vertex_1, vertex_2)
@@ -455,19 +509,20 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
 
     edge_weights = np.array(edge_weights, dtype=float)
     if edge_type in ['model', 'features', 'color', 'spatial']:
-        centres = tl_spx.superpixel_centers(segments)
+        centres = seg_spx.superpixel_centers(segments)
         spatial = compute_spatial_dist(centres, edges, relative=True)
         edge_weights /= spatial
     return edges, edge_weights
 
 
-def segment_graph_cut_general(segments, proba, image=None, features=None, gc_regul=1.,
-                              edge_type='model', edge_cost=1., dict_debug_imgs=None):
+def segment_graph_cut_general(segments, proba, image=None, features=None,
+                              gc_regul=1., edge_type='model', edge_cost=1.,
+                              dict_debug_imgs=None):
     """ segment the image segmented via superpixels and estimated features
 
-    :param features:
-    :param segments: segmentation mapping each pixel into a class
-    :param proba: probabilities that each feature belongs to each class
+    :param ndarray features: features sor each instance
+    :param ndarray segments: segmentation mapping each pixel into a class
+    :param ndarray proba: probabilities that each feature belongs to each class
     :param gc_regul: regularisation for GrphCut
     :param {} dict_debug_imgs:
     :return [int]: labelling by resulting classes
@@ -524,12 +579,11 @@ def segment_graph_cut_general(segments, proba, image=None, features=None, gc_reg
     labels = np.argmax(proba, axis=1)
     # run GraphCut
     logging.debug('perform GraphCut')
-    graph_labels = cut_general_graph(edges, edge_weights, unary_cost, pairwise_cost,
-                                     algorithm='expansion', init_labels=labels,
-                                     # down_weight_factor=np.abs(unary_cost).max(),
-                                     n_iter=9999)
+    graph_labels = cut_general_graph(edges, edge_weights, unary_cost,
+                                     pairwise_cost, algorithm='expansion',
+                                     # down_weight_factor=np.abs(unary_cost).max()
+                                     init_labels=labels, n_iter=9999)
 
-    # logging.debug('resulting graph: {}'.format(graph_labels))
     insert_gc_debug_images(dict_debug_imgs, segments, graph_labels,
                            compute_unary_cost(proba), edges, edge_weights)
     return graph_labels
@@ -537,12 +591,12 @@ def segment_graph_cut_general(segments, proba, image=None, features=None, gc_reg
 
 def count_label_transitions_connected_segments(dict_slics, dict_labels,
                                                nb_labels=None):
-    """
+    """ count transitions among labeled segment in between connected segments
 
-    :param {str: [[int]]} dict_slics:
-    :param {str: [int]} dict_labels:
+    :param {str: [[int]]} dict_slics: image name: ndarray
+    :param {str: [int]} dict_labels: image name: ndarray
     :param int nb_labels:
-    :return:
+    :return ndarray: matrix of shape nb_labels x nb_labels
 
     >>> dict_slics = {'a':
     ...        np.array([[0] * 3 + [1] * 3 + [2] * 3 + [3] * 3 + [4] * 3,
@@ -560,7 +614,8 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
            [ 1.,  1.,  1.]])
     """
     if nb_labels is None:
-        uq_img_labels = [np.unique(lbs).tolist() for lbs in dict_labels.values()]
+        uq_img_labels = [np.unique(lbs).tolist()
+                         for lbs in dict_labels.values()]
         uq_labels = np.unique(np.hstack(tuple(uq_img_labels)))
         nb_labels = np.max(uq_labels) + 1
     transitions = np.zeros((nb_labels, nb_labels))
@@ -581,8 +636,8 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
 def compute_pairwise_cost_from_transitions(trans, max_value=1e3):
     """ compute pairwise cost from segments-label transitions
 
-    :param trans:
-    :return:
+    :param ndarray trans:
+    :return ndarray:
 
     >>> trans = np.array([[ 25.,   5.,  0.],
     ...                   [  5.,  10.,  8.],

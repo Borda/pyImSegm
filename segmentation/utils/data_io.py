@@ -5,9 +5,9 @@ Copyright (C) 2015-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
+import re
 import glob
 import logging
-import re
 import warnings
 
 import matplotlib
@@ -22,6 +22,8 @@ from PIL import Image
 from skimage import exposure, io, color
 import nibabel
 
+import segmentation.utils.read_zvi as read_zvi
+
 COLUMNS_COORDS = ['X', 'Y']
 DEFAULT_PATTERN_SET_LIST_FILE = '*.txt'
 
@@ -30,9 +32,9 @@ def update_path(path_file, lim_depth=5, absolute=True):
     """ bubble in the folder tree up intil it found desired file 
     otherwise return original one
     
-    :param str path_file:
-    :param int lim_depth:
-    :return str:
+    :param str path_file: path to the input file / folder
+    :param int lim_depth: maximal depth for going up
+    :return str: path to output file / folder
 
     >>> path = 'sample_file.test'
     >>> f = open(path, 'w')
@@ -45,7 +47,7 @@ def update_path(path_file, lim_depth=5, absolute=True):
     elif path_file.startswith('~'):
         path_file = os.path.expanduser(path_file)
     else:
-        for depth in range(lim_depth):
+        for _ in range(lim_depth):
             if os.path.exists(path_file): break
             path_file = os.path.join('..', path_file)
     if absolute:
@@ -74,7 +76,7 @@ def load_landmarks_txt(path_file):
     """ load the landmarks from a given file of TXT type and return array
     
     :param str path_file: name of the input file(whole path)
-    :return: array of landmarks of size <nbLandmarks> x 2
+    :return ndarray: array of landmarks of size <nbLandmarks> x 2
 
     >>> lnds = np.array([[1, 2], [2, 4], [5, 6]])
     >>> fp = save_landmarks_txt('./sample_landmarks.test', lnds)
@@ -93,11 +95,11 @@ def load_landmarks_txt(path_file):
         
     landmarks = list()
     for line in lines[2:]:
-        #logging.debug(line)
+        # logging.debug(line)
         match_obj = re.match('(.*) (.*)', line)
         vals = match_obj.groups()
         vals = [int(float(i)) for i in vals]
-        #logging.debug(' load_landmarks_txt: ' + repr(vals))
+        # logging.debug(' load_landmarks_txt: ' + repr(vals))
         landmarks.append(vals)
     logging.debug(' load_landmarks_txt (%i): \n%s',
                   len(landmarks), repr(landmarks))
@@ -108,7 +110,7 @@ def load_landmarks_csv(path_file):
     """ load the landmarks from a given file of TXT type and return array
     
     :param str path_file: name of the input file(whole path)
-    :return: array of landmarks of size <nbLandmarks> x 2
+    :return ndarray: array of landmarks of size <nbLandmarks> x 2
 
     >>> lnds = np.array([[1, 2], [2, 4], [5, 6]])
     >>> fp = save_landmarks_csv('./sample_landmarks.test', lnds)
@@ -123,8 +125,8 @@ def load_landmarks_csv(path_file):
     assert os.path.exists(path_file), 'missing "%s"' % path_file
     df = pd.DataFrame.from_csv(path_file)
     landmarks = df[COLUMNS_COORDS].as_matrix().tolist()
-    logging.debug(' load_landmarks_csv (%i): \n%s',
-                  len(landmarks), repr(landmarks))
+    logging.debug(' load_landmarks_csv (%i): \n%s', len(landmarks),
+                  repr(np.asarray(landmarks).astype(int).tolist()))
     return landmarks
 
 
@@ -153,15 +155,16 @@ def load_landmarks_csv(path_file):
 
 
 def save_landmarks_txt(path_file, landmarks):
-    """ function save the landmarks into a given file of TXT type
+    """ save the landmarks into a given file of TXT type
     
     :param str path_file: name of the input file(whole path)
-    :param landmarks: array of landmarks of size <nbLandmarks> x 2
+    :param landmarks: array of landmarks of size nb_landmarks x 2
+    :return str: path to output file
     """
     assert os.path.exists(os.path.dirname(path_file)), \
         'missing "%s"' % os.path.dirname(path_file)
     path_file = os.path.splitext(path_file)[0] + '.txt'
-    logging.info(' save_landmarks_txt: -> creating TXT file: %s' % path_file)
+    logging.info(' save_landmarks_txt: -> creating TXT file: %s', path_file)
     # create the results file in TXT
     with open(path_file, 'w') as f:
         f.write('point\n')
@@ -172,10 +175,11 @@ def save_landmarks_txt(path_file, landmarks):
 
 
 def save_landmarks_csv(path_file, landmarks, dtype=float):
-    """ function save the landmarks into a given file of CSV type
+    """ save the landmarks into a given file of CSV type
     
     :param str path_file: fName is name of the input file(whole path)
-    :param [[int, int ]] landmarks: array of landmarks of size <nbLandmarks> x 2
+    :param [[int, int ]] landmarks: array of landmarks of size nb_landmarks x 2
+    :return str: path to output file
     """
     assert os.path.exists(os.path.dirname(path_file)), \
         'missing "%s"' % os.path.dirname(path_file)
@@ -216,8 +220,8 @@ def scale_image_intensity(img, im_range=1., quantiles=(2, 98)):
 
     :param ndarray img: input image
     :param im_range: range to scale image values (1. or 255)
-    :param (int, int) quantiles:
-    :return:
+    :param (int, int) quantiles: scale image values in certain quantile range
+    :return ndarray:
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(10, 255, (25, 30))
@@ -237,19 +241,19 @@ def scale_image_intensity(img, im_range=1., quantiles=(2, 98)):
     return img
 
 
-def convert_tiff_2_ndarray(im, im_range=255):
-    img = np.empty(im.shape)
-    for i in range(img.shape[0]):
-        img[i, :, :] = np.array(im[i])
-    img = scale_image_intensity(img, im_range)
-    return img
+# def convert_tiff_2_ndarray(im, im_range=255):
+#     img = np.empty(im.shape)
+#     for i in range(img.shape[0]):
+#         img[i, :, :] = np.array(im[i])
+#     img = scale_image_intensity(img, im_range)
+#     return img
 
 
 def load_image_2d(path_img):
-    """
+    """ loading any supported image type
 
-    :param str path_img:
-    :return str, np.array<height, width>:
+    :param str path_img: path to the input image
+    :return str, ndarray: image name, image as matrix
 
     PNG image
     >>> img_name = 'testing_image'
@@ -304,8 +308,8 @@ def export_image(path_out, img, im_name, stretch_range=True):
     """ export an image with given path and optional pattern for image name
 
     :param str path_out: path to the results directory
-    :param np.array<height, width> img: image
-    :param str/int im_name: image nea of index to be place to patterns name
+    :param ndarray img: image np.array<height, width>
+    :param str/int im_name: image name or index to be place to patterns name
     :return str: path to the image
 
     Image - PNG
@@ -363,11 +367,11 @@ def export_image(path_out, img, im_name, stretch_range=True):
     return path_img
 
 
-def load_params_from_txt(p_file):
+def load_params_from_txt(path_file):
     """ parse the parameter file which was coded by repr function
     
-    :param p_file:
-    :return:
+    :param str path_file: path to file with parameters
+    :return {str: ...}:
 
     >>> p = {'abc': 123}
     >>> path_file = './sample_config.txt'
@@ -379,15 +383,16 @@ def load_params_from_txt(p_file):
     {'abc': '123'}
     >>> os.remove(path_file)
     """
-    with open(p_file, "r") as f:
+    assert os.path.isfile(path_file), 'missing %s' % path_file
+    with open(path_file, "r") as f:
         lines = f.readlines()
 
     # parse all lines and add then into a dictionary
     params = {}
     for line in lines:
         match_obj = re.match(r'"(.*)"\s*:\s* (.*),\s*', line)
-        # logging.debug(' PARAMS reading line: {}'.format(line))
-        if not match_obj is None:
+        # logging.debug(' CLUSTER_PARAMS reading line: {}'.format(line))
+        if match_obj is not None:
             key, val = match_obj.groups()
             val = val.replace('\t', '')
             logging.debug(' load_params_from_file: {} -> {}'.format(key, val))
@@ -396,11 +401,11 @@ def load_params_from_txt(p_file):
 
 
 def convert_img_2_nifti_gray(path_img_in, path_out):
-    """
+    """ converting standard image to Nifti format
 
-    :param str path_img_in:
-    :param str path_out:
-    :return:
+    :param str path_img_in: path to input image
+    :param str path_out: path to output directory
+    :return str: path to output image
 
     >>> np.random.seed(0)
     >>> img = np.random.random((150, 125))
@@ -409,8 +414,8 @@ def convert_img_2_nifti_gray(path_img_in, path_out):
     >>> p_out = convert_img_2_nifti_gray(p_in, '.')
     >>> p_out
     'test_sample_image.nii'
-    >>> os.remove(p_in)
     >>> os.remove(p_out)
+    >>> os.remove(p_in)
     """
     assert os.path.exists(path_img_in), 'missing input: %s' % path_img_in
     assert os.path.exists(path_out), 'missing output: %s' % path_out
@@ -433,21 +438,20 @@ def convert_img_2_nifti_gray(path_img_in, path_out):
 
 
 def convert_img_2_nifti_rgb(path_img_in, path_out):
-    """
+    """ converting standard image to Nifti format
 
-    :param str path_img_in:
-    :param str path_out:
-    :return:
+    :param str path_img_in: path to input image
+    :param str path_out: path to output directory
+    :return str: path to output image
 
     >>> np.random.seed(0)
-    >>> img = np.random.random((150, 125, 3))
     >>> p_in = './test_sample_image.png'
-    >>> io.imsave(p_in, img)
-    >>> p_out = convert_img_2_nifti_rgb(p_in, '.')
-    >>> p_out
+    >>> io.imsave(p_in, np.random.random((150, 125, 3)))
+    >>> p_nifty = convert_img_2_nifti_rgb(p_in, '.')
+    >>> p_nifty
     'test_sample_image.nii'
+    >>> os.remove(p_nifty)
     >>> os.remove(p_in)
-    >>> os.remove(p_out)
     """
     assert os.path.exists(path_img_in), 'missing input: %s' % path_img_in
     assert os.path.exists(path_out), 'missing output: %s' % path_out
@@ -472,6 +476,25 @@ def convert_img_2_nifti_rgb(path_img_in, path_out):
 
 
 def convert_nifti_2_img(path_img_in, path_img_out):
+    """ given input and output path convert from nifti to image
+
+    :param str path_img_in: path to input image
+    :param str path_img_out: path to output image
+    :return str: path to output image
+
+    >>> np.random.seed(0)
+    >>> p_in = './test_sample_image.png'
+    >>> io.imsave(p_in, np.random.random((150, 125, 3)))
+    >>> p_nifty = convert_img_2_nifti_rgb(p_in, '.')
+    >>> p_nifty
+    'test_sample_image.nii'
+    >>> p_img = convert_nifti_2_img(p_nifty, './test_sample_image.jpg')
+    >>> p_img
+    './test_sample_image.jpg'
+    >>> os.remove(p_nifty)
+    >>> os.remove(p_img)
+    >>> os.remove(p_in)
+    """
     assert os.path.exists(path_img_in), 'missing input: %s' % path_img_in
     assert os.path.exists(os.path.dirname(path_img_out)), \
         'missing output: %s' % os.path.dirname(path_img_out)
@@ -497,7 +520,9 @@ def convert_nifti_2_img(path_img_in, path_img_out):
 #     logging.debug('Convert MHD transform to txt format "{}"'.format(transMHD))
 #     fileMHD = os.path.splitext(os.path.basename(transMHD))[0]
 #     pathMHD = os.path.dirname(transMHD)
-#     # matlab -nodisplay -nosplash -nodesktop -r "addpath('/b_jirka../scripts/Matlab'); [D P]=mhd_read('results.mhd'); im=repmat(double(D)./255, [1 1 3]); imwrite(im, 'results.jpg'); exit;"
+#     # matlab -nodisplay -nosplash -nodesktop -r "addpath('../scripts/Matlab');
+#            [D P]=mhd_read('results.mhd'); im=repmat(double(D)./255, [1 1 3]);
+#            imwrite(im, 'results.jpg'); exit;"
 #     cmdMatlab = """{} -nodisplay -nosplash -nodesktop -r \"addpath('{}'); \
 #                 [D P]=mhd_read('{}.mhd', '{}'); \
 #                 dlmwrite('{}', D); \
@@ -508,17 +533,17 @@ def convert_nifti_2_img(path_img_in, path_img_out):
 def load_image_tiff_volume(path_img, im_range=None):
     """ loading TIFF image
 
-    :param str path_img:
-    :param float im_range:
+    :param str path_img: path to the input image
+    :param float im_range: range to scale image values (1. or 255)
     :return ndarray:
 
-    >>> p_img = os.path.join(update_path('images'),
-    ...                      'drosophila_ovary_3D', 'AU10-13_f0011.tif')
+    >>> p_img = os.path.join(update_path('images'), 'drosophila_ovary_3D',
+    ...                      'AU10-13_f0011.tif')
     >>> img = load_image_tiff_volume(p_img)
     >>> img.shape
     (30, 323, 512)
-    >>> p_img = os.path.join(update_path('images'),
-    ...                      'drosophila_ovary_slice', 'image', 'insitu4174.tif')
+    >>> p_img = os.path.join(update_path('images'), 'drosophila_ovary_slice',
+    ...                      'image', 'insitu4174.tif')
     >>> img = load_image_tiff_volume(p_img)
     >>> img.shape
     (659, 1033, 3)
@@ -539,35 +564,39 @@ def load_image_tiff_volume(path_img, im_range=None):
 
     # special case of loading 2d tiff
     if img.ndim == 4:
-        img = np.array([img[i, ..., 0] for i in range(img.shape[0])])
+        if img.shape[1] == 3:
+            img = img[:, 0, ...]
+        else:
+            img = img[..., 0]
         # rotate for RGB image
         if img.shape[0] == 3:
             img = np.rollaxis(img, 0, 3)
 
-    logging.debug('image %s values (%d - %d)', repr(img.shape), img.min(), img.max())
+    logging.debug('image %s values (%d - %d)',
+                  repr(img.shape), img.min(), img.max())
     if im_range is not None:
         img = scale_image_intensity(img, im_range)
     return img
 
 
 def load_tiff_volume_split_double_band(path_img, im_range=None):
-    """ load TIFF volume  assumening that there are two bands in zip style:
+    """ load TIFF volume  assuming that there are two bands in zip style:
     c1, c2, c1, c2, c1, ...
     and split each odd index belong to one of two bands
 
-    :param str path_img:
-    :param float im_range:
+    :param str path_img: path to the input image
+    :param float im_range: range to scale image values (1. or 255)
     :return ndarray, ndarray:
 
-    >>> p_img = os.path.join(update_path('images'),
-    ...                      'drosophila_ovary_3D', 'AU10-13_f0011.tif')
+    >>> p_img = os.path.join(update_path('images'), 'drosophila_ovary_3D',
+    ...                      'AU10-13_f0011.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
     >>> img_b1.shape
     (15, 323, 512)
     >>> img_b2.shape
     (15, 323, 512)
-    >>> p_img = os.path.join(update_path('images'),
-    ...                      'drosophila_ovary_slice', 'image', 'insitu4174.tif')
+    >>> p_img = os.path.join(update_path('images'), 'drosophila_ovary_slice',
+    ...                      'image', 'insitu4174.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
     >>> img_b1.shape
     (1, 659, 1033)
@@ -581,8 +610,10 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
     if img.shape[2] == 3:
         img_b1 = img[np.newaxis, ..., 0]
         img_b2 = img[np.newaxis, ..., 1]
-
-    else: # true volume
+    elif img.shape[0] == 3:
+        img_b1 = img[np.newaxis, 0, ...]
+        img_b2 = img[np.newaxis, 1, ...]
+    else:  # true volume
         img_b1 = np.array(img[0::2])
         img_b2 = np.array(img[1::2])
         if len(img_b2) == 0:
@@ -590,24 +621,38 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
             assert img_b1.ndim == 4, 'image is not RGB'
             img_b2 = np.array([img_b1[0, :, :, 1]])
             img_b1 = np.array([img_b1[0, :, :, 0]])
+    assert img_b1.shape[0] == img_b2.shape[0], \
+        'not equal slice number for %s and %s' \
+        % (repr(img_b1.shape), repr(img_b2.shape))
     return img_b1, img_b2
 
 
 def load_zvi_volume_double_band_split(path_img):
-    import read_zvi
+    """ loading zvi image and split by bands
+
+    :param str path_img: path to the image
+    :return ndarray, ndarray:
+
+    >>> p_img = os.path.join(update_path('images'),
+    ...                      'others', 'sample.zvi')
+    >>> img_b1, img_b2 = load_zvi_volume_double_band_split(p_img)
+    >>> img_b1.shape
+    (2, 488, 648)
+    """
+    assert os.path.isfile(path_img), 'missing: %s' % path_img
     img = read_zvi.load_image(path_img)
     nb_half = img.shape[0] / 2
-    img_b1 = img[:nb_half]
-    img_b2 = img[nb_half:]
+    img_b1 = img[:int(nb_half)]
+    img_b2 = img[int(nb_half):]
     return img_b1, img_b2
 
 
 def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     """ load image and split channels
 
-    :param str path_img:
-    :param float im_range:
-    :param (int, int) quantiles:
+    :param str path_img: path to the image
+    :param float im_range: range to scale image values (1. or 255)
+    :param (int, int) quantiles: scale image values in certain quantile range
     :return:
 
     >>> p_imgs = os.path.join(update_path('images'),
@@ -622,10 +667,11 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     (659, 1033)
     >>> p_img = os.path.join(update_path('images'),
     ...                      'drosophila_ovary_3D', 'AU10-13_f0011.tif')
-    >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
+    >>> img_b1, img_b2 = load_img_double_band_split(p_img)
     >>> img_b1.shape
     (15, 323, 512)
     """
+    assert os.path.isfile(path_img), 'missing: %s' % path_img
     file_posix = os.path.splitext(os.path.basename(path_img))[1]
     if file_posix == '.zvi':
         img_b1, img_b2 = load_zvi_volume_double_band_split(path_img)
@@ -645,29 +691,45 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     return img_b1, img_b2
 
 
-def scale_image_size(im_name, size, im_name_out=None):
-    if not im_name_out:
-        im_name_out = im_name
-    logging.debug('Image scaling %s -> %s"', im_name, im_name_out)
-    img = Image.open(im_name)
-    img = img.resize(size, Image.ANTIALIAS)
-    img.save(im_name_out)
+def scale_image_size(path_img, size, path_out=None):
+    """ load image - scale image - export image on the same path
 
+    :param str path_img: path to the image
+    :param [int, int] size: new image size
+    :param str path_out: path to output image, if none overwrite the input
+    :return str: path to output image
 
-def load_all_image_folder(path_dir, img_name_pattern='*.png', nb_sample=None,
-                          im_range=255, skip=[]):
+    >>> np.random.seed(0)
+    >>> path_in = './test_sample_image.png'
+    >>> io.imsave(path_in, np.random.random((150, 125, 3)))
+    >>> path_out = scale_image_size(path_in, [75, 50])
+    >>> Image.open(path_out).size
+    (75, 50)
+    >>> os.remove(path_out)
     """
+    if not path_out:
+        path_out = path_img
+    logging.debug('Image scaling %s -> %s"', path_img, path_out)
+    img = Image.open(path_img)
+    img = img.resize(size, Image.ANTIALIAS)
+    img.save(path_out)
+    return path_out
 
-    :param path_dir:
-    :param img_name_pattern:
-    :param nb_sample:
-    :param im_range:
-    :param skip:
+
+def load_complete_image_folder(path_dir, img_name_pattern='*.png',
+                               nb_sample=None, im_range=255, skip=()):
+    """ load complete image folder with specific name pattern
+
+    :param str path_dir: loading dictionary
+    :param str img_name_pattern: image name pattern
+    :param int nb_sample: load just some subset of images
+    :param im_range: range to scale image values (1. or 255)
+    :param [str] skip: skip some prticular images by name
     :return:
 
     >>> p_imgs = os.path.join(update_path('images'),
     ...                      'drosophila_ovary_slice', 'image')
-    >>> l_imgs, l_names = load_all_image_folder(p_imgs, '*.jpg')
+    >>> l_imgs, l_names = load_complete_image_folder(p_imgs, '*.jpg')
     >>> len(l_imgs)
     5
     >>> l_names
@@ -682,7 +744,31 @@ def load_all_image_folder(path_dir, img_name_pattern='*.png', nb_sample=None,
 
 
 def load_images_list(path_imgs, im_range=255):
-    list_images = [None] * len(path_imgs)
+    """ load list of images together with image names
+
+    :param [str] path_imgs: paths to input images
+    :param im_range: range to scale image values (1. or 255)
+    :return [ndarray], [str]:
+
+    >>> np.random.seed(0)
+    >>> path_in = './test_sample_image.png'
+    >>> io.imsave(path_in, np.random.random((150, 125, 3)))
+    >>> l_imgs, l_names = load_images_list([path_in, './test_sample.img'])
+    >>> l_names
+    ['test_sample_image']
+    >>> [img.shape for img in l_imgs]
+    [(150, 125, 3)]
+    >>> [img.dtype for img in l_imgs]
+    [dtype('uint8')]
+    >>> os.remove(path_in)
+    >>> path_in = './test_sample_image.tif'
+    >>> io.imsave(path_in, np.random.random((150, 125, 3)))
+    >>> l_imgs, l_names = load_images_list([path_in, './test_sample.img'])
+    >>> l_names
+    ['test_sample_image']
+    >>> os.remove(path_in)
+    """
+    list_images, list_names = [], []
     for i, path_im in enumerate(path_imgs):
         path_im = os.path.abspath(os.path.expanduser(path_im))
         if path_im is None or not os.path.exists(path_im):
@@ -695,8 +781,8 @@ def load_images_list(path_imgs, im_range=255):
         else:
             im, _ = load_image_2d(path_im)
         # logging.debug('image dims: {}'.format(im.shape))
-        list_images[i] = im
-    list_names = [os.path.splitext(os.path.basename(p))[0] for p in path_imgs]
+        list_images.append(im)
+        list_names.append(os.path.splitext(os.path.basename(path_im))[0])
     return list_images, list_names
 
 
@@ -709,70 +795,36 @@ def load_images_list(path_imgs, im_range=255):
 
 
 def merge_image_channels(img_ch1, img_ch2, img_ch3=None):
-    assert img_ch1.ndim == 2
-    assert img_ch1.shape == img_ch2.shape
+    """ merge 2 or 3 image channels into single image
+
+    :param ndarray img_ch1: image channel
+    :param ndarray img_ch2: image channel
+    :param ndarray img_ch3: image channel
+    :return ndarray:
+
+    >>> np.random.seed(0)
+    >>> merge_image_channels(np.random.random((150, 125)),
+    ...                      np.random.random((150, 125))).shape
+    (150, 125, 3)
+    >>> merge_image_channels(np.random.random((150, 125)),
+    ...                      np.random.random((150, 125)),
+    ...                      np.random.random((150, 125))).shape
+    (150, 125, 3)
+    """
+    assert img_ch1.ndim == 2, \
+        'image as to strictly 2D and single channel, got %s' \
+        % repr(img_ch1.shape)
+    assert img_ch1.shape == img_ch2.shape, \
+        'channel dimension has to match: %s vs %s' \
+        % (repr(img_ch1.shape), repr(img_ch2.shape))
     if img_ch3 is None:
-        img_ch3 = np.zeros_like(img_ch1)
+        img_ch3 = np.zeros(img_ch1.shape)
     else:
-        assert img_ch1.shape == img_ch3.shape
+        assert img_ch1.shape == img_ch3.shape, \
+            'channel dimension has to match: %s vs %s' \
+            % (repr(img_ch1.shape), repr(img_ch3.shape))
     img_rgb = np.rollaxis(np.array([img_ch1, img_ch2, img_ch3]), 0, 3)
     return img_rgb
-
-
-# def find_match_files_across_dirs(path_pattern_A, path_pattern_B, path_pattern_C=None):
-#     """ walk over dir with images and segmentation and pair those with the same
-#     name and if the folder with centers exists also add to each par a center
-#     NOTE: returns just paths
-#
-#     :param str path_pattern_A:
-#     :param str path_pattern_B:
-#     :param str path_pattern_C:
-#     :return: DF<path_A, path_B, path_C>
-#     """
-#     def get_name(p, pattern='*'):
-#         name = os.path.splitext(os.path.basename(p))[0]
-#         for s in pattern.split('*'):
-#             name = name.replace(s, '')
-#         return name
-#
-#     def get_paths_names(path_pattern):
-#         assert os.path.exists(os.path.dirname(path_pattern)), \
-#             '%s' % os.path.dirname(path_pattern)
-#         paths_ = glob.glob(path_pattern)
-#         names_ = [get_name(p, os.path.basename(path_pattern)) for p in paths_]
-#         return paths_, names_
-#
-#     logging.info('find match files...')
-#     paths_A, names_A = get_paths_names(path_pattern_A)
-#     paths_B, names_B = get_paths_names(path_pattern_B)
-#
-#     logging.debug('list A: %i and B: %i', len(paths_A), len(paths_B))
-#     # select just paths with the same name in images
-#     paths_B = sorted([p for p, n in zip(paths_B, names_B) if n in names_A])
-#     names_B = [get_name(p, os.path.basename(path_pattern_B)) for p in paths_B]
-#     paths_A = sorted([p for p, n in zip(paths_A, names_A) if n in names_B])
-#     assert len(paths_A) == len(paths_B)
-#     logging.info('found pairs: %i', len(paths_A))
-#
-#     # select particula cekters if given path
-#     paths_C = [None] * len(paths_A)
-#     if path_pattern_C is not None:
-#         assert os.path.exists(os.path.dirname(path_pattern_C)), \
-#             '%s' % path_pattern_C
-#         for i, path_C in enumerate(glob.glob(path_pattern_C)):
-#             name_C = get_name(path_C, os.path.basename(path_pattern_C))
-#             if name_C in names_B:
-#                 idx = names_B.index(name_C)
-#                 paths_C[idx] = path_C
-#
-#     list_paths = zip(paths_A, paths_B, paths_C)
-#     df_paths = pd.DataFrame(list_paths, columns=['path_A', 'path_B', 'path_C'])
-#     # weather given path for tenters select just those
-#     if path_pattern_C is not None \
-#             and os.path.exists(os.path.dirname(path_pattern_C)):
-#         df_paths = df_paths[df_paths['path_C'].notnull()]
-#         logging.info('filter triples: %i', len(df_paths))
-#     return df_paths
 
 
 def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
@@ -780,8 +832,9 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     name and if the folder with centers exists also add to each par a center
     NOTE: returns just paths
 
-    :param [str] list_path_pattern:
-    :return: DF<path_0, path_1, ...>
+    :param [str] list_path_pattern: list of paths with image name patterns
+    :param bool drop_none: drop if there are some none - missing values in rows
+    :return: DF<path_1, path_2, ...>
 
     >>> def mpath(d, n):
     ...     p = os.path.join(update_path('images'),
@@ -793,7 +846,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     >>> len(df) > 0
     True
     >>> df.columns.tolist()
-    ['path_0', 'path_1', 'path_2']
+    ['path_1', 'path_2', 'path_3']
     >>> df = find_files_match_names_across_dirs([mpath('image', '*.png'),
     ...                                          mpath('segm', '*.jpg'),
     ...                                          mpath('center_levels', '*.csv')])
@@ -806,8 +859,8 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
         assert os.path.exists(os.path.dirname(p)), \
             'missing "%s"' % os.path.dirname(p)
 
-    def get_name(p, pattern='*'):
-        name = os.path.splitext(os.path.basename(p))[0]
+    def get_name(path, pattern='*'):
+        name = os.path.splitext(os.path.basename(path))[0]
         for s in pattern.split('*'):
             name = name.replace(s, '')
         return name
@@ -835,7 +888,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
                 paths_n[idx] = path_n
         list_paths.append(paths_n)
 
-    col_names = ['path_%i' % i for i in range(len(list_paths))]
+    col_names = ['path_%i' % (i + 1) for i in range(len(list_paths))]
     df_paths = pd.DataFrame(list(zip(*list_paths)), columns=col_names)
 
     # filter None
