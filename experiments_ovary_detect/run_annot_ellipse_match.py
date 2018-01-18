@@ -1,13 +1,12 @@
 """
-Attempt to detect egg centers in the segmented images from annotated data.
-The output is list of potential center candidates
+Attempt to find best matching between annotation and ellipses
+- reconstruct the user annotation and compare it with estimated ellipses
 
 SAMPLE run:
->> python run_center_evaluation.py -list none \
-    -segs "images/drosophila_ovary_slice/segm/*.png" \
-    -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-    -centers "results/detect-centers-predict_ovary/centers/*.csv" \
-    -out results/detect-centers-predict_ovary
+>> python run_annot_ellipse_match.py \
+    -info ~/drosophila/all_ovary_image_info_for_prague.txt \
+    -ells ~/drosophila/RESULTS/3_ellipse_ransac_crit_params/*.csv \
+    -out ~/drosophila/RESULTS
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -15,33 +14,26 @@ Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import os
 import sys
 import glob
-import time
 import logging
 import argparse
-import traceback
-import gc
 import multiprocessing as mproc
 from functools import partial
 
 import tqdm
 import pandas as pd
 import numpy as np
-from PIL import Image
-from scipy import ndimage
-
-import matplotlib
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import segmentation.utils.data_io as tl_io
 import segmentation.utils.experiments as tl_expt
 import segmentation.utils.drawing as tl_visu
-import segmentation.annotation as seg_annot
+# import segmentation.annotation as seg_annot
 import segmentation.ellipse_fitting as ell_fit
 
 NAME_CSV_RESULTS = 'info_ovary_images_ellipses.csv'
 COLUMNS_POSITION_REC = ['ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y']
 SLICE_NAME_GROUPING = 'stack_path'
-OVERLAP_THRESHOLD = 0.4
+OVERLAP_THRESHOLD = 0.
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
 PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
@@ -84,6 +76,13 @@ def arg_parse_params(params=PARAMS):
 
 
 def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD):
+    """ reconstruct the user annotation and compare it with estimated ellipses
+
+    :param (int, row) idx_row:
+    :param str path_dir_csv:
+    :param float overlap_thr: skip all anotation which Jaccard lower then threshold
+    :return {}:
+    """
     idx, row = idx_row
     dict_row = dict(row)
     path_csv = os.path.join(path_dir_csv, row['image_name'] + '.csv')
@@ -127,10 +126,9 @@ def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD)
 
 
 def main(params):
-    """ PIPELINE for new detections
+    """ PIPELINE for matching
 
     :param {str: str} paths:
-    :param int nb_jobs:
     """
     logging.info('running...')
 
