@@ -71,7 +71,6 @@ NAME_CSV_TRIPLES_TEMP = os.path.splitext(NAME_CSV_TRIPLES)[0] + '__TEMP.csv'
 NAME_CSV_TRIPLES_STAT = os.path.splitext(NAME_CSV_TRIPLES)[0] + '__statistic.csv'
 NAME_CSV_ANNOT_STAGE = 'annotation_user_stages_%s.csv'
 NAME_CSV_STATISTIC = 'statistic_missed_annot_eggs.csv'
-COLUMNS_POSITION = ['ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y']
 SLICE_NAME_GROUPING = 'stack_path'
 
 
@@ -82,15 +81,9 @@ def estimate_eggs_from_info(row_slice, mask_shape):
     :param str path_img:
     :return: ndarray
     """
-    dict_eggs = {col: row_slice[col] for col in COLUMNS_POSITION}
-    if all(isinstance(dict_eggs[col], str) for col in dict_eggs):
-        dict_eggs = {col: map(int, dict_eggs[col][1:-1].lstrip().split())
-                     for col in dict_eggs}
-    pos_ant = list(zip(dict_eggs['ant_x'], dict_eggs['ant_y']))
-    pos_lat = list(zip(dict_eggs['lat_x'], dict_eggs['lat_y']))
-    pos_post = list(zip(dict_eggs['post_x'], dict_eggs['post_y']))
-
-    list_masks = tl_visu.draw_eggs_rectangle(mask_shape, pos_ant, pos_lat, pos_post)
+    pos_ant, pos_lat, pos_post = tl_visu.parse_annot_rectangles(row_slice)
+    list_masks = tl_visu.draw_eggs_rectangle(mask_shape, pos_ant, pos_lat,
+                                             pos_post)
     mask_eggs = tl_visu.merge_object_masks(list_masks, thr_overlap=0.5)
 
     return mask_eggs
@@ -163,9 +156,9 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
         logging.debug('center missing "%s"', idx)
         return dict_row
 
-    assert all(c in df_annot.columns for c in COLUMNS_POSITION), \
+    assert all(c in df_annot.columns for c in tl_visu.COLUMNS_POSITION_EGG_ANNOT), \
         'some required columns %s are missing for %s' % \
-        (COLUMNS_POSITION, df_annot.columns)
+        (tl_visu.COLUMNS_POSITION_EGG_ANNOT, df_annot.columns)
     mask_eggs = estimate_eggs_from_info(df_annot.loc[idx], img.shape[:2])
 
     try:

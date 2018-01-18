@@ -19,6 +19,10 @@ from skimage import draw, color, segmentation
 from planar import line as pl_line
 
 SIZE_CHESS_FIELD = 50
+# columns from description files which marks the egg annotation by expert
+COLUMNS_POSITION_EGG_ANNOT = ['ant_x', 'ant_y',
+                              'post_x', 'post_y',
+                              'lat_x', 'lat_y']
 # http://matplotlib.org/examples/color/colormaps_reference.html
 # http://htmlcolorcodes.com/
 COLOR_ORANGE = '#FF5733'
@@ -43,15 +47,15 @@ DICT_LABEL_MARKER_FN_FP = {
 
 
 def _ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
-    """ see New version scikit-image v0.13
+    """ temporary wrapper until release New version scikit-image v0.13
 
-    :param int r:
-    :param int c:
-    :param int r_radius:
-    :param int c_radius:
-    :param float orientation:
-    :param (int, int) shape:
-    :return ([int], [int]):
+    :param int r: center position in rows
+    :param int c: center position in columns
+    :param int r_radius: ellipse diam in rows
+    :param int c_radius: ellipse diam in columns
+    :param float orientation: ellipse orientation
+    :param (int, int) shape: size of output mask
+    :return ([int], [int]): indexes of filled positions
 
     >>> img = np.zeros((10, 12), dtype=int)
     >>> rr, cc = _ellipse(5, 6, 3, 5, orientation=np.deg2rad(30))
@@ -112,15 +116,15 @@ def _ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
 
 # Should be solved in skimage v0.13
 def ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
-    """ see New version scikit-image v0.13
+    """ temporary wrapper until release New version scikit-image v0.13
 
-    :param int r:
-    :param int c:
-    :param int r_radius:
-    :param int c_radius:
-    :param float orientation:
-    :param (int, int) shape:
-    :return ([int], [int]):
+    :param int r: center position in rows
+    :param int c: center position in columns
+    :param int r_radius: ellipse diam in rows
+    :param int c_radius: ellipse diam in columns
+    :param float orientation: ellipse orientation
+    :param (int, int) shape: size of output mask
+    :return ([int], [int]): indexes of filled positions
 
     >>> img = np.zeros((14, 20), dtype=int)
     >>> rr, cc = ellipse(7, 10, 3, 9, np.deg2rad(30), img.shape)
@@ -152,13 +156,14 @@ def ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
 def ellipse_perimeter(r, c, r_radius, c_radius, orientation=0., shape=None):
     """ see New version scikit-image v0.14
 
-    :param int r:
-    :param int c:
-    :param int r_radius:
-    :param int c_radius:
-    :param float orientation:
-    :param (int, int) shape:
-    :return ([int], [int]):
+
+    :param int r: center position in rows
+    :param int c: center position in columns
+    :param int r_radius: ellipse diam in rows
+    :param int c_radius: ellipse diam in columns
+    :param float orientation: ellipse orientation
+    :param (int, int) shape: size of output mask
+    :return ([int], [int]): indexes of filled positions
 
     >>> img = np.zeros((14, 20), dtype=int)
     >>> rr, cc = ellipse_perimeter(7, 10, 3, 9, np.deg2rad(30), img.shape)
@@ -578,6 +583,19 @@ def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
         mask_eggs[mask.astype(bool)] = i + 1
 
     return mask_eggs
+
+
+def parse_annot_rectangles(row_slice):
+    dict_eggs = {col: row_slice[col] for col in COLUMNS_POSITION_EGG_ANNOT}
+    if all(isinstance(dict_eggs[col], str) for col in dict_eggs):
+        dict_eggs = {col: map(int, dict_eggs[col][1:-1].lstrip().split())
+                     for col in dict_eggs}
+
+    pos_ant = list(zip(dict_eggs['ant_x'], dict_eggs['ant_y']))
+    pos_lat = list(zip(dict_eggs['lat_x'], dict_eggs['lat_y']))
+    pos_post = list(zip(dict_eggs['post_x'], dict_eggs['post_y']))
+
+    return pos_ant, pos_lat, pos_post
 
 
 def draw_eggs_rectangle(mask_shape, pos_ant, pos_lat, pos_post):

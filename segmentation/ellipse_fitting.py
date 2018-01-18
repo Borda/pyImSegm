@@ -324,7 +324,9 @@ def add_overlap_ellipse(segm, ellipse_params, label, thr_overlap=1.):
         overlap = np.sum(np.logical_and(segm == lb, mask == 1))
         # together = np.sum(np.logical_or(segm == lb, mask == 1))
         # ratio = float(overlap) / float(together)
-        sizes = [np.sum(segm == lb), np.sum(mask == 1)]
+        sizes = [s for s in [np.sum(segm == lb), np.sum(mask == 1)] if s > 0]
+        if len(sizes) == 0:
+            return segm
         ratio = float(overlap) / float(min(sizes))
         # if there is already ellipse with such size, return just the segment
         if ratio > thr_overlap:
