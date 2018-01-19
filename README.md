@@ -218,7 +218,11 @@ In general, the input is a formatted list (CSV file) of input images and annotat
     ```
 1. Matching the ellipses to the user annotation.
     ```
-    python experiments_ovary_detect/run_annot_ellipse_match.py
+    python experiments_ovary_detect/run_ellipse_annot_match.py
+    ```
+1. Cut eggs by stages and norm to mean size.
+    ```
+    python experiments_ovary_detect/run_ellipse_cut_scale.py
     ```
 
 ![ellipse fitting](figures/insitu7544_ellipses.jpg)

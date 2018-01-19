@@ -3,7 +3,7 @@ Attempt to find best matching between annotation and ellipses
 - reconstruct the user annotation and compare it with estimated ellipses
 
 SAMPLE run:
->> python run_annot_ellipse_match.py \
+>> python run_ellipse_annot_match.py \
     -info ~/drosophila/all_ovary_image_info_for_prague.txt \
     -ells ~/drosophila/RESULTS/3_ellipse_ransac_crit_params/*.csv \
     -out ~/drosophila/RESULTS
@@ -31,19 +31,16 @@ import segmentation.utils.drawing as tl_visu
 import segmentation.ellipse_fitting as ell_fit
 
 NAME_CSV_RESULTS = 'info_ovary_images_ellipses.csv'
-COLUMNS_POSITION_REC = ['ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y']
-SLICE_NAME_GROUPING = 'stack_path'
 OVERLAP_THRESHOLD = 0.
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
 PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
 
 PARAMS = {
-    'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
+    'path_images': '',
     'path_ellipses': os.path.join(PATH_IMAGES, 'ellipse_fitting', '*.csv'),
     'path_infofile': os.path.join(PATH_IMAGES, 'info_ovary_images.txt'),
-    'path_output': os.path.join(PATH_RESULTS),
+    'path_output': tl_io.update_path('results', absolute=True),
 }
 
 
@@ -125,30 +122,39 @@ def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD)
     return dict_row
 
 
+def filter_table(df_info, path_pattern):
+    """ filter the table according existing files in given folder
+
+    :param df_info:
+    :param str path_pattern:
+    :return DF:
+    """
+    list_name = [os.path.splitext(os.path.basename(p))[0]
+                     for p in glob.glob(path_pattern)]
+    logging.info('loaded item in table %i and found in dir %i'
+                 % (len(df_info), len(list_name)))
+
+    df_info['image_name'] = [os.path.splitext(p)[0]
+                             for p in df_info['image_path']]
+    df_info = df_info[df_info['image_name'].isin(list_name)]
+
+    return df_info
+
+
 def main(params):
     """ PIPELINE for matching
 
     :param {str: str} paths:
     """
     logging.info('running...')
-
-    # tl_expt.set_experiment_logger(params['path_expt'])
-    # tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     df_info = pd.DataFrame().from_csv(params['path_infofile'], sep='\t')
-    list_name_csv = [os.path.splitext(os.path.basename(p))[0]
-                     for p in glob.glob(params['path_ellipses'])]
-    logging.info('loaded item in table %i and found in dir %i'
-                 % (len(df_info), len(list_name_csv)))
-
-    df_info['image_name'] = [os.path.splitext(p)[0]
-                             for p in df_info['image_path']]
-    df_info = df_info[df_info['image_name'].isin(list_name_csv)]
+    df_info = filter_table(df_info, params['path_ellipses'])
     logging.info('filtered %i item in table' % len(df_info))
 
-    # perform on new images
     list_evals = []
+    # get the folder
     path_dir_csv = os.path.dirname(params['path_ellipses'])
     tqdm_bar = tqdm.tqdm(total=len(df_info))
     if params['nb_jobs'] > 1:

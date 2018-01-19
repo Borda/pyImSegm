@@ -19,7 +19,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 # import libtiff, nibabel
-from skimage import exposure, io, color
+from scipy import ndimage
+from skimage import exposure, io, color, measure
 import nibabel
 
 import segmentation.utils.read_zvi as read_zvi
@@ -258,7 +259,8 @@ def load_image_2d(path_img):
     PNG image
     >>> img_name = 'testing_image'
     >>> img = np.random.randint(0, 255, size=(20, 20))
-    >>> path_img = export_image('.', img, img_name, stretch_range=False)
+    >>> path_img = export_image(os.path.join('.', img_name), img,
+    ...                         stretch_range=False)
     >>> path_img
     './testing_image.png'
     >>> os.path.exists(path_img)
@@ -271,7 +273,8 @@ def load_image_2d(path_img):
     TIFF image
     >>> img_name = 'testing_image'
     >>> img = np.random.randint(0, 255, size=(5, 20, 20))
-    >>> path_img = export_image('.', img, img_name, stretch_range=False)
+    >>> path_img = export_image(os.path.join('.', img_name), img,
+    ...                         stretch_range=False)
     >>> path_img
     './testing_image.tiff'
     >>> os.path.exists(path_img)
@@ -304,7 +307,7 @@ def load_image_2d(path_img):
     return img, n_img
 
 
-def export_image(path_out, img, im_name, stretch_range=True):
+def export_image(path_img, img, stretch_range=True):
     """ export an image with given path and optional pattern for image name
 
     :param str path_out: path to the results directory
@@ -315,7 +318,7 @@ def export_image(path_out, img, im_name, stretch_range=True):
     Image - PNG
     >>> np.random.seed(0)
     >>> img = np.random.random([5, 10])
-    >>> path_img = export_image('.', img, 'testing-image')
+    >>> path_img = export_image(os.path.join('.', 'testing-image'), img)
     >>> path_img
     './testing-image.png'
     >>> os.path.exists(path_img)
@@ -333,7 +336,7 @@ def export_image(path_out, img, im_name, stretch_range=True):
 
     Image - TIFF
     >>> img = np.random.random([5, 20, 25])
-    >>> path_img = export_image('.', img, 'testing-image')
+    >>> path_img = export_image(os.path.join('.', 'testing-image'), img)
     >>> path_img
     './testing-image.tiff'
     >>> os.path.exists(path_img)
@@ -344,21 +347,20 @@ def export_image(path_out, img, im_name, stretch_range=True):
     >>> os.remove(path_img)
     """
     assert img.ndim >= 2, 'wrong image dim: %s' % repr(img.shape)
-    if not os.path.exists(path_out):
+    if not os.path.isdir(os.path.dirname(path_img)):
         return ''
-    path_img = os.path.join(path_out, im_name)
     logging.debug(' .. saving image %s with %s to "%s"', repr(img.shape),
                   repr(np.unique(img)), path_img)
     if img.ndim == 2 or (img.ndim == 3 and img.shape[2] == 3):
         if stretch_range and img.max() > 0:
             img = img / float(img.max()) * 255
         # io.imsave(path_img, im_norm)
-        path_img += '.png'
+        path_img = os.path.splitext(path_img)[0] + '.png'
         Image.fromarray(img.astype(np.uint8)).save(path_img)
     elif img.ndim == 3:
         if stretch_range and img.max() > 0:
             img = img / float(img.max()) * 255 ** 2
-        path_img += '.tiff'
+        path_img = os.path.splitext(path_img)[0] + '.tiff'
         io.imsave(path_img, img)
         # tif = libtiff.TIFF.open(path_img, mode='w')
         # tif.write_image(img_clip.astype(np.uint16))
@@ -895,3 +897,120 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     if drop_none:
         df_paths.dropna(inplace=True)
     return df_paths
+
+
+def get_background_color(image):
+    """ extract background color as median along image boundaries
+
+    :param image:
+    :return:
+
+    >>> img = np.zeros((5, 15), dtype=int)
+    >>> img[:4, 3:9] = 1
+    >>> img
+    array([[0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+    >>> get_background_color(img)
+    0
+    """
+    if image.ndim == 2:
+        bg_pixels = np.hstack([image[0, :], image[:, 0],
+                               image[-1, :], image[:, -1]])
+        bg_color = np.argmax(np.bincount(bg_pixels))
+    elif image.ndim == 3:
+        bg_pixels = np.vstack([image[0, :, ...], image[:, 0, ...],
+                               image[-1, :, ...], image[:, -1, ...]])
+        bg_color = np.median(bg_pixels, axis=0)
+    else:
+        logging.error('not supported image dim: %s' % repr(image.shape))
+        bg_color = np.array(0)
+    bg_color = bg_color.astype(image.dtype)
+    return bg_color
+
+
+def add_padding(img_size, padding, min_row, min_col, max_row, max_col):
+    """ add some padding but still be inside image
+
+    :param (int, int) img_size:
+    :param int padding: set padding around segmented object
+    :param int min_row: setting top left corner of bounding box
+    :param int min_col: setting top left corner of bounding box
+    :param int max_row: setting bottom right corner of bounding box
+    :param int max_col: setting bottom right corner of bounding box
+    :return: int, int, int, int
+
+    >>> add_padding((50, 50), 5, 15, 25, 35, 55)
+    (10, 20, 40, 50)
+    """
+    min_row = max(0, min_row - padding)
+    min_col = max(0, min_col - padding)
+    max_row = min(img_size[0], max_row + padding)
+    max_col = min(img_size[1], max_col + padding)
+    return min_row, min_col, max_row, max_col
+
+
+def cut_object(img, mask, padding, use_mask=False, bg_color=None):
+    """ cut an object fro image according binary object segmentation
+
+    :param ndarray img:
+    :param ndarray mask:
+    :param int padding: set padding around segmented object
+    :param use_mask: fill BG values also outside the mask
+    :param bg_color: set as default values outside bounding box
+    :return:
+
+    >>> img = np.ones((10, 20), dtype=int)
+    >>> img[3:7, 4:16] = 2
+    >>> mask = np.zeros((10, 20), dtype=int)
+    >>> mask[4:6, 5:15] = 1
+    >>> cut_object(img, mask, 2)
+    array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+           [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+           [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+           [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+           [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+    >>> cut_object(img, mask, 2, use_mask=True)
+    array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+           [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1],
+           [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1],
+           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+    """
+    assert mask.shape[:2] == img.shape[:2]
+
+    prop = measure.regionprops(mask.astype(int))[0]
+    bg_pixels = np.hstack([mask[0, :], mask[:, 0], mask[-1, :], mask[:, -1]])
+    bg_mask = np.argmax(np.bincount(bg_pixels))
+
+    if bg_color is None:
+        bg_color = get_background_color(img)
+
+    rotate = np.rad2deg(prop.orientation)
+    shift = prop.centroid - (np.array(mask.shape) / 2.)
+    shift = np.append(shift, np.zeros(img.ndim - mask.ndim))
+
+    mask = ndimage.interpolation.shift(mask, -shift[:mask.ndim], order=0)
+    mask = ndimage.rotate(mask, -rotate, order=0, mode='constant',
+                          cval=np.nan)
+
+    img_cut = ndimage.interpolation.shift(img, -shift[:img.ndim], order=0)
+    img_cut = ndimage.rotate(img_cut, -rotate, order=0, mode='constant',
+                             cval=np.nan)
+    img_cut[np.isnan(mask), ...] = bg_color
+    mask[np.isnan(mask)] = bg_mask
+
+    prop = measure.regionprops(mask.astype(int))[0]
+    min_row, min_col, max_row, max_col = add_padding(img_cut.shape, padding,
+                                                     *prop.bbox)
+    img_cut = img_cut[min_row:max_row, min_col:max_col, ...]
+
+    if use_mask:
+        use_mask = mask[min_row:max_row, min_col:max_col, ...].astype(bool)
+        img_cut[~use_mask, ...] = bg_color
+
+    return img_cut

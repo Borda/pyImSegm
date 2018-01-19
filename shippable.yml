@@ -81,7 +81,8 @@ script:
   - python experiments_ovary_detect/run_ovary_segm_evaluation.py
   - python experiments_ovary_detect/run_export_user-annot-segm.py
   - python experiments_ovary_detect/run_cut_segmented_objects.py
-  - python experiments_ovary_detect/run_annot_ellipse_match.py
+  - python experiments_ovary_detect/run_ellipse_annot_match.py
+  - python experiments_ovary_detect/run_ellipse_cut_scale.py
 
 after_success:
   - coverage xml -o $COVERAGE_REPORTS/coverage.xml
