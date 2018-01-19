@@ -8,7 +8,7 @@ SAMPLE run:
     -ells ~/drosophila/RESULTS/3_ellipse_ransac_crit_params/*.csv \
     -out ~/drosophila/RESULTS
 
-Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
@@ -37,7 +37,6 @@ NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
 PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
 
 PARAMS = {
-    'path_images': '',
     'path_ellipses': os.path.join(PATH_IMAGES, 'ellipse_fitting', '*.csv'),
     'path_infofile': os.path.join(PATH_IMAGES, 'info_ovary_images.txt'),
     'path_output': tl_io.update_path('results', absolute=True),
@@ -52,21 +51,21 @@ def arg_parse_params(params=PARAMS):
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=False,
                         help='path to directory & name pattern for images',
-                        default=params['path_images'])
+                        default=params.get('path_images', None))
     parser.add_argument('-ells', '--path_ellipses', type=str, required=False,
                         help='path to directory & name pattern for ellipses',
-                        default=params['path_ellipses'])
+                        default=params.get('path_ellipses', None))
     parser.add_argument('-info', '--path_infofile', type=str, required=False,
                         help='path to the global information file',
-                        default=params['path_infofile'])
+                        default=params.get('path_infofile', None))
     parser.add_argument('-out', '--path_output', type=str, required=False,
                         help='path to the output directory',
-                        default=params['path_output'])
+                        default=params.get('path_output', None))
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
-    for k in (k for k in params if 'path' in k):
+    for k in (k for k in params if 'path' in k and params[k] is not None):
         params[k] = tl_io.update_path(params[k], absolute=True)
     logging.info('ARG PARAMETERS: \n %s', repr(params))
     return params
@@ -130,7 +129,7 @@ def filter_table(df_info, path_pattern):
     :return DF:
     """
     list_name = [os.path.splitext(os.path.basename(p))[0]
-                     for p in glob.glob(path_pattern)]
+                     for p in glob.glob(path_pattern) if os.path.isfile(p)]
     logging.info('loaded item in table %i and found in dir %i'
                  % (len(df_info), len(list_name)))
 

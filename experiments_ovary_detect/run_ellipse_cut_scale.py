@@ -1,5 +1,5 @@
 """
-Estimate the mormal size per stage, cut these images and norm them
+Estimate the normal size per stage, cut these images and norm them
 
 SAMPLE run:
 >> python run_ellipse_cut_scale.py \
@@ -7,7 +7,7 @@ SAMPLE run:
     -imgs ~/drosophila/RESULTS/1_input_images/*.jpg \
     -out ~/drosophila/RESULTS/image_stages
 
-Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
@@ -20,7 +20,6 @@ from functools import partial
 import tqdm
 import pandas as pd
 import numpy as np
-from PIL import Image
 from skimage import transform
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -31,9 +30,11 @@ import segmentation.utils.experiments as tl_expt
 import segmentation.ellipse_fitting as ell_fit
 import run_ellipse_annot_match as r_match
 
-COLUMNS_ELLIPSE = ['ellipse_xc', 'ellipse_yc', 'ellipse_a', 'ellipse_b', 'ellipse_theta']
-OVERLAP_THRESHOLD = 0.4
-NORM_FUNC = np.mean
+COLUMNS_ELLIPSE = ['ellipse_xc', 'ellipse_yc',
+                   'ellipse_a', 'ellipse_b',
+                   'ellipse_theta']
+OVERLAP_THRESHOLD = 0.45
+NORM_FUNC = np.median  # other options - mean, max, ...
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
 PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
@@ -41,7 +42,6 @@ PATH_RESULTS = tl_io.update_path('results', absolute=True)
 
 PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
-    'path_ellipses': '',
     'path_infofile': os.path.join(PATH_IMAGES, 'info_ovary_images_ellipses.csv'),
     'path_output': os.path.join(PATH_RESULTS, 'cut_stages'),
 }
@@ -80,7 +80,8 @@ def perform_stage(df_group, stage, path_images, path_out):
     if not os.path.isdir(path_out_stage):
         os.mkdir(path_out_stage)
 
-    tqdm_bar = tqdm.tqdm(total=len(df_group))
+    tqdm_bar = tqdm.tqdm(total=len(df_group), desc='stage %i - size %s'
+                                                   % (stage, norm_size))
     if params['nb_jobs'] > 1:
         wrapper_object = partial(extract_ellipse_object,
                                  path_images=path_images,
@@ -113,6 +114,7 @@ def main(params):
 
     df_info = pd.DataFrame().from_csv(params['path_infofile'])
     df_info = r_match.filter_table(df_info, params['path_images'])
+    df_info.dropna(inplace=True)
     df_info = df_info[df_info['ellipse_Jaccard'] >= OVERLAP_THRESHOLD]
     logging.info('filtered %i item in table' % len(df_info))
 
@@ -125,6 +127,6 @@ def main(params):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     params = r_match.arg_parse_params(PARAMS)
     main(params)

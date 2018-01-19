@@ -224,6 +224,10 @@ In general, the input is a formatted list (CSV file) of input images and annotat
     ```
     python experiments_ovary_detect/run_ellipse_cut_scale.py
     ```
+1. Rotate (swap) extrated eggs according the larger mount of mass.
+    ```
+    python experiments_ovary_detect/run_egg_swap_orientation.py
+    ```
 
 ![ellipse fitting](figures/insitu7544_ellipses.jpg)
 
