@@ -43,7 +43,7 @@ PARAMS = {
 }
 
 
-def arg_parse_params(params=PARAMS):
+def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
     :return: {str: str}, int
@@ -79,7 +79,7 @@ def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD)
     :param float overlap_thr: skip all anotation which Jaccard lower then threshold
     :return {}:
     """
-    idx, row = idx_row
+    _, row = idx_row
     dict_row = dict(row)
     path_csv = os.path.join(path_dir_csv, row['image_name'] + '.csv')
     df_ellipses = pd.DataFrame().from_csv(path_csv)
@@ -94,7 +94,7 @@ def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD)
                                            pos_ant, pos_lat, pos_post)[0]
 
     list_jaccard = []
-    for idx, ell_row in df_ellipses.iterrows():
+    for _, ell_row in df_ellipses.iterrows():
         mask_ell = ell_fit.add_overlap_ellipse(np.zeros(mask_ref.shape),
                                                ell_row.values.tolist(), 1)
         union = np.sum(np.logical_and(mask_ref, mask_ell))

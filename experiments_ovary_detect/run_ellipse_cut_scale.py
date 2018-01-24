@@ -48,11 +48,11 @@ PARAMS = {
 
 
 def extract_ellipse_object(idx_row, path_images, path_out, norm_size):
-    idx, row = idx_row
+    _, row = idx_row
     # select image with this name and any extension
     list_imgs = glob.glob(os.path.join(path_images, row['image_name'] + '.*'))
     path_img = sorted(list_imgs)[0]
-    img, name = tl_io.load_image_2d(path_img)
+    img, _ = tl_io.load_image_2d(path_img)
 
     # create mask according to chosen ellipse
     ell_params = row[COLUMNS_ELLIPSE].tolist()

@@ -17,16 +17,13 @@ import multiprocessing as mproc
 from functools import partial
 
 import tqdm
-import pandas as pd
 import numpy as np
-from skimage import transform
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import segmentation.utils.data_io as tl_io
 import segmentation.utils.experiments as tl_expt
 import run_ellipse_annot_match as r_match
 
-STAT_FUNC = np.mean  # other options - mean, max, ...
 IMAGE_CHANNEL = 0  # image channel for mass extraction
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
@@ -40,7 +37,7 @@ PARAMS = {
 
 
 def perform_orientation_swap(path_img, path_out):
-    img, name = tl_io.load_image_2d(path_img)
+    img, _ = tl_io.load_image_2d(path_img)
 
     half = img.shape[1] / 2
     sel_mask = img[:, :, IMAGE_CHANNEL] > np.min(img[:, :, IMAGE_CHANNEL])
@@ -67,8 +64,8 @@ def main(params):
 
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
-    list_imgs = [p for p in glob.glob(params['path_images'])
-                 if os.path.isfile(p)]
+    list_imgs = sorted([p for p in glob.glob(params['path_images'])
+                        if os.path.isfile(p)])
     logging.info('found images: %i' % len(list_imgs))
 
     if not os.path.isdir(params['path_output']):
