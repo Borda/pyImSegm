@@ -178,6 +178,8 @@ We utilize (un)supervised segmentation according to given training examples or s
         -out results/evaluation
     ```
 
+![unsupervised](figures/imag-disk-20_gmm.jpg)
+![supervised](figures/imag-disk-20_train.jpg)
 
 ### Center detection and ellipse fitting
 
@@ -213,7 +215,21 @@ In general, the input is a formatted list (CSV file) of input images and annotat
     ```
     python experiments_ovary_centres/run_center_clustering.py
     ```
+    ```
+1. Matching the ellipses to the user annotation.
+    ```
+    python experiments_ovary_detect/run_ellipse_annot_match.py
+    ```
+1. Cut eggs by stages and norm to mean size.
+    ```
+    python experiments_ovary_detect/run_ellipse_cut_scale.py
+    ```
+1. Rotate (swap) extrated eggs according the larger mount of mass.
+    ```
+    python experiments_ovary_detect/run_egg_swap_orientation.py
+    ```
 
+![ellipse fitting](figures/insitu7544_ellipses.jpg)
 
 ### Region growing with shape prior
 

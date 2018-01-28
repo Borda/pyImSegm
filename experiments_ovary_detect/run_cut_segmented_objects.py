@@ -24,8 +24,6 @@ matplotlib.use('Agg')
 import tqdm
 import numpy as np
 from PIL import Image
-from skimage import measure
-from scipy import ndimage
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import segmentation.utils.data_io as tl_io
@@ -96,79 +94,10 @@ def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
         return
 
     for idx in uq_objects[1:]:
-        img_new = cut_object(img, annot == idx, padding, use_mask, bg_color)
+        img_new = tl_io.cut_object(img, annot == idx, padding, use_mask, bg_color)
         path_img = os.path.join(path_out, '%s_%i.png' % (name, idx))
         logging.debug('saving image "%s"', path_img)
         Image.fromarray(img_new).save(path_img)
-
-
-def add_padding(img_size, padding, min_row, min_col, max_row, max_col):
-    """ add some padding but still be inside image
-
-    :param (int, int) img_size:
-    :param int padding: set padding around segmented object
-    :param int min_row: setting top left corner of bounding box
-    :param int min_col: setting top left corner of bounding box
-    :param int max_row: setting bottom right corner of bounding box
-    :param int max_col: setting bottom right corner of bounding box
-    :return: int, int, int, int
-    """
-    min_row = max(0, min_row - padding)
-    min_col = max(0, min_col - padding)
-    max_row = min(img_size[0], max_row + padding)
-    max_col = min(img_size[1], max_col + padding)
-    return min_row, min_col, max_row, max_col
-
-
-def cut_object(img, mask, padding, use_mask=False, bg_color=None):
-    """ cut an object fro image according binary object segmentation
-
-    :param ndarray img:
-    :param ndarray mask:
-    :param int padding: set padding around segmented object
-    :return:
-    """
-    assert mask.shape[:2] == img.shape[:2]
-
-    prop = measure.regionprops(mask.astype(int))[0]
-    bg_pixels = np.hstack([mask[0, :], mask[:, 0], mask[-1, :], mask[:, -1]])
-    bg_mask = np.argmax(np.bincount(bg_pixels))
-
-    if bg_color is None:
-        if img.ndim == 2:
-            bg_pixels = np.hstack([img[0, :], img[:, 0],
-                                   img[-1, :], img[:, -1]])
-            bg_color = np.argmax(np.bincount(bg_pixels))
-        else:
-            bg_pixels = np.vstack([img[0, :, ...], img[:, 0, ...],
-                                   img[-1, :, ...], img[:, -1, ...]])
-            bg_color = np.median(bg_pixels, axis=0)
-    bg_color = bg_color.astype(img.dtype)
-
-    rotate = np.rad2deg(prop.orientation)
-    shift = prop.centroid - (np.array(mask.shape) / 2.)
-    shift = np.append(shift, np.zeros(img.ndim - mask.ndim))
-
-    mask = ndimage.interpolation.shift(mask, -shift[:mask.ndim], order=0)
-    mask = ndimage.rotate(mask, -rotate, order=0, mode='constant',
-                          cval=np.nan)
-
-    img_cut = ndimage.interpolation.shift(img, -shift[:img.ndim], order=0)
-    img_cut = ndimage.rotate(img_cut, -rotate, order=0, mode='constant',
-                             cval=np.nan)
-    img_cut[np.isnan(mask), ...] = bg_color
-    mask[np.isnan(mask)] = bg_mask
-
-    prop = measure.regionprops(mask.astype(int))[0]
-    min_row, min_col, max_row, max_col = add_padding(img_cut.shape, padding,
-                                                     *prop.bbox)
-    img_cut = img_cut[min_row:max_row, min_col:max_col, ...]
-
-    if use_mask:
-        use_mask = mask[min_row:max_row, min_col:max_col, ...]
-        img_cut[~use_mask, ...] = bg_color
-
-    return img_cut
 
 
 def main(dict_paths, padding=0, use_mask=False, bg_color=None,
