@@ -49,8 +49,6 @@ PARAMS = {
     'path_infofile': os.path.join(PATH_IMAGES, 'info_ovary_images.txt'),
     'path_output': os.path.join(PATH_RESULTS, 'export_user-annot-segm'),
 }
-# coluns from decribtion files which marks the egg anotation by expert
-COLUMNS_POSITION = ['ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y']
 COLOR_ANNOT = '#ff6100'
 COLOR_SEGM = '#00ff00'
 # subfugure size for visualisations
@@ -142,13 +140,7 @@ def figure_draw_annot_csv(fig, img, row_slice, subfig_size=FIGURE_SIZE):
     else:
         ax = fig.gca()
 
-    dict_eggs = {col: row_slice[col] for col in COLUMNS_POSITION}
-    if all(isinstance(dict_eggs[col], str) for col in dict_eggs):
-        dict_eggs = {col: map(int, dict_eggs[col][1:-1].lstrip().split())
-                     for col in dict_eggs}
-    pos_ant = list(zip(dict_eggs['ant_x'], dict_eggs['ant_y']))
-    pos_lat = list(zip(dict_eggs['lat_x'], dict_eggs['lat_y']))
-    pos_post = list(zip(dict_eggs['post_x'], dict_eggs['post_y']))
+    pos_ant, pos_lat, pos_post = tl_visu.parse_annot_rectangles(row_slice)
 
     list_masks = tl_visu.draw_eggs_rectangle(img.shape[:2],
                                              pos_ant, pos_lat, pos_post)
