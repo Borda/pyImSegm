@@ -915,6 +915,10 @@ def get_background_color(image):
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> get_background_color(img)
     0
+    >>> get_background_color(np.ones((5, 15, 3), dtype=int))
+    array([1, 1, 1])
+    >>> get_background_color(np.ones((5, 15, 3, 1), dtype=int))
+    array(0)
     """
     if image.ndim == 2:
         bg_pixels = np.hstack([image[0, :], image[:, 0],

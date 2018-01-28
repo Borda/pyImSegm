@@ -585,8 +585,26 @@ def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
     return mask_eggs
 
 
-def parse_annot_rectangles(row_slice):
-    dict_eggs = {col: row_slice[col] for col in COLUMNS_POSITION_EGG_ANNOT}
+def parse_annot_rectangles(rows_slice):
+    """ parse annotation fromDF to lists
+
+    :param row_slice:
+    :return:
+
+    >>> import pandas as pd
+    >>> dict_row = dict(ant_x=1, ant_y=2, lat_x=3, lat_y=4, post_x=5, post_y=6)
+    >>> row = pd.DataFrame([dict_row])
+    >>> parse_annot_rectangles(row)
+    ([(1, 2)], [(3, 4)], [(5, 6)])
+    >>> rows = pd.DataFrame([dict_row, {n: dict_row[n] + 10 for n in dict_row}])
+    >>> rows
+       ant_x  ant_y  lat_x  lat_y  post_x  post_y
+    0      1      2      3      4       5       6
+    1     11     12     13     14      15      16
+    >>> parse_annot_rectangles(rows)
+    ([(1, 2), (11, 12)], [(3, 4), (13, 14)], [(5, 6), (15, 16)])
+    """
+    dict_eggs = {col: rows_slice[col] for col in COLUMNS_POSITION_EGG_ANNOT}
     if all(isinstance(dict_eggs[col], str) for col in dict_eggs):
         dict_eggs = {col: map(int, dict_eggs[col][1:-1].lstrip().split())
                      for col in dict_eggs}
