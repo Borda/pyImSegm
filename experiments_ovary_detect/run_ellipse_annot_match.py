@@ -4,9 +4,9 @@ Attempt to find best matching between annotation and ellipses
 
 SAMPLE run:
 >> python run_ellipse_annot_match.py \
-    -info ~/drosophila/all_ovary_image_info_for_prague.txt \
-    -ells ~/drosophila/RESULTS/3_ellipse_ransac_crit_params/*.csv \
-    -out ~/drosophila/RESULTS
+    -info ~/Medical-drosophila/all_ovary_image_info_for_prague.txt \
+    -ells ~/Medical-drosophila/RESULTS/3_ellipse_ransac_crit_params/*.csv \
+    -out ~/Medical-drosophila/RESULTS
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -74,9 +74,9 @@ def arg_parse_params(params):
 def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD):
     """ reconstruct the user annotation and compare it with estimated ellipses
 
-    :param (int, row) idx_row:
-    :param str path_dir_csv:
-    :param float overlap_thr: skip all anotation which Jaccard lower then threshold
+    :param (int, row) idx_row: index and row with user annotation
+    :param str path_dir_csv: path to list of ellipse parameters
+    :param float overlap_thr: skip all annot. which Jaccard lower then threshold
     :return {}:
     """
     _, row = idx_row
@@ -125,12 +125,12 @@ def filter_table(df_info, path_pattern):
     """ filter the table according existing files in given folder
 
     :param df_info:
-    :param str path_pattern:
-    :return DF:
+    :param str path_pattern: path and pattern to selected images
+    :return DF: filterd dataframe
     """
     list_name = [os.path.splitext(os.path.basename(p))[0]
                      for p in glob.glob(path_pattern) if os.path.isfile(p)]
-    logging.info('loaded item in table %i and found in dir %i'
+    logging.info('loaded item in table %i and found %i in dir'
                  % (len(df_info), len(list_name)))
 
     df_info['image_name'] = [os.path.splitext(p)[0]
@@ -143,7 +143,7 @@ def filter_table(df_info, path_pattern):
 def main(params):
     """ PIPELINE for matching
 
-    :param {str: str} paths:
+    :param {str: str} params:
     """
     logging.info('running...')
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
@@ -151,6 +151,7 @@ def main(params):
     df_info = pd.DataFrame().from_csv(params['path_infofile'], sep='\t')
     df_info = filter_table(df_info, params['path_ellipses'])
     logging.info('filtered %i item in table' % len(df_info))
+    path_csv = os.path.join(params['path_output'], NAME_CSV_RESULTS)
 
     list_evals = []
     # get the folder
@@ -167,13 +168,16 @@ def main(params):
         mproc_pool.close()
         mproc_pool.join()
     else:
-        for idx_row in df_info.iterrows():
+        for i, idx_row in enumerate(df_info.iterrows()):
             dict_row = select_optimal_ellipse(idx_row, path_dir_csv)
             list_evals.append(dict_row)
+            # every hundreds iteration do export
+            if i % 100 == 0:
+                pd.DataFrame(list_evals).to_csv(path_csv)
             tqdm_bar.update()
 
     df_ellipses = pd.DataFrame(list_evals)
-    df_ellipses.to_csv(os.path.join(params['path_output'], NAME_CSV_RESULTS))
+    df_ellipses.to_csv(path_csv)
 
     logging.info('DONE')
 

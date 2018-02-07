@@ -258,7 +258,7 @@ def load_image_2d(path_img):
 
     PNG image
     >>> img_name = 'testing_image'
-    >>> img = np.random.randint(0, 255, size=(20, 20))
+    >>> img = np.random.randint(0, 255, size=(20, 20, 3))
     >>> path_img = export_image(os.path.join('.', img_name), img,
     ...                         stretch_range=False)
     >>> path_img
@@ -268,6 +268,14 @@ def load_image_2d(path_img):
     >>> img_new, _ = load_image_2d(path_img)
     >>> np.array_equal(img, img_new)
     True
+    >>> io.imsave(path_img, np.random.random((50, 65, 4)))
+    >>> img_new, _ = load_image_2d(path_img)
+    >>> img_new.shape
+    (50, 65, 3)
+    >>> Image.fromarray(np.random.randint(0, 2, (65, 50)), mode='1').save(path_img)
+    >>> img_new, _ = load_image_2d(path_img)
+    >>> img_new.shape
+    (65, 50)
     >>> os.remove(path_img)
 
     TIFF image
@@ -291,6 +299,7 @@ def load_image_2d(path_img):
 
     if img_ext in ['.tif', '.tiff']:
         img = io.imread(path_img)
+        # DEPRECATED
         # im = libtiff.TiffFile().get_tiff_array()
         # img = np.empty(im.shape)
         # for i in range(img.shape[0]):
@@ -302,6 +311,9 @@ def load_image_2d(path_img):
         if im.mode == '1':
             im = im.convert('L')
         img = np.asarray(im)
+        # in case of png and alpha channel cut it out...
+        if img.ndim == 3 and img.shape[-1] > 3:
+            img = img[:, :, :3]
     # if bool_val and img.max() > 0:
     #     img = (img / float(img.max()))
     return img, n_img
@@ -310,9 +322,9 @@ def load_image_2d(path_img):
 def export_image(path_img, img, stretch_range=True):
     """ export an image with given path and optional pattern for image name
 
-    :param str path_out: path to the results directory
+    :param str path_img: path to the output image
     :param ndarray img: image np.array<height, width>
-    :param str/int im_name: image name or index to be place to patterns name
+    :param bool stretch_range:
     :return str: path to the image
 
     Image - PNG

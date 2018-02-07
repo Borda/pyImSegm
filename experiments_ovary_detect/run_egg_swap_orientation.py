@@ -3,8 +3,8 @@ Rotate the extracted eggs according major mass in main diagonal
 
 SAMPLE run:
 >> python run_egg_swap_orientation.py \
-    -imgs ~/drosophila/RESULTS/1_input_images/*.jpg \
-    -out ~/drosophila/RESULTS/image_stages
+    -imgs ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages/2/*.png \
+    -out ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages/2
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -37,13 +37,19 @@ PARAMS = {
 
 
 def perform_orientation_swap(path_img, path_out):
+    """ compute the density in front adn back part of the egg rotate eventually
+    we split the egg into thirds instead half because the middle part variate
+
+    :param str path_img:
+    :param str path_out:
+    """
     img, _ = tl_io.load_image_2d(path_img)
 
-    half = img.shape[1] / 2
+    part = img.shape[1] / 3
     sel_mask = img[:, :, IMAGE_CHANNEL] > np.min(img[:, :, IMAGE_CHANNEL])
     norm_val = np.mean(img[sel_mask, IMAGE_CHANNEL])
-    val_left = np.sum(img[:, :half, IMAGE_CHANNEL] > norm_val)
-    val_fight = np.sum(img[:, half:, IMAGE_CHANNEL] > norm_val)
+    val_left = np.sum(img[:, :part, IMAGE_CHANNEL] > norm_val)
+    val_fight = np.sum(img[:, -part:, IMAGE_CHANNEL] > norm_val)
     ration = val_left / float(val_fight)
     # ration = STAT_FUNC(img[:, :half, IMAGE_CHANNEL]) \
     #          / float(STAT_FUNC(img[:, half:, IMAGE_CHANNEL]))
@@ -58,7 +64,7 @@ def perform_orientation_swap(path_img, path_out):
 def main(params):
     """ PIPELINE for rotation
 
-    :param {str: str} paths:
+    :param {str: str} params:
     """
     logging.info('running...')
 
