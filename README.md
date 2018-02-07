@@ -215,14 +215,19 @@ In general, the input is a formatted list (CSV file) of input images and annotat
     ```
     python experiments_ovary_centres/run_center_clustering.py
     ```
-    ```
 1. Matching the ellipses to the user annotation.
     ```
-    python experiments_ovary_detect/run_ellipse_annot_match.py
+    python experiments_ovary_detect/run_ellipse_annot_match.py \
+        -info "~/Medical-drosophila/all_ovary_image_info_for_prague.txt" \
+        -ells "~/Medical-drosophila/RESULTS/3_ellipse_ransac_crit_params/*.csv" \
+        -out ~/Medical-drosophila/RESULTS
     ```
 1. Cut eggs by stages and norm to mean size.
     ```
-    python experiments_ovary_detect/run_ellipse_cut_scale.py
+    python experiments_ovary_detect/run_ellipse_cut_scale.py \
+        -info ~/Medical-drosophila/RESULTS/info_ovary_images_ellipses.csv \
+        -imgs "~/Medical-drosophila/RESULTS/0_input_images_png/*.png" \
+        -out ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages
     ```
 1. Rotate (swap) extrated eggs according the larger mount of mass.
     ```

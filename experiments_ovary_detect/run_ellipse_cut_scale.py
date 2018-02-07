@@ -3,9 +3,9 @@ Estimate the normal size per stage, cut these images and norm them
 
 SAMPLE run:
 >> python run_ellipse_cut_scale.py \
-    -info ~/drosophila/info_ovary_images_ellipses.csv \
-    -imgs ~/drosophila/RESULTS/1_input_images/*.jpg \
-    -out ~/drosophila/RESULTS/image_stages
+    -info ~/Medical-drosophila/RESULTS/info_ovary_images_ellipses.csv \
+    -imgs ~/Medical-drosophila/RESULTS/0_input_images_png/*.png \
+    -out ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -25,8 +25,6 @@ from skimage import transform
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import segmentation.utils.data_io as tl_io
 import segmentation.utils.experiments as tl_expt
-# import segmentation.utils.drawing as tl_visu
-# import segmentation.annotation as seg_annot
 import segmentation.ellipse_fitting as ell_fit
 import run_ellipse_annot_match as r_match
 
@@ -48,6 +46,14 @@ PARAMS = {
 
 
 def extract_ellipse_object(idx_row, path_images, path_out, norm_size):
+    """ cut the image selection according ellipse parameters
+    and scale it into given size to have all image in the end the same sizes
+
+    :param (int, row) idx_row: index and row with ellipse parameters
+    :param str path_images: path to the image folder
+    :param str path_out: path to output folder
+    :param (int, int) norm_size: output image size
+    """
     _, row = idx_row
     # select image with this name and any extension
     list_imgs = glob.glob(os.path.join(path_images, row['image_name'] + '.*'))
@@ -70,6 +76,14 @@ def extract_ellipse_object(idx_row, path_images, path_out, norm_size):
 
 
 def perform_stage(df_group, stage, path_images, path_out):
+    """ perform cutting images for a particular development stage
+    and nom them into common image size
+
+    :param df_group: input dataframe with ellipse parameters
+    :param int stage: index of development stage
+    :param str path_images: path to the image folder
+    :param str path_out: path to the output folder
+    """
     logging.info('stage %i listing %i items' % (stage, len(df_group)))
     stat_a = NORM_FUNC(df_group['ellipse_a'])
     stat_b = NORM_FUNC(df_group['ellipse_b'])
@@ -101,7 +115,7 @@ def perform_stage(df_group, stage, path_images, path_out):
 def main(params):
     """ PIPELINE for matching
 
-    :param {str: str} paths:
+    :param {str: str} params:
     """
     logging.info('running...')
 
