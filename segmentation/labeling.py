@@ -344,6 +344,20 @@ def mask_segm_labels(im_labeling, labels, mask_init=None):
     :param [int] labels: list of wanted labels to be detected in image
     :param ndarray mask_init: np.array<height, width> initial bool mask on the beginning
     :return ndarray: np.array<height, width> bool mask
+
+    >>> img = np.zeros((4, 6))
+    >>> img[:-1, 1:] = 1
+    >>> img[1:2, 2:4] = 2
+    >>> mask_segm_labels(img, [1])
+    array([[False,  True,  True,  True,  True,  True],
+           [False,  True, False, False,  True,  True],
+           [False,  True,  True,  True,  True,  True],
+           [False, False, False, False, False, False]], dtype=bool)
+    >>> mask_segm_labels(img, [2], np.full(img.shape, True, dtype=bool))
+    array([[ True,  True,  True,  True,  True,  True],
+           [ True,  True,  True,  True,  True,  True],
+           [ True,  True,  True,  True,  True,  True],
+           [ True,  True,  True,  True,  True,  True]], dtype=bool)
     """
     if mask_init is None:
         mask = np.full(im_labeling.shape, False, dtype=bool)
@@ -365,19 +379,34 @@ def sequence_labels_merge(labels_stack, dict_colors, labels_free, change_label=-
     - 10111100 -> 1
     - 00000000 -> CHANGE_LABEL
 
-    :param ndarray labels_stack: np.array<height, width, date> input stack of labeled images
+    :param ndarray labels_stack: np.array<date, height, width> input stack of labeled images
     :param {int: (int, int, int)} dict_colors: dictionary of labels-colors
     :param [int] labels_free: list of free labels
     :param int change_label: label that is set for non constant time series
     :return ndarray: np.array<height, width>
+
+    >>> dict_colors = {0: [], 1: [], 2: []}
+    >>> sequence_labels_merge(np.zeros((8, 1, 1)), dict_colors, [0])
+    array([[-1]])
+    >>> sequence_labels_merge(np.ones((8, 1, 1)), dict_colors, [0])
+    array([[1]])
+    >>> sequence_labels_merge(np.array([[1], [1], [2], [1], [1], [1], [2], [1]]), dict_colors, [0])
+    array([-1])
+    >>> sequence_labels_merge(np.array([[1], [0], [1], [1], [1], [1], [0], [0]]), dict_colors, [0])
+    array([1])
     """
-    im_labels = np.full(labels_stack.shape[:-1], change_label, dtype=np.int)
+    labels_stack = np.array(labels_stack)
+    im_labels = np.full(labels_stack.shape[1:], change_label, dtype=np.int)
     labels_used = [lb for lb in dict_colors if lb not in labels_free]
+    lb_all = labels_used + labels_free + [change_label]
+    assert all(l in lb_all for l in np.unique(labels_stack)), 'some extra labels in image stack'
     # generate mask of free labels
     mask_free = mask_segm_labels(labels_stack, labels_free)
     for lb in labels_used:
-        mask = mask_segm_labels(labels_stack, [lb], mask_free)
-        im_labels[np.all(mask, axis=2)] = lb
+        mask1 = mask_segm_labels(labels_stack, [lb], mask_free)
+        mask2 = mask_segm_labels(labels_stack, [lb])
+        mask = np.logical_and(np.all(mask1, axis=0), np.any(mask2, axis=0))
+        im_labels[mask] = lb
     return im_labels
 
 

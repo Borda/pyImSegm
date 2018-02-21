@@ -7,7 +7,7 @@ Cython>=0.23
 matplotlib==2.0.2
 scikit-learn>=0.18.1
 scikit-image>=0.13.0
-ipython==3.2.1
+ipython==4.2.0
 tqdm>=4.7.4
 nibabel==2.1.0
 olefile==0.44  # new version - ImportError: No module named OleFileIO_PL
