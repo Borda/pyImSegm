@@ -295,7 +295,7 @@ python setup.py install
 
 ## References
 
-For complete references see [BibTex](references.bib).
+For complete references see [BibTex](docs/references.bib).
 1. Borovec J., Svihlik J., Kybic J., Habart D. (2017). **Supervised and unsupervised segmentation using superpixels, model estimation, and Graph Cut.** SPIE Journal of Electronic Imaging 26(6), 061610, http://doi.org/10.1117/1.JEI.26.6.061610
 1. Borovec J., Kybic J., Nava R. (2017) **Detection and Localization of Drosophila Egg Chambers in Microscopy Images.** In: Wang Q., Shi Y., Suk HI., Suzuki K. (eds) Machine Learning in Medical Imaging. MLMI 2017. LNCS, vol 10541. Springer, Cham. http://doi.org/10.1007/978-3-319-67389-9_3
 1. Borovec J., Kybic J., Sugimoto, A. (2017). **Region growing using superpixels with learned shape prior.** SPIE Journal of Electronic Imaging 26(6),  061611, http://doi.org/10.1117/1.JEI.26.6.061611

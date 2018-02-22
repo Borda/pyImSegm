@@ -28,9 +28,9 @@ before_install:
 
 install:
   - root=$PWD
-  - cd $root/libs && git clone https://github.com/Borda/pyGCO.git
-  - cd $root/libs/pyGCO && pip install -r requirements.txt
-  - cd $root/libs/pyGCO && python setup.py install
+#  - cd $root/libs && git clone https://github.com/Borda/pyGCO.git
+#  - cd $root/libs/pyGCO && pip install -r requirements.txt
+#  - cd $root/libs/pyGCO && python setup.py install
 #  - rm -r -f $here/libs/pyGCO
   - cd $root
 

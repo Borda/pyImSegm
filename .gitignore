@@ -10,7 +10,7 @@ __pycache__/
 # installed libraries
 libs/
 
-# temporary strucure
+# temporary structure
 data/
 build/
 output/
