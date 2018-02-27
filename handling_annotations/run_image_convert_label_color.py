@@ -24,11 +24,6 @@ import numpy as np
 import tqdm
 from skimage import io
 
-import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
-
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import segmentation.utils.data_io as tl_io
 import segmentation.utils.experiments as tl_expt

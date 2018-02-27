@@ -160,14 +160,14 @@ We utilize (un)supervised segmentation according to given training examples or s
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -list images/langerhans_islets/list_lang-isl_imgs-annot.csv \
        -imgs "images/langerhans_islets/image/*.jpg" \
-       -out results -n langIsl --nb_classes 3 --visual 1 --nb_jobs 2
+       -out results -n langIsl --nb_classes 3 --visual --nb_jobs 2
     ```
 * Perform **Supervised** segmentation with afterwards evaluation.
     ```
     python experiments_segmentation/run_segm_slic_classif_graphcut.py \
         -list images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
         -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-        -out results -n Ovary --img_type 2d_gray --visual 1 --nb_jobs 2
+        -out results -n Ovary --img_type 2d_gray --visual --nb_jobs 2
     ```
 * For both experiment you can evaluate segmentation results.
     ```
@@ -275,7 +275,7 @@ python setup.py install
     ```
 1. Evaluate your segmentation results to expert annotation.
     ```
-    python experiments_ovary_detect/run_ovary_segm_evaluation.py
+    python experiments_ovary_detect/run_ovary_segm_evaluation.py --visual
     ```
 1. In the end, cut individual segmented objects comes as minimal bounding box.
     ```

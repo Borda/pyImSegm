@@ -18,11 +18,6 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
-
 import numpy as np
 import tqdm
 from skimage import io

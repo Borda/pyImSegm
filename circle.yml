@@ -35,35 +35,35 @@ test:
     - coverage report && coverage xml -o $CIRCLE_TEST_REPORTS/coverage.xml
 
     # ANNOTATION section
-    - python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png"
-    - python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" -m position
-    - python handling_annotations/run_image_convert_label_color.py -imgs "images/drosophila_ovary_slice/segm/*.png" -out images/drosophila_ovary_slice/segm_rgb
-    - python handling_annotations/run_image_convert_label_color.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" -out images/drosophila_ovary_slice/segm
-    - python handling_annotations/run_overlap_images_segms.py  -imgs "images/drosophila_ovary_slice/image/*.jpg" -segs images/drosophila_ovary_slice/segm -out results/overlap_ovary_segment
-    - python handling_annotations/run_segm_annot_inpaint.py -imgs "images/drosophila_ovary_slice/segm/*.png" --label 0
-    - python handling_annotations/run_segm_annot_relabel.py -imgs "images/drosophila_ovary_slice/center_levels/*.png" -out results/relabel_center_levels
+    - unset DISPLAY && python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png"
+    - unset DISPLAY && python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" -m position
+    - unset DISPLAY && python handling_annotations/run_image_convert_label_color.py -imgs "images/drosophila_ovary_slice/segm/*.png" -out images/drosophila_ovary_slice/segm_rgb
+    - unset DISPLAY && python handling_annotations/run_image_convert_label_color.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" -out images/drosophila_ovary_slice/segm
+    - unset DISPLAY && python handling_annotations/run_overlap_images_segms.py  -imgs "images/drosophila_ovary_slice/image/*.jpg" -segs images/drosophila_ovary_slice/segm -out results/overlap_ovary_segment
+    - unset DISPLAY && python handling_annotations/run_segm_annot_inpaint.py -imgs "images/drosophila_ovary_slice/segm/*.png" --label 0
+    - unset DISPLAY && python handling_annotations/run_segm_annot_relabel.py -imgs "images/drosophila_ovary_slice/center_levels/*.png" -out results/relabel_center_levels
 
     # SEGMENTATION section
-    - python experiments_segmentation/run_compute-stat_annot-segm.py
-    - python experiments_segmentation/run_segm_slic_model_graphcut.py --visual
-    - python experiments_segmentation/run_segm_slic_classif_graphcut.py --visual
+    - unset DISPLAY && python experiments_segmentation/run_compute-stat_annot-segm.py
+    - unset DISPLAY && python experiments_segmentation/run_segm_slic_model_graphcut.py --visual
+    - unset DISPLAY && python experiments_segmentation/run_segm_slic_classif_graphcut.py --visual
 
     # CENTER DETECT. section
-    - python experiments_ovary_centres/run_create_annotation.py
-    - python experiments_ovary_centres/run_center_candidate_training.py
-    - python experiments_ovary_centres/run_center_prediction.py
-    - python experiments_ovary_centres/run_center_clustering.py
-    - python experiments_ovary_centres/run_center_evaluation.py
+    - unset DISPLAY && python experiments_ovary_centres/run_create_annotation.py
+    - unset DISPLAY && python experiments_ovary_centres/run_center_candidate_training.py
+    - unset DISPLAY && python experiments_ovary_centres/run_center_prediction.py
+    - unset DISPLAY && python experiments_ovary_centres/run_center_clustering.py
+    - unset DISPLAY && python experiments_ovary_centres/run_center_evaluation.py
 
     # download MorphSnake
     - cd libs && git clone https://github.com/Borda/morph-snakes.git
     - cd libs/morph-snakes && pip install -r requirements.txt && python setup.py install
     # REGION GROWING section
-    - python experiments_ovary_detect/run_RG2Sp_estim_shape-models.py
-    - python experiments_ovary_detect/run_ovary_egg-segmentation.py -m ellipse_moments ellipse_ransac_mmt ellipse_ransac_crit GC_pixels-large GC_pixels-shape GC_slic-small GC_slic-shape rg2sp_greedy-single rg2sp_GC-mixture watershed_morph
-    - python experiments_ovary_detect/run_ovary_segm_evaluation.py --visual
-    - python experiments_ovary_detect/run_export_user-annot-segm.py
-    - python experiments_ovary_detect/run_cut_segmented_objects.py
-    - python experiments_ovary_detect/run_ellipse_annot_match.py
-    - python experiments_ovary_detect/run_ellipse_cut_scale.py
-    - python experiments_ovary_detect/run_egg_swap_orientation.py
+    - unset DISPLAY && python experiments_ovary_detect/run_RG2Sp_estim_shape-models.py
+    - unset DISPLAY && python experiments_ovary_detect/run_ovary_egg-segmentation.py -m ellipse_moments ellipse_ransac_mmt ellipse_ransac_crit GC_pixels-large GC_pixels-shape GC_slic-small GC_slic-shape rg2sp_greedy-single rg2sp_GC-mixture watershed_morph
+    - unset DISPLAY && python experiments_ovary_detect/run_ovary_segm_evaluation.py --visual
+    - unset DISPLAY && python experiments_ovary_detect/run_export_user-annot-segm.py
+    - unset DISPLAY && python experiments_ovary_detect/run_cut_segmented_objects.py
+    - unset DISPLAY && python experiments_ovary_detect/run_ellipse_annot_match.py
+    - unset DISPLAY && python experiments_ovary_detect/run_ellipse_cut_scale.py
+    - unset DISPLAY && python experiments_ovary_detect/run_egg_swap_orientation.py

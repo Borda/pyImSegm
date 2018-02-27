@@ -30,7 +30,8 @@ from scipy import ndimage
 import matplotlib
 if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
+    matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root

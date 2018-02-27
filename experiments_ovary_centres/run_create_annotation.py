@@ -33,10 +33,6 @@ from PIL import Image
 from scipy import ndimage
 from skimage import morphology, measure, draw
 
-import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import run_center_candidate_training as run_train
