@@ -37,7 +37,7 @@ import segmentation.utils.data_io as tl_io
 import segmentation.utils.drawing as tl_visu
 import segmentation.labeling as seg_lbs
 
-EXPORT_VUSIALISATION = True
+EXPORT_VUSIALISATION = False
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 
 NAME_DIR_VISUAL_1 = 'ALL_visualisation-1'
@@ -85,13 +85,11 @@ def arg_parse_params(paths=PATHS):
                         help='path to the result directory',
                         default=paths['results'])
     parser.add_argument('--nb_jobs', type=int, required=False,
-                        default=NB_THREADS,
-                        help='number of processes in parallel')
-    parser.add_argument('--visual', type=int, required=False,
-                        default=EXPORT_VUSIALISATION,
-                        help='export visualisations')
+                        default=NB_THREADS, help='number of processes in parallel')
+    parser.add_argument('--visual', required=False, action='store_true',
+                        default=False, help='export visualisations')
     arg_params = vars(parser.parse_args())
-    export_visual = bool(arg_params['visual'])
+    export_visual = arg_params['visual']
     for k in (k for k in arg_params if k != 'nb_jobs' and k != 'visual'):
         if not isinstance(arg_params[k], str) or arg_params[k].lower() == 'none':
             paths[k] = None

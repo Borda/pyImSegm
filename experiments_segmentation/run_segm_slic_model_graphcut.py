@@ -145,8 +145,8 @@ def arg_parse_params(params=SEGM_PARAMS):
     parser.add_argument('--nb_jobs', type=int, required=False,
                         default=NB_THREADS,
                         help='number of processes in parallel')
-    parser.add_argument('--visual', type=int, required=False, default=False,
-                        help='export debug visualisations')
+    parser.add_argument('--visual', required=False, action='store_true',
+                        help='export debug visualisations', default=False)
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %s', repr(args))
     for k in (k for k in args if 'path' in k):
@@ -154,7 +154,7 @@ def arg_parse_params(params=SEGM_PARAMS):
         args[k] = tl_data.update_path(args[k])
         p = os.path.dirname(args[k]) if '*' in args[k] else args[k]
         assert os.path.exists(p), 'missing (%s) "%s"' % (k, p)
-    args['visual'] = bool(args['visual'])
+    # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
     if os.path.isfile(args['path_config']):
         with open(args['path_config'], 'r') as fd:
