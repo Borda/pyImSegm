@@ -444,7 +444,7 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
         'no image was dropped from training set'
 
     features, labels, _ = seg_clf.convert_set_features_labels_2_dataset(
-        dict_features, dict_labels, balance=params['balance'], drop_labels=[-1])
+        dict_features, dict_labels, balance_type=params['balance'], drop_labels=[-1])
     classif.fit(features, labels)
 
     idx_name, segm, segm_gc = segment_image(imgs_idx_path, params, classif,
@@ -479,7 +479,7 @@ def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
         % (len(list_imgs_idx_path), len(dict_imgs), len(dict_features))
 
     features, labels, _ = seg_clf.convert_set_features_labels_2_dataset(
-                        dict_features, dict_labels, balance=params['balance'],
+                        dict_features, dict_labels, balance_type=params['balance'],
                         drop_labels=[-1])
     classif.fit(features, labels)
 
@@ -730,7 +730,7 @@ def main_train(params):
     logging.info('prepare features...')
     # concentrate features, labels
     features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
-        dict_features, dict_labels, balance=params['balance'], drop_labels=[-1])
+        dict_features, dict_labels, balance_type=params['balance'], drop_labels=[-1])
     # drop "do not care" label which are -1
     features = np.nan_to_num(features)
 

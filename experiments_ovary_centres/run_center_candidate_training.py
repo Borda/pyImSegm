@@ -746,7 +746,7 @@ def main_train(params=CENTER_PARAMS):
 
     # concentrate features, labels
     features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
-        dict_features, dict_labels, drop_labels=[-1], balance=params['balance'])
+        dict_features, dict_labels, drop_labels=[-1], balance_type=params['balance'])
     # remove all bad values from features space
     features[np.isnan(features)] = 0
     features[np.isinf(features)] = -1

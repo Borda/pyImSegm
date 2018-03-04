@@ -1044,13 +1044,13 @@ def balance_dataset_by_(features, labels, balance_type='random',
 
 
 def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
-                                          drop_labels=None, balance=None):
+                                          drop_labels=None, balance_type=None):
     """ with dictionary for each image we concentrate all features over images
     and labels into simple form
 
     :param {str: ndarray} imgs_features: dictionary of name and features
     :param {str: ndarray} imgs_labels: dictionary of name and labels
-    :param balance: bool, wether balance number of sampler per class
+    :param balance: bool, wether balance_type number of sampler per class
     :return:
 
     >>> np.random.seed(0)
@@ -1071,17 +1071,17 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
     features_all, labels_all, sizes = list(), list(), list()
     for name in sorted(imgs_features.keys()):
         features = np.array(imgs_features[name])
-        labels = np.array(imgs_labels[name])
+        labels = np.array(imgs_labels[name].astype(int))
 
         if drop_labels is not None:
             for lb in drop_labels:
                 features = features[labels != lb]
                 labels = labels[labels != lb]
 
-        if balance is not None:
-            # balance dataset to have comparable nb of samples
+        if balance_type is not None:
+            # balance_type dataset to have comparable nb of samples
             features, labels = balance_dataset_by_(features, labels,
-                                                   balance_type=balance)
+                                                   balance_type=balance_type)
         features_all += features.tolist()
         labels_all += np.asarray(labels).tolist()
         sizes.append(len(labels))
