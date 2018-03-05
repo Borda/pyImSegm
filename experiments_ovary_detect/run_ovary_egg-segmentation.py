@@ -758,7 +758,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
             # export also centers
             centers = tl_data.swap_coord_x_y(centers)
             tl_data.save_landmarks_csv(path_centre, centers)
-        except:
+        except Exception:
             logging.error('segment fail for "%s" via %s with \n %s',
                           name, method, traceback.format_exc())
 

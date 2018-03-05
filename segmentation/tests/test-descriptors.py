@@ -25,7 +25,7 @@ import segmentation.superpixels as seg_spx
 ANGULAR_STEP = 15
 # size of subfigure for visualise the Filter bank
 SUBPLOT_SIZE_FILTER_BANK = 3
-PATH_OUTPUT = os.path.abspath(tl_io.update_path('output'))
+PATH_OUTPUT = tl_io.update_path('output', absolute=True)
 PATH_FIGURES_RAY = os.path.join(PATH_OUTPUT, 'test_ray_features')
 # create the folder for visualisations
 if not os.path.exists(PATH_FIGURES_RAY):
@@ -45,10 +45,12 @@ def export_ray_results(seg, center, points, ray_dist_raw, ray_dist, name):
     fig = tl_visu.figure_ray_feature(seg, center, ray_dist_raw=ray_dist_raw,
                                      ray_dist=ray_dist,
                                      points_reconst=points)
-    fig.savefig(os.path.join(PATH_FIGURES_RAY, name))
+    fig_path = os.path.join(PATH_FIGURES_RAY, name)
+    fig.savefig(fig_path)
     if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
         plt.show()
     plt.close(fig)
+    return fig_path
 
 
 class TestFeatures(unittest.TestCase):
@@ -71,18 +73,20 @@ class TestFeatures(unittest.TestCase):
     def test_filter_banks(self, ax_size=SUBPLOT_SIZE_FILTER_BANK):
         filters, names = seg_fts.create_filter_bank_lm_2d()
         l_max, w_max = len(filters), max([f.shape[0] for f in filters])
-        fig, axarr = plt.subplots(l_max, w_max,
-                                  figsize=(w_max * ax_size, l_max * ax_size))
+        fig_size = (w_max * ax_size, l_max * ax_size)
+        fig, axarr = plt.subplots(l_max, w_max, figsize=fig_size)
         for i in range(l_max):
             f = filters[i]
             for j in range(f.shape[0]):
                 axarr[i, j].set_title(names[i][j])
                 axarr[i, j].imshow(f[j, :, :], cmap=plt.cm.gray)
         fig.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
-        fig.savefig(os.path.join(PATH_OUTPUT, 'test_filter_banks.png'))
+        p_fig = os.path.join(PATH_OUTPUT, 'test_filter_banks.png')
+        fig.savefig(p_fig)
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             plt.show()
         plt.close(fig)
+        self.assertTrue(os.path.exists(p_fig))
 
     def test_ray_features_circle(self):
         seg = np.ones((400, 600), dtype=bool)
@@ -95,8 +99,9 @@ class TestFeatures(unittest.TestCase):
                                     seg, point, angle_step=ANGULAR_STEP)
             ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist, shift)
-            export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
-                               'circle-%i.png' % i)
+            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
+                                       'circle-%i.png' % i)
+            self.assertTrue(os.path.exists(p_fig))
 
     def test_ray_features_ellipse(self):
         seg = np.ones((400, 600), dtype=bool)
@@ -110,8 +115,9 @@ class TestFeatures(unittest.TestCase):
                                     seg, point, angle_step=ANGULAR_STEP)
             # ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist_raw)
-            export_ray_results(seg, point, points, ray_dist_raw, [],
-                               'ellipse-%i.png' % i)
+            p_fig = export_ray_results(seg, point, points, ray_dist_raw, [],
+                                       'ellipse-%i.png' % i)
+            self.assertTrue(os.path.exists(p_fig))
 
     def test_ray_features_circle_down_edge(self):
         seg = np.zeros((400, 600), dtype=bool)
@@ -124,8 +130,9 @@ class TestFeatures(unittest.TestCase):
                         seg, point, angle_step=ANGULAR_STEP, edge='down')
             ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist, shift)
-            export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
-                               'circle_e-down-A-%i.png' % i)
+            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
+                                       'circle_e-down-A-%i.png' % i)
+            self.assertTrue(os.path.exists(p_fig))
 
         x, y = draw.circle(200, 250, 120, shape=seg.shape)
         seg[x, y] = False
@@ -135,8 +142,9 @@ class TestFeatures(unittest.TestCase):
                         seg, point, angle_step=ANGULAR_STEP, edge='down')
             ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist, shift)
-            export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
-                               'circle_e-down-B-%i.png' % i)
+            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
+                                       'circle_e-down-B-%i.png' % i)
+            self.assertTrue(os.path.exists(p_fig))
 
     def test_ray_features_polygon(self):
         seg = np.ones((400, 600), dtype=bool)
@@ -151,8 +159,9 @@ class TestFeatures(unittest.TestCase):
                                     seg, point, angle_step=ANGULAR_STEP)
             ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist, shift)
-            export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
-                               'polygon-%i.png' % i)
+            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
+                                       'polygon-%i.png' % i)
+            self.assertTrue(os.path.exists(p_fig))
 
     def test_show_image_features_clr2d(self):
         img = d_spl.load_sample_image(d_spl.IMAGE_LENNA)
@@ -170,7 +179,9 @@ class TestFeatures(unittest.TestCase):
         for i in range(features.shape[1]):
             fts = features[:, i]
             im_fts = fts[slic]
-            plt.imsave(os.path.join(path_dir, names[i] + '.png'), im_fts)
+            p_fig = os.path.join(path_dir, names[i] + '.png')
+            plt.imsave(p_fig, im_fts)
+            self.assertTrue(os.path.exists(p_fig))
 
 
 if __name__ == '__main__':

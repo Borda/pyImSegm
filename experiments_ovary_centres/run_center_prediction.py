@@ -87,7 +87,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
 
         dict_center = run_clust.cluster_points_draw_export(dict_center, params,
                                                            path_output)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
     gc.collect()
     time.sleep(1)

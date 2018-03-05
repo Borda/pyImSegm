@@ -296,9 +296,9 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     EVAL_STR = 'EVALUATION: {:<2} PRE: {:.3f} REC: {:.3f} F1: {:.3f} S: {:>6}'
     try:
         p, r, f, s = metrics.precision_recall_fscore_support(y_true, y_pred)
-        for l in range(len(p)):
+        for l, _ in enumerate(p):
             logging.debug(EVAL_STR.format(l, p[l], r[l], f[l], s[l]))
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
 
     dict_metrics = {
@@ -316,7 +316,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
             mtr = metrics.precision_recall_fscore_support(y_true, y_pred,
                                                           average=avg)
             res = dict(zip(['{}_{}'.format(n, avg) for n in names], mtr))
-        except:
+        except Exception:
             logging.error(traceback.format_exc())
             res = dict(zip(['{}_{}'.format(n, avg) for n in names], [-1] * 4))
         dict_metrics.update(res)
@@ -678,7 +678,7 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
             logging.info('Cross-Val score (%s = %f):\n %s',
                          scoring, np.mean(scores), repr(scores))
             df_scoring[scoring] = scores
-        except:
+        except Exception:
             logging.error(traceback.format_exc())
     df_stat = df_scoring.describe()
 
@@ -809,7 +809,7 @@ def search_params_cut_down_max_nb_iter(clf_parameters, nb_iter):
         if len(param_grid) < nb_iter:
             nb_iter = len(param_grid.param_grid)
             logging.debug('nb iter: -> %i', nb_iter)
-    except:
+    except Exception:
         logging.debug('something went wrong in cutting down nb iter')
     return nb_iter
 

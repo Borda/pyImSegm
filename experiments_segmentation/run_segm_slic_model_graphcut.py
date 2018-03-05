@@ -116,7 +116,7 @@ SEGM_PARAMS.update({
 })
 
 
-def arg_parse_params(params=SEGM_PARAMS):
+def arg_parse_params(params):
     """ argument parser from cmd
 
     SEE: https://docs.python.org/3/library/argparse.html
@@ -320,7 +320,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None):
             pca_coef=params['pca_coef'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
             dict_debug_imgs=dict_debug_imgs)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
 
@@ -360,7 +360,7 @@ def segment_image_model(imgs_idx_path, params, scaler, pca, model, path_out=None
             dict_features=params['features'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
             dict_debug_imgs=dict_debug_imgs)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
 

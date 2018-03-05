@@ -40,7 +40,7 @@ PATHS = {
 }
 
 
-def aparse_params(dict_paths=PATHS):
+def aparse_params(dict_paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
     :return: {str: str}, int
@@ -101,7 +101,7 @@ def wrapper_relabel_segm(annot_segm):
     annot, segm = annot_segm
     try:
         segm = seg_lbs.relabel_max_overlap_unique(annot, segm)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
     return segm
 
@@ -168,5 +168,5 @@ def main(dict_paths, nb_jobs=NB_THREADS, relabel=True):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    dict_paths, args = aparse_params()
+    dict_paths, args = aparse_params(PATHS)
     main(dict_paths)

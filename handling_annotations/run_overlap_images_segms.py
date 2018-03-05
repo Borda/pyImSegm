@@ -122,7 +122,7 @@ def perform_visu_overlap(path_img, paths):
 
     try:
         visualise_overlap(path_img, path_seg, path_out)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
         return False
     return True

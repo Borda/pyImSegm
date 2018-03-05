@@ -95,7 +95,7 @@ def quantize_folder_images(path_images, label, nb_jobs=1):
         mproc_pool.close()
         mproc_pool.join()
     else:
-        for r in map(wrapper_img_inpaint, path_imgs):
+        for _ in map(wrapper_img_inpaint, path_imgs):
             tqdm_bar.update()
 
 

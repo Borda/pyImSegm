@@ -43,7 +43,7 @@ PARAMS = {
 }
 
 
-def arg_parse_params(params=PARAMS):
+def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
     :return: {str: any}

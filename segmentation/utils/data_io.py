@@ -48,9 +48,12 @@ def update_path(path_file, lim_depth=5, absolute=True):
     elif path_file.startswith('~'):
         path_file = os.path.expanduser(path_file)
     else:
+        tmp_path = path_file
         for _ in range(lim_depth):
-            if os.path.exists(path_file): break
-            path_file = os.path.join('..', path_file)
+            if os.path.exists(tmp_path):
+                path_file = tmp_path
+                break
+            tmp_path = os.path.join('..', tmp_path)
     if absolute:
         path_file = os.path.abspath(path_file)
     return path_file
@@ -783,7 +786,7 @@ def load_images_list(path_imgs, im_range=255):
     >>> os.remove(path_in)
     """
     list_images, list_names = [], []
-    for i, path_im in enumerate(path_imgs):
+    for path_im in path_imgs:
         path_im = os.path.abspath(os.path.expanduser(path_im))
         if path_im is None or not os.path.exists(path_im):
             logging.debug('particular image is missing "%s"', path_im)
@@ -895,7 +898,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
         name_pattern = os.path.basename(path_pattern_n)
         list_files = glob.glob(path_pattern_n)
         logging.debug('found %i files in %s', len(list_files), path_pattern_n)
-        for i, path_n in enumerate(list_files):
+        for path_n in list_files:
             name_n = get_name(path_n, name_pattern)
             if name_n in names_0:
                 idx = names_0.index(name_n)

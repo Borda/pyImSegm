@@ -1,19 +1,19 @@
 """
 The build/compilations setup
 
->>> pip install -r requirements.txt
->>> python setup.py build_ext --inplace
->>> python setup.py install
+>> pip install -r requirements.txt
+>> python setup.py build_ext --inplace
+>> python setup.py install
 
 For uploading to PyPi follow instructions
 http://peterdowns.com/posts/first-time-with-pypi.html
 
 Pre-release package
->>> python setup.py sdist upload -r pypitest
->>> pip install --index-url https://test.pypi.org/simple/ your-package
+>> python setup.py sdist upload -r pypitest
+>> pip install --index-url https://test.pypi.org/simple/ your-package
 Release package
->>> python setup.py sdist upload -r pypi
->>> pip install your-package
+>> python setup.py sdist upload -r pypi
+>> pip install your-package
 
 Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -21,10 +21,10 @@ import pip
 import logging
 import pkg_resources
 try:
-    from setuptools import setup, Extension, Command, find_packages
+    from setuptools import setup, Extension #, find_packages
     from setuptools.command.build_ext import build_ext
 except ImportError:
-    from distutils.core import setup, Extension, Command, find_packages
+    from distutils.core import setup, Extension #, find_packages
     from distutils.command.build_ext import build_ext
 # from Cython.Distutils import build_ext
 # from Cython.Build import cythonize
@@ -56,7 +56,7 @@ def _parse_requirements(file_path):
 # parse_requirements() returns generator of pip.req.InstallRequirement objects
 try:
     install_reqs = _parse_requirements("requirements.txt")
-except:
+except Exception:
     logging.warning('Fail load requirements file, so using default ones.')
     install_reqs = ['Cython', 'numpy']
 

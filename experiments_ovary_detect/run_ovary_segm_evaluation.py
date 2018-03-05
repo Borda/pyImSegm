@@ -63,7 +63,7 @@ LUT_COLOR = np.array([
 ])
 
 
-def arg_parse_params(paths=PATHS):
+def arg_parse_params(paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
     :return: {str: str}, int
@@ -297,5 +297,5 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    paths, nb_jobs, export_visual = arg_parse_params()
+    paths, nb_jobs, export_visual = arg_parse_params(PATHS)
     main(paths, export_visual, nb_jobs)

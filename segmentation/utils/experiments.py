@@ -285,6 +285,6 @@ def create_subfolders(path_out, list_folders):
             try:
                 os.mkdir(path_dir)
                 count += 1
-            except:
+            except Exception:
                 logging.error(traceback.format_exc())
     return count

@@ -19,7 +19,7 @@ import segmentation.utils.drawing as tl_visu
 import segmentation.pipelines as pipelines
 import segmentation.descriptors as seg_fts
 
-PATH_OUTPUT = tl_io.update_path(os.path.join('output'))
+PATH_OUTPUT = tl_io.update_path('output', absolute=True)
 # set default feature extracted from image
 FEATURES_TEXTURE = seg_fts.FEATURES_SET_TEXTURE_SHORT
 seg_fts.USE_CYTHON = False
@@ -104,9 +104,16 @@ def run_segm2d_gmm_gc(img2d, dir_name, types_edge=('model', 'const'),
 
 class TestPipelinesGMM(unittest.TestCase):
 
+    img_obj = d_spl.load_sample_image(d_spl.IMAGE_OBJECTS)
+    img_star = d_spl.load_sample_image(d_spl.IMAGE_STAR_2)
+    img_islet = d_spl.load_sample_image(d_spl.IMAGE_LANGER_ISLET)
+    img_histo = d_spl.load_sample_image(d_spl.IMAGE_HISTOL_FLAGSHIP)
+    img_disc = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_DISC)
+    img_ovary = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_OVARY_2D)
+    img3d = d_spl.get_image_path(d_spl.IMAGE_DROSOPHILA_OVARY_3D)
+
     def test_segm_gmm_gc_objects(self):
-        img = d_spl.load_sample_image(d_spl.IMAGE_OBJECTS)
-        img = imresize(img, (256, 256))
+        img = imresize(self.img_obj, (256, 256))
         logging.debug('dimension: {}'.format(img.shape))
 
         dict_imgs = dict()
@@ -124,15 +131,14 @@ class TestPipelinesGMM(unittest.TestCase):
                              'fig_regul-%.2f_edge-%s.png' % (1., 'model'))
 
     def test_segm_gmm_gc_stars(self):
-        img = d_spl.load_sample_image(d_spl.IMAGE_STAR_2)
+        img = self.img_star
         logging.debug('dimension: {}'.format(img.shape))
         params = dict(nb_classes=3, sp_regul=0.2, sp_size=25,
                       dict_features={'color': ['mean', 'std']})
         run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_stars', dict_params=params)
 
     def test_segm_gmm_gc_langer(self):
-        img = d_spl.load_sample_image(d_spl.IMAGE_LANGER_ISLET)
-        img = imresize(img, (512, 512))
+        img = imresize(self.img_islet, (512, 512))
         params = dict(clr_space='hsv', sp_regul=0.15, sp_size=5)
 
         run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_langer',
@@ -140,24 +146,21 @@ class TestPipelinesGMM(unittest.TestCase):
                           dict_params=params)
 
     def test_segm_gmm_gc_histo(self):
-        img = d_spl.load_sample_image(d_spl.IMAGE_HISTOL_FLAGSHIP)
-        img = imresize(img, (512, 512))
+        img = imresize(self.img_histo, (512, 512))
         params = dict(sp_regul=0.15, sp_size=15, pca_coef=0.98)
         run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_histology',
                           types_edge=['model'], list_regul=[0, 1, 5],
                           dict_params=params)
 
     def test_segm_gmm_gc_disc(self):
-        img = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_DISC)
-        img = imresize(img, (512, 512))
+        img = imresize(self.img_disc, (512, 512))
         params = dict(sp_regul=0.2, sp_size=15, pca_coef=0.98)
         run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_disc',
                           types_edge=['model_l2'], list_regul=[0, 1, 5],
                           dict_params=params)
 
     def test_segm_gmm_gc_ovary_2d(self):
-        img = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_OVARY_2D)[:, :, 0]
-        img = imresize(img, (512, 512))
+        img = imresize(self.img_ovary[:, :, 0], (512, 512))
         # img = np.rollaxis(np.tile(img[:, :, 0], (3, 1, 1)), 0, 3)
         params = dict(nb_classes=4, pca_coef=0.95, sp_regul=0.3, sp_size=10,
                       dict_features=seg_fts.FEATURES_SET_TEXTURE_SHORT)
@@ -165,20 +168,22 @@ class TestPipelinesGMM(unittest.TestCase):
                           list_regul=[0, 2, 10], dict_params=params)
 
     def test_segm_gmm_gc_ovary_3d(self):
-        path_img = d_spl.get_image_path(d_spl.IMAGE_DROSOPHILA_OVARY_3D)
+        # _ = self.img3d
         # TODO, add extension to 3D
         # seg = pipelines.pipe_gray3d_slic_features_gmm_graphcut(img)
+        pass
 
 
 class TestPipelinesClassif(unittest.TestCase):
 
+    img = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_OVARY_2D)[:, :, 0]
+    annot = d_spl.load_sample_image(d_spl.ANNOT_DROSOPHILA_OVARY_2D)
+    img2 = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_OVARY_2D)[:, :, 0]
+
     def test_segm_supervised(self):
-        img = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_OVARY_2D)[:, :, 0]
-        img = imresize(img, (256, 256))
-        annot = d_spl.load_sample_image(d_spl.ANNOT_DROSOPHILA_OVARY_2D)
-        annot = imresize(annot, (256, 256), interp='nearest')
-        img2 = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_OVARY_2D)[:, :, 0]
-        img2 = imresize(img2, (256, 256))
+        img = imresize(self.img, (256, 256))
+        annot = imresize(self.annot, (256, 256), interp='nearest')
+        img2 = imresize(self.img2, (256, 256))
 
         path_dir = os.path.join(PATH_OUTPUT, 'test_segm_supervised_gc')
         if not os.path.exists(path_dir):
