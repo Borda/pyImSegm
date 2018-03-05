@@ -13,7 +13,7 @@ import logging
 import traceback
 
 import numpy as np
-import pandas as pd
+# import pandas as pd
 from sklearn import metrics
 
 FILE_RESULTS = 'resultStat.txt'
@@ -33,7 +33,7 @@ class Experiment(object):
     >>> expt.run()
     >>> params = expt.params.copy()
     >>> del expt
-    >>> shutil.rmtree(params['path_exp'])
+    >>> shutil.rmtree(params['path_exp'], ignore_errors=True)
     """
 
     def __init__(self, dict_params, time_stamp=True):
@@ -115,7 +115,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     True
     >>> p['path_exp']
     './my_test_EXAMPLE'
-    >>> shutil.rmtree(p['path_exp'])
+    >>> shutil.rmtree(p['path_exp'], ignore_errors=True)
     """
     date = time.gmtime()
     name = params.get('name', 'EXAMPLE')
@@ -236,6 +236,7 @@ def extend_list_params(list_params, name_param, list_options):
     :param [] list_options:
     :return [{str: ...}]:
 
+    >>> import pandas as pd
     >>> params = extend_list_params([{'a': 1}], 'a', [3, 4])
     >>> pd.DataFrame(params)  # doctest: +NORMALIZE_WHITESPACE
        a param_idx
@@ -275,7 +276,7 @@ def create_subfolders(path_out, list_folders):
     1
     >>> os.path.exists(dir_name)
     True
-    >>> shutil.rmtree(dir_name)
+    >>> shutil.rmtree(dir_name, ignore_errors=True)
     """
     count = 0
     for dir_name in list_folders:
