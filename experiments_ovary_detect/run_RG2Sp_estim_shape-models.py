@@ -16,11 +16,6 @@ import logging
 import pickle
 import argparse
 
-import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
-
 from PIL import Image
 import numpy as np
 import pandas as pd

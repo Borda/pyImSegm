@@ -23,7 +23,7 @@ try:
     import segmentation.features_cython as fts_cython
     # logging.debug('try to load Cython implementation')  # CRASH logger
     USE_CYTHON = True
-except:
+except Exception:
     # NOTE: in some cases following warning may crash all message logging
     logging.warning('descriptors: using pure python libraries')
     USE_CYTHON = False

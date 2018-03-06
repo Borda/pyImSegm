@@ -24,7 +24,7 @@ from functools import partial
 import matplotlib
 if os.environ.get('DISPLAY','') == '':
     logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
+    matplotlib.use('Agg')
 
 import tqdm
 import numpy as np
@@ -122,7 +122,7 @@ def perform_visu_overlap(path_img, paths):
 
     try:
         visualise_overlap(path_img, path_seg, path_out)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
         return False
     return True

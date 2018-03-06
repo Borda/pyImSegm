@@ -39,7 +39,8 @@ from scipy import spatial
 import matplotlib
 if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
+    matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -120,7 +121,7 @@ CENTER_PARAMS.update({
 })
 
 
-def arg_parse_params(params=CENTER_PARAMS):
+def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
     :return: {str: str}, int
@@ -704,7 +705,7 @@ def load_df_paths(params):
     return df_paths, path_csv
 
 
-def main_train(params=CENTER_PARAMS):
+def main_train(params):
     """ PIPELINE for training
     0) load triplets or create triplets from path to images, annotations
     1) load precomputed data or compute them now
@@ -724,7 +725,7 @@ def main_train(params=CENTER_PARAMS):
 
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 
-    df_paths, path_csv = load_df_paths(params)
+    df_paths, _ = load_df_paths(params)
 
     path_dump_data = os.path.join(params['path_expt'], NAME_DUMP_TRAIN_DATA)
     if not os.path.isfile(path_dump_data) or FORCE_RECOMP_DATA:
@@ -745,7 +746,7 @@ def main_train(params=CENTER_PARAMS):
 
     # concentrate features, labels
     features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
-        dict_features, dict_labels, drop_labels=[-1], balance=params['balance'])
+        dict_features, dict_labels, drop_labels=[-1], balance_type=params['balance'])
     # remove all bad values from features space
     features[np.isnan(features)] = 0
     features[np.isinf(features)] = -1
@@ -777,5 +778,5 @@ def main_train(params=CENTER_PARAMS):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    params = arg_parse_params()
+    params = arg_parse_params(CENTER_PARAMS)
     main_train(params)

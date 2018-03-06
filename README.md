@@ -160,14 +160,14 @@ We utilize (un)supervised segmentation according to given training examples or s
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -list images/langerhans_islets/list_lang-isl_imgs-annot.csv \
        -imgs "images/langerhans_islets/image/*.jpg" \
-       -out results -n langIsl --nb_classes 3 --visual 1 --nb_jobs 2
+       -out results -n langIsl --nb_classes 3 --visual --nb_jobs 2
     ```
 * Perform **Supervised** segmentation with afterwards evaluation.
     ```
     python experiments_segmentation/run_segm_slic_classif_graphcut.py \
         -list images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
         -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-        -out results -n Ovary --img_type 2d_gray --visual 1 --nb_jobs 2
+        -out results -n Ovary --img_type 2d_gray --visual --nb_jobs 2
     ```
 * For both experiment you can evaluate segmentation results.
     ```
@@ -275,7 +275,7 @@ python setup.py install
     ```
 1. Evaluate your segmentation results to expert annotation.
     ```
-    python experiments_ovary_detect/run_ovary_segm_evaluation.py
+    python experiments_ovary_detect/run_ovary_segm_evaluation.py --visual
     ```
 1. In the end, cut individual segmented objects comes as minimal bounding box.
     ```
@@ -295,7 +295,7 @@ python setup.py install
 
 ## References
 
-For complete references see [BibTex](references.bib).
+For complete references see [BibTex](docs/references.bib).
 1. Borovec J., Svihlik J., Kybic J., Habart D. (2017). **Supervised and unsupervised segmentation using superpixels, model estimation, and Graph Cut.** SPIE Journal of Electronic Imaging 26(6), 061610, http://doi.org/10.1117/1.JEI.26.6.061610
 1. Borovec J., Kybic J., Nava R. (2017) **Detection and Localization of Drosophila Egg Chambers in Microscopy Images.** In: Wang Q., Shi Y., Suk HI., Suzuki K. (eds) Machine Learning in Medical Imaging. MLMI 2017. LNCS, vol 10541. Springer, Cham. http://doi.org/10.1007/978-3-319-67389-9_3
 1. Borovec J., Kybic J., Sugimoto, A. (2017). **Region growing using superpixels with learned shape prior.** SPIE Journal of Electronic Imaging 26(6),  061611, http://doi.org/10.1117/1.JEI.26.6.061611

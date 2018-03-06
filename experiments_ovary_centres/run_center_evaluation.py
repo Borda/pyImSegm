@@ -30,7 +30,8 @@ from scipy import ndimage
 import matplotlib
 if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
+    matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -178,7 +179,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
         dict_stat = compute_statistic_eggs_centres(dict_row, centres, labels,
                                                    mask_eggs, img, segm,
                                                    path_visu, col_prefix)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
         dict_stat = dict_row
     return dict_stat

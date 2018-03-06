@@ -45,7 +45,7 @@ def perform_orientation_swap(path_img, path_out):
     """
     img, _ = tl_io.load_image_2d(path_img)
 
-    part = img.shape[1] / 3
+    part = int(img.shape[1] / 3)
     sel_mask = img[:, :, IMAGE_CHANNEL] > np.min(img[:, :, IMAGE_CHANNEL])
     norm_val = np.mean(img[sel_mask, IMAGE_CHANNEL])
     val_left = np.sum(img[:, :part, IMAGE_CHANNEL] > norm_val)

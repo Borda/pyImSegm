@@ -22,12 +22,12 @@ import segmentation.utils.drawing as tl_visu
 import segmentation.superpixels as seg_spx
 import segmentation.region_growing as seg_rg
 
-PATH_BASE = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'),
-                              absolute=True)
-PATH_IMAGE = os.path.join(PATH_BASE, 'image')
-PATH_SEGM = os.path.join(PATH_BASE, 'segm')
-PATH_ANNOT = os.path.join(PATH_BASE, 'annot_eggs')
-PATH_CENTRE = os.path.join(PATH_BASE, 'center_levels')
+PATH_OVARY = os.path.join(tl_io.update_path('images', absolute=True),
+                         'drosophila_ovary_slice')
+PATH_IMAGE = os.path.join(PATH_OVARY, 'image')
+PATH_SEGM = os.path.join(PATH_OVARY, 'segm')
+PATH_ANNOT = os.path.join(PATH_OVARY, 'annot_eggs')
+PATH_CENTRE = os.path.join(PATH_OVARY, 'center_levels')
 PATH_OUTPUT = tl_io.update_path('output', absolute=True)
 NAME_RG2SP_MODEL = 'RG2SP_multi-model_mixture.npz'
 PATH_PKL_MODEL = os.path.join(PATH_OUTPUT, NAME_RG2SP_MODEL)

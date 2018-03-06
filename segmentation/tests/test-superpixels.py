@@ -18,15 +18,14 @@ import segmentation.utils.data_io as tl_io
 import segmentation.superpixels as seg_spx
 
 # set default output path
-PATH_OUTPUT = os.path.abspath(tl_io.update_path('output'))
+PATH_OUTPUT = tl_io.update_path('output', absolute=True)
 
 
 class TestSuperpixels(unittest.TestCase):
 
-    def setUp(self):
-        self.seg2d = d_spl.sample_segment_vertical_2d()
-        self.seg3d = d_spl.sample_segment_vertical_3d()
-        self.img = d_spl.load_sample_image(d_spl.IMAGE_LENNA)
+    img = d_spl.load_sample_image(d_spl.IMAGE_LENNA)
+    seg2d = d_spl.sample_segment_vertical_2d()
+    seg3d = d_spl.sample_segment_vertical_3d()
 
     def test_segm_connect(self):
         logging.debug(self.seg2d)

@@ -18,11 +18,6 @@ import logging
 import multiprocessing as mproc
 from functools import partial
 
-import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
-
 import tqdm
 import numpy as np
 import pandas as pd
@@ -48,7 +43,7 @@ PARAMS = {
 }
 
 
-def arg_parse_params(params=PARAMS):
+def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
     :return: {str: any}
@@ -70,8 +65,8 @@ def arg_parse_params(params=PARAMS):
                         default=20, help='superpixels size')
     parser.add_argument('--slic_regul', type=float, required=False,
                         default=0.25, help='superpixel regularization')
-    parser.add_argument('--slico', type=int, required=False,
-                        default=0, help='using SLICO (ASLIC)')
+    parser.add_argument('--slico', action='store_true', required=False,
+                        default=False, help='using SLICO (ASLIC)')
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     params = vars(parser.parse_args())
@@ -101,9 +96,10 @@ def compute_boundary_distance(idx_row, params, path_out=''):
     segm = load_image(row['path_segm'], 'segm')
 
     logging.debug('segment SLIC...')
-    slic = seg_spx.segment_slic_img2d(img, params['slic_size'],
+    slic = seg_spx.segment_slic_img2d(img,
+                                      params['slic_size'],
                                       params['slic_regul'],
-                                      bool(params['slico']))
+                                      params['slico'])
     _, dists = seg_lbs.compute_boundary_distances(segm, slic)
 
     if os.path.isdir(path_out):

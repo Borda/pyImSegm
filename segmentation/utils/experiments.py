@@ -8,10 +8,12 @@ import os
 import json
 import copy
 import time
+import types
 import logging
 import traceback
 
 import numpy as np
+# import pandas as pd
 from sklearn import metrics
 
 FILE_RESULTS = 'resultStat.txt'
@@ -31,7 +33,7 @@ class Experiment(object):
     >>> expt.run()
     >>> params = expt.params.copy()
     >>> del expt
-    >>> shutil.rmtree(params['path_exp'])
+    >>> shutil.rmtree(params['path_exp'], ignore_errors=True)
     """
 
     def __init__(self, dict_params, time_stamp=True):
@@ -113,7 +115,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     True
     >>> p['path_exp']
     './my_test_EXAMPLE'
-    >>> shutil.rmtree(p['path_exp'])
+    >>> shutil.rmtree(p['path_exp'], ignore_errors=True)
     """
     date = time.gmtime()
     name = params.get('name', 'EXAMPLE')
@@ -210,30 +212,53 @@ def append_final_stat(out_dir, y_true, y_pred, time_sec,
     return file_path
 
 
+def is_iterable(var):
+    """ check if the variable is iterable
+
+    :param var:
+    :return bool:
+
+    >>> is_iterable('abc')
+    False
+    >>> is_iterable([0])
+    True
+    >>> is_iterable((1, ))
+    True
+    """
+    return any(isinstance(var, cls) for cls in [list, tuple, types.GeneratorType])
+
+
 def extend_list_params(list_params, name_param, list_options):
     """ extend the parameter list by all sub-datasets
 
-    :param list_params: [{str: ...}]
-    :param name_param: str
-    :param list_options: list
-    :return: [{str: ...}]
+    :param [{str: ...}] list_params:
+    :param str name_param:
+    :param [] list_options:
+    :return [{str: ...}]:
 
     >>> import pandas as pd
     >>> params = extend_list_params([{'a': 1}], 'a', [3, 4])
     >>> pd.DataFrame(params)  # doctest: +NORMALIZE_WHITESPACE
        a param_idx
-    0  3     a_1/2
-    1  4     a_2/2
+    0  3     a-2#1
+    1  4     a-2#2
+    >>> params = extend_list_params([{'a': 1}], 'b', 5)
+    >>> pd.DataFrame(params)  # doctest: +NORMALIZE_WHITESPACE
+       a  b param_idx
+    0  1  5     b-1#1
     """
-    if not isinstance(list_options, list):
+    if not is_iterable(list_options):
         list_options = [list_options]
     list_params_new = []
     for p in list_params:
+        p['param_idx'] = p.get('param_idx', '')
         for i, v in enumerate(list_options):
             p_new = p.copy()
             p_new.update({name_param: v})
-            p_new['param_idx'] = \
-                '%s_%i/%i' % (name_param, i + 1, len(list_options))
+            if len(p_new['param_idx']) > 0:
+                p_new['param_idx'] += '_'
+            p_new['param_idx'] += \
+                '%s-%i#%i' % (name_param, len(list_options), i + 1)
             list_params_new.append(p_new)
     return list_params_new
 
@@ -251,7 +276,7 @@ def create_subfolders(path_out, list_folders):
     1
     >>> os.path.exists(dir_name)
     True
-    >>> shutil.rmtree(dir_name)
+    >>> shutil.rmtree(dir_name, ignore_errors=True)
     """
     count = 0
     for dir_name in list_folders:
@@ -260,6 +285,6 @@ def create_subfolders(path_out, list_folders):
             try:
                 os.mkdir(path_dir)
                 count += 1
-            except:
+            except Exception:
                 logging.error(traceback.format_exc())
     return count
