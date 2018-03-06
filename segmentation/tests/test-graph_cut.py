@@ -20,16 +20,17 @@ import segmentation.graph_cuts as seg_gc
 import segmentation.labeling as seg_lb
 
 # set the output put directory
-PATH_OUTPUT = tl_io.update_path(os.path.join('output'))
+PATH_OUTPUT = tl_io.update_path('output', absolute=True)
 
 
 class TestGraphCut(unittest.TestCase):
 
-    def test_count_transitions_segment(self):
-        img = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_OVARY_2D)[:, :, 0]
+    img = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_OVARY_2D)
+    annot = d_spl.load_sample_image(d_spl.ANNOT_DROSOPHILA_OVARY_2D)
 
-        annot = d_spl.load_sample_image(d_spl.ANNOT_DROSOPHILA_OVARY_2D)
-        annot = annot.astype(int)
+    def test_count_transitions_segment(self):
+        img = self.img[:, :, 0]
+        annot = self.annot.astype(int)
 
         slic = seg_spx.segment_slic_img2d(img, sp_size=15, rltv_compact=0.2)
         label_hist = seg_lb.histogram_regions_labels_norm(slic, annot)

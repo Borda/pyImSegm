@@ -19,13 +19,15 @@ import segmentation.utils.data_io as tl_io
 import segmentation.labeling as seg_lb
 
 # set the output put directory
-PATH_OUTPUT = os.path.abspath(tl_io.update_path('output'))
+PATH_OUTPUT = tl_io.update_path('output', absolute=True)
 
 
 class TestLabels(unittest.TestCase):
 
+    segm = d_spl.sample_segment_vertical_2d()
+
     def test_label_contours(self):
-        seg = d_spl.sample_segment_vertical_2d()
+        seg = self.segm
         logging.debug('matrix seg_pipe \n%s', repr(seg))
         labs = list(np.unique(seg))
         path_dir = os.path.join(PATH_OUTPUT, 'test_labels')

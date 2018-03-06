@@ -26,7 +26,7 @@ from functools import partial
 import matplotlib
 if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
+    matplotlib.use('Agg')
 
 import tqdm
 from PIL import Image
@@ -55,7 +55,7 @@ COLOR_SEGM = '#00ff00'
 FIGURE_SIZE = 12
 
 
-def arg_parse_params(params=PARAMS):
+def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
     :return: {str: str}, int
@@ -160,7 +160,7 @@ def figure_draw_annot_csv(fig, img, row_slice, subfig_size=FIGURE_SIZE):
 #         figure_image_adjustment(fig, img)
 #         fig.savefig(os.path.join(path_out, n_img + '_segm_user-auto.png'))
 #         plt.close(fig)
-#     except:
+#     except Exception:
 #         print 'error for:', n_img
 #         traceback.print_exc()
 
@@ -197,7 +197,7 @@ def export_figure(idx_row, df_slices_info, path_out):
         tl_visu.figure_image_adjustment(fig, img.shape)
         fig.savefig(os.path.join(path_out, img_name + '.png'))
         plt.close(fig)
-    except:
+    except Exception:
         logging.error('failed for: %s', img_name)
         logging.error(traceback.format_exc())
 

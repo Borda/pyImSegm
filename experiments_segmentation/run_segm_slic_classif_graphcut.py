@@ -38,7 +38,7 @@ from functools import partial
 import matplotlib
 if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
+    matplotlib.use('Agg')
 
 import tqdm
 from PIL import Image
@@ -340,7 +340,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
         segm_soft = proba[slic]
         path_npz = os.path.join(path_out, idx_name + '.npz')
         np.savez_compressed(path_npz, segm_soft)
-    except:
+    except Exception:
         logging.warning('classif: %s not support predict_proba(.)',
                         repr(classif))
         proba = None
@@ -431,8 +431,8 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
     :return str, ndarray, ndarray:
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
-    dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, \
-        _, _ = load_dump_data(path_dump)
+    dict_imgs, _, _, dict_features, dict_labels, _, _ = \
+        load_dump_data(path_dump)
     dict_classif = seg_clf.load_classifier(path_classif)
     classif = dict_classif['clf_pipeline']
     params = dict_classif['params']
@@ -444,7 +444,7 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
         'no image was dropped from training set'
 
     features, labels, _ = seg_clf.convert_set_features_labels_2_dataset(
-        dict_features, dict_labels, balance=params['balance'], drop_labels=[-1])
+        dict_features, dict_labels, balance_type=params['balance'], drop_labels=[-1])
     classif.fit(features, labels)
 
     idx_name, segm, segm_gc = segment_image(imgs_idx_path, params, classif,
@@ -464,8 +464,8 @@ def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
     :param, str path_out: path to segmentation outputs
     :return str, ndarray, ndarray:
     """
-    dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, \
-        _, feature_names = load_dump_data(path_dump)
+    dict_imgs, _, _, dict_features, dict_labels, _, _ = \
+        load_dump_data(path_dump)
     dict_classif = seg_clf.load_classifier(path_classif)
     classif = dict_classif['clf_pipeline']
     params = dict_classif['params']
@@ -479,7 +479,7 @@ def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
         % (len(list_imgs_idx_path), len(dict_imgs), len(dict_features))
 
     features, labels, _ = seg_clf.convert_set_features_labels_2_dataset(
-                        dict_features, dict_labels, balance=params['balance'],
+                        dict_features, dict_labels, balance_type=params['balance'],
                         drop_labels=[-1])
     classif.fit(features, labels)
 
@@ -730,7 +730,7 @@ def main_train(params):
     logging.info('prepare features...')
     # concentrate features, labels
     features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
-        dict_features, dict_labels, balance=params['balance'], drop_labels=[-1])
+        dict_features, dict_labels, balance_type=params['balance'], drop_labels=[-1])
     # drop "do not care" label which are -1
     features = np.nan_to_num(features)
 
@@ -784,7 +784,7 @@ def try_segment_image(img_idx_path, params, classif, path_out, path_visu,
         return segment_image(img_idx_path, params, classif,
                              path_out, path_visu,
                              show_debug_imgs=show_debug_imgs)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
         return '', None, None
 

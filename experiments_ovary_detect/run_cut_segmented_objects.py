@@ -16,11 +16,6 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
-
 import tqdm
 import numpy as np
 from PIL import Image
@@ -38,7 +33,7 @@ PATHS = {
 }
 
 
-def arg_parse_params(dict_paths=PATHS):
+def arg_parse_params(dict_paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
     :return: {str: str}, int
@@ -133,5 +128,5 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    dict_paths, args = arg_parse_params()
+    dict_paths, args = arg_parse_params(PATHS)
     main(dict_paths, args.padding, args.mask, args.background, args.nb_jobs)

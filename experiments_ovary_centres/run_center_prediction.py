@@ -23,11 +23,6 @@ from functools import partial
 import tqdm
 import pandas as pd
 
-import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
-
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
 import segmentation.utils.experiments as tl_expt
 import segmentation.utils.data_io as tl_io
@@ -92,7 +87,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
 
         dict_center = run_clust.cluster_points_draw_export(dict_center, params,
                                                            path_output)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
     gc.collect()
     time.sleep(1)

@@ -18,11 +18,6 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
-
 import numpy as np
 import tqdm
 from skimage import io
@@ -100,7 +95,7 @@ def quantize_folder_images(path_images, label, nb_jobs=1):
         mproc_pool.close()
         mproc_pool.join()
     else:
-        for r in map(wrapper_img_inpaint, path_imgs):
+        for _ in map(wrapper_img_inpaint, path_imgs):
             tqdm_bar.update()
 
 

@@ -33,7 +33,7 @@ from functools import partial
 import matplotlib
 if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
+    matplotlib.use('Agg')
 
 import tqdm
 from PIL import Image
@@ -116,7 +116,7 @@ SEGM_PARAMS.update({
 })
 
 
-def arg_parse_params(params=SEGM_PARAMS):
+def arg_parse_params(params):
     """ argument parser from cmd
 
     SEE: https://docs.python.org/3/library/argparse.html
@@ -145,8 +145,8 @@ def arg_parse_params(params=SEGM_PARAMS):
     parser.add_argument('--nb_jobs', type=int, required=False,
                         default=NB_THREADS,
                         help='number of processes in parallel')
-    parser.add_argument('--visual', type=int, required=False, default=False,
-                        help='export debug visualisations')
+    parser.add_argument('--visual', required=False, action='store_true',
+                        help='export debug visualisations', default=False)
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %s', repr(args))
     for k in (k for k in args if 'path' in k):
@@ -154,7 +154,7 @@ def arg_parse_params(params=SEGM_PARAMS):
         args[k] = tl_data.update_path(args[k])
         p = os.path.dirname(args[k]) if '*' in args[k] else args[k]
         assert os.path.exists(p), 'missing (%s) "%s"' % (k, p)
-    args['visual'] = bool(args['visual'])
+    # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
     if os.path.isfile(args['path_config']):
         with open(args['path_config'], 'r') as fd:
@@ -320,7 +320,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None):
             pca_coef=params['pca_coef'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
             dict_debug_imgs=dict_debug_imgs)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
 
@@ -360,7 +360,7 @@ def segment_image_model(imgs_idx_path, params, scaler, pca, model, path_out=None
             dict_features=params['features'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
             dict_debug_imgs=dict_debug_imgs)
-    except:
+    except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
 

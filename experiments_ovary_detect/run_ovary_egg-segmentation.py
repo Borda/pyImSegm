@@ -38,7 +38,7 @@ from functools import partial
 import matplotlib
 if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend')
-matplotlib.use('Agg')
+    matplotlib.use('Agg')
 
 import tqdm
 from PIL import Image
@@ -758,7 +758,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
             # export also centers
             centers = tl_data.swap_coord_x_y(centers)
             tl_data.save_landmarks_csv(path_centre, centers)
-        except:
+        except Exception:
             logging.error('segment fail for "%s" via %s with \n %s',
                           name, method, traceback.format_exc())
 

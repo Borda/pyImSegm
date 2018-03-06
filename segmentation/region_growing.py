@@ -6,7 +6,6 @@ Framework for region growing
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
 import logging
 
 import numpy as np
@@ -778,7 +777,7 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     assert len(points) == len(labels)
     if selected_idx is None:
         selected_idx = list(range(len(points)))
-    model, cdf = shape_chist
+    _, cdf = shape_chist
     # segm_obj = labels[slic]
     for i, centre in enumerate(centres):
         # segm_binary = (segm_obj == i + 1)

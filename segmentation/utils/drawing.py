@@ -251,10 +251,10 @@ def figure_image_segm_results(img, seg, subfig_size=9):
     axarr[2].set_title('segmentation of all labels')
     axarr[2].imshow(seg, cmap=plt.cm.jet)
 
-    for i in range(len(axarr)):
-        axarr[i].axis('off')
-        axarr[i].axes.get_xaxis().set_ticklabels([])
-        axarr[i].axes.get_yaxis().set_ticklabels([])
+    for ax in axarr:
+        ax.axis('off')
+        ax.axes.get_xaxis().set_ticklabels([])
+        ax.axes.get_yaxis().set_ticklabels([])
 
     fig.subplots_adjust(wspace=0.01, hspace=0.01)
     fig.tight_layout()
@@ -976,8 +976,8 @@ def make_overlap_images_chess(imgs, chess_field=SIZE_CHESS_FIELD):
     for im in imgs:
         imgs_w.append(np.zeros(max_size, dtype=im.dtype))
     # copy images to the maximal image
-    for i in range(len(imgs)):
-        imgs_w[i][:imgs[i].shape[0], :imgs[i].shape[1]]=imgs[i]
+    for i, im in enumerate(imgs):
+        imgs_w[i][:im.shape[0], :im.shape[1]] = im
     img = np.zeros(max_size, dtype=im.dtype)
     idx_row = 0
     for i in range(int(max_size[0] / chess_field)):
