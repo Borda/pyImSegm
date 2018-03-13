@@ -86,6 +86,8 @@ script:
   - python experiments_ovary_detect/run_egg_swap_orientation.py
 
 after_success:
+  - python setup.py install
+
   - coverage xml -o $COVERAGE_REPORTS/coverage.xml
   - codecov -t 80efed4e-ac2b-4fea-a642-0a8b1c82e1c8
   - coverage report

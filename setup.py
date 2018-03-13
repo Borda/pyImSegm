@@ -83,6 +83,7 @@ setup(
                                                  '-march=native', '-fopenmp'],
                            extra_link_args=['-fopenmp'],
                            )],
+    setup_requires=install_reqs,
     install_requires=install_reqs,
     # include_dirs = [np.get_include()],
     include_package_data=True,

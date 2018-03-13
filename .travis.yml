@@ -44,6 +44,7 @@ before_script:
 script:
   # - pytest segmentation -v --doctest-modules
   - nosetests segmentation -v --exe --with-doctest --with-xunit --with-coverage --cover-package=segmentation
+  - python setup.py install
 
 after_success:
   # - codecov  # public repository on Travis CI
