@@ -23,10 +23,10 @@ import numpy as np
 import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as tl_visu
-import segmentation.superpixels as seg_spx
-import segmentation.labeling as seg_lbs
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as tl_visu
+import imsegm.superpixels as seg_spx
+import imsegm.labeling as seg_lbs
 from run_segm_slic_model_graphcut import load_image
 from run_segm_slic_model_graphcut import TYPES_LOAD_IMAGE
 

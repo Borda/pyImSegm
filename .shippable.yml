@@ -46,7 +46,7 @@ script:
   - python setup.py build_ext --inplace
 
   - nosetests -v --with-xunit --xunit-file=$CI_REPORTS/nosetests.xml
-  - nosetests segmentation -v --exe --with-doctest --with-xunit --with-coverage --cover-package segmentation
+  - nosetests imsegm -v --exe --with-doctest --with-xunit --with-coverage --cover-package imsegm
 
   # ANNOTATION section
   - python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png"

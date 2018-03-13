@@ -17,10 +17,10 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import adjusted_rand_score
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as tl_visu
-import segmentation.superpixels as seg_spx
-import segmentation.region_growing as seg_rg
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as tl_visu
+import imsegm.superpixels as seg_spx
+import imsegm.region_growing as seg_rg
 
 PATH_OVARY = os.path.join(tl_io.update_path('images', absolute=True),
                          'drosophila_ovary_slice')

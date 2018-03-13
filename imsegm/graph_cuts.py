@@ -10,9 +10,9 @@ import numpy as np
 from gco import cut_general_graph
 from sklearn import metrics, mixture, cluster, preprocessing
 
-import segmentation.utils.drawing as tl_visu
-import segmentation.superpixels as seg_spx
-import segmentation.descriptors as seg_fts
+import imsegm.utils.drawing as tl_visu
+import imsegm.superpixels as seg_spx
+import imsegm.descriptors as seg_fts
 
 DEFAULT_GC_ITERATIONS = 25
 COEF_INT_CONVERSION = 1e6

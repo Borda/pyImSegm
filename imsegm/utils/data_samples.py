@@ -11,7 +11,7 @@ import logging
 from PIL import Image
 import numpy as np
 
-import segmentation.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_io
 
 SAMPLE_SEG_SIZE_2D_SMALL = (20, 10)
 SAMPLE_SEG_SIZE_2D_NORM = (150, 100)

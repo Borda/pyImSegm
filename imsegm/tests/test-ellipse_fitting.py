@@ -14,9 +14,9 @@ import pandas as pd
 from sklearn.metrics import adjusted_rand_score
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as tl_visu
-import segmentation.ellipse_fitting as seg_fit
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as tl_visu
+import imsegm.ellipse_fitting as seg_fit
 
 # set some default paths
 PATH_OUTPUT = tl_io.update_path('output', absolute=True)

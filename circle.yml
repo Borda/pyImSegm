@@ -29,7 +29,7 @@ test:
     - mkdir -p $CIRCLE_TEST_REPORTS
 
   override:
-    - unset DISPLAY && coverage run --source segmentation -m py.test segmentation -v --doctest-modules --junitxml=$CIRCLE_TEST_REPORTS/pytest_junit.xml
+    - unset DISPLAY && coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=$CIRCLE_TEST_REPORTS/pytest_junit.xml
 
   post:
     - coverage report && coverage xml -o $CIRCLE_TEST_REPORTS/coverage.xml

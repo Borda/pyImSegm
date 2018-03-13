@@ -45,8 +45,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as tl_visu
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as tl_visu
 
 PATH_BASE = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
 PATH_IMAGES = os.path.join(PATH_BASE, 'image', '*.jpg')

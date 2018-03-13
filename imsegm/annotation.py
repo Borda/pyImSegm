@@ -317,7 +317,7 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     :param [str] pos_columns:
     :return: DF
 
-    >>> import segmentation.utils.data_io as tl_io
+    >>> import imsegm.utils.data_io as tl_io
     >>> path_txt = os.path.join(tl_io.update_path('images'),
     ...                 'drosophila_ovary_slice', 'info_ovary_images.txt')
     >>> load_info_group_by_slices(path_txt, [4]) # doctest: +NORMALIZE_WHITESPACE

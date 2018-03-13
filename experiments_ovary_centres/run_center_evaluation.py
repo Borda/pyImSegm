@@ -35,9 +35,9 @@ if os.environ.get('DISPLAY', '') == '':
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.drawing as tl_visu
-import segmentation.annotation as seg_annot
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.drawing as tl_visu
+import imsegm.annotation as seg_annot
 import run_center_candidate_training as run_train
 import run_center_prediction as run_detect
 import run_center_clustering as run_clust

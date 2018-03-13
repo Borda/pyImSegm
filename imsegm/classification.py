@@ -29,7 +29,7 @@ from sklearn import ensemble, neighbors, svm, tree
 from sklearn import pipeline, linear_model, neural_network
 from sklearn import model_selection
 
-import segmentation.labeling as seg_lbs
+import imsegm.labeling as seg_lbs
 
 # NAME_FILE_RESULTS = 'results.csv'
 TEMPLATE_NAME_CLF = 'classifier_{}.pkl'

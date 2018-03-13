@@ -35,9 +35,9 @@ import pandas as pd
 import matplotlib.pylab as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as tl_visu
-import segmentation.annotation as seg_annot
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as tl_visu
+import imsegm.annotation as seg_annot
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
 PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))

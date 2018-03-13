@@ -21,7 +21,7 @@ import numpy as np
 from PIL import Image
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_io
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))

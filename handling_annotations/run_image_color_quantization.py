@@ -27,9 +27,9 @@ import numpy as np
 import tqdm
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
-import segmentation.annotation as seg_annot
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
+import imsegm.annotation as seg_annot
 
 PATH_IMAGES = os.path.join('images', 'drosophila_ovary_slice', 'segm_rgb', '*.png')
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))

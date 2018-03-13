@@ -10,9 +10,9 @@ from skimage import morphology
 
 from skimage.measure import fit as sk_fit
 # from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
-import segmentation.utils.drawing as tl_visu
-import segmentation.descriptors as seg_fts
-import segmentation.superpixels as seg_spx
+import imsegm.utils.drawing as tl_visu
+import imsegm.descriptors as seg_fts
+import imsegm.superpixels as seg_spx
 
 INIT_MASK_BORDER = 50.
 MIN_ELLIPSE_DAIM = 25.

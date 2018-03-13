@@ -22,10 +22,10 @@ import tqdm
 from skimage.segmentation import relabel_sequential
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as seg_visu
-import segmentation.labeling as seg_lbs
-import segmentation.classification as seg_clf
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as seg_visu
+import imsegm.labeling as seg_lbs
+import imsegm.classification as seg_clf
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 NAME_CVS_OVERALL = 'segm-STATISTIC_%s_stat-overall.csv'

@@ -12,11 +12,11 @@ import numpy as np
 import skimage.color as sk_color
 from sklearn import preprocessing, mixture, decomposition
 
-import segmentation.graph_cuts as seg_gc
-import segmentation.superpixels as seg_sp
-import segmentation.descriptors as seg_fts
-import segmentation.labeling as seg_lbs
-import segmentation.classification as seg_clf
+import imsegm.graph_cuts as seg_gc
+import imsegm.superpixels as seg_sp
+import imsegm.descriptors as seg_fts
+import imsegm.labeling as seg_lbs
+import imsegm.classification as seg_clf
 
 CLASSIF_PARAMS = {'method': 'kNN', 'nb': 10}
 FTS_SET_SIMPLE = seg_fts.FEATURES_SET_COLOR

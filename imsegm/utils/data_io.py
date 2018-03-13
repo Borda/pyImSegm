@@ -23,7 +23,7 @@ from scipy import ndimage
 from skimage import exposure, io, color, measure
 import nibabel
 
-import segmentation.utils.read_zvi as read_zvi
+import imsegm.utils.read_zvi as read_zvi
 
 COLUMNS_COORDS = ['X', 'Y']
 DEFAULT_PATTERN_SET_LIST_FILE = '*.txt'

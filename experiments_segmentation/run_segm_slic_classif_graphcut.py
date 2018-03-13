@@ -50,15 +50,15 @@ from skimage import segmentation
 from sklearn import metrics
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_data
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.drawing as tl_visu
-import segmentation.pipelines as seg_pipe
-import segmentation.labeling as seg_label
-import segmentation.descriptors as seg_fts
-import segmentation.classification as seg_clf
-import segmentation.superpixels as seg_spx
-import segmentation.graph_cuts as seg_gc
+import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.drawing as tl_visu
+import imsegm.pipelines as seg_pipe
+import imsegm.labeling as seg_label
+import imsegm.descriptors as seg_fts
+import imsegm.classification as seg_clf
+import imsegm.superpixels as seg_spx
+import imsegm.graph_cuts as seg_gc
 from run_segm_slic_model_graphcut import (arg_parse_params, load_image,
                                           parse_imgs_idx_path, get_idx_name)
 

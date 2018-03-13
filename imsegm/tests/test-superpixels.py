@@ -13,9 +13,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import segmentation.utils.data_samples as d_spl
-import segmentation.utils.data_io as tl_io
-import segmentation.superpixels as seg_spx
+import imsegm.utils.data_samples as d_spl
+import imsegm.utils.data_io as tl_io
+import imsegm.superpixels as seg_spx
 
 # set default output path
 PATH_OUTPUT = tl_io.update_path('output', absolute=True)

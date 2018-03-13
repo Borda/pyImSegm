@@ -45,11 +45,11 @@ from skimage import segmentation
 from sklearn import metrics
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_data
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.drawing as tl_visu
-import segmentation.pipelines as seg_pipe
-import segmentation.descriptors as seg_fts
+import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.drawing as tl_visu
+import imsegm.pipelines as seg_pipe
+import imsegm.descriptors as seg_fts
 # sometimes it freeze in "Cython: computing Colour means for image"
 seg_fts.USE_CYTHON = False
 

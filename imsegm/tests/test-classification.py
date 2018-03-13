@@ -13,7 +13,7 @@ import numpy as np
 from sklearn import metrics
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import segmentation.classification as seg_clf
+import imsegm.classification as seg_clf
 
 CLASSIFIER_NAMES = seg_clf.create_classifiers().keys()
 

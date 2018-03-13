@@ -25,9 +25,9 @@ import tqdm
 from skimage import io
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
-import segmentation.annotation as seg_annot
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
+import imsegm.annotation as seg_annot
 
 PATH_INPUT = os.path.join('images', 'drosophila_ovary_slice', 'segm', '*.png')
 PATH_OUTPUT = os.path.join('images', 'drosophila_ovary_slice', 'segm_rgb')

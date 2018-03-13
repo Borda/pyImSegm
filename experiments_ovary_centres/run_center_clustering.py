@@ -27,9 +27,9 @@ if os.environ.get('DISPLAY', '') == '':
 import matplotlib.pylab as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.drawing as tl_visu
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.drawing as tl_visu
 import run_center_candidate_training as run_train
 # import run_center_prediction as run_pred
 

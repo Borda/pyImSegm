@@ -21,8 +21,8 @@ import numpy as np
 import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
-import segmentation.utils.data_io as tl_data
-import segmentation.region_growing as tl_rg
+import imsegm.utils.data_io as tl_data
+import imsegm.region_growing as tl_rg
 
 PATH_DATA = tl_data.update_path('data', absolute=True)
 PATH_IMAGES = os.path.join(tl_data.update_path('images'), 'drosophila_ovary_slice')

@@ -14,10 +14,10 @@ from sklearn import cluster, mixture
 from skimage import morphology
 from gco import cut_general_graph, cut_grid_graph
 
-import segmentation.graph_cuts as seg_gc
-import segmentation.labeling as seg_lb
-import segmentation.descriptors as seg_fts
-import segmentation.superpixels as seg_spx
+import imsegm.graph_cuts as seg_gc
+import imsegm.labeling as seg_lb
+import imsegm.descriptors as seg_fts
+import imsegm.superpixels as seg_spx
 
 GC_REPLACE_INF = 1e5
 MIN_SHAPE_PROB = 1e-2

@@ -44,13 +44,13 @@ if os.environ.get('DISPLAY', '') == '':
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.drawing as tl_visu
-import segmentation.superpixels as seg_spx
-import segmentation.descriptors as seg_fts
-import segmentation.classification as seg_clf
-import segmentation.labeling as seg_lbs
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.drawing as tl_visu
+import imsegm.superpixels as seg_spx
+import imsegm.descriptors as seg_fts
+import imsegm.classification as seg_clf
+import imsegm.labeling as seg_lbs
 
 # whether skip loading triplest CSV from previous run
 FORCE_RELOAD = False
