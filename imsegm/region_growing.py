@@ -374,7 +374,9 @@ def transform_rays_model_cdf_mixture(list_rays, coef_components=1):
                        for m, c in zip(mm.means_, mm.covariances_)])
     # max_dist = np.max(rays)
 
-    stds = np.sqrt(mm.covariances_)[:, np.eye(mm.means_.shape[1], dtype=bool)]
+    # fixing, AttributeError: 'BayesianGaussianMixture' object has no attribute 'covariances'
+    covs = mm.covariances if hasattr(mm, 'covariances') else mm.covariances_
+    stds = np.sqrt(abs(covs))[:, np.eye(mm.means_.shape[1], dtype=bool)]
     # stds = np.sum(mm.covariances_, axis=-1)
     cdist = compute_cumulative_distrib(mm.means_, stds, mm.weights_, max_dist)
     return mm, cdist.tolist()
@@ -908,7 +910,8 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
             shifts[i] = shift
 
         volume = np.sum(labels == (i + 1))
-        volume_diff = np.abs(volume - volumes[i]) / float(volumes[i])
+        volume_diff = 0 if volumes[i] == 0 \
+            else np.abs(volume - volumes[i]) / float(volumes[i])
 
         # shift it to the edge of max init distance
         cdist_init_2 = np.sum((np.array(centre_new)

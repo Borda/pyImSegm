@@ -251,8 +251,12 @@ def histogram_regions_labels_norm(slic, segm):
     matrix_hist = histogram_regions_labels_counts(slic, segm)
     region_sums = np.tile(np.sum(matrix_hist, axis=1),
                           (matrix_hist.shape[1], 1)).T
+    # prevent dividing by 0
+    region_sums[region_sums == 0] = -1.
     matrix_hist = (matrix_hist / region_sums)
     matrix_hist = np.nan_to_num(matrix_hist)
+    # preventing negative zeros
+    matrix_hist[matrix_hist == 0] = 0
     return matrix_hist
 
 # DEPRECATED

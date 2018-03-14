@@ -637,7 +637,7 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
     return transitions
 
 
-def compute_pairwise_cost_from_transitions(trans, max_value=1e3):
+def compute_pairwise_cost_from_transitions(trans, min_prob=1e-32):
     """ compute pairwise cost from segments-label transitions
 
     :param ndarray trans:
@@ -647,17 +647,17 @@ def compute_pairwise_cost_from_transitions(trans, max_value=1e3):
     ...                   [  5.,  10.,  8.],
     ...                   [  0.,   8.,  30.]])
     >>> np.round(compute_pairwise_cost_from_transitions(trans), 3)
-    array([[  1.82000000e-01,   1.52600000e+00,   1.00000000e+03],
-           [  1.52600000e+00,   8.33000000e-01,   1.05600000e+00],
-           [  1.00000000e+03,   1.05600000e+00,   2.36000000e-01]])
+    array([[  0.182,   1.526,  73.683],
+           [  1.526,   0.833,   1.056],
+           [ 73.683,   1.056,   0.236]])
     >>> np.round(compute_pairwise_cost_from_transitions(np.ones(3)), 2)
     array([[ 1.1,  1.1,  1.1],
            [ 1.1,  1.1,  1.1],
            [ 1.1,  1.1,  1.1]])
     >>> np.round(compute_pairwise_cost_from_transitions(np.eye(3)), 2)
-    array([[    0.,  1000.,  1000.],
-           [ 1000.,     0.,  1000.],
-           [ 1000.,  1000.,     0.]])
+    array([[  0.  ,  73.68,  73.68],
+           [ 73.68,   0.  ,  73.68],
+           [ 73.68,  73.68,   0.  ]])
     """
     # e_x = np.exp(trans - np.max(trans))  # softmax
     # softmax = e_x / e_x.sum(axis=0)
@@ -668,6 +668,8 @@ def compute_pairwise_cost_from_transitions(trans, max_value=1e3):
             el = max(ratio[i, j], ratio[j, i])
             ratio[i, j] = el
             ratio[j, i] = el
+    # prevent dividing by 0, set very small value
+    ratio[ratio < min_prob] = min_prob
     pw = np.log(1. / ratio)
-    pw[pw > max_value] = max_value
+    # pw[pw > max_value] = max_value
     return pw

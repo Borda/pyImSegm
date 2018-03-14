@@ -36,6 +36,8 @@ FEATURES_SET_COLOR = {'color': ('mean', 'std', 'eng')}
 FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'eng')}
 FEATURES_SET_TEXTURE_SHORT = {'tLM_s': ('mean', 'std', 'eng')}
 HIST_CIRCLE_DIAGONALS = (10, 20, 30, 40, 50)
+# maxila reposnse is bounded by fix number to preven overflowing
+MAX_SIGNAL_RESPONSE = 1.e6
 
 # Wavelets:
 # * http://www.pybytes.com/pywavelets/
@@ -245,7 +247,11 @@ def numpy_img2d_color_mean(im, seg):
             means[lb, 1] += im[i, j, 1]
             means[lb, 2] += im[i, j, 2]
             counts[lb] += 1
+    # prevent dividing by 0
+    counts[counts == 0] = -1
     means = (means / np.tile(counts, (3, 1)).T.astype(float))
+    # preventing negative zeros
+    # means[means == 0] = 0
     return means
 
 
@@ -284,7 +290,11 @@ def numpy_img2d_color_std(im, seg, means=None):
             lb = seg[i, j]
             variations[lb, :] += (im[i, j, :] - means[lb, :]) ** 2
             counts[lb] += 1
+    # prevent dividing by 0
+    counts[counts == 0] = -1
     variations = (variations / np.tile(counts, (3, 1)).T.astype(float))
+    # preventing negative zeros
+    variations[variations == 0] = 0
     stds = np.sqrt(variations)
     return stds
 
@@ -320,7 +330,11 @@ def numpy_img2d_color_energy(im, seg):
             energy[lb, 1] += im[i, j, 1] ** 2
             energy[lb, 2] += im[i, j, 2] ** 2
             counts[lb] += 1
+    # prevent dividing by 0
+    counts[counts == 0] = -1
     energy = (energy / np.tile(counts, (3, 1)).T.astype(float))
+    # preventing negative zeros
+    # energy[energy == 0] = 0
     return energy
 
 
@@ -477,7 +491,11 @@ def numpy_img3d_gray_mean(im, seg):
                 lb = seg[i, j, k]
                 means[lb] += im[i, j, k]
                 counts[lb] += 1
+    # just for not dividing by 0
+    counts[counts == 0] = -1
     means = (means / counts.astype(float))
+    # preventing negative zeros
+    # means[means == 0] = 0
     return means
 
 
@@ -514,7 +532,11 @@ def numpy_img3d_gray_std(im, seg, means=None):
                 lb = seg[i, j, k]
                 variances[lb] += (im[i, j, k] - means[lb]) ** 2
                 counts[lb] += 1
+    # just for not dividing by 0
+    counts[counts == 0] = -1
     variances = (variances / counts.astype(float))
+    # preventing negative zeros
+    variances[variances == 0] = 0
     stds = np.sqrt(variances)
     return stds
 
@@ -546,7 +568,11 @@ def numpy_img3d_gray_energy(im, seg):
                 lb = seg[i, j, k]
                 energy[lb] += im[i, j, k] ** 2
                 counts[lb] += 1
+    # just for not dividing by 0
+    counts[counts == 0] = -1
     energy = (energy / counts.astype(float))
+    # preventing negative zeros
+    # energy[energy == 0] = 0
     return energy
 
 
@@ -668,6 +694,8 @@ def compute_image3d_gray_statistic(image, segm,
         names += ['%s_meanGrad' % ch_name]
     features = np.concatenate(tuple([fts] for fts in features), axis=0)
     features = np.nan_to_num(features).T
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
@@ -747,6 +775,8 @@ def compute_image2d_color_statistic(image, segm,
     #     G[i,:,:] = np.sum(np.gradient(image[i]), axis=0)
     # grad = cython_img3d_gray_mean(G, segm)
     features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
@@ -911,14 +941,22 @@ def compute_texture_desc_lm_img3d_val(img, seg, list_feature_flags,
     features, names = [], []
     for battery, fl_name in zip(filters, fl_names):
         response = compute_img_filter_response3d(img, battery)
+        # cut too large values
+        response[response > MAX_SIGNAL_RESPONSE] = MAX_SIGNAL_RESPONSE
         # norm responces
         l_n = np.sqrt(np.sum(np.power(response, 2)))
-        response = (response * (np.log(1 + l_n) / 0.03)) / l_n
+        if l_n == 0 or abs(l_n) == np.Inf:
+            response = np.zeros(response.shape)
+        else:
+            response = (response * (np.log(1 + l_n) / 0.03)) / l_n
         fts, n = compute_image3d_gray_statistic(response, seg,
                                                 list_feature_flags, fl_name)
         features += [fts]
         names += n
     features = np.concatenate(tuple(features), axis=1)
+    features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     names = ['tLM_%s' % n for n in names]
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
@@ -971,15 +1009,23 @@ def compute_texture_desc_lm_img2d_clr(img, seg, list_feature_flags,
     features, names = [], []
     for fl_battery, fl_name in zip(filters, fl_names):
         response_roll = compute_img_filter_response3d(img_roll, fl_battery)
+        # cut too large values
+        response_roll[response_roll > MAX_SIGNAL_RESPONSE] = MAX_SIGNAL_RESPONSE
         # norm responses
         norm = np.sqrt(np.sum(response_roll ** 2))
-        response_roll = (response_roll * (np.log(1 + norm) / 0.03)) / norm
+        if norm == 0 or abs(norm) == np.inf:
+            response_roll = np.zeros(response_roll.shape)
+        else:
+            response_roll = (response_roll * (np.log(1 + norm) / 0.03)) / norm
         response = np.rollaxis(response_roll, 0, 3)
         fts, n = compute_image2d_color_statistic(response, seg,
                                                  list_feature_flags, fl_name)
         features += [fts]
         names += n
     features = np.concatenate(tuple(features), axis=1)
+    features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     names = ['tLM_%s' % n for n in names]
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
@@ -1039,6 +1085,9 @@ def compute_selected_features_gray3d(img, segments,
     if len(features) == 0:
         logging.error('not supported features: %s', repr(dict_feature_flags))
     features = np.concatenate(tuple(features), axis=1)
+    features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
@@ -1132,6 +1181,9 @@ def compute_selected_features_color2d(img, segments,
                                                    'short')
         features = np.concatenate((features, fts), axis=1)
         names += n
+    features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     if len(features) == 0:
         logging.error('not supported features: %s', repr(dict_feature_flags))
     assert features.shape[1] == len(names), \
@@ -1688,14 +1740,17 @@ def reconstruct_ray_features_2d(position, ray_features, shift=0):
 
     angles = np.linspace(0, 2 * np.pi, len(ray_features), endpoint=False)
     angles = (np.pi / 2.) - angles - np.deg2rad(shift)
+
+    mask = np.logical_and(np.array(ray_features) >= 0,
+                          ~ np.isinf(ray_features))
+    angles = angles[mask]
+    ray_features = ray_features[mask]
     dx = np.cos(angles) * ray_features
     dy = np.sin(angles) * ray_features
 
     positions = np.tile(position, (len(ray_features), 1))
     points = positions + np.array([dx, dy]).T
-    mask = np.logical_and(np.array(ray_features) >= 0,
-                          ~ np.isinf(ray_features))
-    points = points[mask, :]
+    # points = points[mask, :]
 
     return points
 

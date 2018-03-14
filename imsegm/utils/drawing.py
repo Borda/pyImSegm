@@ -831,7 +831,10 @@ def draw_graphcut_weighted_edges(segments, list_centers, edges, edge_weights,
         img = np.zeros(segments.shape + (3,))
     clrs = plt.get_cmap('Greens')
     diff = (edge_weights.max() - edge_weights.min())
-    edge_ratio = (edge_weights - edge_weights.min()) / diff
+    if diff > 0:
+        edge_ratio = (edge_weights - edge_weights.min()) / diff
+    else:
+        edge_ratio = np.zeros(edge_weights.shape)
     for i, edge in enumerate(edges):
         n1, n2 = edge
         y1, x1 = map(int, list_centers[n1])
