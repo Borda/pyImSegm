@@ -23,7 +23,7 @@ from scipy import ndimage
 from skimage import exposure, io, color, measure
 import nibabel
 
-import segmentation.utils.read_zvi as read_zvi
+import imsegm.utils.read_zvi as read_zvi
 
 COLUMNS_COORDS = ['X', 'Y']
 DEFAULT_PATTERN_SET_LIST_FILE = '*.txt'
@@ -297,7 +297,7 @@ def load_image_2d(path_img):
     True
     >>> os.remove(path_img)
     """
-    assert os.path.exists(path_img), path_img
+    assert os.path.exists(path_img), 'missing: %s' % path_img
     n_img, img_ext = os.path.splitext(os.path.basename(path_img))
 
     if img_ext in ['.tif', '.tiff']:

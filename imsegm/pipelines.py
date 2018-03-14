@@ -12,11 +12,11 @@ import numpy as np
 import skimage.color as sk_color
 from sklearn import preprocessing, mixture, decomposition
 
-import segmentation.graph_cuts as seg_gc
-import segmentation.superpixels as seg_sp
-import segmentation.descriptors as seg_fts
-import segmentation.labeling as seg_lbs
-import segmentation.classification as seg_clf
+import imsegm.graph_cuts as seg_gc
+import imsegm.superpixels as seg_sp
+import imsegm.descriptors as seg_fts
+import imsegm.labeling as seg_lbs
+import imsegm.classification as seg_clf
 
 CLASSIF_PARAMS = {'method': 'kNN', 'nb': 10}
 FTS_SET_SIMPLE = seg_fts.FEATURES_SET_COLOR
@@ -270,7 +270,9 @@ def wrapper_compute_color2d_slic_features_labels(img_annot, clr_space,
     img, annot = img_annot
     # in case of binary annotation convert it to integers labels
     annot = annot.astype(int)
-    assert img.shape[:2] == annot.shape[:2]
+    assert img.shape[:2] == annot.shape[:2], \
+        'image (%s) and annot (%s) should match' \
+        % (repr(img.shape), repr(annot.shape))
     slic, features = compute_color2d_superpixels_features(img, clr_space,
                                                           sp_size, sp_regul,
                                                           dict_features,
@@ -314,7 +316,9 @@ def train_classif_color2d_slic_features(list_images, list_annots, clr_space='rgb
     :return:
     """
     logging.info('TRAIN Superpixels-Features-Classifier')
-    assert len(list_images) == len(list_annots)
+    assert len(list_images) == len(list_annots), \
+        'size of images (%i) and annotations (%i) should match' \
+        % (len(list_images), len(list_annots))
 
     list_slic, list_features, list_labels = list(), list(), list()
 

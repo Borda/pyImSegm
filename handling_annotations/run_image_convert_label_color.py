@@ -25,9 +25,9 @@ import tqdm
 from skimage import io
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
-import segmentation.annotation as seg_annot
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
+import imsegm.annotation as seg_annot
 
 PATH_INPUT = os.path.join('images', 'drosophila_ovary_slice', 'segm', '*.png')
 PATH_OUTPUT = os.path.join('images', 'drosophila_ovary_slice', 'segm_rgb')
@@ -139,7 +139,8 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_jobs=1):
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
     if not os.path.exists(path_out):
-        assert os.path.isdir(os.path.dirname(path_out))
+        assert os.path.isdir(os.path.dirname(path_out)), \
+            'missing folder: %s' % os.path.dirname(path_out)
         os.mkdir(path_out)
 
     dict_colors = load_dict_colours(path_json)
@@ -165,7 +166,8 @@ def main(params):
     logging.info('running...')
 
     if not os.path.exists(params['path_out']):
-        assert os.path.isdir(os.path.dirname(params['path_out']))
+        assert os.path.isdir(os.path.dirname(params['path_out'])), \
+            'missing folder: %s' % os.path.dirname(params['path_out'])
         os.mkdir(params['path_out'])
 
     convert_folder_images(params['path_images'], params['path_out'],

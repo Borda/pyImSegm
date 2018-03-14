@@ -13,11 +13,11 @@ import matplotlib.pyplot as plt
 from scipy.misc import imresize
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import segmentation.utils.data_samples as d_spl
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as tl_visu
-import segmentation.pipelines as pipelines
-import segmentation.descriptors as seg_fts
+import imsegm.utils.data_samples as d_spl
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as tl_visu
+import imsegm.pipelines as pipelines
+import imsegm.descriptors as seg_fts
 
 PATH_OUTPUT = tl_io.update_path('output', absolute=True)
 # set default feature extracted from image

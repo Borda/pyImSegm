@@ -10,9 +10,9 @@ import numpy as np
 from gco import cut_general_graph
 from sklearn import metrics, mixture, cluster, preprocessing
 
-import segmentation.utils.drawing as tl_visu
-import segmentation.superpixels as seg_spx
-import segmentation.descriptors as seg_fts
+import imsegm.utils.drawing as tl_visu
+import imsegm.superpixels as seg_spx
+import imsegm.descriptors as seg_fts
 
 DEFAULT_GC_ITERATIONS = 25
 COEF_INT_CONVERSION = 1e6
@@ -373,7 +373,9 @@ def create_pairwise_matrix(gc_regul, nb_classes):
            [ 1.23,  0.97,  0.54]])
     """
     if isinstance(gc_regul, np.ndarray):
-        assert gc_regul.shape[0] == gc_regul.shape[1] == nb_classes
+        assert gc_regul.shape[0] == gc_regul.shape[1] == nb_classes, \
+            'GC regul matrix %s should match match number o lasses (%i)' \
+            % (repr(gc_regul.shape), nb_classes)
         # sub_min = np.tile(np.min(gc_regul, axis=0), (gc_regul.shape[0], 1))
         pairwise = gc_regul - np.min(gc_regul)
     elif isinstance(gc_regul, list):
@@ -480,11 +482,11 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
     logging.debug('graph edges %s', repr(edges.shape))
 
     if edge_type.startswith('model'):
-        assert proba is not None
+        assert proba is not None, '"proba" is requuired'
         metric = edge_type.split('_')[-1] if '_' in edge_type else 'lT'
         edge_weights = compute_edge_model(edges, proba, metric)
     elif edge_type == 'color':
-        assert image is not None
+        assert image is not None, '"image" is required'
         # {'color': ['mean', 'median']}
         image_float = np.array(image, dtype=float)
         if np.max(image) > 1:
@@ -497,7 +499,7 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
         weights = dist.astype(float) / (2 * np.std(dist) ** 2)
         edge_weights = np.exp(- weights)
     elif edge_type == 'features':
-        assert features is not None
+        assert features is not None, '"features" is required'
         features_norm = preprocessing.StandardScaler().fit_transform(features)
         vertex_1 = features_norm[edges[:, 0]]
         vertex_2 = features_norm[edges[:, 1]]
@@ -620,7 +622,9 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
         nb_labels = np.max(uq_labels) + 1
     transitions = np.zeros((nb_labels, nb_labels))
     for name in dict_slics:
-        assert (np.max(dict_slics[name]) + 1) == len(dict_labels[name])
+        assert (np.max(dict_slics[name]) + 1) == len(dict_labels[name]), \
+            'dims are not matching - max slic (%i) and label (%i)' \
+            % (np.max(dict_slics[name]), len(dict_labels[name]))
         _, edges = get_vertexes_edges(dict_slics[name])
         label_edges = np.asarray(dict_labels[name])[np.asarray(edges)]
         for lb1, lb2 in label_edges.tolist():
@@ -633,7 +637,7 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
     return transitions
 
 
-def compute_pairwise_cost_from_transitions(trans, max_value=1e3):
+def compute_pairwise_cost_from_transitions(trans, min_prob=1e-32):
     """ compute pairwise cost from segments-label transitions
 
     :param ndarray trans:
@@ -643,17 +647,17 @@ def compute_pairwise_cost_from_transitions(trans, max_value=1e3):
     ...                   [  5.,  10.,  8.],
     ...                   [  0.,   8.,  30.]])
     >>> np.round(compute_pairwise_cost_from_transitions(trans), 3)
-    array([[  1.82000000e-01,   1.52600000e+00,   1.00000000e+03],
-           [  1.52600000e+00,   8.33000000e-01,   1.05600000e+00],
-           [  1.00000000e+03,   1.05600000e+00,   2.36000000e-01]])
+    array([[  0.182,   1.526,  73.683],
+           [  1.526,   0.833,   1.056],
+           [ 73.683,   1.056,   0.236]])
     >>> np.round(compute_pairwise_cost_from_transitions(np.ones(3)), 2)
     array([[ 1.1,  1.1,  1.1],
            [ 1.1,  1.1,  1.1],
            [ 1.1,  1.1,  1.1]])
     >>> np.round(compute_pairwise_cost_from_transitions(np.eye(3)), 2)
-    array([[    0.,  1000.,  1000.],
-           [ 1000.,     0.,  1000.],
-           [ 1000.,  1000.,     0.]])
+    array([[  0.  ,  73.68,  73.68],
+           [ 73.68,   0.  ,  73.68],
+           [ 73.68,  73.68,   0.  ]])
     """
     # e_x = np.exp(trans - np.max(trans))  # softmax
     # softmax = e_x / e_x.sum(axis=0)
@@ -664,6 +668,8 @@ def compute_pairwise_cost_from_transitions(trans, max_value=1e3):
             el = max(ratio[i, j], ratio[j, i])
             ratio[i, j] = el
             ratio[j, i] = el
+    # prevent dividing by 0, set very small value
+    ratio[ratio < min_prob] = min_prob
     pw = np.log(1. / ratio)
-    pw[pw > max_value] = max_value
+    # pw[pw > max_value] = max_value
     return pw

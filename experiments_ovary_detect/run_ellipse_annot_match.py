@@ -24,11 +24,11 @@ import pandas as pd
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.drawing as tl_visu
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.drawing as tl_visu
 # import segmentation.annotation as seg_annot
-import segmentation.ellipse_fitting as ell_fit
+import imsegm.ellipse_fitting as ell_fit
 
 NAME_CSV_RESULTS = 'info_ovary_images_ellipses.csv'
 OVERLAP_THRESHOLD = 0.

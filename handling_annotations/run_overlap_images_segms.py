@@ -32,9 +32,9 @@ import matplotlib.pyplot as plt
 from skimage import exposure, segmentation
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.drawing as tl_visu
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.drawing as tl_visu
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 BOOL_IMAGE_RESCALE_INTENSITY = False
@@ -70,7 +70,7 @@ def parse_arg_params():
         else:
             paths[k] = tl_io.update_path(paths[k])
             p_dir = paths[k]
-        assert os.path.exists(p_dir), '%s' % paths[k]
+        assert os.path.exists(p_dir), 'missing: %s' % paths[k]
     return paths, args.nb_jobs
 
 
@@ -133,7 +133,8 @@ def main(paths, nb_jobs=NB_THREADS):
 
     logging.info(tl_expt.string_dict(paths, desc='PATHS'))
     if not os.path.exists(paths['output']):
-        assert os.path.isdir(os.path.dirname(paths['output']))
+        assert os.path.isdir(os.path.dirname(paths['output'])), \
+            'missing folder: %s' % os.path.dirname(paths['output'])
         os.mkdir(paths['output'])
 
     paths_imgs = glob.glob(paths['images'])

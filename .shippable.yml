@@ -45,8 +45,8 @@ script:
   - mkdir data && mkdir output && mkdir results
   - python setup.py build_ext --inplace
 
-  - nosetests -v --with-xunit --xunit-file=$CI_REPORTS/nosetests.xml
-  - nosetests segmentation -v --exe --with-doctest --with-xunit --with-coverage --cover-package segmentation
+  # - nosetests -v --with-xunit --xunit-file=$CI_REPORTS/nosetests.xml
+  - nosetests -v --exe --with-doctest --with-xunit --with-coverage --cover-package imsegm --xunit-file=$CI_REPORTS/nosetests.xml
 
   # ANNOTATION section
   - python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png"
@@ -86,6 +86,8 @@ script:
   - python experiments_ovary_detect/run_egg_swap_orientation.py
 
 after_success:
+  - python setup.py install
+
   - coverage xml -o $COVERAGE_REPORTS/coverage.xml
   - codecov -t 80efed4e-ac2b-4fea-a642-0a8b1c82e1c8
   - coverage report

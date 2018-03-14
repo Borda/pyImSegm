@@ -20,7 +20,7 @@ from skimage import morphology
 # from numba import int32, int64, float32
 
 try:
-    import segmentation.features_cython as fts_cython
+    import imsegm.features_cython as fts_cython
     # logging.debug('try to load Cython implementation')  # CRASH logger
     USE_CYTHON = True
 except Exception:
@@ -36,6 +36,8 @@ FEATURES_SET_COLOR = {'color': ('mean', 'std', 'eng')}
 FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'eng')}
 FEATURES_SET_TEXTURE_SHORT = {'tLM_s': ('mean', 'std', 'eng')}
 HIST_CIRCLE_DIAGONALS = (10, 20, 30, 40, 50)
+# maxila reposnse is bounded by fix number to preven overflowing
+MAX_SIGNAL_RESPONSE = 1.e6
 
 # Wavelets:
 # * http://www.pybytes.com/pywavelets/
@@ -245,7 +247,11 @@ def numpy_img2d_color_mean(im, seg):
             means[lb, 1] += im[i, j, 1]
             means[lb, 2] += im[i, j, 2]
             counts[lb] += 1
+    # prevent dividing by 0
+    counts[counts == 0] = -1
     means = (means / np.tile(counts, (3, 1)).T.astype(float))
+    # preventing negative zeros
+    # means[means == 0] = 0
     return means
 
 
@@ -274,7 +280,9 @@ def numpy_img2d_color_std(im, seg, means=None):
         means = numpy_img2d_color_mean(im, seg)
 
     nb_labels = np.max(seg) + 1
-    assert len(means) >= nb_labels
+    assert len(means) >= nb_labels, \
+        'number of means (%i) should be equal to number of labels (%i)' \
+        % (len(means), nb_labels)
     variations = np.zeros((nb_labels, 3))
     counts = np.zeros(nb_labels)
     for i in range(seg.shape[0]):
@@ -282,7 +290,11 @@ def numpy_img2d_color_std(im, seg, means=None):
             lb = seg[i, j]
             variations[lb, :] += (im[i, j, :] - means[lb, :]) ** 2
             counts[lb] += 1
+    # prevent dividing by 0
+    counts[counts == 0] = -1
     variations = (variations / np.tile(counts, (3, 1)).T.astype(float))
+    # preventing negative zeros
+    variations[variations == 0] = 0
     stds = np.sqrt(variations)
     return stds
 
@@ -318,7 +330,11 @@ def numpy_img2d_color_energy(im, seg):
             energy[lb, 1] += im[i, j, 1] ** 2
             energy[lb, 2] += im[i, j, 2] ** 2
             counts[lb] += 1
+    # prevent dividing by 0
+    counts[counts == 0] = -1
     energy = (energy / np.tile(counts, (3, 1)).T.astype(float))
+    # preventing negative zeros
+    # energy[energy == 0] = 0
     return energy
 
 
@@ -475,7 +491,11 @@ def numpy_img3d_gray_mean(im, seg):
                 lb = seg[i, j, k]
                 means[lb] += im[i, j, k]
                 counts[lb] += 1
+    # just for not dividing by 0
+    counts[counts == 0] = -1
     means = (means / counts.astype(float))
+    # preventing negative zeros
+    # means[means == 0] = 0
     return means
 
 
@@ -501,7 +521,9 @@ def numpy_img3d_gray_std(im, seg, means=None):
         means = numpy_img3d_gray_mean(im, seg)
 
     nb_labels = np.max(seg) + 1
-    assert len(means) >= nb_labels
+    assert len(means) >= nb_labels, \
+        'number of means (%i) should be equal to number of labels (%i)' \
+        % (len(means), nb_labels)
     variances = np.zeros(nb_labels)
     counts = np.zeros(nb_labels)
     for i in range(seg.shape[0]):
@@ -510,7 +532,11 @@ def numpy_img3d_gray_std(im, seg, means=None):
                 lb = seg[i, j, k]
                 variances[lb] += (im[i, j, k] - means[lb]) ** 2
                 counts[lb] += 1
+    # just for not dividing by 0
+    counts[counts == 0] = -1
     variances = (variances / counts.astype(float))
+    # preventing negative zeros
+    variances[variances == 0] = 0
     stds = np.sqrt(variances)
     return stds
 
@@ -542,7 +568,11 @@ def numpy_img3d_gray_energy(im, seg):
                 lb = seg[i, j, k]
                 energy[lb] += im[i, j, k] ** 2
                 counts[lb] += 1
+    # just for not dividing by 0
+    counts[counts == 0] = -1
     energy = (energy / counts.astype(float))
+    # preventing negative zeros
+    # energy[energy == 0] = 0
     return energy
 
 
@@ -615,7 +645,7 @@ def compute_image3d_gray_statistic(image, segm,
     """
     _check_gray_image_segm(image, segm)
 
-    assert len(list_feature_flags) > 0
+    assert len(list_feature_flags) > 0, 'some features has to be selected'
     image = np.nan_to_num(image)
     features, names = [], []
     # nb_fts = image.shape[0]
@@ -664,8 +694,10 @@ def compute_image3d_gray_statistic(image, segm,
         names += ['%s_meanGrad' % ch_name]
     features = np.concatenate(tuple([fts] for fts in features), axis=0)
     features = np.nan_to_num(features).T
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     assert features.shape[1] == len(names), \
-        'features: %s and names %s' % (features.shape, repr(names))
+        'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
 
 
@@ -743,8 +775,10 @@ def compute_image2d_color_statistic(image, segm,
     #     G[i,:,:] = np.sum(np.gradient(image[i]), axis=0)
     # grad = cython_img3d_gray_mean(G, segm)
     features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     assert features.shape[1] == len(names), \
-        'features: %s and names %s' % (features.shape, repr(names))
+        'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
 
 
@@ -907,17 +941,25 @@ def compute_texture_desc_lm_img3d_val(img, seg, list_feature_flags,
     features, names = [], []
     for battery, fl_name in zip(filters, fl_names):
         response = compute_img_filter_response3d(img, battery)
+        # cut too large values
+        response[response > MAX_SIGNAL_RESPONSE] = MAX_SIGNAL_RESPONSE
         # norm responces
         l_n = np.sqrt(np.sum(np.power(response, 2)))
-        response = (response * (np.log(1 + l_n) / 0.03)) / l_n
+        if l_n == 0 or abs(l_n) == np.Inf:
+            response = np.zeros(response.shape)
+        else:
+            response = (response * (np.log(1 + l_n) / 0.03)) / l_n
         fts, n = compute_image3d_gray_statistic(response, seg,
                                                 list_feature_flags, fl_name)
         features += [fts]
         names += n
     features = np.concatenate(tuple(features), axis=1)
+    features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     names = ['tLM_%s' % n for n in names]
     assert features.shape[1] == len(names), \
-        'features: %s and names %s' % (features.shape, repr(names))
+        'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
 
 
@@ -967,17 +1009,26 @@ def compute_texture_desc_lm_img2d_clr(img, seg, list_feature_flags,
     features, names = [], []
     for fl_battery, fl_name in zip(filters, fl_names):
         response_roll = compute_img_filter_response3d(img_roll, fl_battery)
+        # cut too large values
+        response_roll[response_roll > MAX_SIGNAL_RESPONSE] = MAX_SIGNAL_RESPONSE
         # norm responses
         norm = np.sqrt(np.sum(response_roll ** 2))
-        response_roll = (response_roll * (np.log(1 + norm) / 0.03)) / norm
+        if norm == 0 or abs(norm) == np.inf:
+            response_roll = np.zeros(response_roll.shape)
+        else:
+            response_roll = (response_roll * (np.log(1 + norm) / 0.03)) / norm
         response = np.rollaxis(response_roll, 0, 3)
         fts, n = compute_image2d_color_statistic(response, seg,
                                                  list_feature_flags, fl_name)
         features += [fts]
         names += n
     features = np.concatenate(tuple(features), axis=1)
+    features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     names = ['tLM_%s' % n for n in names]
-    assert features.shape[1] == len(names)
+    assert features.shape[1] == len(names), \
+        'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
 
 
@@ -1012,7 +1063,7 @@ def compute_selected_features_gray3d(img, segments,
 
     """
     _check_gray_image_segm(img, segments)
-    assert len(dict_feature_flags) > 0
+    assert len(dict_feature_flags) > 0, 'some features has to be selected'
 
     features, names = [], []
     if 'color' in dict_feature_flags:
@@ -1034,8 +1085,11 @@ def compute_selected_features_gray3d(img, segments,
     if len(features) == 0:
         logging.error('not supported features: %s', repr(dict_feature_flags))
     features = np.concatenate(tuple(features), axis=1)
+    features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     assert features.shape[1] == len(names), \
-        'features: %s and names %s' % (features.shape, repr(names))
+        'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
 
 
@@ -1073,7 +1127,8 @@ def compute_selected_features_gray2d(img, segments,
     features, names = compute_selected_features_gray3d(img[np.newaxis, ...],
                                                        segments[np.newaxis, ...],
                                                        dict_features_flags)
-    assert features.shape[1] == len(names)
+    assert features.shape[1] == len(names), \
+        'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
 
 
@@ -1126,9 +1181,13 @@ def compute_selected_features_color2d(img, segments,
                                                    'short')
         features = np.concatenate((features, fts), axis=1)
         names += n
+    features = np.nan_to_num(features)
+    # normalise +/- zeros as set all as positive
+    features[features == 0] = 0
     if len(features) == 0:
         logging.error('not supported features: %s', repr(dict_feature_flags))
-    assert features.shape[1] == len(names)
+    assert features.shape[1] == len(names), \
+        'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
 
 
@@ -1151,7 +1210,9 @@ def extend_segm_by_struct_elem(segm, struc_elem):
     :param [[int]] struc_elem:
     :return [[int]]:
     """
-    assert segm.ndim >= struc_elem.ndim
+    assert segm.ndim >= struc_elem.ndim, \
+        'segment %s should be larger than element %s' \
+        % (repr(segm.shape), repr(struc_elem.shape))
 
     shape_new = np.array(segm.shape[:struc_elem.ndim]) \
                  + np.array(struc_elem.shape)
@@ -1201,7 +1262,9 @@ def compute_label_histograms_positions(segm, list_positions,
            [ 0.  ,  0.8 ,  0.2 ,  0.12,  0.62,  0.25,  0.42,  0.39,  0.14]])
     """
     pos_dim = np.asarray(list_positions).shape[1]
-    assert (segm.ndim - pos_dim) in (0, 1)
+    assert (segm.ndim - pos_dim) in (0, 1), \
+        'dimension %s and %s difference should be 0 or 1' \
+        % (repr(segm.ndim), repr(pos_dim))
 
     if nb_labels is None:
         if segm.ndim == pos_dim:
@@ -1225,7 +1288,7 @@ def compute_label_histograms_positions(segm, list_positions,
         sel_last = np.zeros(1)
         for segm_extend, sel in zip(list_segm_extend, list_struct_elems):
             norm = np.sum(sel) - np.sum(sel_last)
-            assert norm > 0
+            assert norm > 0, 'norm or element should be positive'
             # hist_new = segm_convol[diam, :, pos[1], pos[0]]
             if segm_extend.ndim == len(pos):
                 hist = compute_label_hist_segm(segm_extend, pos,
@@ -1243,7 +1306,8 @@ def compute_label_histograms_positions(segm, list_positions,
     feature_names = ['hist-d_%i-lb_%i' % (d, lb)
                      for d in diameters for lb in range(nb_labels)]
     pos_hists = np.array(pos_hists)
-    assert pos_hists.shape[1] == len(feature_names)
+    assert pos_hists.shape[1] == len(feature_names), \
+        'histogram: %s and names %s' % (repr(pos_hists.shape), repr(feature_names))
     return np.array(pos_hists), feature_names
 
 
@@ -1275,12 +1339,16 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
     >>> compute_label_hist_segm(segm, [4, 4], np.ones((5, 5)), 3)
     array([  5.,  14.,   6.])
     """
-    assert segm.ndim == len(position)
+    assert segm.ndim == len(position), \
+        'dim of position %s should match the segm %s dim' \
+        % (repr(position), repr(segm.shape))
     position = [int(p) for p in position]
     # take selection around point with size of struc element
     segm_select = segm[position[0]:position[0] + struc_elem.shape[0],
                        position[1]:position[1] + struc_elem.shape[1]]
-    assert segm_select.shape == struc_elem.shape
+    assert segm_select.shape == struc_elem.shape, \
+        'segmentation %s and element %s should match' \
+        % (repr(segm_select.shape), repr(struc_elem.shape))
     hist = np.zeros(nb_labels)
     for lb in range(nb_labels):
         hist[lb] = np.sum(np.logical_and(segm_select == lb, struc_elem == 1))
@@ -1296,12 +1364,16 @@ def compute_label_hist_proba(segm, position, struc_elem):
     :param ndarray struc_elem: np.array<h, w>
     :return: [float]
     """
-    assert segm.ndim == (len(position) + 1)
+    assert segm.ndim == (len(position) + 1), \
+        'segment. (%s) should have larger dim than position %i' \
+        % (repr(segm.shape), len(position))
     position = map(int, position)
     # take selection around point with size of struc element
     segm_select = segm[position[0]:position[0] + struc_elem.shape[0],
                        position[1]:position[1] + struc_elem.shape[1], :]
-    assert segm_select.shape[:-1] == struc_elem.shape
+    assert segm_select.shape[:-1] == struc_elem.shape, \
+        'initial dim of segm %s should match element %s' \
+        % (repr(segm_select.shape), repr(struc_elem))
     segm_mask = np.rollaxis(segm_select, -1, 0) \
                  * np.tile(struc_elem, (segm_select.shape[-1], 1, 1))
     hist = np.sum(segm_mask, axis=tuple(range(1, segm_mask.ndim)))
@@ -1548,7 +1620,9 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     logging.debug('compute Ray features with border label=%s and angle step=%f',
                   repr(border_labels), angle_step)
     pos_dim = np.asarray(list_positions).shape[1]
-    assert (segm.ndim - pos_dim) in (0, 1)
+    assert (segm.ndim - pos_dim) in (0, 1), \
+        'dimension %s and %s difference should be 0 or 1' \
+        % (repr(segm.ndim), repr(pos_dim))
     border_labels = border_labels if border_labels is not None else [0]
     if segm.ndim > pos_dim:
         # set label segment from probab
@@ -1577,7 +1651,8 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     feature_names = ['ray-lb_%s-agl_%i' % (''.join(map(str, border_labels)), int(a))
                      for a in np.linspace(0, 360 - angle_step, len(ray_dist))]
     pos_rays = np.array(pos_rays)
-    assert pos_rays.shape[1] == len(feature_names)
+    assert pos_rays.shape[1] == len(feature_names), \
+        'Ray features: %s and names %s' % (repr(pos_rays.shape), repr(feature_names))
     return pos_rays, pos_shift, feature_names
 
 
@@ -1665,14 +1740,17 @@ def reconstruct_ray_features_2d(position, ray_features, shift=0):
 
     angles = np.linspace(0, 2 * np.pi, len(ray_features), endpoint=False)
     angles = (np.pi / 2.) - angles - np.deg2rad(shift)
+
+    mask = np.logical_and(np.array(ray_features) >= 0,
+                          ~ np.isinf(ray_features))
+    angles = angles[mask]
+    ray_features = ray_features[mask]
     dx = np.cos(angles) * ray_features
     dy = np.sin(angles) * ray_features
 
     positions = np.tile(position, (len(ray_features), 1))
     points = positions + np.array([dx, dy]).T
-    mask = np.logical_and(np.array(ray_features) >= 0,
-                          ~ np.isinf(ray_features))
-    points = points[mask, :]
+    # points = points[mask, :]
 
     return points
 
@@ -1699,7 +1777,7 @@ def reduce_close_points(points, dist_thr):
     >>> reduce_close_points(np.ones((10, 2)), 2)
     array([[ 1.,  1.]])
     """
-    assert len(points) > 2
+    assert len(points) > 2, 'too few point to be reduced'
 
     dist = spatial.distance.cdist(points, points, metric='euclidean')
     for i in range(len(points)):

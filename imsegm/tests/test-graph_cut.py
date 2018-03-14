@@ -13,11 +13,11 @@ import numpy as np
 import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join('..', '..'))) # Add path to root
-import segmentation.utils.data_samples as d_spl
-import segmentation.utils.data_io as tl_io
-import segmentation.superpixels as seg_spx
-import segmentation.graph_cuts as seg_gc
-import segmentation.labeling as seg_lb
+import imsegm.utils.data_samples as d_spl
+import imsegm.utils.data_io as tl_io
+import imsegm.superpixels as seg_spx
+import imsegm.graph_cuts as seg_gc
+import imsegm.labeling as seg_lb
 
 # set the output put directory
 PATH_OUTPUT = tl_io.update_path('output', absolute=True)

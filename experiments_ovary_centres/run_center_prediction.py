@@ -24,9 +24,9 @@ import tqdm
 import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.data_io as tl_io
-import segmentation.classification as seg_clf
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.data_io as tl_io
+import imsegm.classification as seg_clf
 import run_center_candidate_training as run_train
 import run_center_clustering as run_clust
 

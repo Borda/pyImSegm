@@ -53,12 +53,12 @@ from skimage import measure, draw
 from skimage.measure.fit import EllipseModel
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_data
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.drawing as tl_visu
-import segmentation.superpixels as seg_spx
-import segmentation.region_growing as seg_rg
-import segmentation.ellipse_fitting as ell_fit
+import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.drawing as tl_visu
+import imsegm.superpixels as seg_spx
+import imsegm.region_growing as seg_rg
+import imsegm.ellipse_fitting as ell_fit
 from morphsnakes import morphsnakes, multi_snakes
 # from libs import chanvese
 
@@ -157,8 +157,10 @@ def arg_parse_params(params):
         params['path_config'] = ''
     else:
         params['path_config'] = tl_data.update_path(params['path_config'])
-        assert os.path.isfile(params['path_config']), '%s' % params['path_config']
-        assert os.path.splitext(params['path_config'])[-1] == '.json'
+        assert os.path.isfile(params['path_config']), \
+            'missing file: %s' % params['path_config']
+        assert os.path.splitext(params['path_config'])[-1] == '.json', \
+            '"%s" should be JSON file' % params['path_config']
         with open(params['path_config'], 'r') as fd:
             data = json.load(fd)
         params.update(data)
@@ -167,7 +169,7 @@ def arg_parse_params(params):
         if arg_params[k] is None: continue
         params[k] = tl_data.update_path(arg_params[k], absolute=True)
         p = os.path.dirname(params[k]) if '*' in params[k] else params[k]
-        assert os.path.exists(p), '%s' % p
+        assert os.path.exists(p), 'missing: %s' % p
     # load saved configuration
     logging.info('ARG PARAMETERS: \n %s', repr(params))
     return params
@@ -181,12 +183,12 @@ def load_image(path_img, img_type=TYPE_LOAD_IMAGE):
     :return ndarray:
     """
     path_img = os.path.abspath(os.path.expanduser(path_img))
-    assert os.path.isfile(path_img), 'missing "%s"' % path_img
+    assert os.path.isfile(path_img), 'missing: "%s"' % path_img
     if img_type == 'segm':
         img = np.array(Image.open(path_img))
     elif img_type == '2d_struct':
         img, _ = tl_data.load_img_double_band_split(path_img)
-        assert img.ndim == 2
+        assert img.ndim == 2, 'image can be only single color'
     else:
         logging.error('not supported loading img_type: %s', img_type)
         img = np.array(Image.open(path_img))
@@ -216,7 +218,8 @@ def export_draw_image_segm(path_fig, img, segm=None, segm_obj=None, centers=None
         ax.contour(segm)
     if segm_obj is not None:
         ax.imshow(segm_obj, alpha=0.1)
-        assert len(np.unique(segm_obj)) < 1e2, 'too many labeled objects'
+        assert len(np.unique(segm_obj)) < 1e2, \
+            'too many labeled objects - %i' % len(np.unique(segm_obj))
         ax.contour(segm_obj, levels=np.unique(segm_obj).tolist(),
                    cmap=plt.cm.jet_r, linewidths=(10, ))
     if centers is not None:
@@ -229,7 +232,7 @@ def export_draw_image_segm(path_fig, img, segm=None, segm_obj=None, centers=None
 
 
 def segment_watershed(seg, centers, post_morph=False):
-    """ perform watershed segmentation on input segmentation
+    """ perform watershed segmentation on input imsegm
     and optionally run some postprocessing using morphological operations
 
     :param ndarray seg: input image / segmentation
@@ -682,8 +685,8 @@ def create_dict_segmentation(params, slic, segm, img, centers):
 
 
 def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
-    """ image segmentation which prepare inputs (segmentation, centres)
-    and perform segmentation of various segmentation methods
+    """ image segmentation which prepare inputs (imsegm, centres)
+    and perform segmentation of various imsegm methods
 
     :param (int, str) idx_row: input image and centres
     :param {str: ...} params: segmentation parameters

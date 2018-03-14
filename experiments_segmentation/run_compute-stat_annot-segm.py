@@ -22,10 +22,10 @@ import tqdm
 from skimage.segmentation import relabel_sequential
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as seg_visu
-import segmentation.labeling as seg_lbs
-import segmentation.classification as seg_clf
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as seg_visu
+import imsegm.labeling as seg_lbs
+import imsegm.classification as seg_clf
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 NAME_CVS_OVERALL = 'segm-STATISTIC_%s_stat-overall.csv'
@@ -72,7 +72,7 @@ def aparse_params(dict_paths):
         if dict_paths[k] == '' or k == 'output':
             continue
         p = os.path.dirname(dict_paths[k]) if '*' in dict_paths[k] else dict_paths[k]
-        assert os.path.exists(p), 'missing (%s) "%s"' % (k, p)
+        assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
     return dict_paths, args
 
 
@@ -116,7 +116,7 @@ def main(dict_paths, nb_jobs=NB_THREADS, relabel=True):
     logging.info('running...')
     if not os.path.isdir(dict_paths['output']):
         assert os.path.isdir(os.path.dirname(dict_paths['output'])), \
-            'missing %s' % dict_paths['output']
+            'missing folder: %s' % dict_paths['output']
         os.mkdir(dict_paths['output'])
 
     name = os.path.basename(os.path.dirname(dict_paths['segm']))

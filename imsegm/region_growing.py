@@ -14,10 +14,10 @@ from sklearn import cluster, mixture
 from skimage import morphology
 from gco import cut_general_graph, cut_grid_graph
 
-import segmentation.graph_cuts as seg_gc
-import segmentation.labeling as seg_lb
-import segmentation.descriptors as seg_fts
-import segmentation.superpixels as seg_spx
+import imsegm.graph_cuts as seg_gc
+import imsegm.labeling as seg_lb
+import imsegm.descriptors as seg_fts
+import imsegm.superpixels as seg_spx
 
 GC_REPLACE_INF = 1e5
 MIN_SHAPE_PROB = 1e-2
@@ -374,7 +374,9 @@ def transform_rays_model_cdf_mixture(list_rays, coef_components=1):
                        for m, c in zip(mm.means_, mm.covariances_)])
     # max_dist = np.max(rays)
 
-    stds = np.sqrt(mm.covariances_)[:, np.eye(mm.means_.shape[1], dtype=bool)]
+    # fixing, AttributeError: 'BayesianGaussianMixture' object has no attribute 'covariances'
+    covs = mm.covariances if hasattr(mm, 'covariances') else mm.covariances_
+    stds = np.sqrt(abs(covs))[:, np.eye(mm.means_.shape[1], dtype=bool)]
     # stds = np.sum(mm.covariances_, axis=-1)
     cdist = compute_cumulative_distrib(mm.means_, stds, mm.weights_, max_dist)
     return mm, cdist.tolist()
@@ -774,7 +776,9 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
            [ 0.   ,  0.543],
            [ 0.   ,  0.374]])
     """
-    assert len(points) == len(labels)
+    assert len(points) == len(labels), \
+        'number of points (%i) and labels (%i) should match' \
+        % (len(points), len(labels))
     if selected_idx is None:
         selected_idx = list(range(len(points)))
     _, cdf = shape_chist
@@ -885,7 +889,9 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
            ...
            [ 0.   ,  4.605]])
     """
-    assert len(points) == len(labels)
+    assert len(points) == len(labels), \
+        'number of points (%i) and labels (%i) should match' \
+        % (len(points), len(labels))
     if selected_idx is None:
         selected_idx = range(len(points))
     segm_obj = labels[slic]
@@ -904,7 +910,8 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
             shifts[i] = shift
 
         volume = np.sum(labels == (i + 1))
-        volume_diff = np.abs(volume - volumes[i]) / float(volumes[i])
+        volume_diff = 0 if volumes[i] == 0 \
+            else np.abs(volume - volumes[i]) / float(volumes[i])
 
         # shift it to the edge of max init distance
         cdist_init_2 = np.sum((np.array(centre_new)
@@ -1310,9 +1317,10 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     assert np.max(candidates) < len(slic_points), \
         'max candidate idx: %d for %d centres' \
         % (np.max(candidates), len(slic_points))
-    assert max(max(l) for l in slic_neighbours) < len(slic_points), \
+    max_slic_neighbours = max(max(l) for l in slic_neighbours)
+    assert max_slic_neighbours < len(slic_points), \
         'max slic neighbours idx: %d for %d centres' \
-        % (max(max(l) for l in slic_neighbours), len(slic_points))
+        % (max_slic_neighbours, len(slic_points))
     unary = np.zeros((len(candidates), nb_centres + 1))
     vertexes, edges = list(candidates), []
     for i, idx in enumerate(candidates):

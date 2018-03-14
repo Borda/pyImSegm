@@ -20,8 +20,8 @@ import tqdm
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
 import run_ellipse_annot_match as r_match
 
 IMAGE_CHANNEL = 0  # image channel for mass extraction

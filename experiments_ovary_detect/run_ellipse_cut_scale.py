@@ -23,9 +23,9 @@ import numpy as np
 from skimage import transform
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
-import segmentation.ellipse_fitting as ell_fit
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
+import imsegm.ellipse_fitting as ell_fit
 import run_ellipse_annot_match as r_match
 
 COLUMNS_ELLIPSE = ['ellipse_xc', 'ellipse_yc',

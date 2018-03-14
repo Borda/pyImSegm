@@ -32,10 +32,10 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.experiments as tl_expt
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as tl_visu
-import segmentation.labeling as seg_lbs
+import imsegm.utils.experiments as tl_expt
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as tl_visu
+import imsegm.labeling as seg_lbs
 
 EXPORT_VUSIALISATION = False
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
@@ -96,7 +96,7 @@ def arg_parse_params(paths):
             continue
         paths[k] = tl_io.update_path(arg_params[k], absolute=True)
         p = os.path.dirname(paths[k]) if '*' in paths[k] else paths[k]
-        assert os.path.exists(p), '%s' % p
+        assert os.path.exists(p), 'missing: %s' % p
     logging.info('ARG PARAMETERS: \n %s', repr(paths))
     return paths, export_visual, arg_params['nb_jobs']
 

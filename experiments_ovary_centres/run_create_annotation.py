@@ -95,7 +95,7 @@ def draw_circle(pos_center, radius, img_shape):
 
 
 def segm_set_center_levels(name, seg_labels, path_out, levels=DISTANCE_LEVELS):
-    """ set segmentation levels according distance inside object segmentation
+    """ set segmentation levels according distance inside object imsegm
 
     :param str name: image name
     :param ndarray seg_labels:

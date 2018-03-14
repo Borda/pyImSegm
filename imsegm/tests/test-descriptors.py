@@ -15,11 +15,11 @@ from skimage import draw, transform
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import segmentation.utils.data_samples as d_spl
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.drawing as tl_visu
-import segmentation.descriptors as seg_fts
-import segmentation.superpixels as seg_spx
+import imsegm.utils.data_samples as d_spl
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.drawing as tl_visu
+import imsegm.descriptors as seg_fts
+import imsegm.superpixels as seg_spx
 
 # angular step for Ray features
 ANGULAR_STEP = 15

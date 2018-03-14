@@ -10,9 +10,9 @@ from skimage import morphology
 
 from skimage.measure import fit as sk_fit
 # from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
-import segmentation.utils.drawing as tl_visu
-import segmentation.descriptors as seg_fts
-import segmentation.superpixels as seg_spx
+import imsegm.utils.drawing as tl_visu
+import imsegm.descriptors as seg_fts
+import imsegm.superpixels as seg_spx
 
 INIT_MASK_BORDER = 50.
 MIN_ELLIPSE_DAIM = 25.
@@ -117,8 +117,8 @@ class EllipseModelSegm(sk_fit.EllipseModel):
             table_prob = np.array([table_prob, 1. - table_prob])
         assert table_prob.shape[0] == 2, 'table shape %s' % repr(table_prob.shape)
         assert np.max(labels) < table_prob.shape[1], \
-            'labels (%i) exceed the table %s' % \
-            (np.max(labels), repr(table_prob.shape))
+            'labels (%i) exceed the table %s' \
+            % (np.max(labels), repr(table_prob.shape))
 
         r_pos, c_pos = points[:, 0], points[:, 1]
         r_org, c_org, r_rad, c_rad, phi = self.params

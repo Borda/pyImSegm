@@ -21,27 +21,29 @@ import pip
 import logging
 import pkg_resources
 try:
-    from setuptools import setup, Extension #, find_packages
+    from setuptools import setup, Extension # , Command, find_packages
     from setuptools.command.build_ext import build_ext
 except ImportError:
-    from distutils.core import setup, Extension #, find_packages
+    from distutils.core import setup, Extension # , Command, find_packages
     from distutils.command.build_ext import build_ext
+
 # from Cython.Distutils import build_ext
 # from Cython.Build import cythonize
-
 # extensions = [Extension("*", "*.pyx")]
 
 
-class CustomBuildExtCommand(build_ext):
+class BuildExt(build_ext):
     """ build_ext command for use when numpy headers are needed.
-    SEE: https://stackoverflow.com/questions/2379898 """
-    def run(self):
-        # Import numpy here, only when headers are needed
+    SEE tutorial: https://stackoverflow.com/questions/2379898
+    SEE fix: https://stackoverflow.com/questions/19919905
+    """
+
+    def finalize_options(self):
+        build_ext.finalize_options(self)
+        # Prevent numpy from thinking it is still in its setup process:
+        # __builtins__.__NUMPY_SETUP__ = False
         import numpy
-        # Add numpy headers to include_dirs
         self.include_dirs.append(numpy.get_include())
-        # Call original build_ext command
-        build_ext.run(self)
 
 
 def _parse_requirements(file_path):
@@ -72,15 +74,16 @@ setup(
     description='superpixel image segmentation: '
                 '(un)supervised, center detection, region growing',
 
-    packages=["segmentation"],
-    cmdclass={'build_ext': CustomBuildExtCommand},
-    ext_modules=[Extension('segmentation.features_cython',
+    packages=["imsegm"],
+    cmdclass={'build_ext': BuildExt},
+    ext_modules=[Extension('imsegm.features_cython',
                            language='c++',
-                           sources=['segmentation/features_cython.pyx'],
+                           sources=['imsegm/features_cython.pyx'],
                            extra_compile_args = ['-O3', '-ffast-math',
                                                  '-march=native', '-fopenmp'],
                            extra_link_args=['-fopenmp'],
                            )],
+    setup_requires=install_reqs,
     install_requires=install_reqs,
     # include_dirs = [np.get_include()],
     include_package_data=True,

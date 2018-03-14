@@ -23,9 +23,9 @@ import tqdm
 from skimage import io
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import segmentation.utils.data_io as tl_io
-import segmentation.utils.experiments as tl_expt
-import segmentation.annotation as seg_annot
+import imsegm.utils.data_io as tl_io
+import imsegm.utils.experiments as tl_expt
+import imsegm.annotation as seg_annot
 
 PATH_IMAGES = os.path.join('images', 'drosophila_ovary_slice', 'segm', '*.png')
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
@@ -45,7 +45,7 @@ def parse_arg_params():
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
     p_dir = tl_io.update_path(os.path.dirname(args['path_images']))
-    assert os.path.isdir(p_dir), '%s' % args['path_images']
+    assert os.path.isdir(p_dir), 'missing folder: %s' % args['path_images']
     args['path_images'] = os.path.join(p_dir,
                                        os.path.basename(args['path_images']))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
@@ -80,7 +80,8 @@ def quantize_folder_images(path_images, label, nb_jobs=1):
     :param im_pattern: str, image pattern for loading
     :param nb_jobs: int
     """
-    assert os.path.isdir(os.path.dirname(path_images)), 'input folder does not exist'
+    assert os.path.isdir(os.path.dirname(path_images)), \
+        'input folder does not exist: %s' % os.path.dirname(path_images)
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
 
