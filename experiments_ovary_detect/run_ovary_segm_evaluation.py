@@ -96,7 +96,7 @@ def arg_parse_params(paths):
             continue
         paths[k] = tl_io.update_path(arg_params[k], absolute=True)
         p = os.path.dirname(paths[k]) if '*' in paths[k] else paths[k]
-        assert os.path.exists(p), '%s' % p
+        assert os.path.exists(p), 'missing: %s' % p
     logging.info('ARG PARAMETERS: \n %s', repr(paths))
     return paths, export_visual, arg_params['nb_jobs']
 

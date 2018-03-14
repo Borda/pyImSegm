@@ -72,7 +72,7 @@ def aparse_params(dict_paths):
         if dict_paths[k] == '' or k == 'output':
             continue
         p = os.path.dirname(dict_paths[k]) if '*' in dict_paths[k] else dict_paths[k]
-        assert os.path.exists(p), 'missing (%s) "%s"' % (k, p)
+        assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
     return dict_paths, args
 
 
@@ -116,7 +116,7 @@ def main(dict_paths, nb_jobs=NB_THREADS, relabel=True):
     logging.info('running...')
     if not os.path.isdir(dict_paths['output']):
         assert os.path.isdir(os.path.dirname(dict_paths['output'])), \
-            'missing %s' % dict_paths['output']
+            'missing folder: %s' % dict_paths['output']
         os.mkdir(dict_paths['output'])
 
     name = os.path.basename(os.path.dirname(dict_paths['segm']))

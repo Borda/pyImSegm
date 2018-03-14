@@ -51,9 +51,11 @@ def parse_arg_params():
     args = vars(parser.parse_args())
     for k in ['path_images', 'path_output']:
         p_dir = tl_io.update_path(os.path.dirname(args[k]))
-        assert os.path.isdir(p_dir), '%s' % args[k]
+        assert os.path.isdir(p_dir), 'missing folder: %s' % args[k]
         args[k] = os.path.join(p_dir, os.path.basename(args[k]))
-    assert len(args['label_old']) == len(args['label_new'])
+    assert len(args['label_old']) == len(args['label_new']), \
+        'length of old (%i) and new (%i) labels should be same' \
+        % (len(args['label_old']), len(args['label_new']))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args
 
@@ -99,8 +101,9 @@ def relabel_folder_images(path_images, path_out, labels_old, labels_new,
     :param [int] labels_new: list of new labels
     :param int nb_jobs:
     """
-    assert os.path.isdir(os.path.dirname(path_images)), '%s' % path_images
-    assert os.path.isdir(path_out), 'missing ouput folder %s' % path_out
+    assert os.path.isdir(os.path.dirname(path_images)), \
+        'missing folder: %s' % path_images
+    assert os.path.isdir(path_out), 'missing ouput folder: %s' % path_out
 
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
@@ -126,7 +129,8 @@ def main(params):
     logging.info('running...')
 
     if not os.path.exists(params['path_output']):
-        assert os.path.isdir(os.path.dirname(params['path_output']))
+        assert os.path.isdir(os.path.dirname(params['path_output'])), \
+            'missing folder: %s' % os.path.dirname(params['path_output'])
         os.mkdir(params['path_output'])
 
     relabel_folder_images(params['path_images'], params['path_output'],

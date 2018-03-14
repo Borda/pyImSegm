@@ -184,8 +184,7 @@ def load_image_annot_compute_features_labels(idx_row, params,
     logging.debug('.. processing: %s', idx_name)
     assert img.shape[:2] == annot.shape[:2], \
         'individual size of image %s and seg_pipe %s for "%s" - "%s"' % \
-        (repr(img.shape), repr(annot.shape), row['path_image'],
-         row['path_annot'])
+        (repr(img.shape), repr(annot.shape), row['path_image'], row['path_annot'])
     if show_debug_imgs:
         plt.imsave(path_out_img(params, FOLDER_IMAGE, idx_name), img,
                    cmap=plt.cm.gray)

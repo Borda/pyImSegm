@@ -275,7 +275,9 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-    assert y_true.shape == y_pred.shape
+    assert y_true.shape == y_pred.shape, \
+        'prediction (%i) and annotation (%i) should be equal' \
+        % (len(y_true), len(y_pred))
     logging.debug('unique lbs true: %s, predict %s',
                   repr(np.unique(y_true)), repr(np.unique(y_pred)))
 
@@ -370,7 +372,9 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
     support_macro                                               None
     Name: 0, dtype: object
     """
-    assert len(segms) == len(annots)
+    assert len(segms) == len(annots), \
+        'size of segment. (%i) amd annot. (%i) should be equal' \
+        % (len(segms), len(annots))
     if names is None:
         names = map(str, range(len(segms)))
     df_stat = pd.DataFrame()
@@ -483,7 +487,7 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None,
     'TESTINNG'
     >>> os.remove(p_clf)
     """
-    assert os.path.isdir(path_out), 'missing %s' % repr(path_out)
+    assert os.path.isdir(path_out), 'missing folder: %s' % repr(path_out)
     dict_classif = {
         'params': params,
         'name': clf_name,
@@ -506,7 +510,7 @@ def load_classifier(path_classif):
     :param str path_classif: path to the exported classifier
     :return {str: ...}:
     """
-    assert os.path.exists(path_classif), 'missing "%s"' % path_classif
+    assert os.path.exists(path_classif), 'missing: "%s"' % path_classif
     logging.info('import classif from "%s"', path_classif)
     if not os.path.exists(path_classif):
         logging.debug('classif does not exist')
@@ -525,7 +529,7 @@ def export_results_clf_search(path_out, clf_name, clf_search):
     :param str clf_name: name of selected classifier
     :param object clf_search:
     """
-    assert os.path.isdir(path_out), 'missing %s' % repr(path_out)
+    assert os.path.isdir(path_out), 'missing folder: %s' % repr(path_out)
     fn_path_out = lambda s: os.path.join(path_out,
                                          'classif_%s_%s.txt' % (clf_name, s))
 
@@ -581,10 +585,13 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
      './classif_RandForest_search_params_scores.txt']
     >>> for p in files: os.remove(p)
     """
-    assert len(labels) > 0
+    assert len(labels) > 0, 'some labels has to be given'
     features = np.nan_to_num(features)
-    assert features.shape[0] == len(labels)
-    assert features.ndim == 2 and features.shape[1] > 0
+    assert len(features) == len(labels), \
+        'features (%i) and labels (%i) should have equal length' \
+        % (len(features), len(labels))
+    assert features.ndim == 2 and features.shape[1] > 0, \
+        'at least one feature is required'
     logging.debug('training data: %s, labels (%i): %s', repr(features.shape),
                   len(labels), repr(collections.Counter(labels)))
     # gc.collect(), time.sleep(1)
@@ -683,7 +690,7 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     df_stat = df_scoring.describe()
 
     if path_out is not None:
-        assert os.path.exists(path_out), 'missing "%s"' % path_out
+        assert os.path.exists(path_out), 'missing: "%s"' % path_out
         name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'all-folds')
         path_csv = os.path.join(path_out, name_csv)
         df_scoring.to_csv(path_csv)
@@ -783,7 +790,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     auc = metrics.auc(mean_fpr, mean_tpr)
 
     if path_out is not None:
-        assert os.path.exists(path_out), 'missing "%s"' % path_out
+        assert os.path.exists(path_out), 'missing: "%s"' % path_out
         name_csv = NAME_CSV_CLASSIF_CV_ROC.format(clf_name, 'mean')
         path_csv = os.path.join(path_out, name_csv)
         df_roc.to_csv(path_csv)
@@ -866,7 +873,9 @@ def shuffle_features_labels(features, labels):
     >>> np.array_equal(lbs, lbs_new)
     False
     """
-    assert len(features) == len(labels)
+    assert len(features) == len(labels), \
+        'features (%i) and labels (%i) should have equal length' \
+        % (len(features), len(labels))
     idx = list(range(len(labels)))
     logging.debug('shuffle indexes - %i', len(labels))
     np.random.shuffle(idx)
@@ -997,8 +1006,9 @@ def down_sample_dict_features_unique(dict_features):
     for label in dict_features:
         features = dict_features[label]
         unique_fts = np.array(unique_rows(features))
-        assert features.ndim == unique_fts.ndim
-        assert features.shape[1] == unique_fts.shape[1]
+        assert features.ndim == unique_fts.ndim, 'feature dim matching'
+        assert features.shape[1] == unique_fts.shape[1], \
+            'features: %i <> %i' % (features.shape[1], unique_fts.shape[1])
         dict_features_new[label] = unique_fts
     return dict_features_new
 
@@ -1067,7 +1077,8 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
     [25, 30]
     """
     logging.debug('convert set of features and labels to single one')
-    assert all(k in imgs_labels.keys() for k in imgs_features.keys())
+    assert all(k in imgs_labels.keys() for k in imgs_features.keys()), \
+        'missing some items of %s' % repr(list(imgs_labels.keys()))
     features_all, labels_all, sizes = list(), list(), list()
     for name in sorted(imgs_features.keys()):
         features = np.array(imgs_features[name])
@@ -1152,7 +1163,8 @@ class HoldOut:
         self.total = nb
         self.hold_idx = hold_idx
         self.random_state = random_state
-        assert self.total > self.hold_idx
+        assert self.total > self.hold_idx, \
+            'total %i should be higher than hold Idx %i' % (self.total, self.hold_idx)
 
     def __iter__(self):
         """ iterate the folds
@@ -1215,7 +1227,7 @@ class CrossValidatePOut:
         :param obj rand_seed: int or None
         """
         assert nb_samples > nb_hold_out, \
-            'nb of out has to be smaller then total size'
+            'number of holdout has to be smaller then total size'
         self.nb_samples = nb_samples
         self.nb_hold_out = nb_hold_out
 
@@ -1302,7 +1314,8 @@ class CrossValidatePSetsOut:
             inds = range(start, start + size)
             self.set_indexes.append(list(inds))
 
-        assert np.sum(len(i) for i in self.set_indexes) == self.total
+        assert np.sum(len(i) for i in self.set_indexes) == self.total, \
+            'all indexes should sum to total count %i' % self.total
 
         self.sets_order = list(range(len(self.set_sizes)))
 

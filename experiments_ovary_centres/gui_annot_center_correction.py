@@ -90,7 +90,7 @@ def arg_parse_params():
         if params[k] is None: continue
         params[k] = os.path.abspath(os.path.expanduser(params[k]))
         p = os.path.dirname(params[k]) if '*' in params[k] else params[k]
-        assert os.path.exists(p), '%s' % p
+        assert os.path.exists(p), 'missing: %s' % p
     logging.info('ARG PARAMETERS: \n %s', repr(params))
     return params
 

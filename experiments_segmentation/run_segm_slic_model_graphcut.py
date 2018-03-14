@@ -153,7 +153,7 @@ def arg_parse_params(params):
         if args[k] == '' or args[k] == 'none': continue
         args[k] = tl_data.update_path(args[k])
         p = os.path.dirname(args[k]) if '*' in args[k] else args[k]
-        assert os.path.exists(p), 'missing (%s) "%s"' % (k, p)
+        assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
     # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
     if os.path.isfile(args['path_config']):
@@ -172,7 +172,7 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
     :return ndarray:
     """
     path_img = tl_data.update_path(path_img)
-    assert os.path.isfile(path_img), 'missing "%s"' % path_img
+    assert os.path.isfile(path_img), 'missing: "%s"' % path_img
     if img_type == '2d_gray':
         img, _ = tl_data.load_img_double_band_split(path_img)
         assert img.ndim == 2, 'image dims: %s' % repr(img.shape)

@@ -105,7 +105,8 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
     """
     logging.info('running...')
     if not os.path.isdir(dict_paths['output']):
-        assert os.path.isdir(os.path.dirname(dict_paths['output']))
+        assert os.path.isdir(os.path.dirname(dict_paths['output'])), \
+            '"%s" should be folder' % dict_paths['output']
         logging.debug('creating dir: %s', dict_paths['output'])
         os.mkdir(dict_paths['output'])
 

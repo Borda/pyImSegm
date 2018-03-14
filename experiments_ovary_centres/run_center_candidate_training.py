@@ -353,7 +353,7 @@ def estim_points_compute_features(name, img, segm, params):
     """
     # superpixels on image
     assert img.shape[:2] == segm.shape[:2], \
-        'shapes: %s : %s' % (repr(img.shape), repr(segm.shape))
+        'not matching shapes: %s : %s' % (repr(img.shape), repr(segm.shape))
     slic = seg_spx.segment_slic_img2d(img, params['slic_size'],
                                       params['slic_regul'])
     slic_centers = seg_spx.superpixel_centers(slic)
@@ -437,7 +437,7 @@ def label_close_points(centers, points, params):
         labels = [-1] * len(points)
     assert len(points) == len(labels), \
         'not equal lenghts of points (%i) and labels (%i)' \
-        % (len(points),len(labels))
+        % (len(points), len(labels))
     return labels
 
 

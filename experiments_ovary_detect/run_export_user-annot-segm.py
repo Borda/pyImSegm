@@ -210,7 +210,8 @@ def main(params):
     df_paths.index = range(1, len(df_paths) + 1)
 
     if not os.path.exists(params['path_output']):
-        assert os.path.exists(os.path.dirname(params['path_output']))
+        assert os.path.exists(os.path.dirname(params['path_output'])), \
+            'missing folder: "%s"' % os.path.dirname(params['path_output'])
         os.mkdir(params['path_output'])
 
     mproc_pool = mproc.Pool(params['nb_jobs'])

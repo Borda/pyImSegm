@@ -297,7 +297,7 @@ def load_image_2d(path_img):
     True
     >>> os.remove(path_img)
     """
-    assert os.path.exists(path_img), path_img
+    assert os.path.exists(path_img), 'missing: %s' % path_img
     n_img, img_ext = os.path.splitext(os.path.basename(path_img))
 
     if img_ext in ['.tif', '.tiff']:

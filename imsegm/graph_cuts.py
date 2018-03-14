@@ -373,7 +373,9 @@ def create_pairwise_matrix(gc_regul, nb_classes):
            [ 1.23,  0.97,  0.54]])
     """
     if isinstance(gc_regul, np.ndarray):
-        assert gc_regul.shape[0] == gc_regul.shape[1] == nb_classes
+        assert gc_regul.shape[0] == gc_regul.shape[1] == nb_classes, \
+            'GC regul matrix %s should match match number o lasses (%i)' \
+            % (repr(gc_regul.shape), nb_classes)
         # sub_min = np.tile(np.min(gc_regul, axis=0), (gc_regul.shape[0], 1))
         pairwise = gc_regul - np.min(gc_regul)
     elif isinstance(gc_regul, list):
@@ -480,11 +482,11 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
     logging.debug('graph edges %s', repr(edges.shape))
 
     if edge_type.startswith('model'):
-        assert proba is not None
+        assert proba is not None, '"proba" is requuired'
         metric = edge_type.split('_')[-1] if '_' in edge_type else 'lT'
         edge_weights = compute_edge_model(edges, proba, metric)
     elif edge_type == 'color':
-        assert image is not None
+        assert image is not None, '"image" is required'
         # {'color': ['mean', 'median']}
         image_float = np.array(image, dtype=float)
         if np.max(image) > 1:
@@ -497,7 +499,7 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
         weights = dist.astype(float) / (2 * np.std(dist) ** 2)
         edge_weights = np.exp(- weights)
     elif edge_type == 'features':
-        assert features is not None
+        assert features is not None, '"features" is required'
         features_norm = preprocessing.StandardScaler().fit_transform(features)
         vertex_1 = features_norm[edges[:, 0]]
         vertex_2 = features_norm[edges[:, 1]]
@@ -620,7 +622,9 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
         nb_labels = np.max(uq_labels) + 1
     transitions = np.zeros((nb_labels, nb_labels))
     for name in dict_slics:
-        assert (np.max(dict_slics[name]) + 1) == len(dict_labels[name])
+        assert (np.max(dict_slics[name]) + 1) == len(dict_labels[name]), \
+            'dims are not matching - max slic (%i) and label (%i)' \
+            % (np.max(dict_slics[name]), len(dict_labels[name]))
         _, edges = get_vertexes_edges(dict_slics[name])
         label_edges = np.asarray(dict_labels[name])[np.asarray(edges)]
         for lb1, lb2 in label_edges.tolist():
