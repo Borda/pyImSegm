@@ -10,11 +10,6 @@ import glob
 import logging
 import warnings
 
-import matplotlib
-if os.environ.get('DISPLAY','') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-    matplotlib.use('Agg')
-
 import numpy as np
 import pandas as pd
 from PIL import Image
