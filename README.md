@@ -77,6 +77,7 @@ and in the end terminating...
 (env)@duda:~/pyImSegm$ deactivate
 ```
 
+<!--
 Moreover, we are using python [GraphCut wrapper](https://github.com/Borda/pyGCO) which require to be installed separately (not yet integrated in PIP)
 ```bash
 (env)@duda:~/pyImSegm$ mkdir libs && cd libs
@@ -84,6 +85,7 @@ Moreover, we are using python [GraphCut wrapper](https://github.com/Borda/pyGCO)
 (env)@duda:~/pyImSegm$ pip install -r requirements.txt
 (env)@duda:~/pyImSegm$ python setup.py install
 ```
+-->
 
 **Compilation**
 
@@ -92,6 +94,13 @@ We have implemented cython version of some functions, especially computing descr
 python setup.py build_ext --inplace
 ```
 If loading of compiled descriptors in cython fails, it is automatically swapped to numpy which gives the same results, but it is significantly slower.
+
+**Installation**
+
+The package can be installed via pip from the folder
+```bash
+python setup.py install
+```
 
 ---
 
