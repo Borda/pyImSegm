@@ -17,18 +17,18 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import adjusted_rand_score
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.drawing as tl_visu
 import imsegm.superpixels as seg_spx
 import imsegm.region_growing as seg_rg
 
-PATH_OVARY = os.path.join(tl_io.update_path('images', absolute=True),
+PATH_OVARY = os.path.join(tl_data.update_path('images', absolute=True),
                          'drosophila_ovary_slice')
 PATH_IMAGE = os.path.join(PATH_OVARY, 'image')
 PATH_SEGM = os.path.join(PATH_OVARY, 'segm')
 PATH_ANNOT = os.path.join(PATH_OVARY, 'annot_eggs')
 PATH_CENTRE = os.path.join(PATH_OVARY, 'center_levels')
-PATH_OUTPUT = tl_io.update_path('output', absolute=True)
+PATH_OUTPUT = tl_data.update_path('output', absolute=True)
 NAME_RG2SP_MODEL = 'RG2SP_multi-model_mixture.npz'
 PATH_PKL_MODEL = os.path.join(PATH_OUTPUT, NAME_RG2SP_MODEL)
 LABELS_FG_PROB = (0.05, 0.7, 0.9, 0.9)
@@ -48,9 +48,9 @@ def compute_prior_map(cdist, size=(500, 800), step=5):
 
 
 def load_inputs(name):
-    img, _ = tl_io.load_image_2d(os.path.join(PATH_IMAGE, name + '.jpg'))
-    seg, _ = tl_io.load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
-    annot, _ = tl_io.load_image_2d(os.path.join(PATH_ANNOT, name + '.png'))
+    img, _ = tl_data.load_image_2d(os.path.join(PATH_IMAGE, name + '.jpg'))
+    seg, _ = tl_data.load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
+    annot, _ = tl_data.load_image_2d(os.path.join(PATH_ANNOT, name + '.png'))
     centers = pd.DataFrame.from_csv(
         os.path.join(PATH_CENTRE, name + '.csv')).values
     centers[:, [0, 1]] = centers[:, [1, 0]]
@@ -81,7 +81,7 @@ class TestRegionGrowing(unittest.TestCase):
                      repr([os.path.basename(p) for p in list_paths[:5]]))
         list_segms = []
         for path_seg in list_paths:
-            seg, _ = tl_io.load_image_2d(path_seg)
+            seg, _ = tl_data.load_image_2d(path_seg)
             list_segms.append(seg)
 
         list_rays, _ = seg_rg.compute_object_shapes(list_segms,
@@ -172,9 +172,9 @@ class TestRegionGrowing(unittest.TestCase):
         list_mean_cdf = file_model['cdfs']
         model = file_model['mix_model']
 
-        img, _ = tl_io.load_image_2d(os.path.join(PATH_IMAGE, name + '.jpg'))
-        seg, _ = tl_io.load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
-        annot, _ = tl_io.load_image_2d(os.path.join(PATH_ANNOT, name + '.png'))
+        img, _ = tl_data.load_image_2d(os.path.join(PATH_IMAGE, name + '.jpg'))
+        seg, _ = tl_data.load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
+        annot, _ = tl_data.load_image_2d(os.path.join(PATH_ANNOT, name + '.png'))
         centers = pd.DataFrame.from_csv(
             os.path.join(PATH_CENTRE, name + '.csv')).values
         centers[:, [0, 1]] = centers[:, [1, 0]]

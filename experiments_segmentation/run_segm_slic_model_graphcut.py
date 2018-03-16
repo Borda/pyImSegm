@@ -106,7 +106,7 @@ SEGM_PARAMS = {
     'estimate': TYPE_GMM[0],
 }
 PATH_IMAGES = os.path.join(tl_data.update_path('images'), 'drosophila_disc')
-# PATH_IMAGES = tl_io.update_path(os.path.join('images', 'langerhans_islets'))
+# PATH_IMAGES = tl_data.update_path(os.path.join('images', 'langerhans_islets'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_EXPERIMENT = 'experiment_segm-unSupervised'
 SEGM_PARAMS.update({
@@ -309,8 +309,8 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None):
     idx_name = get_idx_name(idx, path_img)
     img = load_image(path_img, params['img_type'])
 
-    Image.fromarray(img.astype(np.uint8)).save(
-        os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png'))
+    path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
+    tl_data.io_imsave(path_img, img.astype(np.uint8))
 
     dict_debug_imgs = dict() if SHOW_DEBUG_IMAGES else None
     try:
@@ -349,8 +349,8 @@ def segment_image_model(imgs_idx_path, params, scaler, pca, model, path_out=None
     idx_name = get_idx_name(idx, path_img)
     img = load_image(path_img, params['img_type'])
 
-    Image.fromarray(img.astype(np.uint8)).save(
-        os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png'))
+    path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
+    tl_data.io_imsave(path_img, img.astype(np.uint8))
 
     dict_debug_imgs = dict() if SHOW_DEBUG_IMAGES else None
 

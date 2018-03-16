@@ -16,7 +16,6 @@ from functools import partial
 import tqdm
 import pandas as pd
 import numpy as np
-from PIL import Image
 from sklearn import cluster
 
 import matplotlib
@@ -28,7 +27,7 @@ if os.environ.get('DISPLAY', '') == '' \
 import matplotlib.pylab as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import run_center_candidate_training as run_train
@@ -137,24 +136,24 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
     assert all(n in dict_row for n in ['path_points', 'path_image', 'path_segm']), \
         'missing some required fields: %s' % repr(dict_row)
     name = os.path.splitext(os.path.basename(dict_row['path_points']))[0]
-    points = tl_io.load_landmarks_csv(dict_row['path_points'])
+    points = tl_data.load_landmarks_csv(dict_row['path_points'])
     if len(points) == 0:
         logging.debug('no points to cluster for "%s"', name)
-    points = tl_io.swap_coord_x_y(points)
+    points = tl_data.swap_coord_x_y(points)
 
     centres, clust_labels = cluster_center_candidates(points,
                                       max_dist=params['DBSCAN_max_dist'],
                                       min_samples=params['DBSCAN_min_samples'])
     path_csv = os.path.join(path_out, FOLDER_CENTER, name + '.csv')
-    tl_io.save_landmarks_csv(path_csv, tl_io.swap_coord_x_y(centres))
+    tl_data.save_landmarks_csv(path_csv, tl_data.swap_coord_x_y(centres))
 
     path_visu = os.path.join(path_out, FOLDER_CLUSTER_VISUAL)
 
     img, segm = None, None
     if dict_row['path_image'] is not None and os.path.isfile(dict_row['path_image']):
-        img = np.array(Image.open(dict_row['path_image']))
+        img = tl_data.io_imread(dict_row['path_image'])
     if dict_row['path_segm'] is not None and os.path.isfile(dict_row['path_segm']):
-        segm = np.array(Image.open(dict_row['path_segm']))
+        segm = tl_data.io_imread(dict_row['path_segm'])
 
     export_draw_image_centers_clusters(path_visu, name, img, centres,
                                        points, clust_labels, segm)
@@ -205,7 +204,7 @@ def main(params):
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 
     list_paths = [params[k] for k in ['path_images', 'path_segms', 'path_centers']]
-    df_paths = tl_io.find_files_match_names_across_dirs(list_paths)
+    df_paths = tl_data.find_files_match_names_across_dirs(list_paths)
     df_paths.columns = ['path_image', 'path_segm', 'path_points']
     df_paths.index = range(1, len(df_paths) + 1)
     path_cover = os.path.join(params['path_expt'], run_train.NAME_CSV_TRIPLES)

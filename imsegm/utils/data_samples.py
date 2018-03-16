@@ -11,14 +11,14 @@ import logging
 from PIL import Image
 import numpy as np
 
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 
 SAMPLE_SEG_SIZE_2D_SMALL = (20, 10)
 SAMPLE_SEG_SIZE_2D_NORM = (150, 100)
 SAMPLE_SEG_NB_CLASSES = 3
 SAMPLE_SEG_SIZE_3D_SMALL = (10, 5, 6)
 
-PATH_IMAGES = tl_io.update_path('images')
+PATH_IMAGES = tl_data.update_path('images')
 IMAGE_LENNA = os.path.join('others', 'lena.png')
 IMAGE_OBJECTS = os.path.join('synthetic', 'reference.jpg')
 IMAGE_3CLS = os.path.join('textures', 'sample_rgb_3cls.jpg')
@@ -154,7 +154,7 @@ def get_image_path(name_img, path_base=PATH_IMAGES):
     'lena.png'
     """
     path_img = os.path.join(path_base, name_img)
-    path_img = tl_io.update_path(path_img)
+    path_img = tl_data.update_path(path_img)
     return path_img
 
 
@@ -171,5 +171,5 @@ def load_sample_image(name_img=IMAGE_LENNA):
     path_img = get_image_path(name_img)
     assert os.path.exists(path_img), 'missing: "%s"' % path_img
     logging.debug('image (%s): %s', os.path.exists(path_img), path_img)
-    img = np.array(Image.open(path_img, 'r'))
+    img = tl_data.io_imread(path_img)
     return img

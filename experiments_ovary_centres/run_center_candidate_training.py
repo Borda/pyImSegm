@@ -33,7 +33,6 @@ from functools import partial
 import tqdm
 import pandas as pd
 import numpy as np
-from PIL import Image
 from scipy import spatial
 
 import matplotlib
@@ -45,7 +44,7 @@ if os.environ.get('DISPLAY', '') == '' \
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import imsegm.superpixels as seg_spx
@@ -104,9 +103,9 @@ CENTER_PARAMS = {
     'center_dist_thr': 50,  # distance to from annotated center as a point
 }
 
-PATH_IMAGES = os.path.join(tl_io.update_path('images'),
+PATH_IMAGES = os.path.join(tl_data.update_path('images'),
                            'drosophila_ovary_slice')
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
+PATH_RESULTS = tl_data.update_path('results', absolute=True)
 CENTER_PARAMS.update({
     'path_list': os.path.join(PATH_IMAGES,
                               'list_imgs-segm-center-levels_short.csv'),
@@ -159,10 +158,10 @@ def arg_parse_params(params):
             paths[k] = ''
             continue
         if '*' in params[k] or k == 'path_expt':
-            p_dir = tl_io.update_path(os.path.dirname(params[k]))
+            p_dir = tl_data.update_path(os.path.dirname(params[k]))
             paths[k] = os.path.join(p_dir, os.path.basename(params[k]))
         else:
-            paths[k] = tl_io.update_path(params[k], absolute=True)
+            paths[k] = tl_data.update_path(params[k], absolute=True)
             p_dir = paths[k]
         assert os.path.exists(p_dir), 'missing (%s) %s' % (k, p_dir)
     # load saved configuration
@@ -201,7 +200,7 @@ def find_match_images_segms_centers(path_pattern_imgs, path_pattern_segms,
     """
     logging.info('find match images-segms-centres...')
     list_paths = [path_pattern_imgs, path_pattern_segms, path_pattern_center]
-    df_paths = tl_io.find_files_match_names_across_dirs(list_paths)
+    df_paths = tl_data.find_files_match_names_across_dirs(list_paths)
 
     if path_pattern_center is None:
         df_paths.columns = ['path_image', 'path_segm']
@@ -237,14 +236,14 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
     """
     idx, row_path = idx_row
     for k in ['path_image', 'path_segm', 'path_centers']:
-        row_path[k] = tl_io.update_path(row_path[k])
+        row_path[k] = tl_data.update_path(row_path[k])
         assert os.path.exists(row_path[k]), 'missing %s' % row_path[k]
 
     idx_name = get_idx_name(idx, row_path['path_image'])
-    img_struc, img_gene = tl_io.load_img_double_band_split(row_path['path_image'],
-                                                           im_range=None)
+    img_struc, img_gene = tl_data.load_img_double_band_split(row_path['path_image'],
+                                                             im_range=None)
     # img_rgb = np.array(Image.open(row_path['path_img']))
-    img_rgb = tl_io.merge_image_channels(img_struc, img_gene)
+    img_rgb = tl_data.merge_image_channels(img_struc, img_gene)
     if np.max(img_rgb) > 1:
         img_rgb = img_rgb / float(np.max(img_rgb))
 
@@ -255,7 +254,7 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
         if dict_relabel is not None:
             segm = seg_lbs.merge_probab_labeling_2d(segm, dict_relabel)
     else:
-        segm = np.array(Image.open(row_path['path_segm']))
+        segm = tl_data.io_imread(row_path['path_segm'])
         if dict_relabel is not None:
             segm = seg_lbs.relabel_by_dict(segm, dict_relabel)
 
@@ -263,10 +262,10 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
             and os.path.isfile(row_path['path_centers']):
         posix = os.path.splitext(os.path.basename(row_path['path_centers']))[-1]
         if posix == '.csv':
-            centers = tl_io.load_landmarks_csv(row_path['path_centers'])
-            centers = tl_io.swap_coord_x_y(centers)
+            centers = tl_data.load_landmarks_csv(row_path['path_centers'])
+            centers = tl_data.swap_coord_x_y(centers)
         elif posix == '.png':
-            centers = np.array(Image.open(row_path['path_centers']))
+            centers = tl_data.io_imread(row_path['path_centers'])
             # relabel loaded segm into relevant one
             centers = np.array(LUT_ANNOT_CENTER_RELABEL)[centers]
         else:
@@ -501,7 +500,7 @@ def dataset_load_images_segms_compute_features(params, df_paths,
                                                dict_points[name], params)
         points = np.asarray(dict_points[name])[np.asarray(dict_labels[name]) == 1]
         path_csv = os.path.join(path_points_train, name + '.csv')
-        tl_io.save_landmarks_csv(path_csv, points)
+        tl_data.save_landmarks_csv(path_csv, points)
 
         tqdm_bar.update()
 
@@ -602,7 +601,7 @@ def detect_center_candidates(name, image, segm, centers_gt, slic, points,
     path_visu = os.path.join(path_out, FOLDER_POINTS_VISU)
 
     path_csv = os.path.join(path_points, name + '.csv')
-    tl_io.save_landmarks_csv(path_csv, tl_io.swap_coord_x_y(candidates))
+    tl_data.save_landmarks_csv(path_csv, tl_data.swap_coord_x_y(candidates))
     export_show_image_points_labels(path_visu, name, image, segm, points,
                                     labels, slic, centers_gt)
 

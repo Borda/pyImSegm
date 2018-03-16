@@ -15,6 +15,7 @@ from skimage import io
 from scipy import interpolate
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+import imsegm.utils.data_io as tl_data
 COLUMNS_POSITION = ('ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y')
 SLICE_NAME_GROUPING = 'stack_path'
 # set distance in Z axis whether near sliuce may still belong to the same egg
@@ -200,7 +201,7 @@ def dir_images_frequent_colors(paths_img, ratio_treshold=1e-3):
     logging.debug('passing %i images', len(paths_img))
     dict_colors = dict()
     for path_im in paths_img:
-        img = io.imread(path_im)
+        img = tl_data.io_imread(path_im)
         local_dict_colors = image_frequent_colors(img, ratio_treshold)
         for clr in local_dict_colors:
             if clr not in dict_colors:
@@ -319,8 +320,7 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     :param [str] pos_columns:
     :return: DF
 
-    >>> import imsegm.utils.data_io as tl_io
-    >>> path_txt = os.path.join(tl_io.update_path('images'),
+    >>> path_txt = os.path.join(tl_data.update_path('images'),
     ...                 'drosophila_ovary_slice', 'info_ovary_images.txt')
     >>> load_info_group_by_slices(path_txt, [4]) # doctest: +NORMALIZE_WHITESPACE
                 ant_x  ant_y  lat_x  lat_y post_x post_y

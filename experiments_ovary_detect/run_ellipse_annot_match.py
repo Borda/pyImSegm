@@ -24,7 +24,7 @@ import pandas as pd
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 # import segmentation.annotation as seg_annot
@@ -34,12 +34,12 @@ NAME_CSV_RESULTS = 'info_ovary_images_ellipses.csv'
 OVERLAP_THRESHOLD = 0.
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
 
 PARAMS = {
     'path_ellipses': os.path.join(PATH_IMAGES, 'ellipse_fitting', '*.csv'),
     'path_infofile': os.path.join(PATH_IMAGES, 'info_ovary_images.txt'),
-    'path_output': tl_io.update_path('results', absolute=True),
+    'path_output': tl_data.update_path('results', absolute=True),
 }
 
 
@@ -66,7 +66,7 @@ def arg_parse_params(params):
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
     for k in (k for k in params if 'path' in k and params[k] is not None):
-        params[k] = tl_io.update_path(params[k], absolute=True)
+        params[k] = tl_data.update_path(params[k], absolute=True)
     logging.info('ARG PARAMETERS: \n %s', repr(params))
     return params
 

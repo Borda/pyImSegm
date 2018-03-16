@@ -324,7 +324,6 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
                                                           params['features'])
     labels = classif.predict(features)
     segm = labels[slic]
-    img_seg = Image.fromarray(segm.astype(np.uint8))
     path_img = os.path.join(path_out, idx_name + '.png')
     logging.debug('export segmentation: %s', path_img)
     img_seg = Image.fromarray(segm.astype(np.uint8))

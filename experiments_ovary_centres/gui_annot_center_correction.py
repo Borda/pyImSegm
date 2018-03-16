@@ -45,10 +45,10 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.drawing as tl_visu
 
-PATH_BASE = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_BASE = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
 PATH_IMAGES = os.path.join(PATH_BASE, 'image', '*.jpg')
 PATH_CSV = os.path.join(PATH_BASE, 'center_levels', '*.csv')
 NAME_INFO_SHORT = 'ovary_image_info.csv'

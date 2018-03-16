@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.drawing as tl_visu
 import imsegm.superpixels as seg_spx
 import imsegm.labeling as seg_lbs
@@ -32,8 +32,8 @@ from run_segm_slic_model_graphcut import TYPES_LOAD_IMAGE
 
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
+PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_CSV_DISTANCES = 'measured_boundary_distances.csv'
 PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
@@ -72,7 +72,7 @@ def arg_parse_params(params):
     params = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %s', repr(params))
     for k in (k for k in params if 'path' in k):
-        params[k] = tl_io.update_path(params[k])
+        params[k] = tl_data.update_path(params[k])
         if k == 'path_out' and not os.path.isdir(params[k]):
             params[k] = ''
             continue
@@ -121,7 +121,7 @@ def main(params):
         logging.info('Missing output dir -> no visual export & results table.')
 
     list_paths = [params['path_images'], params['path_segms']]
-    df_paths = tl_io.find_files_match_names_across_dirs(list_paths)
+    df_paths = tl_data.find_files_match_names_across_dirs(list_paths)
     df_paths.columns = ['path_image', 'path_segm']
 
     df_dist = pd.DataFrame()

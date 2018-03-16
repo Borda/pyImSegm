@@ -22,12 +22,11 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-from PIL import Image
 import numpy as np
 import tqdm
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
@@ -53,7 +52,7 @@ def parse_arg_params():
     parser.add_argument('--nb_jobs', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
-    p_dir = tl_io.update_path(os.path.dirname(args['path_images']))
+    p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
     assert os.path.isdir(p_dir), 'missing folder: %s' % args['path_images']
     args['path_images'] = os.path.join(p_dir, os.path.basename(args['path_images']))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
@@ -84,7 +83,7 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     :param [(int, int, int)] list_colors: list of possible colours
     """
     logging.debug('quantize img: "%s"', path_image)
-    im = np.array(Image.open(path_image))
+    im = tl_data.io_imread(path_image)
     assert im.ndim == 3, 'not valid color image of dims %s' % repr(im.shape)
     im = im[:, :, :3]
     # im = io.imread(path_image)[:, :, :3]
@@ -95,7 +94,7 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     else:
         logging.error('not implemented method "%s"', method)
     path_image = os.path.splitext(path_image)[0] + '.png'
-    Image.fromarray(im_q.astype(np.uint8)).save(path_image)
+    tl_data.io_imsave(path_image, im_q.astype(np.uint8))
     # io.imsave(path_image, im_q)
     # plt.subplot(121), plt.imshow(im)
     # plt.subplot(122), plt.imshow(im_q)

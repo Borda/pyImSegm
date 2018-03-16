@@ -20,10 +20,9 @@ from functools import partial
 
 import numpy as np
 import tqdm
-from skimage import io
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
@@ -44,7 +43,7 @@ def parse_arg_params():
     parser.add_argument('--nb_jobs', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
-    p_dir = tl_io.update_path(os.path.dirname(args['path_images']))
+    p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
     assert os.path.isdir(p_dir), 'missing folder: %s' % args['path_images']
     args['path_images'] = os.path.join(p_dir,
                                        os.path.basename(args['path_images']))
@@ -58,7 +57,7 @@ def perform_img_inpaint(path_img, labels):
     :param path_img: str
     """
     logging.debug('repaint labels %s for image: "%s"', repr(labels), path_img)
-    img = np.array(io.imread(path_img), dtype=np.float)
+    img = np.array(tl_data.io.imread(path_img), dtype=np.float)
 
     for label in labels:
         img[img == label] = np.nan
@@ -67,7 +66,7 @@ def perform_img_inpaint(path_img, labels):
     valid_mask = ~np.isnan(img)
     im_paint = seg_annot.image_inpaint_pixels(img, valid_mask)
 
-    io.imsave(path_img, im_paint.astype(np.uint8))
+    tl_data.io_imsave(path_img, im_paint.astype(np.uint8))
     # plt.subplot(121), plt.imshow(img)
     # plt.subplot(122), plt.imshow(im_paint)
     # plt.show()

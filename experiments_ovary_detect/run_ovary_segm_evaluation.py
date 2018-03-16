@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.experiments as tl_expt
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.drawing as tl_visu
 import imsegm.labeling as seg_lbs
 
@@ -47,8 +47,8 @@ NAME_DIR_VISUAL_3 = 'ALL_visualisation-3'
 SKIP_DIRS = ['input', 'simple',
              NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3]
 NAME_CSV_STAT = 'segmented-eggs_%s.csv'
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
+PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_RESULTS = tl_data.update_path('results', absolute=True)
 PATHS = {
     'images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
     'annots': os.path.join(PATH_IMAGES, 'annot_eggs', '*.png'),
@@ -95,7 +95,7 @@ def arg_parse_params(paths):
         if not isinstance(arg_params[k], str) or arg_params[k].lower() == 'none':
             paths[k] = None
             continue
-        paths[k] = tl_io.update_path(arg_params[k], absolute=True)
+        paths[k] = tl_data.update_path(arg_params[k], absolute=True)
         p = os.path.dirname(paths[k]) if '*' in paths[k] else paths[k]
         assert os.path.exists(p), 'missing: %s' % p
     logging.info('ARG PARAMETERS: \n %s', repr(paths))
@@ -110,8 +110,8 @@ def compute_metrics(row):
     """
     logging.debug('loading annot "%s"\n and segm "%s"',
                   row['path_annot'], row['path_egg-segm'])
-    annot, _ = tl_io.load_image_2d(row['path_annot'])
-    segm, _ = tl_io.load_image_2d(row['path_egg-segm'])
+    annot, _ = tl_data.load_image_2d(row['path_annot'])
+    segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
     assert annot.shape == segm.shape, 'dimension do mot match %s - %s' % \
                                       (repr(annot.shape), repr(segm.shape))
     list_jacob = []
@@ -152,12 +152,12 @@ def expert_visual(row, method_name, path_out, max_fig_size=10):
     :return:
     """
     im_name = os.path.splitext(os.path.basename(row['path_image']))[0]
-    img, _ = tl_io.load_image_2d(row['path_image'])
-    # annot = tl_io.load_image(row['path_annot'])
-    egg_segm, _ = tl_io.load_image_2d(row['path_egg-segm'])
-    in_segm, _ = tl_io.load_image_2d(row['path_in-segm'])
-    centers = tl_io.load_landmarks_csv(row['path_centers'])
-    centers = np.array(tl_io.swap_coord_x_y(centers))
+    img, _ = tl_data.load_image_2d(row['path_image'])
+    # annot = tl_data.load_image(row['path_annot'])
+    egg_segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
+    in_segm, _ = tl_data.load_image_2d(row['path_in-segm'])
+    centers = tl_data.load_landmarks_csv(row['path_centers'])
+    centers = np.array(tl_data.swap_coord_x_y(centers))
 
     fig_size = max_fig_size * np.array(img.shape[:2]) / float(np.max(img.shape))
     fig_name = '%s_%s.jpg' % (im_name, method_name)
@@ -211,7 +211,7 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
     list_paths = [dict_paths['images'], dict_paths['annots'],
                   dict_paths['segments'], dict_paths['centers'],
                   os.path.join(path_dir, '*.png')]
-    df_paths = tl_io.find_files_match_names_across_dirs(list_paths)
+    df_paths = tl_data.find_files_match_names_across_dirs(list_paths)
 
     if len(df_paths) == 0:
         return {'method': name, 'count': 0}

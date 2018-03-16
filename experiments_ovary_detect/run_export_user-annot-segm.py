@@ -30,19 +30,18 @@ if os.environ.get('DISPLAY', '') == '' \
     matplotlib.use('Agg')
 
 import tqdm
-from PIL import Image
 import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.drawing as tl_visu
 import imsegm.annotation as seg_annot
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
+PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_RESULTS = tl_data.update_path('results', absolute=True)
 PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(PATH_IMAGES, 'annot_eggs', '*.png'),
@@ -84,7 +83,7 @@ def arg_parse_params(params):
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
     for k in (k for k in params if 'path' in k):
-        params[k] = tl_io.update_path(params[k], absolute=True)
+        params[k] = tl_data.update_path(params[k], absolute=True)
     logging.info('ARG PARAMETERS: \n %s', repr(params))
     return params
 
@@ -185,8 +184,8 @@ def export_figure(idx_row, df_slices_info, path_out):
             logging.debug('missing image in annotation - "%s"', img_name)
             return
 
-        img = np.array(Image.open(os.path.join(row['path_image'])))
-        segm = np.array(Image.open(os.path.join(row['path_segm'])))
+        img = tl_data.io_imread(row['path_image'])
+        segm =tl_data.io_imread(row['path_segm'])
         df = pd.DataFrame().from_csv(os.path.join(row['path_centers']))
         centres = df[['X', 'Y']].values
 
@@ -204,9 +203,9 @@ def export_figure(idx_row, df_slices_info, path_out):
 
 
 def main(params):
-    df_paths = tl_io.find_files_match_names_across_dirs([params['path_images'],
-                                                         params['path_segms'],
-                                                         params['path_centers']])
+    df_paths = tl_data.find_files_match_names_across_dirs([params['path_images'],
+                                                           params['path_segms'],
+                                                           params['path_centers']])
     df_paths.columns = ['path_image', 'path_segm', 'path_centers']
     df_paths.index = range(1, len(df_paths) + 1)
 

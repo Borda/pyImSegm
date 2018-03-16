@@ -25,7 +25,7 @@ import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
 import imsegm.utils.experiments as tl_expt
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.classification as seg_clf
 import run_center_candidate_training as run_train
 import run_center_clustering as run_clust
@@ -124,7 +124,7 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs,
             lambda x: os.path.splitext(os.path.basename(x))[0])
         df_paths.set_index('image', inplace=True)
     for col in (c  for c in df_paths.columns if c.startswith('path_')):
-        df_paths[col] = df_paths[col].apply(tl_io.update_path)
+        df_paths[col] = df_paths[col].apply(tl_data.update_path)
     df_paths.to_csv(path_csv_out)
     return df_paths
 

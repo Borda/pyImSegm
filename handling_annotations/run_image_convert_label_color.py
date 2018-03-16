@@ -22,10 +22,9 @@ from functools import partial
 
 import numpy as np
 import tqdm
-from skimage import io
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
@@ -51,11 +50,11 @@ def parse_arg_params():
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
     for n in ['path_images', 'path_out']:
-        p_dir = tl_io.update_path(os.path.dirname(args[n]))
+        p_dir = tl_data.update_path(os.path.dirname(args[n]))
         assert os.path.isdir(p_dir), 'missing: %s' % args[n]
         args[n] = os.path.join(p_dir, os.path.basename(args[n]))
     if args['path_colors'] is not None:
-        args['path_colors'] = tl_io.update_path(args['path_colors'])
+        args['path_colors'] = tl_data.update_path(args['path_colors'])
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args
 
@@ -101,7 +100,7 @@ def perform_img_convert(path_img, path_out, dict_colors):
     :param str path_out:
     :param {} dict_colors:
     """
-    img = np.array(io.imread(path_img))
+    img = tl_data.io.imread(path_img)
 
     if img.ndim == 2:
         if len(dict_colors) == 0:
@@ -120,7 +119,7 @@ def perform_img_convert(path_img, path_out, dict_colors):
         img_new = img_new.astype(np.uint8)
         path_img_out = os.path.join(path_out, os.path.basename(path_img))
         logging.debug('export "%s"', path_img_out)
-        io.imsave(path_img_out, img_new)
+        tl_data.io_imsave(path_img_out, img_new)
     # plt.subplot(121), plt.imshow(img)
     # plt.subplot(122), plt.imshow(im_paint)
     # plt.show()

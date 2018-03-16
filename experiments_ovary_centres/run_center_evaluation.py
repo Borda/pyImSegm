@@ -24,7 +24,6 @@ from functools import partial
 import tqdm
 import pandas as pd
 import numpy as np
-from PIL import Image
 from scipy import ndimage
 
 import matplotlib
@@ -36,6 +35,7 @@ if os.environ.get('DISPLAY', '') == '' \
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import imsegm.annotation as seg_annot
@@ -166,7 +166,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
     try:
         if EXPORT_ANNOT_EGGS:
             path_img = os.path.join(path_annot, idx + '.png')
-            Image.fromarray(mask_eggs.astype(np.uint8)).save(path_img)
+            tl_data.io_imsave(path_img, mask_eggs.astype(np.uint8))
 
         if VISUAL_ANNOT_EGGS:
             fig = tl_visu.figure_image_segm_results(img, mask_eggs)

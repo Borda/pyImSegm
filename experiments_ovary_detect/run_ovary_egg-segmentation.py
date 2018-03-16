@@ -42,7 +42,6 @@ if os.environ.get('DISPLAY', '') == '' \
     matplotlib.use('Agg')
 
 import tqdm
-from PIL import Image
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -186,13 +185,13 @@ def load_image(path_img, img_type=TYPE_LOAD_IMAGE):
     path_img = os.path.abspath(os.path.expanduser(path_img))
     assert os.path.isfile(path_img), 'missing: "%s"' % path_img
     if img_type == 'segm':
-        img = np.array(Image.open(path_img))
+        img = tl_data.io_imread(path_img)
     elif img_type == '2d_struct':
         img, _ = tl_data.load_img_double_band_split(path_img)
         assert img.ndim == 2, 'image can be only single color'
     else:
         logging.error('not supported loading img_type: %s', img_type)
-        img = np.array(Image.open(path_img))
+        img = tl_data.io_imread(path_img)
     logging.debug('image shape: %s, value range %f - %f', repr(img.shape),
                   img.min(), img.max())
     return img
@@ -757,7 +756,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
 
             logging.info('running time of %s on image "%s" is %d s',
                          repr(fn.__name__), image_name, time.time() - t)
-            Image.fromarray(segm_obj.astype(np.uint8)).save(path_segm)
+            tl_data.io_imsave(path_segm, segm_obj.astype(np.uint8))
             export_draw_image_segm(path_fig, img_rgb, seg, segm_obj, centers)
             # export also centers
             centers = tl_data.swap_coord_x_y(centers)

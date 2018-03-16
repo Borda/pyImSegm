@@ -29,12 +29,12 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import tqdm
-from PIL import Image
 from scipy import ndimage
 from skimage import morphology, measure, draw
 
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+import imsegm.utils.data_io as tl_data
 import run_center_candidate_training as run_train
 
 NAME_DIR = 'annot_centres'
@@ -71,7 +71,7 @@ def load_correct_segm(path_img):
     """
     assert os.path.isfile(path_img), 'missing: %s' % path_img
     logging.debug('loading image: %s', path_img)
-    img = np.array(Image.open(path_img))
+    img = tl_data.io_imread(path_img)
     seg = (img > 0)
     seg = morphology.binary_opening(seg, selem=morphology.disk(25))
     seg = morphology.remove_small_objects(seg)
@@ -126,7 +126,7 @@ def segm_set_center_levels(name, seg_labels, path_out, levels=DISTANCE_LEVELS):
             seg[mask] = i + 1
 
     path_seg = os.path.join(path_out, name)
-    Image.fromarray(seg.astype(np.uint8)).save(path_seg)
+    tl_data.io_imsave(path_seg, seg.astype(np.uint8))
 
 
 def create_annot_centers(path_img, path_out_seg, path_out_csv):
