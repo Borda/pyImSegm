@@ -260,16 +260,16 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
 
     if row_path['path_centers'] is not None \
             and os.path.isfile(row_path['path_centers']):
-        posix = os.path.splitext(os.path.basename(row_path['path_centers']))[-1]
-        if posix == '.csv':
+        ext = os.path.splitext(os.path.basename(row_path['path_centers']))[-1]
+        if ext == '.csv':
             centers = tl_data.load_landmarks_csv(row_path['path_centers'])
             centers = tl_data.swap_coord_x_y(centers)
-        elif posix == '.png':
+        elif ext == '.png':
             centers = tl_data.io_imread(row_path['path_centers'])
             # relabel loaded segm into relevant one
             centers = np.array(LUT_ANNOT_CENTER_RELABEL)[centers]
         else:
-            logging.warning('not supported file format %s', posix)
+            logging.warning('not supported file format %s', ext)
     else:
         centers = None
 
@@ -311,7 +311,7 @@ def compute_min_dist_2_centers(centers, points):
 
 def export_show_image_points_labels(path_out, img_name, img, seg, points,
                                     labels=None, slic=None, seg_centers=None,
-                                    fig_posix='', dict_label_marker=tl_visu.DICT_LABEL_MARKER):
+                                    fig_suffix='', dict_label_marker=tl_visu.DICT_LABEL_MARKER):
     """ export complete visualisation of labeld point over rgb image and segm
 
     :param str path_out:
@@ -322,7 +322,7 @@ def export_show_image_points_labels(path_out, img_name, img, seg, points,
     :param [int] labels:
     :param slic: np.array
     :param seg_centers:
-    :param str fig_posix:
+    :param str fig_suffix:
     :param dict_label_marker:
     """
     points = np.array(points)
@@ -336,7 +336,7 @@ def export_show_image_points_labels(path_out, img_name, img, seg, points,
                                    seg_contour=seg_centers,
                                    dict_label_marker=dict_label_marker)
     fig.tight_layout()
-    fig.savefig(os.path.join(path_out, img_name + fig_posix + '.png'),
+    fig.savefig(os.path.join(path_out, img_name + fig_suffix + '.png'),
                 bbox_inches='tight', pad_inches=0)
     plt.close(fig)
 

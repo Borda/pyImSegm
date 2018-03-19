@@ -294,10 +294,10 @@ def save_dump_data(path_dump_data, imgs, annot, slics, features, labels,
                         feature_names=feature_names)
 
 
-def export_draw_image_segm_contour(img, segm, path_out, name, posix=''):
+def export_draw_image_segm_contour(img, segm, path_out, name, suffix=''):
     logging.debug('export draw image segmentation countours')
     fig = tl_visu.figure_image_segm_results(img, segm)
-    fig.savefig(os.path.join(path_out, name + posix + '.png'))
+    fig.savefig(os.path.join(path_out, name + suffix + '.png'))
     plt.close(fig)
 
 

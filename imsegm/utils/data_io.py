@@ -717,10 +717,10 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     (15, 323, 512)
     """
     assert os.path.isfile(path_img), 'missing: %s' % path_img
-    file_posix = os.path.splitext(os.path.basename(path_img))[1]
-    if file_posix == '.zvi':
+    file_ext = os.path.splitext(os.path.basename(path_img))[1]
+    if file_ext == '.zvi':
         img_b1, img_b2 = load_zvi_volume_double_band_split(path_img)
-    elif file_posix in ['.tif', '.tiff']:
+    elif file_ext in ['.tif', '.tiff']:
         img_b1, img_b2 = load_tiff_volume_split_double_band(path_img)
     else:  # assuming PNG
         img = io_imread(path_img)

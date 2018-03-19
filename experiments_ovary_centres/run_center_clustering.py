@@ -87,7 +87,7 @@ def cluster_center_candidates(points, max_dist=100, min_samples=1):
 
 
 def export_draw_image_centers_clusters(path_out, name, img, centres, points=None,
-                                       clust_labels=None, segm=None, fig_posix='',
+                                       clust_labels=None, segm=None, fig_suffix='',
                                        max_fig_size=MAX_FIGURE_SIZE):
     """ draw visualisation of clustered center candidates and export it
 
@@ -98,7 +98,7 @@ def export_draw_image_centers_clusters(path_out, name, img, centres, points=None
     :param [[float]] points:
     :param [int] clust_labels:
     :param ndarray segm:
-    :param str fig_posix:
+    :param str fig_suffix:
     :param int max_fig_size:
     """
     # if the output dos nor exist, leave
@@ -121,7 +121,7 @@ def export_draw_image_centers_clusters(path_out, name, img, centres, points=None
     tl_visu.draw_image_clusters_centers(ax, img, centres, points, clust_labels, segm)
 
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(path_out, name + fig_posix + '.png'))
+    fig.savefig(os.path.join(path_out, name + fig_suffix + '.png'))
     plt.close(fig)
 
 

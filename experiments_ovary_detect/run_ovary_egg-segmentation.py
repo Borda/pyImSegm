@@ -769,12 +769,12 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
 
 
 def export_partial(str_key, obj_content, path_dir, name):
-    key, posix = os.path.splitext(str_key)
+    key, ext = os.path.splitext(str_key)
     path_out = os.path.join(path_dir + '___%s' % key)
     if not os.path.isdir(path_out):
         os.mkdir(path_out)
-    path_file = os.path.join(path_out, name + posix)
-    if posix.endswith('.csv'):
+    path_file = os.path.join(path_out, name + ext)
+    if ext.endswith('.csv'):
         obj_content.to_csv(path_file)
     return path_file
 

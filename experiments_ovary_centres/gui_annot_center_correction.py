@@ -109,7 +109,7 @@ def load_paths_image_csv(params, skip_csv=POSIX_CSV_LABEL):
     get_name = lambda p: os.path.splitext(os.path.basename(p))[0]
     list_csv = glob.glob(params['path_csv'])
     list_names = [get_name(p) for p in list_csv]
-    # skipp al names that contains given posix
+    # skip al names that contains given posix
     list_names = [n for n in list_names if skip_csv not in n]
     # filter to have just paths with the  right names
     list_imgs = sorted([p for p in glob.glob(params['path_images'])

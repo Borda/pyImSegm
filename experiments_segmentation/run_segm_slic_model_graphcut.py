@@ -371,12 +371,12 @@ def segment_image_model(imgs_idx_path, params, scaler, pca, model, path_out=None
     return idx_name, segm
 
 
-def compare_segms_metric_ars(dict_segm_a, dict_segm_b, posix=''):
+def compare_segms_metric_ars(dict_segm_a, dict_segm_b, suffix=''):
     """ compute ARS for each pair of segmentation
 
     :param {str: ndarray} dict_segm_a:
     :param {str: ndarray} dict_segm_b:
-    :param str posix:
+    :param str suffix:
     :return DF:
     """
     df_ars = pd.DataFrame()
@@ -387,7 +387,7 @@ def compare_segms_metric_ars(dict_segm_a, dict_segm_b, posix=''):
         y_a = dict_segm_a[n].ravel()
         y_b = dict_segm_b[n].ravel()
         dict_ars = {'image': n,
-                    'ARS' + posix: metrics.adjusted_rand_score(y_a, y_b)}
+                    'ARS' + suffix: metrics.adjusted_rand_score(y_a, y_b)}
         df_ars = df_ars.append(dict_ars, ignore_index=True)
     df_ars.set_index(['image'], inplace=True)
     return df_ars
@@ -501,7 +501,7 @@ def main(params):
     time.sleep(1)
 
     df_ars = compare_segms_metric_ars(dict_segms_gmm, dict_segms_group,
-                                      posix='_gmm-group')
+                                      suffix='_gmm-group')
     df_ars.to_csv(path_expt(NAME_CSV_ARS_CORES))
     logging.info(df_ars.describe())
 

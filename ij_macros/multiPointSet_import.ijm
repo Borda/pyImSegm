@@ -14,7 +14,7 @@ fileName = File.openDialog("Select the file to import");
 allText = File.openAsString(fileName);
 tmp = split(fileName,".");
 // get file format {txt, csv}
-posix = tmp[lengthOf(tmp)-1];
+ext = tmp[lengthOf(tmp)-1];
 // parse text by lines
 text = split(allText, "\n");
 
@@ -23,7 +23,7 @@ var xpoints = newArray;
 var ypoints = newArray; 
 
 // in case input is in TXT format
-if (posix=="txt") {	
+if (ext=="txt") {
 	print("importing TXT point set...");
 	//these are the column indexes
 	//hdr = split(text[0]);
@@ -38,7 +38,7 @@ if (posix=="txt") {
 	   print("p("+i-1+") ["+xpoints[i-2]+"; "+ypoints[i-2]+"]"); 
 	} 
 // in case input is in CSV format
-} else if (posix=="csv") {
+} else if (ext=="csv") {
 	print("importing CSV point set...");
 	//these are the column indexes
 	//hdr = split(text[0]);
