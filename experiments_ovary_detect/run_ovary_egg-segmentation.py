@@ -794,7 +794,7 @@ def main(params, debug_export=DEBUG_EXPORT):
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     # tl_expt.create_subfolders(params['path_exp'], [FOLDER_IMAGE])
 
-    df_paths = pd.DataFrame.from_csv(params['path_list'])
+    df_paths = pd.read_csv(params['path_list'], index_col=0)
     logging.info('loaded %i items with columns: %s', len(df_paths),
                  repr(df_paths.columns.tolist()))
     df_paths.dropna(how='any', inplace=True)

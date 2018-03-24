@@ -126,7 +126,7 @@ def main(params):
     if not os.path.isdir(params['path_output']):
         os.mkdir(params['path_output'])
 
-    df_info = pd.DataFrame().from_csv(params['path_infofile'])
+    df_info = pd.read_csv(params['path_infofile'], index_col=0)
     df_info = r_match.filter_table(df_info, params['path_images'])
     df_info.dropna(inplace=True)
     df_info = df_info[df_info['ellipse_Jaccard'] >= OVERLAP_THRESHOLD]

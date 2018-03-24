@@ -186,7 +186,7 @@ def export_figure(idx_row, df_slices_info, path_out):
 
         img = tl_data.io_imread(row['path_image'])
         segm =tl_data.io_imread(row['path_segm'])
-        df = pd.DataFrame().from_csv(os.path.join(row['path_centers']))
+        df = pd.read_csv(os.path.join(row['path_centers']), index_col=0)
         centres = df[['X', 'Y']].values
 
         fig = figure_draw_img_centre_segm(None, img, centres, segm)

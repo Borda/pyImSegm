@@ -82,7 +82,7 @@ def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD)
     _, row = idx_row
     dict_row = dict(row)
     path_csv = os.path.join(path_dir_csv, row['image_name'] + '.csv')
-    df_ellipses = pd.DataFrame().from_csv(path_csv)
+    df_ellipses = pd.read_csv(path_csv, index_col=0)
 
     pos = row[tl_visu.COLUMNS_POSITION_EGG_ANNOT]
     max_size = 2 * max(pos) + min(pos)
@@ -148,7 +148,7 @@ def main(params):
     logging.info('running...')
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
-    df_info = pd.DataFrame().from_csv(params['path_infofile'], sep='\t')
+    df_info = pd.read_csv(params['path_infofile'], sep='\t', index_col=0)
     df_info = filter_table(df_info, params['path_ellipses'])
     logging.info('filtered %i item in table' % len(df_info))
     path_csv = os.path.join(params['path_output'], NAME_CSV_RESULTS)

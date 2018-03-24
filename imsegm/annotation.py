@@ -59,7 +59,7 @@ def unique_image_colors(img):
     colors = image.convert('RGB').getcolors()
     if colors is None:
         logging.warning('selected image contains more then 256 colors')
-        nb_pixels = np.prod(img.shape[:2])
+        nb_pixels = int(np.prod(img.shape[:2]))
         colors = image.convert('RGB').getcolors(maxcolors=nb_pixels)
     uq_colors = [clr for nb, clr in colors]
     return uq_colors
@@ -164,7 +164,7 @@ def image_frequent_colors(img, ratio_treshold=1e-3):
     :param ndarray img: np.array<h, w, 3>
     :param float ratio_treshold: percentage of nb color pixels to be assumed
         as important
-    :return:
+    :return {}:
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (50, 50, 3)).astype(np.uint8)
@@ -177,7 +177,7 @@ def image_frequent_colors(img, ratio_treshold=1e-3):
     """
     if img.ndim == 3:
         img = img[:, :, :3]
-    nb_pixels = np.product(img.shape[:2])
+    nb_pixels = int(np.product(img.shape[:2]))
     nb_px_min = nb_pixels * ratio_treshold
     image = Image.fromarray(img)
     img_colors = image.getcolors(maxcolors=nb_pixels)
@@ -328,7 +328,7 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     insitu7569  [298]  [327]  [673]  [411]  [986]  [155]
     """
     logging.info('loading info file and filter stages...')
-    df = pd.DataFrame().from_csv(path_txt, sep='\t')
+    df = pd.read_csv(path_txt, sep='\t', index_col=0)
     logging.debug('loaded %i records', len(df))
     df = df[df['stage'].isin(list(stages))]
     logging.debug('filtered %i records', len(df))

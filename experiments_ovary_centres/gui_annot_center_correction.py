@@ -158,9 +158,9 @@ def load_csv_center_label(path_csv, mask_eggs=None):
     """
     path_csv_labeled = path_csv.replace('.csv', POSIX_CSV_LABEL + '.csv')
     if os.path.isfile(path_csv_labeled):
-        df_points = pd.DataFrame.from_csv(path_csv_labeled)
+        df_points = pd.read_csv(path_csv_labeled, index_col=0)
     else:
-        df_points = pd.DataFrame.from_csv(path_csv)
+        df_points = pd.read_csv(path_csv, index_col=0)
         df_points['label'] = np.ones((len(df_points), ))
         df_points['change'] = np.zeros((len(df_points), ))
 
@@ -357,7 +357,7 @@ def main(params):
     assert len(paths_img_csv) > 0, 'missing paths image - csv'
 
     if params['path_info'] is not None and os.path.isfile(params['path_info']):
-        df_info_all = pd.DataFrame().from_csv(params['path_info'], sep='\t')
+        df_info_all = pd.read_csv(params['path_info'], sep='\t', index_col=0)
     else:
         df_info_all = None
     logging.info('loaded complete info')

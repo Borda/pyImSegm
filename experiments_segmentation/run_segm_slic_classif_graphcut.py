@@ -229,7 +229,7 @@ def dataset_load_images_annot_compute_features(params,
     feature_names = list()
 
     # compute features
-    df_paths = pd.DataFrame.from_csv(params['path_train_list'])
+    df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     assert all(n in df_paths.columns for n in ['path_image', 'path_annot']), \
         'missing required columns in loaded csv file'
     tqdm_bar = tqdm.tqdm(total=len(df_paths), desc='extract training data')
@@ -739,7 +739,7 @@ def main_train(params):
                                                           sizes, nb_holdout)
 
     # test classif on images
-    df_paths = pd.DataFrame.from_csv(params['path_train_list'])
+    df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     paths_img = df_paths['path_image'].tolist()
     perform_predictions(params, paths_img, classif)
 

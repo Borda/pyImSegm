@@ -692,10 +692,11 @@ def load_df_paths(params):
     path_csv = os.path.join(params['path_expt'], NAME_CSV_TRIPLES)
     if os.path.isfile(path_csv) and not FORCE_RELOAD:
         logging.info('loading path pairs "%s"', path_csv)
-        df_paths = pd.DataFrame.from_csv(path_csv, encoding='utf-8')
+        df_paths = pd.read_csv(path_csv, encoding='utf-8', index_col=0)
     else:
         if os.path.isfile(params['path_list']):
-            df_paths = pd.DataFrame.from_csv(params['path_list'], encoding='utf-8')
+            df_paths = pd.read_csv(params['path_list'], index_col=0,
+                                   encoding='utf-8')
         else:
             df_paths = find_match_images_segms_centers(params['path_images'],
                                                        params['path_segms'],

@@ -51,8 +51,8 @@ def load_inputs(name):
     img, _ = tl_data.load_image_2d(os.path.join(PATH_IMAGE, name + '.jpg'))
     seg, _ = tl_data.load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
     annot, _ = tl_data.load_image_2d(os.path.join(PATH_ANNOT, name + '.png'))
-    centers = pd.DataFrame.from_csv(
-        os.path.join(PATH_CENTRE, name + '.csv')).values
+    centers = pd.read_csv(os.path.join(PATH_CENTRE, name + '.csv'),
+                          index_col=0).values
     centers[:, [0, 1]] = centers[:, [1, 0]]
 
     slic = seg_spx.segment_slic_img2d(img, sp_size=25, rltv_compact=0.3)
@@ -175,8 +175,8 @@ class TestRegionGrowing(unittest.TestCase):
         img, _ = tl_data.load_image_2d(os.path.join(PATH_IMAGE, name + '.jpg'))
         seg, _ = tl_data.load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
         annot, _ = tl_data.load_image_2d(os.path.join(PATH_ANNOT, name + '.png'))
-        centers = pd.DataFrame.from_csv(
-            os.path.join(PATH_CENTRE, name + '.csv')).values
+        centers = pd.read_csv(os.path.join(PATH_CENTRE, name + '.csv'),
+                              index_col=0).values
         centers[:, [0, 1]] = centers[:, [1, 0]]
 
         slic = seg_spx.segment_slic_img2d(img, sp_size=25, rltv_compact=0.3)

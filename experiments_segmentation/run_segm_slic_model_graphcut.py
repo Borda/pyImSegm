@@ -481,7 +481,7 @@ def main(params):
     assert os.path.isfile(params['path_train_list']), \
         'missing %s' % params['path_train_list']
     dict_segms_gmm, dict_segms_group = {}, {}
-    df_paths = pd.DataFrame.from_csv(params['path_train_list'])
+    df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     paths_img = df_paths['path_image'].tolist()
 
     def path_expt(n):

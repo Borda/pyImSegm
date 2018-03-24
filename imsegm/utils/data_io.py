@@ -122,7 +122,7 @@ def load_landmarks_csv(path_file):
     """
     path_file = os.path.abspath(os.path.expanduser(path_file))
     assert os.path.exists(path_file), 'missing "%s"' % path_file
-    df = pd.DataFrame.from_csv(path_file)
+    df = pd.read_csv(path_file, index_col=0)
     landmarks = df[COLUMNS_COORDS].as_matrix().tolist()
     logging.debug(' load_landmarks_csv (%i): \n%s', len(landmarks),
                   repr(np.asarray(landmarks).astype(int).tolist()))
@@ -424,7 +424,7 @@ def load_params_from_txt(path_file):
     >>> path_file = './sample_config.txt'
     >>> with open(path_file, 'w') as fp:
     ...     lines = ['"{}" : {},'.format(k, p[k]) for k in p]
-    ...     _= fp.write(os.linesep.join(lines))
+    ...     _= fp.write(os.linesep.join(lines))  # it may return nb characters
     >>> p2 = load_params_from_txt(path_file)
     >>> p2
     {'abc': '123'}

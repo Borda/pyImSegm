@@ -109,13 +109,13 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs,
     """
     if os.path.isfile(path_csv):
         logging.info('loading path pairs "%s"', path_csv)
-        df_paths = pd.DataFrame().from_csv(path_csv)
+        df_paths = pd.read_csv(path_csv, index_col=0)
         df_paths['image'] = df_paths['path_image'].apply(
             lambda x: os.path.splitext(os.path.basename(x))[0])
         df_paths.set_index('image', inplace=True)
     elif os.path.isfile(path_csv_out) and not force_reload:
         logging.info('loading path pairs "%s"', path_csv_out)
-        df_paths = pd.DataFrame().from_csv(path_csv_out)
+        df_paths = pd.read_csv(path_csv_out, index_col=0)
     else:
         logging.info('estimating own triples')
         df_paths = run_train.find_match_images_segms_centers(

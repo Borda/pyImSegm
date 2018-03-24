@@ -43,7 +43,7 @@ class TestEllipseFitting(unittest.TestCase):
         seg, _ = tl_data.load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
         annot, _ = tl_data.load_image_2d(os.path.join(PATH_ANNOT, name + '.png'))
         path_center = os.path.join(PATH_CENTRE, name + '.csv')
-        centers = pd.DataFrame.from_csv(path_center).values[:, [1, 0]]
+        centers = pd.read_csv(path_center, index_col=0).values[:, [1, 0]]
 
         slic, points_all, labels = seg_fit.get_slic_points_labels(seg, slic_size=20,
                                                                   slic_regul=0.3)

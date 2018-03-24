@@ -206,7 +206,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
         df_slices_info.to_csv(path_csv)
     else:
         logging.debug('loading slices_info from "%s"', path_csv)
-        df_slices_info = pd.DataFrame().from_csv(path_csv)
+        df_slices_info = pd.read_csv(path_csv, index_col=0)
 
     if len(df_slices_info) == 0:
         return df_paths
