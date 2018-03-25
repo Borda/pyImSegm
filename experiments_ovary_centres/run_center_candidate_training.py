@@ -124,7 +124,7 @@ CENTER_PARAMS.update({
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return {str: ...}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-list', '--path_list', type=str, required=False,
@@ -196,7 +196,7 @@ def find_match_images_segms_centers(path_pattern_imgs, path_pattern_segms,
     :param str path_pattern_imgs:
     :param str path_pattern_segms:
     :param str path_pattern_center:
-    :return: DF<path_img, path_segm, path_center>
+    :return DF: DF<path_img, path_segm, path_center>
     """
     logging.info('find match images-segms-centres...')
     list_paths = [path_pattern_imgs, path_pattern_segms, path_pattern_center]
@@ -232,7 +232,7 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
     :param (int, DF:row) idx_row:
     :param str path_out: path to output directory
     :param {} dict_relabel:
-    :return: str, np.array, np.array, [[int, int]] or np.array
+    :return (str, ndarray, ndarray, [[int, int]]):
     """
     idx, row_path = idx_row
     for k in ['path_image', 'path_segm', 'path_centers']:
@@ -349,7 +349,7 @@ def estim_points_compute_features(name, img, segm, params):
     :param ndarray img:
     :param ndarray segm:
     :param {str: any} params:
-    :return str, np.array, [(int, int)], [[float]], [str]:
+    :return (str, ndarray, [(int, int)], [[float]], [str]):
     """
     # superpixels on image
     assert img.shape[:2] == segm.shape[:2], \
@@ -371,7 +371,7 @@ def compute_points_features(segm, points, params):
     :param ndarray segm:
     :param [(int, int)] points:
     :param {str: any} params:
-    :return: [[float] * nb_features] * nb_points, [str] * nb_features
+    :return ([[float]], [str]): [[float] * nb_features] * nb_points, [str] * nb_features
     """
     features, feature_names = np.empty((len(points), 0)), list()
 
@@ -454,7 +454,7 @@ def dataset_load_images_segms_compute_features(params, df_paths,
     :param {str: any} params:
     :param df_paths: DF
     :param int nb_jobs:
-    :return {str: any}:
+    :return {str: ...}:
     """
     dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
     logging.info('loading input data (images, segmentation and centers)')
@@ -547,7 +547,7 @@ def compute_statistic_centers(dict_stat, img, segm, center, slic, points, labels
     :param labels:
     :param {str: ...} params:
     :param str path_out:
-    :return:
+    :return {}:
     """
     labels_gt = label_close_points(center, points, params)
 
@@ -590,7 +590,7 @@ def detect_center_candidates(name, image, segm, centers_gt, slic, points,
     :param {} params:
     :param paths: path
     :param classif: obj
-    :return:
+    :return {}:
     """
     labels = classif.predict(features)
     # proba = classif.predict_proba(features)
@@ -624,7 +624,7 @@ def load_dump_data(path_dump_data):
     """ loading saved data prom previous stages
 
     :param path_dump_data:
-    :return: {} * N
+    :return {}:
     """
     logging.info('loading dumped data "%s"', path_dump_data)
     # with open(os.path.join(path_out, NAME_DUMP_TRAIN_DATA), 'r') as f:

@@ -67,7 +67,7 @@ def cluster_center_candidates(points, max_dist=100, min_samples=1):
     :param [[float]] points:
     :param float max_dist:
     :param int min_samples:
-    :return: ndarray, [int]
+    :return (ndarray, [int]):
     """
     points = np.array(points)
     if len(points) == 0:
@@ -131,7 +131,7 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
     :param {} dict_row:
     :param {str: ...} params:
     :param str path_out:
-    :return:
+    :return {}:
     """
     assert all(n in dict_row for n in ['path_points', 'path_image', 'path_segm']), \
         'missing some required fields: %s' % repr(dict_row)

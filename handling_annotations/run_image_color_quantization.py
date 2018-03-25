@@ -38,7 +38,7 @@ THRESHOLD_INVALID_PIXELS = 5e-3
 def parse_arg_params():
     """ create simple arg parser with default values (input, results, dataset)
 
-    :return: argparse
+    :return obj: argparse
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=True,
@@ -65,7 +65,7 @@ def see_images_color_info(path_images, px_thr=THRESHOLD_INVALID_PIXELS):
     :param path_dir: str
     :param im_pattern: str
     :param px_th: float, percentage of nb clr pixels to be assumed as important
-    :return:
+    :return {}:
     """
     if not os.path.isdir(os.path.dirname(path_images)):
         logging.error('input folder does not exist')

@@ -311,7 +311,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     :param obj classif: trained classifier
     :param str path_out: path for output
     :param str path_visu: the existing patch means export also visualisation
-    :return str, ndarray, ndarray:
+    :return (str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
@@ -427,7 +427,7 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
-    :return str, ndarray, ndarray:
+    :return (str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     dict_imgs, _, _, dict_features, dict_labels, _, _ = \
@@ -461,7 +461,7 @@ def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
-    :return str, ndarray, ndarray:
+    :return (str, ndarray, ndarray):
     """
     dict_imgs, _, _, dict_features, dict_labels, _, _ = \
         load_dump_data(path_dump)

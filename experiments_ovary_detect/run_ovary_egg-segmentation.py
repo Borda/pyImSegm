@@ -133,7 +133,7 @@ SEGM_PARAMS = {
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return {str: str}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-list', '--path_list', type=str, required=False,
@@ -208,8 +208,7 @@ def export_draw_image_segm(path_fig, img, segm=None, segm_obj=None, centers=None
     :param ndarray img:
     :param ndarray segm:
     :param ndarray segm_obj:
-    :param centers:
-    :return:
+    :param ndarray centers:
     """
     size = np.array(img.shape[:2][::-1], dtype=float)
     fig, ax = plt.subplots(figsize=(size / size.max() * MAX_FIGURE_SIZE))
@@ -295,7 +294,7 @@ def segment_active_contour(img, centers):
 
     :param ndarray img: input image / segmentation
     :param [[int, int]] centers: position of centres / seeds
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     logging.debug('segment: active_contour...')
     # http://scikit-image.org/docs/dev/auto_examples/edges/plot_active_contours.html
@@ -330,8 +329,8 @@ def segment_morphsnakes(img, centers, init_center=True, smoothing=5,
     :param bool init_center:
     :param int smoothing:
     :param [int, int] lambdas:
-    :param bb_dist:
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :param float bb_dist:
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     logging.debug('segment: morph-snakes...')
     if img.ndim == 3:
@@ -376,7 +375,7 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points,
     :param [[int, int]] centers: position of centres / seeds
     :param fn_preproc_points: function for detection boundary points
     :param float thr_overlap: threshold for removing overlapping segmentation
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     points_centers = fn_preproc_points(seg, centers)
 
@@ -410,7 +409,7 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
     :param fn_preproc_points: function for detection boundary points
     :param float nb_inliers: ratio of inliers for RANSAC
     :param float thr_overlap: threshold for removing overlapping segmentations
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     points_centers = fn_preproc_points(seg, centers)
 
@@ -450,7 +449,7 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
     :param [[float]] table_p: table of probabilities being foreground / background
     :param float nb_inliers: ratio of inliers for RANSAC
     :param float thr_overlap: threshold for removing overlapping segmentations
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     slic, points_all, labels = ell_fit.get_slic_points_labels(seg, slic_size=15,
                                                               slic_regul=0.1)
@@ -495,8 +494,8 @@ def segment_graphcut_pixels(seg, centers, labels_fg_prob, gc_regul=1.,
     :param float gc_regul:
     :param int seed_size:
     :param float coef_shape:
-    :param shape_mean_std:
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :param (float, float) shape_mean_std:
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     segm_obj = seg_rg.object_segmentation_graphcut_pixels(
                             seg, centers, labels_fg_prob, gc_regul, seed_size,
@@ -518,7 +517,7 @@ def segment_graphcut_slic(slic, seg, centers, labels_fg_prob, gc_regul=1.,
     :param float coef_shape:
     :param float edge_weight:
     :param shape_mean_std:
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     gc_labels = seg_rg.object_segmentation_graphcut_slic(
                     slic, seg, centers, labels_fg_prob, gc_regul, edge_weight,
@@ -592,7 +591,7 @@ def simplify_segm_3cls(seg, lut=(0., 0.8, 1.), smooth=True):
     :param ndarray seg: input image / segmentation
     :param [float] lut:
     :param bool smooth:
-    :return:
+    :return ndarray:
     """
     segm = seg.copy()
     segm[seg > 1] = 2

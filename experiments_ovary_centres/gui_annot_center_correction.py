@@ -76,7 +76,7 @@ df_center_labeled, fig = None, None
 def arg_parse_params():
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}
+    :return {str: ...}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=False,
@@ -154,7 +154,7 @@ def load_csv_center_label(path_csv, mask_eggs=None):
     """ load already edited ces with point, wheter it not exists create it
 
     :param str path_csv:
-    :return: DF<x, y, label, change>
+    :return DF: DF<x, y, label, change>
     """
     path_csv_labeled = path_csv.replace('.csv', POSIX_CSV_LABEL + '.csv')
     if os.path.isfile(path_csv_labeled):

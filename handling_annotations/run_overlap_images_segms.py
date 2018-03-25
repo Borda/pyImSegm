@@ -50,7 +50,7 @@ def parse_arg_params():
     """ create simple arg parser with default values (input, output, dataset)
 
     :param dict_params: {str: ...}
-    :return: object argparse<in, out, ant, name>
+    :return obj: object argparse<in, out, ant, name>
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=True,

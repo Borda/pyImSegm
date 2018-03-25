@@ -33,7 +33,7 @@ NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 def parse_arg_params():
     """ create simple arg parser with default values (input, results, dataset)
 
-    :return: argparse
+    :return obj: argparse
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=True,

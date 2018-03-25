@@ -35,7 +35,7 @@ PATHS = {
 def arg_parse_params(dict_paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return ({str: str}, int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-annot', '--path_annot', type=str, required=False,

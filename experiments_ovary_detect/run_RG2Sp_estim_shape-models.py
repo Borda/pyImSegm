@@ -38,7 +38,7 @@ NAME_NPZ_MODEL_MIXTURE = 'RG2SP_mixture-model.npz'
 def arg_parse_params():
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return {str: str}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-annot', '--path_annot', type=str, required=False,

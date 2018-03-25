@@ -51,7 +51,7 @@ def compute_eggs_center(seg_label):
     assuming that each label is just one object
 
     :param ndarray seg_label:
-    :return: DF
+    :return DF:
     """
     df_center = pd.DataFrame()
     for lb in range(1, seg_label.max() + 1):
@@ -67,7 +67,7 @@ def load_correct_segm(path_img):
     """ load segmentation and correct it with simple morphological operations
 
     :param str path_img:
-    :return:
+    :return (ndarray, ndarray):
     """
     assert os.path.isfile(path_img), 'missing: %s' % path_img
     logging.debug('loading image: %s', path_img)
@@ -157,7 +157,7 @@ def main(path_segs, path_out, nb_jobs):
     :param str path_segs: path with image pattern of images - obj segmentation
     :param str path_out:
     :param int nb_jobs: number of processes in parallel
-    :return:
+    :return ndarray:
     """
     logging.info('running...')
 

@@ -61,7 +61,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
     :param obj classif:
     :param str path_classif:
     :param str path_output:
-    :return: {str: float}
+    :return {str: float}:
     """
     _, row = idx_row
     dict_center = dict(row)
@@ -105,7 +105,7 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs,
     :param str path_segs:
     :param str path_centers:
     :param bool force_reload:
-    :return:
+    :return DF:
     """
     if os.path.isfile(path_csv):
         logging.info('loading path pairs "%s"', path_csv)

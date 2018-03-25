@@ -58,7 +58,7 @@ FIGURE_SIZE = 12
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return ({str: str}, int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=False,
@@ -93,12 +93,12 @@ def figure_draw_img_centre_segm(fig, img, centres, segm,
     """ add to a figure drawing of center
     in case no figure exists, create new one
 
-    :param fig:
+    :param obj fig:
     :param ndarray img:
     :param [[int]] centres:
     :param ndarray segm:
     :param int subfig_size:
-    :return:
+    :return obj:
     """
     if fig is None:
         norm_size = np.array(img.shape[:2]) / float(np.max(img.shape))
@@ -127,11 +127,11 @@ def figure_draw_img_centre_segm(fig, img, centres, segm,
 def figure_draw_annot_csv(fig, img, row_slice, subfig_size=FIGURE_SIZE):
     """ draw from expert annotation stored in info file
 
-    :param fig:
+    :param obj fig:
     :param ndarray img: backround image
     :param row_slice: line from info file containing annotation
     :param int subfig_size:
-    :return:
+    :return obj:
     """
     if fig is None:
         norm_size = np.array(img.shape[:2]) / float(np.max(img.shape))
@@ -174,7 +174,6 @@ def export_figure(idx_row, df_slices_info, path_out):
     :param idx_row:
     :param df_slices_info:
     :param path_out:
-    :return:
     """
     _, row = idx_row
     img_name = os.path.splitext(os.path.basename(row['path_image']))[0]

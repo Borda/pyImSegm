@@ -67,7 +67,7 @@ LUT_COLOR = np.array([
 def arg_parse_params(paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return ({str: ...}, bool, int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--images', type=str, required=False,
@@ -149,7 +149,6 @@ def expert_visual(row, method_name, path_out, max_fig_size=10):
     :param str method_name:
     :param str path_out:
     :param int max_fig_size:
-    :return:
     """
     im_name = os.path.splitext(os.path.basename(row['path_image']))[0]
     img, _ = tl_data.load_image_2d(row['path_image'])

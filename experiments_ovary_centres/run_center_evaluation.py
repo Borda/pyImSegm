@@ -81,7 +81,7 @@ def estimate_eggs_from_info(row_slice, mask_shape):
     by ant, post and lat in the all info table
 
     :param str path_img:
-    :return: ndarray
+    :return ndarray: ndarray
     """
     pos_ant, pos_lat, pos_post = tl_visu.parse_annot_rectangles(row_slice)
     list_masks = tl_visu.draw_eggs_rectangle(mask_shape, pos_ant, pos_lat,
@@ -194,7 +194,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
     :param str path_info:
     :param str path_out:
     :param int nb_jobs:
-    :return:
+    :return DF:
     """
     logging.info('evaluate stages: %s', repr(stage))
     str_stage = '-'.join(map(str, stage))

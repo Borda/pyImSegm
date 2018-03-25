@@ -106,7 +106,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     :param str dir_name:
     :param bool stamp_unique:
     :param bool skip_load:
-    :return {str: any}:
+    :return {str: ...}:
 
     >>> import shutil
     >>> p = {'path_out': '.'}
@@ -268,7 +268,7 @@ def create_subfolders(path_out, list_folders):
 
     :param str path_out: root dictionary
     :param [str] list_folders: list of subfolders
-    :return:
+    :return int:
 
     >>> import shutil
     >>> dir_name = 'sample_dir'

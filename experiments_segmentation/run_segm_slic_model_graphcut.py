@@ -121,7 +121,7 @@ def arg_parse_params(params):
     """ argument parser from cmd
 
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: any}
+    :return {str: ...}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-list', '--path_train_list', type=str, required=False,
@@ -198,7 +198,7 @@ def load_model(path_model):
     """ load exported segmentation model
 
     :param str path_model:
-    :return (...):
+    :return (obj, obj, obj, {}, [str]):
     """
     logging.info('loading dumped model "%s"', path_model)
     with open(path_model, 'rb') as f:
@@ -302,7 +302,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None):
     :param {str: ...} params: segmentation parameters
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
-    :return str, ndarray:
+    :return (str, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(img_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
@@ -342,7 +342,7 @@ def segment_image_model(imgs_idx_path, params, scaler, pca, model, path_out=None
     :param obj model:
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
-    :return str, ndarray:
+    :return (str, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
