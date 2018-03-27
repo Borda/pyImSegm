@@ -19,7 +19,6 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 import numpy as np
 
@@ -156,25 +155,15 @@ def main(params):
     list_evals = []
     # get the folder
     path_dir_csv = os.path.dirname(params['path_ellipses'])
-    tqdm_bar = tqdm.tqdm(total=len(df_info))
-    if params['nb_jobs'] > 1:
-        wrapper_match = partial(select_optimal_ellipse,
-                                path_dir_csv=path_dir_csv)
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for dict_row in mproc_pool.imap_unordered(wrapper_match,
-                                                   df_info.iterrows()):
-            list_evals.append(dict_row)
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for i, idx_row in enumerate(df_info.iterrows()):
-            dict_row = select_optimal_ellipse(idx_row, path_dir_csv)
-            list_evals.append(dict_row)
-            # every hundreds iteration do export
-            if i % 100 == 0:
-                pd.DataFrame(list_evals).to_csv(path_csv)
-            tqdm_bar.update()
+    wrapper_match = partial(select_optimal_ellipse,
+                            path_dir_csv=path_dir_csv)
+    iterate = tl_expt.WrapExecuteSequence(wrapper_match, df_info.iterrows(),
+                                          nb_jobs=params['nb_jobs'])
+    for i, dict_row in enumerate(iterate):
+        list_evals.append(dict_row)
+        # every hundreds iteration do export
+        if i % 100 == 0:
+            pd.DataFrame(list_evals).to_csv(path_csv)
 
     df_ellipses = pd.DataFrame(list_evals)
     df_ellipses.to_csv(path_csv)

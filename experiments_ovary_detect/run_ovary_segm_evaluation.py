@@ -26,7 +26,6 @@ if os.environ.get('DISPLAY', '') == '' \
     logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import tqdm
 import numpy as np
 import pandas as pd
 from sklearn import metrics
@@ -272,20 +271,12 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
                     [NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3])
 
     df_all = pd.DataFrame()
-    tqdm_bar = tqdm.tqdm(total=len(list_results))
     wrapper_eval = partial(evaluate_folder, dict_paths=dict_paths,
                            export_visual=export_visual)
-    if nb_jobs > 1:
-        mproc_pool = mproc.Pool(nb_jobs)
-        for dict_eval in mproc_pool.imap_unordered(wrapper_eval, list_results):
-            df_all = df_all.append(dict_eval, ignore_index=True)
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for dict_eval in map(wrapper_eval, list_results):
-            df_all = df_all.append(dict_eval, ignore_index=True)
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_eval, list_results,
+                                          nb_jobs=nb_jobs)
+    for dict_eval in iterate:
+        df_all = df_all.append(dict_eval, ignore_index=True)
 
     df_all.set_index(['method'], inplace=True)
     df_all.sort_index(inplace=True)

@@ -77,20 +77,13 @@ def main(params):
     if not os.path.isdir(params['path_output']):
         os.mkdir(params['path_output'])
 
-    tqdm_bar = tqdm.tqdm(total=len(list_imgs),
-                         desc=os.path.dirname(params['path_images']))
-    if params['nb_jobs'] > 1:
-        wrapper_object = partial(perform_orientation_swap,
-                                 path_out=params['path_output'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for _ in mproc_pool.imap_unordered(wrapper_object, list_imgs):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for p_img in list_imgs:
-            perform_orientation_swap(p_img, path_out=params['path_output'])
-            tqdm_bar.update()
+    wrapper_object = partial(perform_orientation_swap,
+                             path_out=params['path_output'])
+    dir_name = os.path.dirname(params['path_images'])
+    iterate = tl_expt.WrapExecuteSequence(wrapper_object, list_imgs,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc=dir_name)
+    list(iterate)
 
     logging.info('DONE')
 

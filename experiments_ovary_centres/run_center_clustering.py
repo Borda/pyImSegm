@@ -10,10 +10,9 @@ import os
 import sys
 import logging
 import json
-import multiprocessing as mproc
+# import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 import numpy as np
 from sklearn import cluster
@@ -212,23 +211,13 @@ def main(params):
 
     logging.info('run clustering...')
     df_paths_new = pd.DataFrame()
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
-    if params['nb_jobs'] > 1:
-        wrapper_clustering = partial(cluster_points_draw_export, params=params,
-                                     path_out=params['path_expt'])
-        pool = mproc.Pool(params['nb_jobs'])
-        for dict_center in pool.imap_unordered(wrapper_clustering,
-                                   (dict(row) for idx, row in df_paths.iterrows())):
-            df_paths_new = df_paths_new.append(dict_center, ignore_index=True)
-            tqdm_bar.update()
-        pool.close()
-        pool.join()
-    else:
-        for dict_row in (dict(row) for idx, row in df_paths.iterrows()):
-            dict_center = cluster_points_draw_export(dict_row, params,
-                                                     params['path_expt'])
-            df_paths_new = df_paths_new.append(dict_center, ignore_index=True)
-            tqdm_bar.update()
+    wrapper_clustering = partial(cluster_points_draw_export, params=params,
+                                 path_out=params['path_expt'])
+    iterate = tl_expt.WrapExecuteSequence(wrapper_clustering,
+                                          (dict(row) for idx, row in df_paths.iterrows()),
+                                          nb_jobs=params['nb_jobs'])
+    for dict_center in iterate:
+        df_paths_new = df_paths_new.append(dict_center, ignore_index=True)
 
     df_paths_new.set_index('image', inplace=True)
     df_paths_new.to_csv(path_cover)

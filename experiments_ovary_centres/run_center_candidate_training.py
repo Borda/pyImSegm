@@ -459,36 +459,29 @@ def dataset_load_images_segms_compute_features(params, df_paths,
     dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
     logging.info('loading input data (images, segmentation and centers)')
     path_show_in = os.path.join(params['path_expt'], FOLDER_INPUT)
-    tqdm_bar = tqdm.tqdm(total=len(df_paths), desc='loading input data')
     wrapper_load_data = partial(load_image_segm_center, path_out=path_show_in,
                                 dict_relabel=params['dict_relabel'])
-    pool = mproc.Pool(nb_jobs)
-    for name, img, seg, center in pool.imap(wrapper_load_data, df_paths.iterrows()):
+    iterate = tl_expt.WrapExecuteSequence(wrapper_load_data, df_paths.iterrows(),
+                                          nb_jobs=nb_jobs, desc='loading input data')
+    for name, img, seg, center in iterate:
         dict_imgs[name] = img
         dict_segms[name] = seg
         dict_center[name] = center
-        tqdm_bar.update()
-    pool.close()
-    pool.join()
 
     dict_slics, dict_points, dict_features = dict(), dict(), dict()
     logging.info('estimate candidate points and compute features')
-    tqdm_bar = tqdm.tqdm(total=len(dict_imgs),
-                         desc = 'estimate candidates & features')
     gene_name_img_seg = ((name, dict_imgs[name], dict_segms[name])
                           for name in dict_imgs)
     wrapper_points_features = partial(wrapper_estim_points_compute_features,
                                       params=params)
     feature_names = None
-    pool = mproc.Pool(nb_jobs)
-    for name, slic, points, features, feature_names \
-            in pool.imap_unordered(wrapper_points_features, gene_name_img_seg):
+    iterate = tl_expt.WrapExecuteSequence(wrapper_points_features,
+                                          gene_name_img_seg, nb_jobs=nb_jobs,
+                                          desc='estimate candidates & features')
+    for name, slic, points, features, feature_names in iterate:
         dict_slics[name] = slic
         dict_points[name] = points
         dict_features[name] = features
-        tqdm_bar.update()
-    pool.close()
-    pool.join()
     logging.debug('computed features:\n %s', repr(feature_names))
 
     dict_labels = dict()
@@ -521,17 +514,15 @@ def export_dataset_visual(path_output, dict_imgs, dict_segms, dict_slics,
     :param int nb_jobs: number processing in parallel
     """
     logging.info('export training visualisations')
-    tqdm_bar = tqdm.tqdm(total=len(dict_imgs), desc='exporting visualisations')
 
     path_out = os.path.join(path_output, FOLDER_POINTS_TRAIN)
     gener_args = ((path_out, name, dict_imgs[name], dict_segms[name],
                    dict_points[name], dict_labels[name], dict_slics[name],
                    None, '_train') for name in dict_imgs)
-    pool = mproc.Pool(nb_jobs)
-    for _ in pool.imap_unordered(wrapper_draw_export_slic_centers, gener_args):
-        tqdm_bar.update()
-    pool.close()
-    pool.join()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_draw_export_slic_centers,
+                                          gener_args, nb_jobs=nb_jobs,
+                                          desc='exporting visualisations')
+    list(iterate)
 
 
 def compute_statistic_centers(dict_stat, img, segm, center, slic, points, labels,
@@ -663,14 +654,11 @@ def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
                                 params=params, classif=classif,
                                 path_output=params['path_expt'])
     df_stat = pd.DataFrame()
-    tqdm_bar = tqdm.tqdm(total=len(dict_imgs), desc='experiment LOO')
-    pool = mproc.Pool(params['nb_jobs'])
-    for dict_stat in pool.imap_unordered(wrapper_detection, gener_data):
+    iterate = tl_expt.WrapExecuteSequence(wrapper_detection,
+                                          gener_data, nb_jobs=params['nb_jobs'])
+    for dict_stat in iterate:
         df_stat = df_stat.append(dict_stat, ignore_index=True)
         df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STAT_TRAIN))
-        tqdm_bar.update()
-    pool.close()
-    pool.join()
 
     df_stat.set_index(['image'], inplace=True)
     df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STAT_TRAIN))

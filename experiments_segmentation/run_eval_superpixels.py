@@ -18,12 +18,12 @@ import logging
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import numpy as np
 import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import imsegm.superpixels as seg_spx
 import imsegm.labeling as seg_lbs
@@ -126,17 +126,14 @@ def main(params):
 
     df_dist = pd.DataFrame()
 
-    tqdm_bar = tqdm.tqdm(total=len(df_paths), desc='evaluate SLIC')
     wrapper_eval = partial(compute_boundary_distance, params=params,
                            path_out=params['path_out'])
-    mproc_pool = mproc.Pool(params['nb_jobs'])
-    for name, dist in mproc_pool.imap_unordered(wrapper_eval,
-                                                df_paths.iterrows()):
+    iterate = tl_expt.WrapExecuteSequence(wrapper_eval, df_paths.iterrows(),
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='evaluate SLIC')
+    for name, dist in iterate:
         df_dist = df_dist.append({'name': name, 'mean boundary distance': dist},
                                  ignore_index=True)
-        tqdm_bar.update()
-    mproc_pool.close()
-    mproc_pool.join()
     df_dist.set_index('name', inplace=True)
 
     if os.path.isdir(params['path_out']):

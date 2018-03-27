@@ -16,11 +16,11 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
@@ -113,15 +113,12 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
     df_paths = tl_data.find_files_match_names_across_dirs(list_dirs)
 
     logging.info('start cutting images')
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
     wrapper_cutting = partial(export_cut_objects, path_out=dict_paths['output'],
                               padding=padding, use_mask=use_mask, bg_color=bg_color)
-    mproc_pool = mproc.Pool(nb_jobs)
-    for _ in mproc_pool.imap_unordered(wrapper_cutting,
-                                       (row for idx, row in df_paths.iterrows())):
-        tqdm_bar.update()
-    mproc_pool.close()
-    mproc_pool.join()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_cutting,
+                                          (row for idx, row in df_paths.iterrows()),
+                                          nb_jobs=nb_jobs)
+    list(iterate)
 
     logging.info('DONE')
 

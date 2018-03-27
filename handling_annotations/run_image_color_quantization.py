@@ -23,7 +23,6 @@ import multiprocessing as mproc
 from functools import partial
 
 import numpy as np
-import tqdm
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
@@ -121,18 +120,9 @@ def quantize_folder_images(path_images, list_colors=None, method='color',
 
     wrapper_quantize_img = partial(perform_quantize_image,
                                    method=method, list_colors=list_colors)
-    tqdm_bar = tqdm.tqdm(total=len(path_imgs), desc='quantize images')
-
-    if nb_jobs > 1:
-        logging.debug('perform_sequence in %i threads', nb_jobs)
-        mproc_pool = mproc.Pool(nb_jobs)
-        for _ in mproc_pool.imap_unordered(wrapper_quantize_img, path_imgs):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for _ in map(wrapper_quantize_img, path_imgs):
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_quantize_img, path_imgs,
+                                          nb_jobs=nb_jobs, desc='quantize images')
+    list(iterate)
 
 
 def main(params):

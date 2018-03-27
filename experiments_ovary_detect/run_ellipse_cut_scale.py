@@ -17,7 +17,6 @@ import logging
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 import numpy as np
 from skimage import transform
@@ -94,22 +93,13 @@ def perform_stage(df_group, stage, path_images, path_out):
     if not os.path.isdir(path_out_stage):
         os.mkdir(path_out_stage)
 
-    tqdm_bar = tqdm.tqdm(total=len(df_group), desc='stage %i - size %s'
-                                                   % (stage, norm_size))
-    if params['nb_jobs'] > 1:
-        wrapper_object = partial(extract_ellipse_object,
-                                 path_images=path_images,
-                                 path_out=path_out_stage,
-                                 norm_size=norm_size)
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for _ in mproc_pool.imap_unordered(wrapper_object, df_group.iterrows()):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for idx_row in df_group.iterrows():
-            extract_ellipse_object(idx_row, path_images, path_out_stage, norm_size)
-            tqdm_bar.update()
+    wrapper_object = partial(extract_ellipse_object, path_images=path_images,
+                             path_out=path_out_stage, norm_size=norm_size)
+    desc = 'stage %i - size %s' % (stage, norm_size)
+    iterate = tl_expt.WrapExecuteSequence(wrapper_object, df_group.iterrows(),
+                                          nb_jobs=params['nb_jobs'],
+                                          desc=desc)
+    list(iterate)
 
 
 def main(params):

@@ -41,7 +41,6 @@ if os.environ.get('DISPLAY', '') == '' \
     logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import tqdm
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -808,17 +807,10 @@ def main(params, debug_export=DEBUG_EXPORT):
         list_dirs = [n + DIR_DEBUG_POSIX for n in dict_segment if 'rg2sp' in n]
         tl_expt.create_subfolders(params['path_exp'], list_dirs)
 
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
     wrapper_segment = partial(image_segmentation, params=params)
-    if params['nb_jobs'] > 1:
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for _ in mproc_pool.imap_unordered(wrapper_segment, df_paths.iterrows()):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for _ in map(wrapper_segment, df_paths.iterrows()):
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, df_paths.iterrows(),
+                                          nb_jobs=params['nb_jobs'])
+    list(iterate)
 
     logging.info('DONE')
 

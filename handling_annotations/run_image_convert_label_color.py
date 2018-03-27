@@ -21,7 +21,6 @@ import multiprocessing as mproc
 from functools import partial
 
 import numpy as np
-import tqdm
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
@@ -146,18 +145,9 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_jobs=1):
     logging.debug('loaded dictionary %s', repr(dict_colors))
     wrapper_img_convert = partial(perform_img_convert, path_out=path_out,
                                   dict_colors=dict_colors)
-    tqdm_bar = tqdm.tqdm(total=len(path_imgs), desc='convert images')
-
-    if nb_jobs > 1:
-        logging.debug('perform_sequence in %i threads', nb_jobs)
-        mproc_pool = mproc.Pool(nb_jobs)
-        for _ in mproc_pool.imap_unordered(wrapper_img_convert, path_imgs):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for _ in map(wrapper_img_convert, path_imgs):
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_img_convert, path_imgs,
+                                          nb_jobs=nb_jobs, desc='convert images')
+    list(iterate)
 
 
 def main(params):

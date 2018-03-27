@@ -18,10 +18,9 @@ import time
 import logging
 import traceback
 import gc
-import multiprocessing as mproc
+# import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 import numpy as np
 from scipy import ndimage
@@ -222,29 +221,17 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
     tl_expt.create_subfolders(path_out, list_dirs)
 
     # perfom on new images
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
     stage_prefix = '[stage-%s] ' % str_stage
     logging.info('start section %s - load_center_evaluate ...', stage_prefix)
-    if nb_jobs > 1:
-        wrapper_detection = partial(load_center_evaluate, df_annot=df_slices_info,
-                                    path_annot=path_annot, path_visu=path_visu,
-                                    col_prefix=stage_prefix)
-        mproc_pool = mproc.Pool(nb_jobs)
-        for dict_eval in mproc_pool.imap_unordered(wrapper_detection,
-                                                   df_paths.iterrows()):
-            df_eval = df_eval.append(dict_eval, ignore_index=True)
-            df_eval.to_csv(os.path.join(path_out, NAME_CSV_TRIPLES_TEMP))
-            tqdm_bar.update()
-            # gc.collect(), time.sleep(1)
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for idx_row in df_paths.iterrows():
-            dict_eval = load_center_evaluate(idx_row, df_slices_info,
-                                             path_annot, path_visu, stage_prefix)
-            df_eval = df_eval.append(dict_eval, ignore_index=True)
-            df_eval.to_csv(os.path.join(path_out, NAME_CSV_TRIPLES_TEMP))
-            tqdm_bar.update()
+    wrapper_detection = partial(load_center_evaluate, df_annot=df_slices_info,
+                                path_annot=path_annot, path_visu=path_visu,
+                                col_prefix=stage_prefix)
+    iterate = tl_expt.WrapExecuteSequence(wrapper_detection, df_paths.iterrows(),
+                                          nb_jobs=nb_jobs)
+    for dict_eval in iterate:
+        df_eval = df_eval.append(dict_eval, ignore_index=True)
+        df_eval.to_csv(os.path.join(path_out, NAME_CSV_TRIPLES_TEMP))
+        # gc.collect(), time.sleep(1)
     return df_eval
 
 

@@ -18,11 +18,11 @@ import traceback
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 from skimage.segmentation import relabel_sequential
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as seg_visu
 import imsegm.labeling as seg_lbs
 import imsegm.classification as seg_clf
@@ -132,11 +132,8 @@ def main(dict_paths, nb_jobs=NB_THREADS, relabel=True):
     logging.info('loaded %i annots and %i segms', len(annots), len(segms))
 
     if relabel:
-        mproc_pool = mproc.Pool(nb_jobs)
         annots = [relabel_sequential(annot)[0] for annot in annots]
-        segms = mproc_pool.map(wrapper_relabel_segm, zip(annots, segms))
-        mproc_pool.close()
-        mproc_pool.join()
+        segms = list(map(wrapper_relabel_segm, zip(annots, segms)))
 
     path_csv = os.path.join(dict_paths['output'], NAME_CVS_PER_IMAGE % name)
     logging.debug('export to "%s"', path_csv)
@@ -154,14 +151,11 @@ def main(dict_paths, nb_jobs=NB_THREADS, relabel=True):
         os.mkdir(path_visu)
     # for idx, row in df_paths.iterrows():
     #     export_visual(row, path_visu)
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
     wrapper_visual = partial(export_visual, path_out=path_visu)
-    mproc_pool = mproc.Pool(nb_jobs)
-    for _ in mproc_pool.imap_unordered(wrapper_visual,
-                                       (row for idx, row in df_paths.iterrows())):
-        tqdm_bar.update()
-    mproc_pool.close()
-    mproc_pool.join()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_visual,
+                                          (row for idx, row in df_paths.iterrows()),
+                                          nb_jobs=nb_jobs)
+    list(iterate)
 
     logging.info('DONE')
 

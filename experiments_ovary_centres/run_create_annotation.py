@@ -23,18 +23,18 @@ import os
 import sys
 import glob
 import logging
-import multiprocessing as mproc
+# import multiprocessing as mproc
 from functools import partial
 
 import numpy as np
 import pandas as pd
-import tqdm
 from scipy import ndimage
 from skimage import morphology, measure, draw
 
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
 import run_center_candidate_training as run_train
 
 NAME_DIR = 'annot_centres'
@@ -171,19 +171,13 @@ def main(path_segs, path_out, nb_jobs):
             'missing: %s' % path_out
         os.mkdir(path_out)
 
-    tqdm_bar = tqdm.tqdm(total=len(list_imgs), desc='annotating images')
     wrapper_create_annot_centers = partial(create_annot_centers,
                                            path_out_seg=path_out,
                                            path_out_csv=path_out)
-    if nb_jobs > 1:
-        pool = mproc.Pool(nb_jobs)
-        for _ in pool.imap_unordered(wrapper_create_annot_centers, list_imgs):
-            tqdm_bar.update()
-        pool.close()
-        pool.join()
-    else:
-        for _ in map(wrapper_create_annot_centers, list_imgs):
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_create_annot_centers,
+                                          list_imgs, nb_jobs=nb_jobs,
+                                          desc='annotating images')
+    list(iterate)
 
     logging.info('DONE')
 

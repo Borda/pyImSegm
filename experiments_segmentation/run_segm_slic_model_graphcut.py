@@ -397,23 +397,13 @@ def experiment_single_gmm(params, paths_img, path_out, path_visu):
     imgs_idx_path = list(zip([None] * len(paths_img), paths_img))
     logging.info('Perform image segmentation as single image in each time')
     dict_segms_gmm = {}
-    tqdm_bar = tqdm.tqdm(total=len(imgs_idx_path), desc='experiment single GMM')
     wrapper_segment = partial(segment_image_independent, params=params,
                               path_out=path_out, path_visu=path_visu)
-    if params['nb_jobs'] > 1:
-        logging.debug('running experiments in %i threads', params['nb_jobs'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for name, segm in mproc_pool.imap_unordered(wrapper_segment,
-                                                    imgs_idx_path):
-            dict_segms_gmm[name] = segm
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for img_idx_path in imgs_idx_path:
-            name, segm = wrapper_segment(img_idx_path)
-            dict_segms_gmm[name] = segm
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='experiment single GMM')
+    for name, segm in iterate:
+        dict_segms_gmm[name] = segm
     return dict_segms_gmm
 
 
@@ -436,24 +426,14 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu):
 
     logging.info('Perform image segmentation from group model')
     dict_segms_group = {}
-    tqdm_bar = tqdm.tqdm(total=len(imgs_idx_path), desc='experiment group GMM')
     wrapper_segment = partial(segment_image_model, params=params,
                               scaler=scaler, pca=pca, model=model,
                               path_out=path_out, path_visu=path_visu)
-    if params['nb_jobs'] > 1:
-        logging.debug('running experiments in %i threads', params['nb_jobs'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for name, segm in mproc_pool.imap_unordered(wrapper_segment,
-                                                    imgs_idx_path):
-            dict_segms_group[name] = segm
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for img_idx_path in imgs_idx_path:
-            name, segm = wrapper_segment(img_idx_path)
-            dict_segms_group[name] = segm
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='experiment group GMM')
+    for name, segm in iterate:
+        dict_segms_group[name] = segm
     return dict_segms_group
 
 

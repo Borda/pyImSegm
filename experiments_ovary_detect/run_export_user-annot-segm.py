@@ -29,13 +29,13 @@ if os.environ.get('DISPLAY', '') == '' \
     logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import tqdm
 import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import imsegm.annotation as seg_annot
 
@@ -213,18 +213,13 @@ def main(params):
             'missing folder: "%s"' % os.path.dirname(params['path_output'])
         os.mkdir(params['path_output'])
 
-    mproc_pool = mproc.Pool(params['nb_jobs'])
     df_slices_info = seg_annot.load_info_group_by_slices(params['path_infofile'],
                                                          params['stages'])
     wrapper_export = partial(export_figure, df_slices_info=df_slices_info,
                              path_out=params['path_output'])
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
-
-    for _ in mproc_pool.imap_unordered(wrapper_export, df_paths.iterrows()):
-        tqdm_bar.update()
-        # gc.collect(), time.sleep(1)
-    mproc_pool.close()
-    mproc_pool.join()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_export, df_paths.iterrows(),
+                                          nb_jobs=params['nb_jobs'])
+    list(iterate)
     logging.info('DONE')
 
 

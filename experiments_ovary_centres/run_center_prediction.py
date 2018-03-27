@@ -17,10 +17,9 @@ import sys
 import time, gc
 import logging
 import traceback
-import multiprocessing as mproc
+# import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
@@ -156,27 +155,14 @@ def main(params):
 
     # perform on new images
     df_stat = pd.DataFrame()
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
-    if params['nb_jobs'] > 1:
-        wrapper_detection = partial(load_compute_detect_centers, params=params_clf,
-                                    path_classif=params['path_classif'],
-                                    path_output=params['path_expt'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for dict_center in mproc_pool.imap_unordered(wrapper_detection,
-                                                     df_paths.iterrows()):
-            df_stat = df_stat.append(dict_center, ignore_index=True)
-            df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_TEMP))
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        classif = dict_classif['clf_pipeline']
-        for idx_row in df_paths.iterrows():
-            dict_center = load_compute_detect_centers(idx_row, params_clf, classif,
-                                                      path_output=params['path_expt'])
-            df_stat = df_stat.append(dict_center, ignore_index=True)
-            df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_TEMP))
-            tqdm_bar.update()
+    wrapper_detection = partial(load_compute_detect_centers, params=params_clf,
+                                path_classif=params['path_classif'],
+                                path_output=params['path_expt'])
+    iterate = tl_expt.WrapExecuteSequence(wrapper_detection, df_paths.iterrows(),
+                                          nb_jobs=params['nb_jobs'])
+    for dict_center in iterate:
+        df_stat = df_stat.append(dict_center, ignore_index=True)
+        df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_TEMP))
 
     df_stat.set_index(['image'], inplace=True)
     df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES))

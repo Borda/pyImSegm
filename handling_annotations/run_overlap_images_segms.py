@@ -27,7 +27,6 @@ if os.environ.get('DISPLAY','') == '' \
     logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import exposure, segmentation
@@ -144,18 +143,10 @@ def main(paths, nb_jobs=NB_THREADS):
     warped_overlap = partial(perform_visu_overlap, paths=paths)
 
     created = []
-    tqdm_bar = tqdm.tqdm(total=len(paths_imgs), desc='overlapping')
-    if nb_jobs > 1:
-        mproc_pool = mproc.Pool(nb_jobs)
-        for r in mproc_pool.imap_unordered(warped_overlap, paths_imgs):
-            created.append(r)
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for r in map(warped_overlap, paths_imgs):
-            created.append(r)
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(warped_overlap, paths_imgs,
+                                          nb_jobs=nb_jobs, desc='overlapping')
+    for r in iterate:
+        created.append(r)
 
     logging.info('matched and created %i overlaps', np.sum(created))
     logging.info('DONE')

@@ -19,7 +19,6 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -109,18 +108,9 @@ def relabel_folder_images(path_images, path_out, labels_old, labels_new,
 
     wrapper_img_relabel = partial(perform_image_relabel, path_out=path_out,
                                   labels_old=labels_old, labels_new=labels_new)
-    tqdm_bar = tqdm.tqdm(total=len(path_imgs), desc='relabel images')
-
-    if nb_jobs > 1:
-        logging.debug('perform_sequence in %i threads', nb_jobs)
-        mproc_pool = mproc.Pool(nb_jobs)
-        for _ in mproc_pool.imap_unordered(wrapper_img_relabel, path_imgs):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for _ in map(wrapper_img_relabel, path_imgs):
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_img_relabel, path_imgs,
+                                          nb_jobs=nb_jobs, desc='relabel images')
+    list(iterate)
 
 
 def main(params):
