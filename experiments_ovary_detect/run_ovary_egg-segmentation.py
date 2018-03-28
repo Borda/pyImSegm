@@ -36,12 +36,11 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import tqdm
-from PIL import Image
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -133,7 +132,7 @@ SEGM_PARAMS = {
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return {str: str}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-list', '--path_list', type=str, required=False,
@@ -185,13 +184,13 @@ def load_image(path_img, img_type=TYPE_LOAD_IMAGE):
     path_img = os.path.abspath(os.path.expanduser(path_img))
     assert os.path.isfile(path_img), 'missing: "%s"' % path_img
     if img_type == 'segm':
-        img = np.array(Image.open(path_img))
+        img = tl_data.io_imread(path_img)
     elif img_type == '2d_struct':
         img, _ = tl_data.load_img_double_band_split(path_img)
         assert img.ndim == 2, 'image can be only single color'
     else:
         logging.error('not supported loading img_type: %s', img_type)
-        img = np.array(Image.open(path_img))
+        img = tl_data.io_imread(path_img)
     logging.debug('image shape: %s, value range %f - %f', repr(img.shape),
                   img.min(), img.max())
     return img
@@ -208,8 +207,7 @@ def export_draw_image_segm(path_fig, img, segm=None, segm_obj=None, centers=None
     :param ndarray img:
     :param ndarray segm:
     :param ndarray segm_obj:
-    :param centers:
-    :return:
+    :param ndarray centers:
     """
     size = np.array(img.shape[:2][::-1], dtype=float)
     fig, ax = plt.subplots(figsize=(size / size.max() * MAX_FIGURE_SIZE))
@@ -295,7 +293,7 @@ def segment_active_contour(img, centers):
 
     :param ndarray img: input image / segmentation
     :param [[int, int]] centers: position of centres / seeds
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     logging.debug('segment: active_contour...')
     # http://scikit-image.org/docs/dev/auto_examples/edges/plot_active_contours.html
@@ -330,8 +328,8 @@ def segment_morphsnakes(img, centers, init_center=True, smoothing=5,
     :param bool init_center:
     :param int smoothing:
     :param [int, int] lambdas:
-    :param bb_dist:
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :param float bb_dist:
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     logging.debug('segment: morph-snakes...')
     if img.ndim == 3:
@@ -376,7 +374,7 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points,
     :param [[int, int]] centers: position of centres / seeds
     :param fn_preproc_points: function for detection boundary points
     :param float thr_overlap: threshold for removing overlapping segmentation
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     points_centers = fn_preproc_points(seg, centers)
 
@@ -410,7 +408,7 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
     :param fn_preproc_points: function for detection boundary points
     :param float nb_inliers: ratio of inliers for RANSAC
     :param float thr_overlap: threshold for removing overlapping segmentations
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     points_centers = fn_preproc_points(seg, centers)
 
@@ -450,7 +448,7 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
     :param [[float]] table_p: table of probabilities being foreground / background
     :param float nb_inliers: ratio of inliers for RANSAC
     :param float thr_overlap: threshold for removing overlapping segmentations
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     slic, points_all, labels = ell_fit.get_slic_points_labels(seg, slic_size=15,
                                                               slic_regul=0.1)
@@ -495,8 +493,8 @@ def segment_graphcut_pixels(seg, centers, labels_fg_prob, gc_regul=1.,
     :param float gc_regul:
     :param int seed_size:
     :param float coef_shape:
-    :param shape_mean_std:
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :param (float, float) shape_mean_std:
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     segm_obj = seg_rg.object_segmentation_graphcut_pixels(
                             seg, centers, labels_fg_prob, gc_regul, seed_size,
@@ -518,7 +516,7 @@ def segment_graphcut_slic(slic, seg, centers, labels_fg_prob, gc_regul=1.,
     :param float coef_shape:
     :param float edge_weight:
     :param shape_mean_std:
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     gc_labels = seg_rg.object_segmentation_graphcut_slic(
                     slic, seg, centers, labels_fg_prob, gc_regul, edge_weight,
@@ -592,7 +590,7 @@ def simplify_segm_3cls(seg, lut=(0., 0.8, 1.), smooth=True):
     :param ndarray seg: input image / segmentation
     :param [float] lut:
     :param bool smooth:
-    :return:
+    :return ndarray:
     """
     segm = seg.copy()
     segm[seg > 1] = 2
@@ -756,7 +754,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
 
             logging.info('running time of %s on image "%s" is %d s',
                          repr(fn.__name__), image_name, time.time() - t)
-            Image.fromarray(segm_obj.astype(np.uint8)).save(path_segm)
+            tl_data.io_imsave(path_segm, segm_obj.astype(np.uint8))
             export_draw_image_segm(path_fig, img_rgb, seg, segm_obj, centers)
             # export also centers
             centers = tl_data.swap_coord_x_y(centers)
@@ -769,12 +767,12 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
 
 
 def export_partial(str_key, obj_content, path_dir, name):
-    key, posix = os.path.splitext(str_key)
+    key, ext = os.path.splitext(str_key)
     path_out = os.path.join(path_dir + '___%s' % key)
     if not os.path.isdir(path_out):
         os.mkdir(path_out)
-    path_file = os.path.join(path_out, name + posix)
-    if posix.endswith('.csv'):
+    path_file = os.path.join(path_out, name + ext)
+    if ext.endswith('.csv'):
         obj_content.to_csv(path_file)
     return path_file
 
@@ -794,7 +792,7 @@ def main(params, debug_export=DEBUG_EXPORT):
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     # tl_expt.create_subfolders(params['path_exp'], [FOLDER_IMAGE])
 
-    df_paths = pd.DataFrame.from_csv(params['path_list'])
+    df_paths = pd.read_csv(params['path_list'], index_col=0)
     logging.info('loaded %i items with columns: %s', len(df_paths),
                  repr(df_paths.columns.tolist()))
     df_paths.dropna(how='any', inplace=True)
@@ -809,17 +807,10 @@ def main(params, debug_export=DEBUG_EXPORT):
         list_dirs = [n + DIR_DEBUG_POSIX for n in dict_segment if 'rg2sp' in n]
         tl_expt.create_subfolders(params['path_exp'], list_dirs)
 
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
     wrapper_segment = partial(image_segmentation, params=params)
-    if params['nb_jobs'] > 1:
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for _ in mproc_pool.imap_unordered(wrapper_segment, df_paths.iterrows()):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for _ in map(wrapper_segment, df_paths.iterrows()):
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, df_paths.iterrows(),
+                                          nb_jobs=params['nb_jobs'])
+    list(iterate)
 
     logging.info('DONE')
 

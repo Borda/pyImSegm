@@ -20,15 +20,15 @@ import tqdm
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import run_ellipse_annot_match as r_match
 
 IMAGE_CHANNEL = 0  # image channel for mass extraction
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
+PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_RESULTS = tl_data.update_path('results', absolute=True)
 
 PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image_cut-stage-2', '*.png'),
@@ -43,7 +43,7 @@ def perform_orientation_swap(path_img, path_out):
     :param str path_img:
     :param str path_out:
     """
-    img, _ = tl_io.load_image_2d(path_img)
+    img, _ = tl_data.load_image_2d(path_img)
 
     part = int(img.shape[1] / 3)
     sel_mask = img[:, :, IMAGE_CHANNEL] > np.min(img[:, :, IMAGE_CHANNEL])
@@ -58,7 +58,7 @@ def perform_orientation_swap(path_img, path_out):
         img = img[::-1, ::-1, :]
 
     path_img = os.path.join(path_out, os.path.basename(path_img))
-    tl_io.export_image(path_img, img)
+    tl_data.export_image(path_img, img)
 
 
 def main(params):
@@ -77,20 +77,13 @@ def main(params):
     if not os.path.isdir(params['path_output']):
         os.mkdir(params['path_output'])
 
-    tqdm_bar = tqdm.tqdm(total=len(list_imgs),
-                         desc=os.path.dirname(params['path_images']))
-    if params['nb_jobs'] > 1:
-        wrapper_object = partial(perform_orientation_swap,
-                                 path_out=params['path_output'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for _ in mproc_pool.imap_unordered(wrapper_object, list_imgs):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for p_img in list_imgs:
-            perform_orientation_swap(p_img, path_out=params['path_output'])
-            tqdm_bar.update()
+    wrapper_object = partial(perform_orientation_swap,
+                             path_out=params['path_output'])
+    dir_name = os.path.dirname(params['path_images'])
+    iterate = tl_expt.WrapExecuteSequence(wrapper_object, list_imgs,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc=dir_name)
+    list(iterate)
 
     logging.info('DONE')
 

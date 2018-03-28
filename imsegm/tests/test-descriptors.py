@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 import imsegm.utils.data_samples as d_spl
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.drawing as tl_visu
 import imsegm.descriptors as seg_fts
 import imsegm.superpixels as seg_spx
@@ -25,7 +25,7 @@ import imsegm.superpixels as seg_spx
 ANGULAR_STEP = 15
 # size of subfigure for visualise the Filter bank
 SUBPLOT_SIZE_FILTER_BANK = 3
-PATH_OUTPUT = tl_io.update_path('output', absolute=True)
+PATH_OUTPUT = tl_data.update_path('output', absolute=True)
 PATH_FIGURES_RAY = os.path.join(PATH_OUTPUT, 'test_ray_features')
 # create the folder for visualisations
 if not os.path.exists(PATH_FIGURES_RAY):

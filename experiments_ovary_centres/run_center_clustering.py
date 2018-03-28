@@ -10,24 +10,23 @@ import os
 import sys
 import logging
 import json
-import multiprocessing as mproc
+# import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 import numpy as np
-from PIL import Image
 from sklearn import cluster
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import matplotlib.pylab as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import run_center_candidate_training as run_train
@@ -67,7 +66,7 @@ def cluster_center_candidates(points, max_dist=100, min_samples=1):
     :param [[float]] points:
     :param float max_dist:
     :param int min_samples:
-    :return: ndarray, [int]
+    :return (ndarray, [int]):
     """
     points = np.array(points)
     if len(points) == 0:
@@ -87,7 +86,7 @@ def cluster_center_candidates(points, max_dist=100, min_samples=1):
 
 
 def export_draw_image_centers_clusters(path_out, name, img, centres, points=None,
-                                       clust_labels=None, segm=None, fig_posix='',
+                                       clust_labels=None, segm=None, fig_suffix='',
                                        max_fig_size=MAX_FIGURE_SIZE):
     """ draw visualisation of clustered center candidates and export it
 
@@ -98,7 +97,7 @@ def export_draw_image_centers_clusters(path_out, name, img, centres, points=None
     :param [[float]] points:
     :param [int] clust_labels:
     :param ndarray segm:
-    :param str fig_posix:
+    :param str fig_suffix:
     :param int max_fig_size:
     """
     # if the output dos nor exist, leave
@@ -121,7 +120,7 @@ def export_draw_image_centers_clusters(path_out, name, img, centres, points=None
     tl_visu.draw_image_clusters_centers(ax, img, centres, points, clust_labels, segm)
 
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(path_out, name + fig_posix + '.png'))
+    fig.savefig(os.path.join(path_out, name + fig_suffix + '.png'))
     plt.close(fig)
 
 
@@ -131,29 +130,29 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
     :param {} dict_row:
     :param {str: ...} params:
     :param str path_out:
-    :return:
+    :return {}:
     """
     assert all(n in dict_row for n in ['path_points', 'path_image', 'path_segm']), \
         'missing some required fields: %s' % repr(dict_row)
     name = os.path.splitext(os.path.basename(dict_row['path_points']))[0]
-    points = tl_io.load_landmarks_csv(dict_row['path_points'])
+    points = tl_data.load_landmarks_csv(dict_row['path_points'])
     if len(points) == 0:
         logging.debug('no points to cluster for "%s"', name)
-    points = tl_io.swap_coord_x_y(points)
+    points = tl_data.swap_coord_x_y(points)
 
     centres, clust_labels = cluster_center_candidates(points,
                                       max_dist=params['DBSCAN_max_dist'],
                                       min_samples=params['DBSCAN_min_samples'])
     path_csv = os.path.join(path_out, FOLDER_CENTER, name + '.csv')
-    tl_io.save_landmarks_csv(path_csv, tl_io.swap_coord_x_y(centres))
+    tl_data.save_landmarks_csv(path_csv, tl_data.swap_coord_x_y(centres))
 
     path_visu = os.path.join(path_out, FOLDER_CLUSTER_VISUAL)
 
     img, segm = None, None
     if dict_row['path_image'] is not None and os.path.isfile(dict_row['path_image']):
-        img = np.array(Image.open(dict_row['path_image']))
+        img = tl_data.io_imread(dict_row['path_image'])
     if dict_row['path_segm'] is not None and os.path.isfile(dict_row['path_segm']):
-        segm = np.array(Image.open(dict_row['path_segm']))
+        segm = tl_data.io_imread(dict_row['path_segm'])
 
     export_draw_image_centers_clusters(path_visu, name, img, centres,
                                        points, clust_labels, segm)
@@ -204,7 +203,7 @@ def main(params):
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 
     list_paths = [params[k] for k in ['path_images', 'path_segms', 'path_centers']]
-    df_paths = tl_io.find_files_match_names_across_dirs(list_paths)
+    df_paths = tl_data.find_files_match_names_across_dirs(list_paths)
     df_paths.columns = ['path_image', 'path_segm', 'path_points']
     df_paths.index = range(1, len(df_paths) + 1)
     path_cover = os.path.join(params['path_expt'], run_train.NAME_CSV_TRIPLES)
@@ -212,23 +211,13 @@ def main(params):
 
     logging.info('run clustering...')
     df_paths_new = pd.DataFrame()
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
-    if params['nb_jobs'] > 1:
-        wrapper_clustering = partial(cluster_points_draw_export, params=params,
-                                     path_out=params['path_expt'])
-        pool = mproc.Pool(params['nb_jobs'])
-        for dict_center in pool.imap_unordered(wrapper_clustering,
-                                   (dict(row) for idx, row in df_paths.iterrows())):
-            df_paths_new = df_paths_new.append(dict_center, ignore_index=True)
-            tqdm_bar.update()
-        pool.close()
-        pool.join()
-    else:
-        for dict_row in (dict(row) for idx, row in df_paths.iterrows()):
-            dict_center = cluster_points_draw_export(dict_row, params,
-                                                     params['path_expt'])
-            df_paths_new = df_paths_new.append(dict_center, ignore_index=True)
-            tqdm_bar.update()
+    wrapper_clustering = partial(cluster_points_draw_export, params=params,
+                                 path_out=params['path_expt'])
+    iterate = tl_expt.WrapExecuteSequence(wrapper_clustering,
+                                          (dict(row) for idx, row in df_paths.iterrows()),
+                                          nb_jobs=params['nb_jobs'])
+    for dict_center in iterate:
+        df_paths_new = df_paths_new.append(dict_center, ignore_index=True)
 
     df_paths_new.set_index('image', inplace=True)
     df_paths_new.to_csv(path_cover)

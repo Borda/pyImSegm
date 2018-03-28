@@ -45,10 +45,10 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.drawing as tl_visu
 
-PATH_BASE = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_BASE = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
 PATH_IMAGES = os.path.join(PATH_BASE, 'image', '*.jpg')
 PATH_CSV = os.path.join(PATH_BASE, 'center_levels', '*.csv')
 NAME_INFO_SHORT = 'ovary_image_info.csv'
@@ -76,7 +76,7 @@ df_center_labeled, fig = None, None
 def arg_parse_params():
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}
+    :return {str: ...}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=False,
@@ -109,7 +109,7 @@ def load_paths_image_csv(params, skip_csv=POSIX_CSV_LABEL):
     get_name = lambda p: os.path.splitext(os.path.basename(p))[0]
     list_csv = glob.glob(params['path_csv'])
     list_names = [get_name(p) for p in list_csv]
-    # skipp al names that contains given posix
+    # skip al names that contains given posix
     list_names = [n for n in list_names if skip_csv not in n]
     # filter to have just paths with the  right names
     list_imgs = sorted([p for p in glob.glob(params['path_images'])
@@ -154,13 +154,13 @@ def load_csv_center_label(path_csv, mask_eggs=None):
     """ load already edited ces with point, wheter it not exists create it
 
     :param str path_csv:
-    :return: DF<x, y, label, change>
+    :return DF: DF<x, y, label, change>
     """
     path_csv_labeled = path_csv.replace('.csv', POSIX_CSV_LABEL + '.csv')
     if os.path.isfile(path_csv_labeled):
-        df_points = pd.DataFrame.from_csv(path_csv_labeled)
+        df_points = pd.read_csv(path_csv_labeled, index_col=0)
     else:
-        df_points = pd.DataFrame.from_csv(path_csv)
+        df_points = pd.read_csv(path_csv, index_col=0)
         df_points['label'] = np.ones((len(df_points), ))
         df_points['change'] = np.zeros((len(df_points), ))
 
@@ -357,7 +357,7 @@ def main(params):
     assert len(paths_img_csv) > 0, 'missing paths image - csv'
 
     if params['path_info'] is not None and os.path.isfile(params['path_info']):
-        df_info_all = pd.DataFrame().from_csv(params['path_info'], sep='\t')
+        df_info_all = pd.read_csv(params['path_info'], sep='\t', index_col=0)
     else:
         df_info_all = None
     logging.info('loaded complete info')

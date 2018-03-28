@@ -19,12 +19,10 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import numpy as np
-from skimage import io
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 
 PATH_IMAGES = os.path.join('images', 'drosophila_ovary_slice', 'center_levels', '*.png')
@@ -35,7 +33,7 @@ NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 def parse_arg_params():
     """ create simple arg parser with default values (input, results, dataset)
 
-    :return: argparse
+    :return obj: argparse
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=True,
@@ -50,7 +48,7 @@ def parse_arg_params():
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
     for k in ['path_images', 'path_output']:
-        p_dir = tl_io.update_path(os.path.dirname(args[k]))
+        p_dir = tl_data.update_path(os.path.dirname(args[k]))
         assert os.path.isdir(p_dir), 'missing folder: %s' % args[k]
         args[k] = os.path.join(p_dir, os.path.basename(args[k]))
     assert len(args['label_old']) == len(args['label_new']), \
@@ -70,7 +68,7 @@ def perform_image_relabel(path_img, path_out, labels_old, labels_new):
     """
     logging.debug('repaint labels %s -> %s for image: "%s"',
                   repr(labels_old), repr(labels_new), path_img)
-    img = np.array(io.imread(path_img), dtype=int)
+    img = np.array(tl_data.io.imread(path_img), dtype=int)
 
     max_label = int(max(img.max(), max(labels_old)))
     lut = np.array(range(max_label + 1))
@@ -83,7 +81,7 @@ def perform_image_relabel(path_img, path_out, labels_old, labels_new):
 
     logging.debug('resulting image labels: i%s', repr(np.unique(img).tolist()))
     path_img_out = os.path.join(path_out, os.path.basename(path_img))
-    io.imsave(path_img_out, img)
+    tl_data.io_imsave(path_img_out, img)
     # plt.subplot(121), plt.imshow(img)
     # plt.subplot(122), plt.imshow(im_paint)
     # plt.show()
@@ -110,18 +108,9 @@ def relabel_folder_images(path_images, path_out, labels_old, labels_new,
 
     wrapper_img_relabel = partial(perform_image_relabel, path_out=path_out,
                                   labels_old=labels_old, labels_new=labels_new)
-    tqdm_bar = tqdm.tqdm(total=len(path_imgs), desc='relabel images')
-
-    if nb_jobs > 1:
-        logging.debug('perform_sequence in %i threads', nb_jobs)
-        mproc_pool = mproc.Pool(nb_jobs)
-        for _ in mproc_pool.imap_unordered(wrapper_img_relabel, path_imgs):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for _ in map(wrapper_img_relabel, path_imgs):
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_img_relabel, path_imgs,
+                                          nb_jobs=nb_jobs, desc='relabel images')
+    list(iterate)
 
 
 def main(params):

@@ -36,11 +36,11 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import tqdm
 from PIL import Image
 import numpy as np
 import pandas as pd
@@ -228,24 +228,21 @@ def dataset_load_images_annot_compute_features(params,
     feature_names = list()
 
     # compute features
-    df_paths = pd.DataFrame.from_csv(params['path_train_list'])
+    df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     assert all(n in df_paths.columns for n in ['path_image', 'path_annot']), \
         'missing required columns in loaded csv file'
-    tqdm_bar = tqdm.tqdm(total=len(df_paths), desc='extract training data')
     wrapper_load_compute = partial(load_image_annot_compute_features_labels,
                                    params=params, show_debug_imgs=show_debug_imgs)
-    mproc_pool = mproc.Pool(params['nb_jobs'])
-    for name, img, annot, slic, features, labels, label_hist, feature_names \
-            in mproc_pool.imap_unordered(wrapper_load_compute, df_paths.iterrows()):
+    iterate = tl_expt.WrapExecuteSequence(wrapper_load_compute, df_paths.iterrows(),
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='extract training data')
+    for name, img, annot, slic, features, labels, label_hist, feature_names in iterate:
         dict_images[name] = img
         dict_annots[name] = annot
         dict_slics[name] = slic
         dict_features[name] = features
         dict_labels[name] = labels
         dict_label_hist[name] = label_hist
-        tqdm_bar.update()
-    mproc_pool.close()
-    mproc_pool.join()
 
     # gc.collect(), time.sleep(1)
     return dict_images, dict_annots, dict_slics, dict_features, dict_labels, \
@@ -293,10 +290,10 @@ def save_dump_data(path_dump_data, imgs, annot, slics, features, labels,
                         feature_names=feature_names)
 
 
-def export_draw_image_segm_contour(img, segm, path_out, name, posix=''):
+def export_draw_image_segm_contour(img, segm, path_out, name, suffix=''):
     logging.debug('export draw image segmentation countours')
     fig = tl_visu.figure_image_segm_results(img, segm)
-    fig.savefig(os.path.join(path_out, name + posix + '.png'))
+    fig.savefig(os.path.join(path_out, name + suffix + '.png'))
     plt.close(fig)
 
 
@@ -310,7 +307,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     :param obj classif: trained classifier
     :param str path_out: path for output
     :param str path_visu: the existing patch means export also visualisation
-    :return str, ndarray, ndarray:
+    :return (str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
@@ -323,7 +320,6 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
                                                           params['features'])
     labels = classif.predict(features)
     segm = labels[slic]
-    img_seg = Image.fromarray(segm.astype(np.uint8))
     path_img = os.path.join(path_out, idx_name + '.png')
     logging.debug('export segmentation: %s', path_img)
     img_seg = Image.fromarray(segm.astype(np.uint8))
@@ -427,7 +423,7 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
-    :return str, ndarray, ndarray:
+    :return (str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     dict_imgs, _, _, dict_features, dict_labels, _, _ = \
@@ -461,7 +457,7 @@ def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
-    :return str, ndarray, ndarray:
+    :return (str, ndarray, ndarray):
     """
     dict_imgs, _, _, dict_features, dict_labels, _, _ = \
         load_dump_data(path_dump)
@@ -518,27 +514,16 @@ def perform_predictions(params, paths_img, classif):
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
 
     dict_segms, dict_segms_gc = dict(), dict()
-    tqdm_bar = tqdm.tqdm(total=len(paths_img), desc='image segm: prediction')
     path_out = os.path.join(params['path_exp'], FOLDER_SEGM)
     path_visu = os.path.join(params['path_exp'], FOLDER_SEGM_VISU)
     wrapper_segment = partial(segment_image, params=params, classif=classif,
                               path_out=path_out, path_visu=path_visu)
-    if params['nb_jobs'] > 1:
-        logging.debug('running experiments in %i threads', params['nb_jobs'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for name, segm, segm_gc in mproc_pool.imap_unordered(wrapper_segment,
-                                                             imgs_idx_path):
-            dict_segms[name] = segm
-            dict_segms_gc[name] = segm_gc
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for img_idx_path in imgs_idx_path:
-            name, segm, segm_gc = wrapper_segment(img_idx_path)
-            dict_segms[name] = segm
-            dict_segms_gc[name] = segm_gc
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='image segm: prediction')
+    for name, segm, segm_gc in iterate:
+        dict_segms[name] = segm
+        dict_segms_gc[name] = segm_gc
     return dict_segms, dict_segms_gc
 
 
@@ -547,28 +532,17 @@ def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
     logging.info('run prediction on training images as Leave-One-Out...')
     dict_segms, dict_segms_gc = dict(), dict()
-    tqdm_bar = tqdm.tqdm(total=len(paths_img), desc='experiment LOO')
     path_out = os.path.join(params['path_exp'], FOLDER_LOO)
     path_visu = os.path.join(params['path_exp'], FOLDER_LOO_VISU)
     wrapper_segment = partial(retrain_loo_segment_image,
                               path_classif=path_classif, path_dump=path_dump,
                               path_out=path_out, path_visu=path_visu)
-    if params['nb_jobs'] > 1:
-        logging.debug('running experiments in %i threads', params['nb_jobs'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for name, segm, segm_gc in mproc_pool.imap_unordered(wrapper_segment,
-                                                             imgs_idx_path):
-            dict_segms[name] = segm
-            dict_segms_gc[name] = segm_gc
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for img_idx_path in imgs_idx_path:
-            name, segm, segm_gc = wrapper_segment(img_idx_path)
-            dict_segms[name] = segm
-            dict_segms_gc[name] = segm_gc
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='experiment LOO')
+    for name, segm, segm_gc in iterate:
+        dict_segms[name] = segm
+        dict_segms_gc[name] = segm_gc
     gc.collect()
     time.sleep(1)
 
@@ -594,29 +568,18 @@ def experiment_lpo(params, df_stat, dict_annot, paths_img, path_classif,
                  nb_holdout)
     dict_segms, dict_segms_gc = dict(), dict()
     cv = seg_clf.CrossValidatePOut(len(paths_img), nb_hold_out=nb_holdout)
-    tqdm_bar = tqdm.tqdm(total=len(cv), desc='experiment LPO')
     test_imgs_idx_path = [[imgs_idx_path[i] for i in ids] for _, ids in cv]
     path_out = os.path.join(params['path_exp'], FOLDER_LPO)
     path_visu = os.path.join(params['path_exp'], FOLDER_LPO_VISU)
     wrapper_segment = partial(retrain_lpo_segment_image,
                               path_classif=path_classif, path_dump=path_dump,
                               path_out=path_out, path_visu=path_visu)
-    if params['nb_jobs'] > 1:
-        logging.debug('running experiments in %i threads', params['nb_jobs'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for dict_seg, dict_seg_gc in mproc_pool.imap_unordered(wrapper_segment,
-                                                               test_imgs_idx_path):
-            dict_segms.update(dict_seg)
-            dict_segms_gc.update(dict_seg_gc)
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for img_idx_path in test_imgs_idx_path:
-            dict_seg, dict_seg_gc= wrapper_segment(img_idx_path)
-            dict_segms.update(dict_seg)
-            dict_segms_gc.update(dict_seg_gc)
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, test_imgs_idx_path,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='experiment LPO')
+    for dict_seg, dict_seg_gc in iterate:
+        dict_segms.update(dict_seg)
+        dict_segms_gc.update(dict_seg_gc)
     gc.collect()
     time.sleep(1)
 
@@ -739,7 +702,7 @@ def main_train(params):
                                                           sizes, nb_holdout)
 
     # test classif on images
-    df_paths = pd.DataFrame.from_csv(params['path_train_list'])
+    df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     paths_img = df_paths['path_image'].tolist()
     perform_predictions(params, paths_img, classif)
 
@@ -817,17 +780,15 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
                  path_pattern_imgs)
 
     logging.debug('run prediction...')
-    tqdm_bar = tqdm.tqdm(total=len(paths_img), desc='segmenting images')
     wrapper_segment = partial(try_segment_image, params=params, classif=classif,
                               path_out=path_out, path_visu=path_visu)
-    mproc_pool = mproc.Pool(params['nb_jobs'])
     list_img_path = list(zip([None] * len(paths_img), paths_img))
-    for _ in mproc_pool.imap_unordered(wrapper_segment, list_img_path):
-        tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, list_img_path,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='segmenting images')
+    for _ in iterate:
         gc.collect()
         time.sleep(1)
-    mproc_pool.close()
-    mproc_pool.join()
 
     logging.info('prediction DONE')
 

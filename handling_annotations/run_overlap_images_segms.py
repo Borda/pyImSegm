@@ -22,17 +22,17 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY','') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
+if os.environ.get('DISPLAY','') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import exposure, segmentation
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 
@@ -49,7 +49,7 @@ def parse_arg_params():
     """ create simple arg parser with default values (input, output, dataset)
 
     :param dict_params: {str: ...}
-    :return: object argparse<in, out, ant, name>
+    :return obj: object argparse<in, out, ant, name>
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=True,
@@ -65,10 +65,10 @@ def parse_arg_params():
                      [args.path_images, args.path_segms, args.path_output]))
     for k in paths:
         if '*' in paths[k] or k == 'output':
-            p_dir = tl_io.update_path(os.path.dirname(paths[k]))
+            p_dir = tl_data.update_path(os.path.dirname(paths[k]))
             paths[k] = os.path.join(p_dir, os.path.basename(paths[k]))
         else:
-            paths[k] = tl_io.update_path(paths[k])
+            paths[k] = tl_data.update_path(paths[k])
             p_dir = paths[k]
         assert os.path.exists(p_dir), 'missing: %s' % paths[k]
     return paths, args.nb_jobs
@@ -78,8 +78,8 @@ def visualise_overlap(path_img, path_seg, path_out,
                       b_img_scale=BOOL_IMAGE_RESCALE_INTENSITY,
                       b_img_contour=BOOL_SAVE_IMAGE_CONTOUR,
                       b_relabel=BOOL_ANNOT_RELABEL):
-    img, _ = tl_io.load_image_2d(path_img)
-    seg, _ = tl_io.load_image_2d(path_seg)
+    img, _ = tl_data.load_image_2d(path_img)
+    seg, _ = tl_data.load_image_2d(path_seg)
 
     if b_relabel:
         seg, _, _ = segmentation.relabel_sequential(seg)
@@ -143,18 +143,10 @@ def main(paths, nb_jobs=NB_THREADS):
     warped_overlap = partial(perform_visu_overlap, paths=paths)
 
     created = []
-    tqdm_bar = tqdm.tqdm(total=len(paths_imgs), desc='overlapping')
-    if nb_jobs > 1:
-        mproc_pool = mproc.Pool(nb_jobs)
-        for r in mproc_pool.imap_unordered(warped_overlap, paths_imgs):
-            created.append(r)
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for r in map(warped_overlap, paths_imgs):
-            created.append(r)
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(warped_overlap, paths_imgs,
+                                          nb_jobs=nb_jobs, desc='overlapping')
+    for r in iterate:
+        created.append(r)
 
     logging.info('matched and created %i overlaps', np.sum(created))
     logging.info('DONE')

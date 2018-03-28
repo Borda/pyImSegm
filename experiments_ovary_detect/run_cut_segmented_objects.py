@@ -16,16 +16,15 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import numpy as np
-from PIL import Image
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
+PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_RESULTS = tl_data.update_path('results', absolute=True)
 PATHS = {
     'annot': os.path.join(PATH_IMAGES, 'annot_eggs', '*.png'),
     'image': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
@@ -36,7 +35,7 @@ PATHS = {
 def arg_parse_params(dict_paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return ({str: str}, int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-annot', '--path_annot', type=str, required=False,
@@ -59,9 +58,9 @@ def arg_parse_params(dict_paths):
     args = parser.parse_args()
     logging.info('ARG PARAMETERS: \n %s', repr(args))
     dict_paths = {
-        'annot': tl_io.update_path(args.path_annot),
-        'image': tl_io.update_path(args.path_image),
-        'output': tl_io.update_path(args.path_out),
+        'annot': tl_data.update_path(args.path_annot),
+        'image': tl_data.update_path(args.path_image),
+        'output': tl_data.update_path(args.path_out),
     }
     for k in dict_paths:
         if dict_paths[k] == '' or k == 'output':
@@ -79,8 +78,8 @@ def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
     :param str path_out: path for exporting image
     :param int padding: set padding around segmented object
     """
-    annot, _ = tl_io.load_image_2d(df_row['path_1'])
-    img, name = tl_io.load_image_2d(df_row['path_2'])
+    annot, _ = tl_data.load_image_2d(df_row['path_1'])
+    img, name = tl_data.load_image_2d(df_row['path_2'])
     assert annot.shape[:2] == img.shape[:2], \
         'image sizes not match %s vs %s' % (repr(annot.shape), repr(img.shape))
 
@@ -89,10 +88,10 @@ def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
         return
 
     for idx in uq_objects[1:]:
-        img_new = tl_io.cut_object(img, annot == idx, padding, use_mask, bg_color)
+        img_new = tl_data.cut_object(img, annot == idx, padding, use_mask, bg_color)
         path_img = os.path.join(path_out, '%s_%i.png' % (name, idx))
         logging.debug('saving image "%s"', path_img)
-        Image.fromarray(img_new).save(path_img)
+        tl_data.io_imsave(path_img, img_new)
 
 
 def main(dict_paths, padding=0, use_mask=False, bg_color=None,
@@ -111,18 +110,15 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
         os.mkdir(dict_paths['output'])
 
     list_dirs = [dict_paths['annot'], dict_paths['image']]
-    df_paths = tl_io.find_files_match_names_across_dirs(list_dirs)
+    df_paths = tl_data.find_files_match_names_across_dirs(list_dirs)
 
     logging.info('start cutting images')
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
     wrapper_cutting = partial(export_cut_objects, path_out=dict_paths['output'],
                               padding=padding, use_mask=use_mask, bg_color=bg_color)
-    mproc_pool = mproc.Pool(nb_jobs)
-    for _ in mproc_pool.imap_unordered(wrapper_cutting,
-                                       (row for idx, row in df_paths.iterrows())):
-        tqdm_bar.update()
-    mproc_pool.close()
-    mproc_pool.join()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_cutting,
+                                          (row for idx, row in df_paths.iterrows()),
+                                          nb_jobs=nb_jobs)
+    list(iterate)
 
     logging.info('DONE')
 

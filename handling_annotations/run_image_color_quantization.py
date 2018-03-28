@@ -22,12 +22,10 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-from PIL import Image
 import numpy as np
-import tqdm
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
@@ -39,7 +37,7 @@ THRESHOLD_INVALID_PIXELS = 5e-3
 def parse_arg_params():
     """ create simple arg parser with default values (input, results, dataset)
 
-    :return: argparse
+    :return obj: argparse
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=True,
@@ -53,7 +51,7 @@ def parse_arg_params():
     parser.add_argument('--nb_jobs', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
-    p_dir = tl_io.update_path(os.path.dirname(args['path_images']))
+    p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
     assert os.path.isdir(p_dir), 'missing folder: %s' % args['path_images']
     args['path_images'] = os.path.join(p_dir, os.path.basename(args['path_images']))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
@@ -66,7 +64,7 @@ def see_images_color_info(path_images, px_thr=THRESHOLD_INVALID_PIXELS):
     :param path_dir: str
     :param im_pattern: str
     :param px_th: float, percentage of nb clr pixels to be assumed as important
-    :return:
+    :return {}:
     """
     if not os.path.isdir(os.path.dirname(path_images)):
         logging.error('input folder does not exist')
@@ -84,7 +82,7 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     :param [(int, int, int)] list_colors: list of possible colours
     """
     logging.debug('quantize img: "%s"', path_image)
-    im = np.array(Image.open(path_image))
+    im = tl_data.io_imread(path_image)
     assert im.ndim == 3, 'not valid color image of dims %s' % repr(im.shape)
     im = im[:, :, :3]
     # im = io.imread(path_image)[:, :, :3]
@@ -95,7 +93,7 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     else:
         logging.error('not implemented method "%s"', method)
     path_image = os.path.splitext(path_image)[0] + '.png'
-    Image.fromarray(im_q.astype(np.uint8)).save(path_image)
+    tl_data.io_imsave(path_image, im_q.astype(np.uint8))
     # io.imsave(path_image, im_q)
     # plt.subplot(121), plt.imshow(im)
     # plt.subplot(122), plt.imshow(im_q)
@@ -122,18 +120,9 @@ def quantize_folder_images(path_images, list_colors=None, method='color',
 
     wrapper_quantize_img = partial(perform_quantize_image,
                                    method=method, list_colors=list_colors)
-    tqdm_bar = tqdm.tqdm(total=len(path_imgs), desc='quantize images')
-
-    if nb_jobs > 1:
-        logging.debug('perform_sequence in %i threads', nb_jobs)
-        mproc_pool = mproc.Pool(nb_jobs)
-        for _ in mproc_pool.imap_unordered(wrapper_quantize_img, path_imgs):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for _ in map(wrapper_quantize_img, path_imgs):
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_quantize_img, path_imgs,
+                                          nb_jobs=nb_jobs, desc='quantize images')
+    list(iterate)
 
 
 def main(params):

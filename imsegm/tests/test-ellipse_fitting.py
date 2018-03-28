@@ -14,13 +14,13 @@ import pandas as pd
 from sklearn.metrics import adjusted_rand_score
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.drawing as tl_visu
 import imsegm.ellipse_fitting as seg_fit
 
 # set some default paths
-PATH_OUTPUT = tl_io.update_path('output', absolute=True)
-PATH_OVARY = os.path.join(tl_io.update_path('images', absolute=True),
+PATH_OUTPUT = tl_data.update_path('output', absolute=True)
+PATH_OVARY = os.path.join(tl_data.update_path('images', absolute=True),
                           'drosophila_ovary_slice')
 PATH_IMAGES = os.path.join(PATH_OVARY, 'image')
 PATH_SEGM = os.path.join(PATH_OVARY, 'segm')
@@ -39,11 +39,11 @@ class TestEllipseFitting(unittest.TestCase):
     def test_ellipse_fitting(self, name='insitu7545',
                              table_prob=TABLE_FB_PROBA):
         """    """
-        img, _ = tl_io.load_image_2d(os.path.join(PATH_IMAGES, name + '.jpg'))
-        seg, _ = tl_io.load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
-        annot, _ = tl_io.load_image_2d(os.path.join(PATH_ANNOT, name + '.png'))
+        img, _ = tl_data.load_image_2d(os.path.join(PATH_IMAGES, name + '.jpg'))
+        seg, _ = tl_data.load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
+        annot, _ = tl_data.load_image_2d(os.path.join(PATH_ANNOT, name + '.png'))
         path_center = os.path.join(PATH_CENTRE, name + '.csv')
-        centers = pd.DataFrame.from_csv(path_center).values[:, [1, 0]]
+        centers = pd.read_csv(path_center, index_col=0).values[:, [1, 0]]
 
         slic, points_all, labels = seg_fit.get_slic_points_labels(seg, slic_size=20,
                                                                   slic_regul=0.3)

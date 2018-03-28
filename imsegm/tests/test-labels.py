@@ -15,11 +15,11 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 import imsegm.utils.data_samples as d_spl
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.labeling as seg_lb
 
 # set the output put directory
-PATH_OUTPUT = tl_io.update_path('output', absolute=True)
+PATH_OUTPUT = tl_data.update_path('output', absolute=True)
 
 
 class TestLabels(unittest.TestCase):

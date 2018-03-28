@@ -11,11 +11,15 @@ import time
 import types
 import logging
 import traceback
+import multiprocessing as mproc
+# from functools import partial
 
+import tqdm
 import numpy as np
 # import pandas as pd
 from sklearn import metrics
 
+NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 FILE_RESULTS = 'resultStat.txt'
 FORMAT_DT = '%Y%m%d-%H%M%S'
 CONFIG_JSON = 'config.json'
@@ -106,7 +110,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     :param str dir_name:
     :param bool stamp_unique:
     :param bool skip_load:
-    :return {str: any}:
+    :return {str: ...}:
 
     >>> import shutil
     >>> p = {'path_out': '.'}
@@ -268,7 +272,7 @@ def create_subfolders(path_out, list_folders):
 
     :param str path_out: root dictionary
     :param [str] list_folders: list of subfolders
-    :return:
+    :return int:
 
     >>> import shutil
     >>> dir_name = 'sample_dir'
@@ -288,3 +292,76 @@ def create_subfolders(path_out, list_folders):
             except Exception:
                 logging.error(traceback.format_exc())
     return count
+
+
+class WrapExecuteSequence:
+    """ wrapper for execution paralle of single thread as for...
+
+    >>> it = WrapExecuteSequence(lambda x: (x, x ** 2), range(5), 1)
+    >>> list(it)
+    [(0, 0), (1, 1), (2, 4), (3, 9), (4, 16)]
+    >>> it = WrapExecuteSequence(sum, [[0, 1]] * 5, 2, desc=None)
+    >>> [o for o in it]
+    [1, 1, 1, 1, 1]
+    >>> it = WrapExecuteSequence(min, ([0, 1] for i in range(5)))
+    >>> [o for o in it]
+    [0, 0, 0, 0, 0]
+    """
+
+    def __init__(self, wrap_func, iterate_vals, nb_jobs=NB_THREADS, desc=''):
+        self.wrap_func = wrap_func
+        self.iterate_vals = list(iterate_vals)
+        self.nb_jobs = nb_jobs
+        self.desc = desc
+
+    def __iter__(self):
+        if self.desc is not None:
+            tqdm_bar = tqdm.tqdm(total=len(self), desc=self.desc)
+        else:
+            tqdm_bar = None
+
+        if self.nb_jobs > 1:
+            logging.debug('perform sequential in %i threads', self.nb_jobs)
+            pool = mproc.Pool(self.nb_jobs)
+            for out in pool.imap_unordered(self.wrap_func, self.iterate_vals):
+                yield out
+                if tqdm_bar is not None:
+                    tqdm_bar.update()
+            pool.close()
+            pool.join()
+        else:
+            for out in map(self.wrap_func, self.iterate_vals):
+                yield out
+                if tqdm_bar is not None:
+                    tqdm_bar.update()
+
+    def __len__(self):
+        return len(self.iterate_vals)
+
+
+# def wrap_execute_parallel(wrap_func, iterate_vals, nb_jobs=NB_THREADS, desc=''):
+#     """ wrapper for execution paralle of single thread as for...
+#
+#     :param func wrap_func:
+#     :param [] iterate_vals:
+#     :param int nb_jobs:
+#     :return:
+#
+#     >>> [o for o in wrap_execute_parallel(lambda x: x ** 2, range(5), 1)]
+#     [0, 1, 4, 9, 16]
+#     >>> [o for o in wrap_execute_parallel(sum, [[0, 1]] * 5, 2)]
+#     [1, 1, 1, 1, 1]
+#     """
+#     tqdm_bar = tqdm.tqdm(total=len(iterate_vals), desc=desc)
+#     if nb_jobs > 1:
+#         logging.debug('perform_sequence in %i threads', nb_jobs)
+#         pool = mproc.Pool(nb_jobs)
+#         for out in pool.imap_unordered(wrap_func, iterate_vals):
+#             yield out
+#             tqdm_bar.update()
+#         pool.close()
+#         pool.join()
+#     else:
+#         for out in map(wrap_func, iterate_vals):
+#             yield out
+#             tqdm_bar.update()

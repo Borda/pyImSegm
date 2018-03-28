@@ -17,13 +17,12 @@ import logging
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 import numpy as np
 from skimage import transform
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.ellipse_fitting as ell_fit
 import run_ellipse_annot_match as r_match
@@ -35,8 +34,8 @@ OVERLAP_THRESHOLD = 0.45
 NORM_FUNC = np.median  # other options - mean, max, ...
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
+PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_RESULTS = tl_data.update_path('results', absolute=True)
 
 PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
@@ -58,7 +57,7 @@ def extract_ellipse_object(idx_row, path_images, path_out, norm_size):
     # select image with this name and any extension
     list_imgs = glob.glob(os.path.join(path_images, row['image_name'] + '.*'))
     path_img = sorted(list_imgs)[0]
-    img, _ = tl_io.load_image_2d(path_img)
+    img, _ = tl_data.load_image_2d(path_img)
 
     # create mask according to chosen ellipse
     ell_params = row[COLUMNS_ELLIPSE].tolist()
@@ -66,13 +65,13 @@ def extract_ellipse_object(idx_row, path_images, path_out, norm_size):
                                        ell_params, 1)
 
     # cut the particular image
-    img_cut = tl_io.cut_object(img, mask, 0, use_mask=True, bg_color=None)
+    img_cut = tl_data.cut_object(img, mask, 0, use_mask=True, bg_color=None)
 
     # scaling according to the normal size
     img_norm = transform.resize(img_cut, norm_size)
 
     path_img = os.path.join(path_out, os.path.basename(path_img))
-    tl_io.export_image(path_img, img_norm)
+    tl_data.export_image(path_img, img_norm)
 
 
 def perform_stage(df_group, stage, path_images, path_out):
@@ -94,22 +93,13 @@ def perform_stage(df_group, stage, path_images, path_out):
     if not os.path.isdir(path_out_stage):
         os.mkdir(path_out_stage)
 
-    tqdm_bar = tqdm.tqdm(total=len(df_group), desc='stage %i - size %s'
-                                                   % (stage, norm_size))
-    if params['nb_jobs'] > 1:
-        wrapper_object = partial(extract_ellipse_object,
-                                 path_images=path_images,
-                                 path_out=path_out_stage,
-                                 norm_size=norm_size)
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for _ in mproc_pool.imap_unordered(wrapper_object, df_group.iterrows()):
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for idx_row in df_group.iterrows():
-            extract_ellipse_object(idx_row, path_images, path_out_stage, norm_size)
-            tqdm_bar.update()
+    wrapper_object = partial(extract_ellipse_object, path_images=path_images,
+                             path_out=path_out_stage, norm_size=norm_size)
+    desc = 'stage %i - size %s' % (stage, norm_size)
+    iterate = tl_expt.WrapExecuteSequence(wrapper_object, df_group.iterrows(),
+                                          nb_jobs=params['nb_jobs'],
+                                          desc=desc)
+    list(iterate)
 
 
 def main(params):
@@ -126,7 +116,7 @@ def main(params):
     if not os.path.isdir(params['path_output']):
         os.mkdir(params['path_output'])
 
-    df_info = pd.DataFrame().from_csv(params['path_infofile'])
+    df_info = pd.read_csv(params['path_infofile'], index_col=0)
     df_info = r_match.filter_table(df_info, params['path_images'])
     df_info.dropna(inplace=True)
     df_info = df_info[df_info['ellipse_Jaccard'] >= OVERLAP_THRESHOLD]

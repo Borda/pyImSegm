@@ -19,12 +19,11 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 # import segmentation.annotation as seg_annot
@@ -34,19 +33,19 @@ NAME_CSV_RESULTS = 'info_ovary_images_ellipses.csv'
 OVERLAP_THRESHOLD = 0.
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
 
 PARAMS = {
     'path_ellipses': os.path.join(PATH_IMAGES, 'ellipse_fitting', '*.csv'),
     'path_infofile': os.path.join(PATH_IMAGES, 'info_ovary_images.txt'),
-    'path_output': tl_io.update_path('results', absolute=True),
+    'path_output': tl_data.update_path('results', absolute=True),
 }
 
 
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return {str: ...}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=False,
@@ -66,7 +65,7 @@ def arg_parse_params(params):
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
     for k in (k for k in params if 'path' in k and params[k] is not None):
-        params[k] = tl_io.update_path(params[k], absolute=True)
+        params[k] = tl_data.update_path(params[k], absolute=True)
     logging.info('ARG PARAMETERS: \n %s', repr(params))
     return params
 
@@ -82,7 +81,7 @@ def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD)
     _, row = idx_row
     dict_row = dict(row)
     path_csv = os.path.join(path_dir_csv, row['image_name'] + '.csv')
-    df_ellipses = pd.DataFrame().from_csv(path_csv)
+    df_ellipses = pd.read_csv(path_csv, index_col=0)
 
     pos = row[tl_visu.COLUMNS_POSITION_EGG_ANNOT]
     max_size = 2 * max(pos) + min(pos)
@@ -148,7 +147,7 @@ def main(params):
     logging.info('running...')
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
-    df_info = pd.DataFrame().from_csv(params['path_infofile'], sep='\t')
+    df_info = pd.read_csv(params['path_infofile'], sep='\t', index_col=0)
     df_info = filter_table(df_info, params['path_ellipses'])
     logging.info('filtered %i item in table' % len(df_info))
     path_csv = os.path.join(params['path_output'], NAME_CSV_RESULTS)
@@ -156,25 +155,15 @@ def main(params):
     list_evals = []
     # get the folder
     path_dir_csv = os.path.dirname(params['path_ellipses'])
-    tqdm_bar = tqdm.tqdm(total=len(df_info))
-    if params['nb_jobs'] > 1:
-        wrapper_match = partial(select_optimal_ellipse,
-                                path_dir_csv=path_dir_csv)
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for dict_row in mproc_pool.imap_unordered(wrapper_match,
-                                                   df_info.iterrows()):
-            list_evals.append(dict_row)
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for i, idx_row in enumerate(df_info.iterrows()):
-            dict_row = select_optimal_ellipse(idx_row, path_dir_csv)
-            list_evals.append(dict_row)
-            # every hundreds iteration do export
-            if i % 100 == 0:
-                pd.DataFrame(list_evals).to_csv(path_csv)
-            tqdm_bar.update()
+    wrapper_match = partial(select_optimal_ellipse,
+                            path_dir_csv=path_dir_csv)
+    iterate = tl_expt.WrapExecuteSequence(wrapper_match, df_info.iterrows(),
+                                          nb_jobs=params['nb_jobs'])
+    for i, dict_row in enumerate(iterate):
+        list_evals.append(dict_row)
+        # every hundreds iteration do export
+        if i % 100 == 0:
+            pd.DataFrame(list_evals).to_csv(path_csv)
 
     df_ellipses = pd.DataFrame(list_evals)
     df_ellipses.to_csv(path_csv)

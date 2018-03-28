@@ -10,11 +10,6 @@ import glob
 import logging
 import warnings
 
-import matplotlib
-if os.environ.get('DISPLAY','') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
-    matplotlib.use('Agg')
-
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -127,7 +122,7 @@ def load_landmarks_csv(path_file):
     """
     path_file = os.path.abspath(os.path.expanduser(path_file))
     assert os.path.exists(path_file), 'missing "%s"' % path_file
-    df = pd.DataFrame.from_csv(path_file)
+    df = pd.read_csv(path_file, index_col=0)
     landmarks = df[COLUMNS_COORDS].as_matrix().tolist()
     logging.debug(' load_landmarks_csv (%i): \n%s', len(landmarks),
                   repr(np.asarray(landmarks).astype(int).tolist()))
@@ -253,6 +248,43 @@ def scale_image_intensity(img, im_range=1., quantiles=(2, 98)):
 #     return img
 
 
+def io_imread(path_img):
+    """ jsut a wrapper to suppers debug messages from the PIL function
+
+    :param str path_img:
+    :return ndarray:
+    """
+    log_level = logging.getLogger().getEffectiveLevel()
+    logging.getLogger().setLevel(logging.INFO)
+    img = io.imread(path_img)
+    logging.getLogger().setLevel(log_level)
+    return img
+
+
+def image_open(path_img):
+    """ jsut a wrapper to suppers debug messages from the PIL function
+
+    :param str path_img:
+    :return Image:
+    """
+    log_level = logging.getLogger().getEffectiveLevel()
+    logging.getLogger().setLevel(logging.INFO)
+    img = Image.open(path_img)
+    logging.getLogger().setLevel(log_level)
+    return img
+
+
+def io_imsave(path_img, img):
+    """ jsut a wrapper to suppers debug messages from the PIL function
+
+    :param str path_img:
+    """
+    log_level = logging.getLogger().getEffectiveLevel()
+    logging.getLogger().setLevel(logging.INFO)
+    io.imsave(path_img, img)
+    logging.getLogger().setLevel(log_level)
+
+
 def load_image_2d(path_img):
     """ loading any supported image type
 
@@ -301,7 +333,7 @@ def load_image_2d(path_img):
     n_img, img_ext = os.path.splitext(os.path.basename(path_img))
 
     if img_ext in ['.tif', '.tiff']:
-        img = io.imread(path_img)
+        img = io_imread(path_img)
         # DEPRECATED
         # im = libtiff.TiffFile().get_tiff_array()
         # img = np.empty(im.shape)
@@ -309,8 +341,7 @@ def load_image_2d(path_img):
         #     img[i, :, :] = im[i]
         # img = np.array(img.tolist())
     else:
-        # img = io.imread(path_img)
-        im = Image.open(path_img)
+        im = image_open(path_img)
         if im.mode == '1':
             im = im.convert('L')
         img = np.asarray(im)
@@ -369,14 +400,13 @@ def export_image(path_img, img, stretch_range=True):
     if img.ndim == 2 or (img.ndim == 3 and img.shape[2] == 3):
         if stretch_range and img.max() > 0:
             img = img / float(img.max()) * 255
-        # io.imsave(path_img, im_norm)
         path_img = os.path.splitext(path_img)[0] + '.png'
-        Image.fromarray(img.astype(np.uint8)).save(path_img)
+        io_imsave(path_img, img.astype(np.uint8))
     elif img.ndim == 3:
         if stretch_range and img.max() > 0:
             img = img / float(img.max()) * 255 ** 2
         path_img = os.path.splitext(path_img)[0] + '.tiff'
-        io.imsave(path_img, img)
+        io_imsave(path_img, img)
         # tif = libtiff.TIFF.open(path_img, mode='w')
         # tif.write_image(img_clip.astype(np.uint16))
     else:
@@ -394,7 +424,7 @@ def load_params_from_txt(path_file):
     >>> path_file = './sample_config.txt'
     >>> with open(path_file, 'w') as fp:
     ...     lines = ['"{}" : {},'.format(k, p[k]) for k in p]
-    ...     _= fp.write(os.linesep.join(lines))
+    ...     _= fp.write(os.linesep.join(lines))  # it may return nb characters
     >>> p2 = load_params_from_txt(path_file)
     >>> p2
     {'abc': '123'}
@@ -441,8 +471,7 @@ def convert_img_2_nifti_gray(path_img_in, path_out):
     logging.debug('Convert image to Nifti format "%s" ->  "%s"',
                   path_img_in, path_img_out)
 
-    # img = Image.open(imgIn).convert('LA')
-    img = io.imread(path_img_in)
+    img = io_imread(path_img_in)
     img = color.rgb2gray(img)
 
     img = np.swapaxes(img, 1, 0)
@@ -477,8 +506,7 @@ def convert_img_2_nifti_rgb(path_img_in, path_out):
     logging.debug('Convert image to Nifti format "%s" ->  "%s"',
                   path_img_in, path_img_out)
 
-    # img = Image.open(pImgIn)
-    img = io.imread(path_img_in)
+    img = io_imread(path_img_in)
     dims = img.shape
 
     img = img.reshape([dims[0], dims[1], 1, dims[2], 1])
@@ -529,7 +557,7 @@ def convert_nifti_2_img(path_img_in, path_img_out):
     if img.max() > 1:
         img = img / 255.
 
-    io.imsave(path_img_out, img)
+    io_imsave(path_img_out, img)
     return path_img_out
 
 
@@ -568,7 +596,7 @@ def load_image_tiff_volume(path_img, im_range=None):
     path_img = update_path(path_img)
     assert os.path.exists(path_img), 'given image "%s" not exist!' % path_img
 
-    img = io.imread(path_img)
+    img = io_imread(path_img)
 
     # import libtiff
     # tif = libtiff.TIFF.open(path_img, mode='r')
@@ -689,13 +717,13 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     (15, 323, 512)
     """
     assert os.path.isfile(path_img), 'missing: %s' % path_img
-    file_posix = os.path.splitext(os.path.basename(path_img))[1]
-    if file_posix == '.zvi':
+    file_ext = os.path.splitext(os.path.basename(path_img))[1]
+    if file_ext == '.zvi':
         img_b1, img_b2 = load_zvi_volume_double_band_split(path_img)
-    elif file_posix in ['.tif', '.tiff']:
+    elif file_ext in ['.tif', '.tiff']:
         img_b1, img_b2 = load_tiff_volume_split_double_band(path_img)
     else:  # assuming PNG
-        img = np.array(Image.open(path_img))
+        img = io_imread(path_img)
         img_b1 = img[..., 0]
         img_b2 = img[..., 1]
     # in case thete is just single clice work with it as 2D image
@@ -727,7 +755,7 @@ def scale_image_size(path_img, size, path_out=None):
     if not path_out:
         path_out = path_img
     logging.debug('Image scaling %s -> %s"', path_img, path_out)
-    img = Image.open(path_img)
+    img = image_open(path_img)
     img = img.resize(size, Image.ANTIALIAS)
     img.save(path_out)
     return path_out

@@ -31,8 +31,9 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import tqdm
@@ -105,7 +106,7 @@ SEGM_PARAMS = {
     'estimate': TYPE_GMM[0],
 }
 PATH_IMAGES = os.path.join(tl_data.update_path('images'), 'drosophila_disc')
-# PATH_IMAGES = tl_io.update_path(os.path.join('images', 'langerhans_islets'))
+# PATH_IMAGES = tl_data.update_path(os.path.join('images', 'langerhans_islets'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_EXPERIMENT = 'experiment_segm-unSupervised'
 SEGM_PARAMS.update({
@@ -120,7 +121,7 @@ def arg_parse_params(params):
     """ argument parser from cmd
 
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: any}
+    :return {str: ...}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-list', '--path_train_list', type=str, required=False,
@@ -197,7 +198,7 @@ def load_model(path_model):
     """ load exported segmentation model
 
     :param str path_model:
-    :return (...):
+    :return (obj, obj, obj, {}, [str]):
     """
     logging.info('loading dumped model "%s"', path_model)
     with open(path_model, 'rb') as f:
@@ -301,15 +302,15 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None):
     :param {str: ...} params: segmentation parameters
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
-    :return str, ndarray:
+    :return (str, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(img_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
     idx_name = get_idx_name(idx, path_img)
     img = load_image(path_img, params['img_type'])
 
-    Image.fromarray(img.astype(np.uint8)).save(
-        os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png'))
+    path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
+    tl_data.io_imsave(path_img, img.astype(np.uint8))
 
     dict_debug_imgs = dict() if SHOW_DEBUG_IMAGES else None
     try:
@@ -341,15 +342,15 @@ def segment_image_model(imgs_idx_path, params, scaler, pca, model, path_out=None
     :param obj model:
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
-    :return str, ndarray:
+    :return (str, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
     idx_name = get_idx_name(idx, path_img)
     img = load_image(path_img, params['img_type'])
 
-    Image.fromarray(img.astype(np.uint8)).save(
-        os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png'))
+    path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
+    tl_data.io_imsave(path_img, img.astype(np.uint8))
 
     dict_debug_imgs = dict() if SHOW_DEBUG_IMAGES else None
 
@@ -370,12 +371,12 @@ def segment_image_model(imgs_idx_path, params, scaler, pca, model, path_out=None
     return idx_name, segm
 
 
-def compare_segms_metric_ars(dict_segm_a, dict_segm_b, posix=''):
+def compare_segms_metric_ars(dict_segm_a, dict_segm_b, suffix=''):
     """ compute ARS for each pair of segmentation
 
     :param {str: ndarray} dict_segm_a:
     :param {str: ndarray} dict_segm_b:
-    :param str posix:
+    :param str suffix:
     :return DF:
     """
     df_ars = pd.DataFrame()
@@ -386,7 +387,7 @@ def compare_segms_metric_ars(dict_segm_a, dict_segm_b, posix=''):
         y_a = dict_segm_a[n].ravel()
         y_b = dict_segm_b[n].ravel()
         dict_ars = {'image': n,
-                    'ARS' + posix: metrics.adjusted_rand_score(y_a, y_b)}
+                    'ARS' + suffix: metrics.adjusted_rand_score(y_a, y_b)}
         df_ars = df_ars.append(dict_ars, ignore_index=True)
     df_ars.set_index(['image'], inplace=True)
     return df_ars
@@ -396,23 +397,13 @@ def experiment_single_gmm(params, paths_img, path_out, path_visu):
     imgs_idx_path = list(zip([None] * len(paths_img), paths_img))
     logging.info('Perform image segmentation as single image in each time')
     dict_segms_gmm = {}
-    tqdm_bar = tqdm.tqdm(total=len(imgs_idx_path), desc='experiment single GMM')
     wrapper_segment = partial(segment_image_independent, params=params,
                               path_out=path_out, path_visu=path_visu)
-    if params['nb_jobs'] > 1:
-        logging.debug('running experiments in %i threads', params['nb_jobs'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for name, segm in mproc_pool.imap_unordered(wrapper_segment,
-                                                    imgs_idx_path):
-            dict_segms_gmm[name] = segm
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for img_idx_path in imgs_idx_path:
-            name, segm = wrapper_segment(img_idx_path)
-            dict_segms_gmm[name] = segm
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='experiment single GMM')
+    for name, segm in iterate:
+        dict_segms_gmm[name] = segm
     return dict_segms_gmm
 
 
@@ -435,24 +426,14 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu):
 
     logging.info('Perform image segmentation from group model')
     dict_segms_group = {}
-    tqdm_bar = tqdm.tqdm(total=len(imgs_idx_path), desc='experiment group GMM')
     wrapper_segment = partial(segment_image_model, params=params,
                               scaler=scaler, pca=pca, model=model,
                               path_out=path_out, path_visu=path_visu)
-    if params['nb_jobs'] > 1:
-        logging.debug('running experiments in %i threads', params['nb_jobs'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for name, segm in mproc_pool.imap_unordered(wrapper_segment,
-                                                    imgs_idx_path):
-            dict_segms_group[name] = segm
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for img_idx_path in imgs_idx_path:
-            name, segm = wrapper_segment(img_idx_path)
-            dict_segms_group[name] = segm
-            tqdm_bar.update()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+                                          nb_jobs=params['nb_jobs'],
+                                          desc='experiment group GMM')
+    for name, segm in iterate:
+        dict_segms_group[name] = segm
     return dict_segms_group
 
 
@@ -480,7 +461,7 @@ def main(params):
     assert os.path.isfile(params['path_train_list']), \
         'missing %s' % params['path_train_list']
     dict_segms_gmm, dict_segms_group = {}, {}
-    df_paths = pd.DataFrame.from_csv(params['path_train_list'])
+    df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     paths_img = df_paths['path_image'].tolist()
 
     def path_expt(n):
@@ -500,7 +481,7 @@ def main(params):
     time.sleep(1)
 
     df_ars = compare_segms_metric_ars(dict_segms_gmm, dict_segms_group,
-                                      posix='_gmm-group')
+                                      suffix='_gmm-group')
     df_ars.to_csv(path_expt(NAME_CSV_ARS_CORES))
     logging.info(df_ars.describe())
 

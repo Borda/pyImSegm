@@ -24,24 +24,24 @@ from functools import partial
 
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import tqdm
-from PIL import Image
 import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
+import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import imsegm.annotation as seg_annot
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
-PATH_IMAGES = tl_io.update_path(os.path.join('images', 'drosophila_ovary_slice'))
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
+PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_RESULTS = tl_data.update_path('results', absolute=True)
 PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(PATH_IMAGES, 'annot_eggs', '*.png'),
@@ -58,7 +58,7 @@ FIGURE_SIZE = 12
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return ({str: str}, int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=False,
@@ -83,7 +83,7 @@ def arg_parse_params(params):
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
     for k in (k for k in params if 'path' in k):
-        params[k] = tl_io.update_path(params[k], absolute=True)
+        params[k] = tl_data.update_path(params[k], absolute=True)
     logging.info('ARG PARAMETERS: \n %s', repr(params))
     return params
 
@@ -93,12 +93,12 @@ def figure_draw_img_centre_segm(fig, img, centres, segm,
     """ add to a figure drawing of center
     in case no figure exists, create new one
 
-    :param fig:
+    :param obj fig:
     :param ndarray img:
     :param [[int]] centres:
     :param ndarray segm:
     :param int subfig_size:
-    :return:
+    :return obj:
     """
     if fig is None:
         norm_size = np.array(img.shape[:2]) / float(np.max(img.shape))
@@ -127,11 +127,11 @@ def figure_draw_img_centre_segm(fig, img, centres, segm,
 def figure_draw_annot_csv(fig, img, row_slice, subfig_size=FIGURE_SIZE):
     """ draw from expert annotation stored in info file
 
-    :param fig:
+    :param obj fig:
     :param ndarray img: backround image
     :param row_slice: line from info file containing annotation
     :param int subfig_size:
-    :return:
+    :return obj:
     """
     if fig is None:
         norm_size = np.array(img.shape[:2]) / float(np.max(img.shape))
@@ -174,7 +174,6 @@ def export_figure(idx_row, df_slices_info, path_out):
     :param idx_row:
     :param df_slices_info:
     :param path_out:
-    :return:
     """
     _, row = idx_row
     img_name = os.path.splitext(os.path.basename(row['path_image']))[0]
@@ -184,9 +183,9 @@ def export_figure(idx_row, df_slices_info, path_out):
             logging.debug('missing image in annotation - "%s"', img_name)
             return
 
-        img = np.array(Image.open(os.path.join(row['path_image'])))
-        segm = np.array(Image.open(os.path.join(row['path_segm'])))
-        df = pd.DataFrame().from_csv(os.path.join(row['path_centers']))
+        img = tl_data.io_imread(row['path_image'])
+        segm =tl_data.io_imread(row['path_segm'])
+        df = pd.read_csv(os.path.join(row['path_centers']), index_col=0)
         centres = df[['X', 'Y']].values
 
         fig = figure_draw_img_centre_segm(None, img, centres, segm)
@@ -203,9 +202,9 @@ def export_figure(idx_row, df_slices_info, path_out):
 
 
 def main(params):
-    df_paths = tl_io.find_files_match_names_across_dirs([params['path_images'],
-                                                         params['path_segms'],
-                                                         params['path_centers']])
+    df_paths = tl_data.find_files_match_names_across_dirs([params['path_images'],
+                                                           params['path_segms'],
+                                                           params['path_centers']])
     df_paths.columns = ['path_image', 'path_segm', 'path_centers']
     df_paths.index = range(1, len(df_paths) + 1)
 
@@ -214,18 +213,13 @@ def main(params):
             'missing folder: "%s"' % os.path.dirname(params['path_output'])
         os.mkdir(params['path_output'])
 
-    mproc_pool = mproc.Pool(params['nb_jobs'])
     df_slices_info = seg_annot.load_info_group_by_slices(params['path_infofile'],
                                                          params['stages'])
     wrapper_export = partial(export_figure, df_slices_info=df_slices_info,
                              path_out=params['path_output'])
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
-
-    for _ in mproc_pool.imap_unordered(wrapper_export, df_paths.iterrows()):
-        tqdm_bar.update()
-        # gc.collect(), time.sleep(1)
-    mproc_pool.close()
-    mproc_pool.join()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_export, df_paths.iterrows(),
+                                          nb_jobs=params['nb_jobs'])
+    list(iterate)
     logging.info('DONE')
 
 

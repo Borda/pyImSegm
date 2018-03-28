@@ -33,18 +33,18 @@ from functools import partial
 import tqdm
 import pandas as pd
 import numpy as np
-from PIL import Image
 from scipy import spatial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import imsegm.superpixels as seg_spx
@@ -103,9 +103,9 @@ CENTER_PARAMS = {
     'center_dist_thr': 50,  # distance to from annotated center as a point
 }
 
-PATH_IMAGES = os.path.join(tl_io.update_path('images'),
+PATH_IMAGES = os.path.join(tl_data.update_path('images'),
                            'drosophila_ovary_slice')
-PATH_RESULTS = tl_io.update_path('results', absolute=True)
+PATH_RESULTS = tl_data.update_path('results', absolute=True)
 CENTER_PARAMS.update({
     'path_list': os.path.join(PATH_IMAGES,
                               'list_imgs-segm-center-levels_short.csv'),
@@ -124,7 +124,7 @@ CENTER_PARAMS.update({
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return {str: ...}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-list', '--path_list', type=str, required=False,
@@ -158,10 +158,10 @@ def arg_parse_params(params):
             paths[k] = ''
             continue
         if '*' in params[k] or k == 'path_expt':
-            p_dir = tl_io.update_path(os.path.dirname(params[k]))
+            p_dir = tl_data.update_path(os.path.dirname(params[k]))
             paths[k] = os.path.join(p_dir, os.path.basename(params[k]))
         else:
-            paths[k] = tl_io.update_path(params[k], absolute=True)
+            paths[k] = tl_data.update_path(params[k], absolute=True)
             p_dir = paths[k]
         assert os.path.exists(p_dir), 'missing (%s) %s' % (k, p_dir)
     # load saved configuration
@@ -196,11 +196,11 @@ def find_match_images_segms_centers(path_pattern_imgs, path_pattern_segms,
     :param str path_pattern_imgs:
     :param str path_pattern_segms:
     :param str path_pattern_center:
-    :return: DF<path_img, path_segm, path_center>
+    :return DF: DF<path_img, path_segm, path_center>
     """
     logging.info('find match images-segms-centres...')
     list_paths = [path_pattern_imgs, path_pattern_segms, path_pattern_center]
-    df_paths = tl_io.find_files_match_names_across_dirs(list_paths)
+    df_paths = tl_data.find_files_match_names_across_dirs(list_paths)
 
     if path_pattern_center is None:
         df_paths.columns = ['path_image', 'path_segm']
@@ -232,18 +232,18 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
     :param (int, DF:row) idx_row:
     :param str path_out: path to output directory
     :param {} dict_relabel:
-    :return: str, np.array, np.array, [[int, int]] or np.array
+    :return (str, ndarray, ndarray, [[int, int]]):
     """
     idx, row_path = idx_row
     for k in ['path_image', 'path_segm', 'path_centers']:
-        row_path[k] = tl_io.update_path(row_path[k])
+        row_path[k] = tl_data.update_path(row_path[k])
         assert os.path.exists(row_path[k]), 'missing %s' % row_path[k]
 
     idx_name = get_idx_name(idx, row_path['path_image'])
-    img_struc, img_gene = tl_io.load_img_double_band_split(row_path['path_image'],
-                                                           im_range=None)
+    img_struc, img_gene = tl_data.load_img_double_band_split(row_path['path_image'],
+                                                             im_range=None)
     # img_rgb = np.array(Image.open(row_path['path_img']))
-    img_rgb = tl_io.merge_image_channels(img_struc, img_gene)
+    img_rgb = tl_data.merge_image_channels(img_struc, img_gene)
     if np.max(img_rgb) > 1:
         img_rgb = img_rgb / float(np.max(img_rgb))
 
@@ -254,22 +254,22 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
         if dict_relabel is not None:
             segm = seg_lbs.merge_probab_labeling_2d(segm, dict_relabel)
     else:
-        segm = np.array(Image.open(row_path['path_segm']))
+        segm = tl_data.io_imread(row_path['path_segm'])
         if dict_relabel is not None:
             segm = seg_lbs.relabel_by_dict(segm, dict_relabel)
 
     if row_path['path_centers'] is not None \
             and os.path.isfile(row_path['path_centers']):
-        posix = os.path.splitext(os.path.basename(row_path['path_centers']))[-1]
-        if posix == '.csv':
-            centers = tl_io.load_landmarks_csv(row_path['path_centers'])
-            centers = tl_io.swap_coord_x_y(centers)
-        elif posix == '.png':
-            centers = np.array(Image.open(row_path['path_centers']))
+        ext = os.path.splitext(os.path.basename(row_path['path_centers']))[-1]
+        if ext == '.csv':
+            centers = tl_data.load_landmarks_csv(row_path['path_centers'])
+            centers = tl_data.swap_coord_x_y(centers)
+        elif ext == '.png':
+            centers = tl_data.io_imread(row_path['path_centers'])
             # relabel loaded segm into relevant one
             centers = np.array(LUT_ANNOT_CENTER_RELABEL)[centers]
         else:
-            logging.warning('not supported file format %s', posix)
+            logging.warning('not supported file format %s', ext)
     else:
         centers = None
 
@@ -311,7 +311,7 @@ def compute_min_dist_2_centers(centers, points):
 
 def export_show_image_points_labels(path_out, img_name, img, seg, points,
                                     labels=None, slic=None, seg_centers=None,
-                                    fig_posix='', dict_label_marker=tl_visu.DICT_LABEL_MARKER):
+                                    fig_suffix='', dict_label_marker=tl_visu.DICT_LABEL_MARKER):
     """ export complete visualisation of labeld point over rgb image and segm
 
     :param str path_out:
@@ -322,7 +322,7 @@ def export_show_image_points_labels(path_out, img_name, img, seg, points,
     :param [int] labels:
     :param slic: np.array
     :param seg_centers:
-    :param str fig_posix:
+    :param str fig_suffix:
     :param dict_label_marker:
     """
     points = np.array(points)
@@ -336,7 +336,7 @@ def export_show_image_points_labels(path_out, img_name, img, seg, points,
                                    seg_contour=seg_centers,
                                    dict_label_marker=dict_label_marker)
     fig.tight_layout()
-    fig.savefig(os.path.join(path_out, img_name + fig_posix + '.png'),
+    fig.savefig(os.path.join(path_out, img_name + fig_suffix + '.png'),
                 bbox_inches='tight', pad_inches=0)
     plt.close(fig)
 
@@ -349,7 +349,7 @@ def estim_points_compute_features(name, img, segm, params):
     :param ndarray img:
     :param ndarray segm:
     :param {str: any} params:
-    :return str, np.array, [(int, int)], [[float]], [str]:
+    :return (str, ndarray, [(int, int)], [[float]], [str]):
     """
     # superpixels on image
     assert img.shape[:2] == segm.shape[:2], \
@@ -371,7 +371,7 @@ def compute_points_features(segm, points, params):
     :param ndarray segm:
     :param [(int, int)] points:
     :param {str: any} params:
-    :return: [[float] * nb_features] * nb_points, [str] * nb_features
+    :return ([[float]], [str]): [[float] * nb_features] * nb_points, [str] * nb_features
     """
     features, feature_names = np.empty((len(points), 0)), list()
 
@@ -454,41 +454,34 @@ def dataset_load_images_segms_compute_features(params, df_paths,
     :param {str: any} params:
     :param df_paths: DF
     :param int nb_jobs:
-    :return {str: any}:
+    :return {str: ...}:
     """
     dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
     logging.info('loading input data (images, segmentation and centers)')
     path_show_in = os.path.join(params['path_expt'], FOLDER_INPUT)
-    tqdm_bar = tqdm.tqdm(total=len(df_paths), desc='loading input data')
     wrapper_load_data = partial(load_image_segm_center, path_out=path_show_in,
                                 dict_relabel=params['dict_relabel'])
-    pool = mproc.Pool(nb_jobs)
-    for name, img, seg, center in pool.imap(wrapper_load_data, df_paths.iterrows()):
+    iterate = tl_expt.WrapExecuteSequence(wrapper_load_data, df_paths.iterrows(),
+                                          nb_jobs=nb_jobs, desc='loading input data')
+    for name, img, seg, center in iterate:
         dict_imgs[name] = img
         dict_segms[name] = seg
         dict_center[name] = center
-        tqdm_bar.update()
-    pool.close()
-    pool.join()
 
     dict_slics, dict_points, dict_features = dict(), dict(), dict()
     logging.info('estimate candidate points and compute features')
-    tqdm_bar = tqdm.tqdm(total=len(dict_imgs),
-                         desc = 'estimate candidates & features')
     gene_name_img_seg = ((name, dict_imgs[name], dict_segms[name])
                           for name in dict_imgs)
     wrapper_points_features = partial(wrapper_estim_points_compute_features,
                                       params=params)
     feature_names = None
-    pool = mproc.Pool(nb_jobs)
-    for name, slic, points, features, feature_names \
-            in pool.imap_unordered(wrapper_points_features, gene_name_img_seg):
+    iterate = tl_expt.WrapExecuteSequence(wrapper_points_features,
+                                          gene_name_img_seg, nb_jobs=nb_jobs,
+                                          desc='estimate candidates & features')
+    for name, slic, points, features, feature_names in iterate:
         dict_slics[name] = slic
         dict_points[name] = points
         dict_features[name] = features
-        tqdm_bar.update()
-    pool.close()
-    pool.join()
     logging.debug('computed features:\n %s', repr(feature_names))
 
     dict_labels = dict()
@@ -500,7 +493,7 @@ def dataset_load_images_segms_compute_features(params, df_paths,
                                                dict_points[name], params)
         points = np.asarray(dict_points[name])[np.asarray(dict_labels[name]) == 1]
         path_csv = os.path.join(path_points_train, name + '.csv')
-        tl_io.save_landmarks_csv(path_csv, points)
+        tl_data.save_landmarks_csv(path_csv, points)
 
         tqdm_bar.update()
 
@@ -521,17 +514,15 @@ def export_dataset_visual(path_output, dict_imgs, dict_segms, dict_slics,
     :param int nb_jobs: number processing in parallel
     """
     logging.info('export training visualisations')
-    tqdm_bar = tqdm.tqdm(total=len(dict_imgs), desc='exporting visualisations')
 
     path_out = os.path.join(path_output, FOLDER_POINTS_TRAIN)
     gener_args = ((path_out, name, dict_imgs[name], dict_segms[name],
                    dict_points[name], dict_labels[name], dict_slics[name],
                    None, '_train') for name in dict_imgs)
-    pool = mproc.Pool(nb_jobs)
-    for _ in pool.imap_unordered(wrapper_draw_export_slic_centers, gener_args):
-        tqdm_bar.update()
-    pool.close()
-    pool.join()
+    iterate = tl_expt.WrapExecuteSequence(wrapper_draw_export_slic_centers,
+                                          gener_args, nb_jobs=nb_jobs,
+                                          desc='exporting visualisations')
+    list(iterate)
 
 
 def compute_statistic_centers(dict_stat, img, segm, center, slic, points, labels,
@@ -547,7 +538,7 @@ def compute_statistic_centers(dict_stat, img, segm, center, slic, points, labels
     :param labels:
     :param {str: ...} params:
     :param str path_out:
-    :return:
+    :return {}:
     """
     labels_gt = label_close_points(center, points, params)
 
@@ -590,7 +581,7 @@ def detect_center_candidates(name, image, segm, centers_gt, slic, points,
     :param {} params:
     :param paths: path
     :param classif: obj
-    :return:
+    :return {}:
     """
     labels = classif.predict(features)
     # proba = classif.predict_proba(features)
@@ -601,7 +592,7 @@ def detect_center_candidates(name, image, segm, centers_gt, slic, points,
     path_visu = os.path.join(path_out, FOLDER_POINTS_VISU)
 
     path_csv = os.path.join(path_points, name + '.csv')
-    tl_io.save_landmarks_csv(path_csv, tl_io.swap_coord_x_y(candidates))
+    tl_data.save_landmarks_csv(path_csv, tl_data.swap_coord_x_y(candidates))
     export_show_image_points_labels(path_visu, name, image, segm, points,
                                     labels, slic, centers_gt)
 
@@ -624,7 +615,7 @@ def load_dump_data(path_dump_data):
     """ loading saved data prom previous stages
 
     :param path_dump_data:
-    :return: {} * N
+    :return {}:
     """
     logging.info('loading dumped data "%s"', path_dump_data)
     # with open(os.path.join(path_out, NAME_DUMP_TRAIN_DATA), 'r') as f:
@@ -663,14 +654,11 @@ def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
                                 params=params, classif=classif,
                                 path_output=params['path_expt'])
     df_stat = pd.DataFrame()
-    tqdm_bar = tqdm.tqdm(total=len(dict_imgs), desc='experiment LOO')
-    pool = mproc.Pool(params['nb_jobs'])
-    for dict_stat in pool.imap_unordered(wrapper_detection, gener_data):
+    iterate = tl_expt.WrapExecuteSequence(wrapper_detection,
+                                          gener_data, nb_jobs=params['nb_jobs'])
+    for dict_stat in iterate:
         df_stat = df_stat.append(dict_stat, ignore_index=True)
         df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STAT_TRAIN))
-        tqdm_bar.update()
-    pool.close()
-    pool.join()
 
     df_stat.set_index(['image'], inplace=True)
     df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STAT_TRAIN))
@@ -692,10 +680,11 @@ def load_df_paths(params):
     path_csv = os.path.join(params['path_expt'], NAME_CSV_TRIPLES)
     if os.path.isfile(path_csv) and not FORCE_RELOAD:
         logging.info('loading path pairs "%s"', path_csv)
-        df_paths = pd.DataFrame.from_csv(path_csv, encoding='utf-8')
+        df_paths = pd.read_csv(path_csv, encoding='utf-8', index_col=0)
     else:
         if os.path.isfile(params['path_list']):
-            df_paths = pd.DataFrame.from_csv(params['path_list'], encoding='utf-8')
+            df_paths = pd.read_csv(params['path_list'], index_col=0,
+                                   encoding='utf-8')
         else:
             df_paths = find_match_images_segms_centers(params['path_images'],
                                                        params['path_segms'],

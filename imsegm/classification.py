@@ -13,7 +13,7 @@ import collections
 import traceback
 # import gc
 # import time
-import multiprocessing as mproc
+# import multiprocessing as mproc
 
 import numpy as np
 import pandas as pd
@@ -30,6 +30,7 @@ from sklearn import pipeline, linear_model, neural_network
 from sklearn import model_selection
 
 import imsegm.labeling as seg_lbs
+import imsegm.utils.experiments as tl_expt
 
 # NAME_FILE_RESULTS = 'results.csv'
 TEMPLATE_NAME_CLF = 'classifier_{}.pkl'
@@ -378,17 +379,11 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
     if names is None:
         names = map(str, range(len(segms)))
     df_stat = pd.DataFrame()
-    if nb_jobs > 1:
-        mproc_pool = mproc.Pool(nb_jobs)
-        for dict_stat in mproc_pool.imap_unordered(
-                compute_classif_stat_segm_annot, zip(annots, segms, names)):
-            df_stat = df_stat.append(dict_stat, ignore_index=True)
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for annot, seg, name in zip(annots, segms, names):
-            dict_stat = compute_classif_stat_segm_annot((annot, seg, name))
-            df_stat = df_stat.append(dict_stat, ignore_index=True)
+    iterate = tl_expt.WrapExecuteSequence(compute_classif_stat_segm_annot,
+                                          zip(annots, segms, names),
+                                          nb_jobs=nb_jobs)
+    for dict_stat in iterate:
+        df_stat = df_stat.append(dict_stat, ignore_index=True)
     df_stat.set_index('name', inplace=True)
     return df_stat
 

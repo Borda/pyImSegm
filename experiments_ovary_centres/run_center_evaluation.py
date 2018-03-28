@@ -18,23 +18,23 @@ import time
 import logging
 import traceback
 import gc
-import multiprocessing as mproc
+# import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 import numpy as np
-from PIL import Image
 from scipy import ndimage
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '':
-    logging.warning('No display found. Using non-interactive Agg backend')
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import imsegm.annotation as seg_annot
@@ -80,7 +80,7 @@ def estimate_eggs_from_info(row_slice, mask_shape):
     by ant, post and lat in the all info table
 
     :param str path_img:
-    :return: ndarray
+    :return ndarray: ndarray
     """
     pos_ant, pos_lat, pos_post = tl_visu.parse_annot_rectangles(row_slice)
     list_masks = tl_visu.draw_eggs_rectangle(mask_shape, pos_ant, pos_lat,
@@ -165,7 +165,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
     try:
         if EXPORT_ANNOT_EGGS:
             path_img = os.path.join(path_annot, idx + '.png')
-            Image.fromarray(mask_eggs.astype(np.uint8)).save(path_img)
+            tl_data.io_imsave(path_img, mask_eggs.astype(np.uint8))
 
         if VISUAL_ANNOT_EGGS:
             fig = tl_visu.figure_image_segm_results(img, mask_eggs)
@@ -193,7 +193,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
     :param str path_info:
     :param str path_out:
     :param int nb_jobs:
-    :return:
+    :return DF:
     """
     logging.info('evaluate stages: %s', repr(stage))
     str_stage = '-'.join(map(str, stage))
@@ -205,7 +205,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
         df_slices_info.to_csv(path_csv)
     else:
         logging.debug('loading slices_info from "%s"', path_csv)
-        df_slices_info = pd.DataFrame().from_csv(path_csv)
+        df_slices_info = pd.read_csv(path_csv, index_col=0)
 
     if len(df_slices_info) == 0:
         return df_paths
@@ -221,29 +221,17 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
     tl_expt.create_subfolders(path_out, list_dirs)
 
     # perfom on new images
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
     stage_prefix = '[stage-%s] ' % str_stage
     logging.info('start section %s - load_center_evaluate ...', stage_prefix)
-    if nb_jobs > 1:
-        wrapper_detection = partial(load_center_evaluate, df_annot=df_slices_info,
-                                    path_annot=path_annot, path_visu=path_visu,
-                                    col_prefix=stage_prefix)
-        mproc_pool = mproc.Pool(nb_jobs)
-        for dict_eval in mproc_pool.imap_unordered(wrapper_detection,
-                                                   df_paths.iterrows()):
-            df_eval = df_eval.append(dict_eval, ignore_index=True)
-            df_eval.to_csv(os.path.join(path_out, NAME_CSV_TRIPLES_TEMP))
-            tqdm_bar.update()
-            # gc.collect(), time.sleep(1)
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        for idx_row in df_paths.iterrows():
-            dict_eval = load_center_evaluate(idx_row, df_slices_info,
-                                             path_annot, path_visu, stage_prefix)
-            df_eval = df_eval.append(dict_eval, ignore_index=True)
-            df_eval.to_csv(os.path.join(path_out, NAME_CSV_TRIPLES_TEMP))
-            tqdm_bar.update()
+    wrapper_detection = partial(load_center_evaluate, df_annot=df_slices_info,
+                                path_annot=path_annot, path_visu=path_visu,
+                                col_prefix=stage_prefix)
+    iterate = tl_expt.WrapExecuteSequence(wrapper_detection, df_paths.iterrows(),
+                                          nb_jobs=nb_jobs)
+    for dict_eval in iterate:
+        df_eval = df_eval.append(dict_eval, ignore_index=True)
+        df_eval.to_csv(os.path.join(path_out, NAME_CSV_TRIPLES_TEMP))
+        # gc.collect(), time.sleep(1)
     return df_eval
 
 

@@ -16,7 +16,6 @@ import logging
 import pickle
 import argparse
 
-from PIL import Image
 import numpy as np
 import pandas as pd
 
@@ -39,7 +38,7 @@ NAME_NPZ_MODEL_MIXTURE = 'RG2SP_mixture-model.npz'
 def arg_parse_params():
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return: {str: str}, int
+    :return {str: str}:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-annot', '--path_annot', type=str, required=False,
@@ -65,7 +64,7 @@ def main(path_annot, path_out, nb_comp=5):
            [os.path.basename(p) for p in list_paths[:5]])
     list_segms = []
     for path_seg in list_paths:
-        seg = np.array(Image.open(path_seg))
+        seg = tl_data.io_imread(path_seg)
         list_segms.append(seg)
 
     list_rays, _ = tl_rg.compute_object_shapes(list_segms, ray_step=RAY_STEP,

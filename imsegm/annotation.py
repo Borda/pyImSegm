@@ -14,7 +14,9 @@ from PIL import Image
 from skimage import io
 from scipy import interpolate
 
-sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+# sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+import imsegm.utils.data_io as tl_data
+
 COLUMNS_POSITION = ('ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y')
 SLICE_NAME_GROUPING = 'stack_path'
 # set distance in Z axis whether near sliuce may still belong to the same egg
@@ -58,7 +60,7 @@ def unique_image_colors(img):
     colors = image.convert('RGB').getcolors()
     if colors is None:
         logging.warning('selected image contains more then 256 colors')
-        nb_pixels = np.prod(img.shape[:2])
+        nb_pixels = int(np.prod(img.shape[:2]))
         colors = image.convert('RGB').getcolors(maxcolors=nb_pixels)
     uq_colors = [clr for nb, clr in colors]
     return uq_colors
@@ -163,7 +165,7 @@ def image_frequent_colors(img, ratio_treshold=1e-3):
     :param ndarray img: np.array<h, w, 3>
     :param float ratio_treshold: percentage of nb color pixels to be assumed
         as important
-    :return:
+    :return {}:
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (50, 50, 3)).astype(np.uint8)
@@ -176,7 +178,7 @@ def image_frequent_colors(img, ratio_treshold=1e-3):
     """
     if img.ndim == 3:
         img = img[:, :, :3]
-    nb_pixels = np.product(img.shape[:2])
+    nb_pixels = int(np.product(img.shape[:2]))
     nb_px_min = nb_pixels * ratio_treshold
     image = Image.fromarray(img)
     img_colors = image.getcolors(maxcolors=nb_pixels)
@@ -200,7 +202,7 @@ def dir_images_frequent_colors(paths_img, ratio_treshold=1e-3):
     logging.debug('passing %i images', len(paths_img))
     dict_colors = dict()
     for path_im in paths_img:
-        img = io.imread(path_im)
+        img = tl_data.io_imread(path_im)
         local_dict_colors = image_frequent_colors(img, ratio_treshold)
         for clr in local_dict_colors:
             if clr not in dict_colors:
@@ -319,8 +321,7 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     :param [str] pos_columns:
     :return: DF
 
-    >>> import imsegm.utils.data_io as tl_io
-    >>> path_txt = os.path.join(tl_io.update_path('images'),
+    >>> path_txt = os.path.join(tl_data.update_path('images'),
     ...                 'drosophila_ovary_slice', 'info_ovary_images.txt')
     >>> load_info_group_by_slices(path_txt, [4]) # doctest: +NORMALIZE_WHITESPACE
                 ant_x  ant_y  lat_x  lat_y post_x post_y
@@ -328,7 +329,7 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     insitu7569  [298]  [327]  [673]  [411]  [986]  [155]
     """
     logging.info('loading info file and filter stages...')
-    df = pd.DataFrame().from_csv(path_txt, sep='\t')
+    df = pd.read_csv(path_txt, sep='\t', index_col=0)
     logging.debug('loaded %i records', len(df))
     df = df[df['stage'].isin(list(stages))]
     logging.debug('filtered %i records', len(df))

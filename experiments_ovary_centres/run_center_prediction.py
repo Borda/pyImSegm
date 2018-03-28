@@ -17,15 +17,14 @@ import sys
 import time, gc
 import logging
 import traceback
-import multiprocessing as mproc
+# import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
 import imsegm.utils.experiments as tl_expt
-import imsegm.utils.data_io as tl_io
+import imsegm.utils.data_io as tl_data
 import imsegm.classification as seg_clf
 import run_center_candidate_training as run_train
 import run_center_clustering as run_clust
@@ -61,7 +60,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
     :param obj classif:
     :param str path_classif:
     :param str path_output:
-    :return: {str: float}
+    :return {str: float}:
     """
     _, row = idx_row
     dict_center = dict(row)
@@ -105,17 +104,17 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs,
     :param str path_segs:
     :param str path_centers:
     :param bool force_reload:
-    :return:
+    :return DF:
     """
     if os.path.isfile(path_csv):
         logging.info('loading path pairs "%s"', path_csv)
-        df_paths = pd.DataFrame().from_csv(path_csv)
+        df_paths = pd.read_csv(path_csv, index_col=0)
         df_paths['image'] = df_paths['path_image'].apply(
             lambda x: os.path.splitext(os.path.basename(x))[0])
         df_paths.set_index('image', inplace=True)
     elif os.path.isfile(path_csv_out) and not force_reload:
         logging.info('loading path pairs "%s"', path_csv_out)
-        df_paths = pd.DataFrame().from_csv(path_csv_out)
+        df_paths = pd.read_csv(path_csv_out, index_col=0)
     else:
         logging.info('estimating own triples')
         df_paths = run_train.find_match_images_segms_centers(
@@ -124,7 +123,7 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs,
             lambda x: os.path.splitext(os.path.basename(x))[0])
         df_paths.set_index('image', inplace=True)
     for col in (c  for c in df_paths.columns if c.startswith('path_')):
-        df_paths[col] = df_paths[col].apply(tl_io.update_path)
+        df_paths[col] = df_paths[col].apply(tl_data.update_path)
     df_paths.to_csv(path_csv_out)
     return df_paths
 
@@ -156,27 +155,14 @@ def main(params):
 
     # perform on new images
     df_stat = pd.DataFrame()
-    tqdm_bar = tqdm.tqdm(total=len(df_paths))
-    if params['nb_jobs'] > 1:
-        wrapper_detection = partial(load_compute_detect_centers, params=params_clf,
-                                    path_classif=params['path_classif'],
-                                    path_output=params['path_expt'])
-        mproc_pool = mproc.Pool(params['nb_jobs'])
-        for dict_center in mproc_pool.imap_unordered(wrapper_detection,
-                                                     df_paths.iterrows()):
-            df_stat = df_stat.append(dict_center, ignore_index=True)
-            df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_TEMP))
-            tqdm_bar.update()
-        mproc_pool.close()
-        mproc_pool.join()
-    else:
-        classif = dict_classif['clf_pipeline']
-        for idx_row in df_paths.iterrows():
-            dict_center = load_compute_detect_centers(idx_row, params_clf, classif,
-                                                      path_output=params['path_expt'])
-            df_stat = df_stat.append(dict_center, ignore_index=True)
-            df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_TEMP))
-            tqdm_bar.update()
+    wrapper_detection = partial(load_compute_detect_centers, params=params_clf,
+                                path_classif=params['path_classif'],
+                                path_output=params['path_expt'])
+    iterate = tl_expt.WrapExecuteSequence(wrapper_detection, df_paths.iterrows(),
+                                          nb_jobs=params['nb_jobs'])
+    for dict_center in iterate:
+        df_stat = df_stat.append(dict_center, ignore_index=True)
+        df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_TEMP))
 
     df_stat.set_index(['image'], inplace=True)
     df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES))

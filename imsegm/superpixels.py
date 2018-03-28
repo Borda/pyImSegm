@@ -27,7 +27,7 @@ def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1, slico=False):
     :param float rltv_compact: relative regularisation in range (0, 1)
         where 0 is for free form and 1 for nearly rectangular superpixels
     :param bool slico: whether use parameter free version ASLIC/SLICO
-    :return:
+    :return ndarray:
     
     >>> np.random.seed(0)
     >>> img = np.random.random((100, 150, 3))
@@ -79,7 +79,7 @@ def segment_slic_img3d_gray(im, sp_size=50, rltv_compact=0.1,
     :param float rltv_compact: relative regularisation in range (0, 1)
         where 0 is for free form and 1 for nearly rectangular superpixels
     :param (int, int, int) space: spacing in 3d image may not be equal
-    :return:
+    :return ndarray:
 
     >>> np.random.seed(0)
     >>> img = np.random.random((100, 100, 10))
