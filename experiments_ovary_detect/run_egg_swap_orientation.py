@@ -77,10 +77,10 @@ def main(params):
     if not os.path.isdir(params['path_output']):
         os.mkdir(params['path_output'])
 
-    wrapper_object = partial(perform_orientation_swap,
-                             path_out=params['path_output'])
+    _wrapper_object = partial(perform_orientation_swap,
+                              path_out=params['path_output'])
     dir_name = os.path.dirname(params['path_images'])
-    iterate = tl_expt.WrapExecuteSequence(wrapper_object, list_imgs,
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_object, list_imgs,
                                           nb_jobs=params['nb_jobs'],
                                           desc=dir_name)
     list(iterate)

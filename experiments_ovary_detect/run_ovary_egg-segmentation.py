@@ -807,8 +807,8 @@ def main(params, debug_export=DEBUG_EXPORT):
         list_dirs = [n + DIR_DEBUG_POSIX for n in dict_segment if 'rg2sp' in n]
         tl_expt.create_subfolders(params['path_exp'], list_dirs)
 
-    wrapper_segment = partial(image_segmentation, params=params)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, df_paths.iterrows(),
+    _wrapper_segment = partial(image_segmentation, params=params)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, df_paths.iterrows(),
                                           nb_jobs=params['nb_jobs'])
     list(iterate)
 

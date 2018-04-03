@@ -223,10 +223,11 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
     # perfom on new images
     stage_prefix = '[stage-%s] ' % str_stage
     logging.info('start section %s - load_center_evaluate ...', stage_prefix)
-    wrapper_detection = partial(load_center_evaluate, df_annot=df_slices_info,
-                                path_annot=path_annot, path_visu=path_visu,
-                                col_prefix=stage_prefix)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_detection, df_paths.iterrows(),
+    _wrapper_detection = partial(load_center_evaluate, df_annot=df_slices_info,
+                                 path_annot=path_annot, path_visu=path_visu,
+                                 col_prefix=stage_prefix)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_detection,
+                                          df_paths.iterrows(),
                                           nb_jobs=nb_jobs)
     for dict_eval in iterate:
         df_eval = df_eval.append(dict_eval, ignore_index=True)

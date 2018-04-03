@@ -271,9 +271,9 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
                     [NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3])
 
     df_all = pd.DataFrame()
-    wrapper_eval = partial(evaluate_folder, dict_paths=dict_paths,
-                           export_visual=export_visual)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_eval, list_results,
+    _wrapper_eval = partial(evaluate_folder, dict_paths=dict_paths,
+                            export_visual=export_visual)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_eval, list_results,
                                           nb_jobs=nb_jobs)
     for dict_eval in iterate:
         df_all = df_all.append(dict_eval, ignore_index=True)

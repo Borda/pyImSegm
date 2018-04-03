@@ -215,9 +215,9 @@ def main(params):
 
     df_slices_info = seg_annot.load_info_group_by_slices(params['path_infofile'],
                                                          params['stages'])
-    wrapper_export = partial(export_figure, df_slices_info=df_slices_info,
-                             path_out=params['path_output'])
-    iterate = tl_expt.WrapExecuteSequence(wrapper_export, df_paths.iterrows(),
+    _wrapper_export = partial(export_figure, df_slices_info=df_slices_info,
+                              path_out=params['path_output'])
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_export, df_paths.iterrows(),
                                           nb_jobs=params['nb_jobs'])
     list(iterate)
     logging.info('DONE')

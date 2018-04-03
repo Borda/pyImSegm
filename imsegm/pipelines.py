@@ -133,11 +133,11 @@ def estim_model_classes_group(list_images, nb_classes=4, clr_space='rgb',
     :return:
     """
     list_slic, list_features = list(), list()
-    wrapper_compute = partial(compute_color2d_superpixels_features,
-                              sp_size=sp_size, sp_regul=sp_regul,
-                              dict_features=dict_features,
-                              clr_space=clr_space, fts_norm=False)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_compute, list_images,
+    _wrapper_compute = partial(compute_color2d_superpixels_features,
+                               sp_size=sp_size, sp_regul=sp_regul,
+                               dict_features=dict_features,
+                               clr_space=clr_space, fts_norm=False)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_images,
                                           nb_jobs=nb_jobs)
     for slic, features in iterate:
         list_slic.append(slic)
@@ -319,12 +319,12 @@ def train_classif_color2d_slic_features(list_images, list_annots, clr_space='rgb
         % (len(list_images), len(list_annots))
 
     list_slic, list_features, list_labels = list(), list(), list()
-    wrapper_compute = partial(wrapper_compute_color2d_slic_features_labels,
-                              clr_space=clr_space, sp_size=sp_size,
-                              sp_regul=sp_regul, dict_features=dict_features,
-                              label_purity=label_purity)
+    _wrapper_compute = partial(wrapper_compute_color2d_slic_features_labels,
+                               clr_space=clr_space, sp_size=sp_size,
+                               sp_regul=sp_regul, dict_features=dict_features,
+                               label_purity=label_purity)
     list_imgs_annot = zip(list_images,  list_annots)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_compute, list_imgs_annot,
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_imgs_annot,
                                           nb_jobs=nb_jobs)
     for slic, fts, lbs in iterate:
         list_slic.append(slic)

@@ -118,10 +118,11 @@ def quantize_folder_images(path_images, list_colors=None, method='color',
         dict_colors = see_images_color_info(path_images, px_thr=px_threshold)
         list_colors = [c for c in dict_colors]
 
-    wrapper_quantize_img = partial(perform_quantize_image,
-                                   method=method, list_colors=list_colors)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_quantize_img, path_imgs,
-                                          nb_jobs=nb_jobs, desc='quantize images')
+    _wrapper_quantize_img = partial(perform_quantize_image,
+                                    method=method, list_colors=list_colors)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_quantize_img, path_imgs,
+                                          nb_jobs=nb_jobs,
+                                          desc='quantize images')
     list(iterate)
 
 

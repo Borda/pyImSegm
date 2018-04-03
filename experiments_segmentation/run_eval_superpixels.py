@@ -126,9 +126,9 @@ def main(params):
 
     df_dist = pd.DataFrame()
 
-    wrapper_eval = partial(compute_boundary_distance, params=params,
-                           path_out=params['path_out'])
-    iterate = tl_expt.WrapExecuteSequence(wrapper_eval, df_paths.iterrows(),
+    _wrapper_eval = partial(compute_boundary_distance, params=params,
+                            path_out=params['path_out'])
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_eval, df_paths.iterrows(),
                                           nb_jobs=params['nb_jobs'],
                                           desc='evaluate SLIC')
     for name, dist in iterate:

@@ -155,9 +155,9 @@ def main(params):
     list_evals = []
     # get the folder
     path_dir_csv = os.path.dirname(params['path_ellipses'])
-    wrapper_match = partial(select_optimal_ellipse,
-                            path_dir_csv=path_dir_csv)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_match, df_info.iterrows(),
+    _wrapper_match = partial(select_optimal_ellipse,
+                             path_dir_csv=path_dir_csv)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_match, df_info.iterrows(),
                                           nb_jobs=params['nb_jobs'])
     for i, dict_row in enumerate(iterate):
         list_evals.append(dict_row)

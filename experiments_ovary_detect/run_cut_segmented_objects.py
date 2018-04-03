@@ -113,9 +113,9 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
     df_paths = tl_data.find_files_match_names_across_dirs(list_dirs)
 
     logging.info('start cutting images')
-    wrapper_cutting = partial(export_cut_objects, path_out=dict_paths['output'],
-                              padding=padding, use_mask=use_mask, bg_color=bg_color)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_cutting,
+    _wrapper_cutting = partial(export_cut_objects, path_out=dict_paths['output'],
+                               padding=padding, use_mask=use_mask, bg_color=bg_color)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_cutting,
                                           (row for idx, row in df_paths.iterrows()),
                                           nb_jobs=nb_jobs)
     list(iterate)

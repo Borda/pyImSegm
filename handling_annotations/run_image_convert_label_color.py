@@ -143,10 +143,11 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_jobs=1):
 
     dict_colors = load_dict_colours(path_json)
     logging.debug('loaded dictionary %s', repr(dict_colors))
-    wrapper_img_convert = partial(perform_img_convert, path_out=path_out,
-                                  dict_colors=dict_colors)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_img_convert, path_imgs,
-                                          nb_jobs=nb_jobs, desc='convert images')
+    _wrapper_img_convert = partial(perform_img_convert, path_out=path_out,
+                                   dict_colors=dict_colors)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_img_convert, path_imgs,
+                                          nb_jobs=nb_jobs,
+                                          desc='convert images')
     list(iterate)
 
 

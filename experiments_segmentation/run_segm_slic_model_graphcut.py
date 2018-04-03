@@ -397,9 +397,9 @@ def experiment_single_gmm(params, paths_img, path_out, path_visu):
     imgs_idx_path = list(zip([None] * len(paths_img), paths_img))
     logging.info('Perform image segmentation as single image in each time')
     dict_segms_gmm = {}
-    wrapper_segment = partial(segment_image_independent, params=params,
-                              path_out=path_out, path_visu=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+    _wrapper_segment = partial(segment_image_independent, params=params,
+                               path_out=path_out, path_visu=path_visu)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment single GMM')
     for name, segm in iterate:
@@ -426,10 +426,10 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu):
 
     logging.info('Perform image segmentation from group model')
     dict_segms_group = {}
-    wrapper_segment = partial(segment_image_model, params=params,
-                              scaler=scaler, pca=pca, model=model,
-                              path_out=path_out, path_visu=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+    _wrapper_segment = partial(segment_image_model, params=params,
+                               scaler=scaler, pca=pca, model=model,
+                               path_out=path_out, path_visu=path_visu)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment group GMM')
     for name, segm in iterate:

@@ -231,9 +231,9 @@ def dataset_load_images_annot_compute_features(params,
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     assert all(n in df_paths.columns for n in ['path_image', 'path_annot']), \
         'missing required columns in loaded csv file'
-    wrapper_load_compute = partial(load_image_annot_compute_features_labels,
-                                   params=params, show_debug_imgs=show_debug_imgs)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_load_compute, df_paths.iterrows(),
+    _wrapper_load_compute = partial(load_image_annot_compute_features_labels,
+                                    params=params, show_debug_imgs=show_debug_imgs)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_load_compute, df_paths.iterrows(),
                                           nb_jobs=params['nb_jobs'],
                                           desc='extract training data')
     for name, img, annot, slic, features, labels, label_hist, feature_names in iterate:
@@ -516,9 +516,9 @@ def perform_predictions(params, paths_img, classif):
     dict_segms, dict_segms_gc = dict(), dict()
     path_out = os.path.join(params['path_exp'], FOLDER_SEGM)
     path_visu = os.path.join(params['path_exp'], FOLDER_SEGM_VISU)
-    wrapper_segment = partial(segment_image, params=params, classif=classif,
-                              path_out=path_out, path_visu=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+    _wrapper_segment = partial(segment_image, params=params, classif=classif,
+                               path_out=path_out, path_visu=path_visu)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='image segm: prediction')
     for name, segm, segm_gc in iterate:
@@ -544,10 +544,10 @@ def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
     dict_segms, dict_segms_gc = dict(), dict()
     path_out = os.path.join(params['path_exp'], FOLDER_LOO)
     path_visu = os.path.join(params['path_exp'], FOLDER_LOO_VISU)
-    wrapper_segment = partial(retrain_loo_segment_image,
-                              path_classif=path_classif, path_dump=path_dump,
-                              path_out=path_out, path_visu=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+    _wrapper_segment = partial(retrain_loo_segment_image,
+                               path_classif=path_classif, path_dump=path_dump,
+                               path_out=path_out, path_visu=path_visu)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment LOO')
     for name, segm, segm_gc in iterate:
@@ -592,10 +592,10 @@ def experiment_lpo(params, df_stat, dict_annot, paths_img, path_classif,
     test_imgs_idx_path = [[imgs_idx_path[i] for i in ids] for _, ids in cv]
     path_out = os.path.join(params['path_exp'], FOLDER_LPO)
     path_visu = os.path.join(params['path_exp'], FOLDER_LPO_VISU)
-    wrapper_segment = partial(retrain_lpo_segment_image,
-                              path_classif=path_classif, path_dump=path_dump,
-                              path_out=path_out, path_visu=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, test_imgs_idx_path,
+    _wrapper_segment = partial(retrain_lpo_segment_image,
+                               path_classif=path_classif, path_dump=path_dump,
+                               path_out=path_out, path_visu=path_visu)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, test_imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment LPO')
     for dict_seg, dict_seg_gc in iterate:
@@ -802,10 +802,10 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
                  path_pattern_imgs)
 
     logging.debug('run prediction...')
-    wrapper_segment = partial(try_segment_image, params=params, classif=classif,
-                              path_out=path_out, path_visu=path_visu)
+    _wrapper_segment = partial(try_segment_image, params=params, classif=classif,
+                               path_out=path_out, path_visu=path_visu)
     list_img_path = list(zip([None] * len(paths_img), paths_img))
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, list_img_path,
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, list_img_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='segmenting images')
     for _ in iterate:

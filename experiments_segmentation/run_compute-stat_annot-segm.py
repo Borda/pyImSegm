@@ -151,8 +151,8 @@ def main(dict_paths, nb_jobs=NB_THREADS, relabel=True):
         os.mkdir(path_visu)
     # for idx, row in df_paths.iterrows():
     #     export_visual(row, path_visu)
-    wrapper_visual = partial(export_visual, path_out=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_visual,
+    _wrapper_visual = partial(export_visual, path_out=path_visu)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_visual,
                                           (row for idx, row in df_paths.iterrows()),
                                           nb_jobs=nb_jobs)
     list(iterate)

@@ -93,10 +93,10 @@ def perform_stage(df_group, stage, path_images, path_out):
     if not os.path.isdir(path_out_stage):
         os.mkdir(path_out_stage)
 
-    wrapper_object = partial(extract_ellipse_object, path_images=path_images,
-                             path_out=path_out_stage, norm_size=norm_size)
+    _wrapper_object = partial(extract_ellipse_object, path_images=path_images,
+                              path_out=path_out_stage, norm_size=norm_size)
     desc = 'stage %i - size %s' % (stage, norm_size)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_object, df_group.iterrows(),
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_object, df_group.iterrows(),
                                           nb_jobs=params['nb_jobs'],
                                           desc=desc)
     list(iterate)

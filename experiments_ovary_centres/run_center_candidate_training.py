@@ -459,10 +459,11 @@ def dataset_load_images_segms_compute_features(params, df_paths,
     dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
     logging.info('loading input data (images, segmentation and centers)')
     path_show_in = os.path.join(params['path_expt'], FOLDER_INPUT)
-    wrapper_load_data = partial(load_image_segm_center, path_out=path_show_in,
-                                dict_relabel=params['dict_relabel'])
-    iterate = tl_expt.WrapExecuteSequence(wrapper_load_data, df_paths.iterrows(),
-                                          nb_jobs=nb_jobs, desc='loading input data')
+    _wrapper_load = partial(load_image_segm_center, path_out=path_show_in,
+                            dict_relabel=params['dict_relabel'])
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_load, df_paths.iterrows(),
+                                          nb_jobs=nb_jobs,
+                                          desc='loading input data')
     for name, img, seg, center in iterate:
         dict_imgs[name] = img
         dict_segms[name] = seg
@@ -472,10 +473,10 @@ def dataset_load_images_segms_compute_features(params, df_paths,
     logging.info('estimate candidate points and compute features')
     gene_name_img_seg = ((name, dict_imgs[name], dict_segms[name])
                           for name in dict_imgs)
-    wrapper_points_features = partial(wrapper_estim_points_compute_features,
-                                      params=params)
+    _wrapper_pnt_features = partial(wrapper_estim_points_compute_features,
+                                    params=params)
     feature_names = None
-    iterate = tl_expt.WrapExecuteSequence(wrapper_points_features,
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_pnt_features,
                                           gene_name_img_seg, nb_jobs=nb_jobs,
                                           desc='estimate candidates & features')
     for name, slic, points, features, feature_names in iterate:
@@ -650,11 +651,11 @@ def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
     gener_data = ((n, dict_imgs[n], dict_segms[n], dict_centers[n],
                    dict_slics[n], dict_points[n], dict_features[n],
                    feature_names) for n in dict_imgs)
-    wrapper_detection = partial(wrapper_detect_center_candidates,
-                                params=params, classif=classif,
-                                path_output=params['path_expt'])
+    _wrapper_detection = partial(wrapper_detect_center_candidates,
+                                 params=params, classif=classif,
+                                 path_output=params['path_expt'])
     df_stat = pd.DataFrame()
-    iterate = tl_expt.WrapExecuteSequence(wrapper_detection,
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_detection,
                                           gener_data, nb_jobs=params['nb_jobs'])
     for dict_stat in iterate:
         df_stat = df_stat.append(dict_stat, ignore_index=True)

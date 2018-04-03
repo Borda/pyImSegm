@@ -83,9 +83,10 @@ def quantize_folder_images(path_images, label, nb_jobs=1):
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
 
-    wrapper_img_inpaint = partial(perform_img_inpaint, labels=label)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_img_inpaint, path_imgs,
-                                          nb_jobs=nb_jobs, desc='quantise images')
+    _wrapper_img_inpaint = partial(perform_img_inpaint, labels=label)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_img_inpaint, path_imgs,
+                                          nb_jobs=nb_jobs,
+                                          desc='quantise images')
     list(iterate)
 
 
