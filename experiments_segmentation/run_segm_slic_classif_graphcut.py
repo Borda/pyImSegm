@@ -529,6 +529,16 @@ def perform_predictions(params, paths_img, classif):
 
 def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
                    path_dump):
+    """ experiment Leave-One-Out
+
+    :param {str: ...} params:
+    :param DF df_stat:
+    :param {str: ndarray} dict_annot:
+    :param [str] paths_img:
+    :param str path_classif:
+    :param str path_dump:
+    :return {}:
+    """
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
     logging.info('run prediction on training images as Leave-One-Out...')
     dict_segms, dict_segms_gc = dict(), dict()
@@ -563,6 +573,17 @@ def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
 
 def experiment_lpo(params, df_stat, dict_annot, paths_img, path_classif,
                    path_dump, nb_holdout):
+    """ experiment Leave-P-samples-Out
+
+    :param {str: ...} params:
+    :param DF df_stat:
+    :param {str: ndarray} dict_annot:
+    :param [str] paths_img:
+    :param str path_classif:
+    :param str path_dump:
+    :param int nb_holdout:
+    :return {}:
+    """
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
     logging.info('run prediction on training images as Leave-%i-Out...',
                  nb_holdout)
@@ -716,6 +737,7 @@ def main_train(params):
         df_stat = experiment_lpo(params, df_stat, dict_annot, paths_img,
                                  path_classif, path_dump, nb_holdout)
 
+    logging.info('Statistic: \n %s', repr(df_stat.describe()))
     logging.info('training DONE')
     return params
 

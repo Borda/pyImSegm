@@ -1701,18 +1701,18 @@ def interpolate_ray_dist(ray_dists, order='spline'):
                                                               y_train_ext)
         ray_dists[missing] = uinterp_us(x_space[missing])
     elif order == 'cos':
-        def fn_cos(x, t):
+        def _fn_cos(x, t):
             return x[0] + x[1] * np.sin(x[2] + x[3] * t)
 
-        def fn_cos_residual(x, t, y):
-            return fn_cos(x, t) - y
+        def _fn_cos_residual(x, t, y):
+            return _fn_cos(x, t) - y
 
         x0 = np.array([np.mean(y_train), (y_train.max() - y_train.min()) / 2.,
                        0, len(x_space) / np.pi])
-        lsm_res = optimize.least_squares(fn_cos_residual, x0, gtol=1e-1,
+        lsm_res = optimize.least_squares(_fn_cos_residual, x0, gtol=1e-1,
                                          # loss='soft_l1', f_scale=0.1,
                                          args=(x_train, y_train))
-        ray_dists[missing] = fn_cos(lsm_res.x, x_space[missing])
+        ray_dists[missing] = _fn_cos(lsm_res.x, x_space[missing])
 
     return ray_dists
 

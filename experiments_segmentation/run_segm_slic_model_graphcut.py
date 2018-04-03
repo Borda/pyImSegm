@@ -464,25 +464,25 @@ def main(params):
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     paths_img = df_paths['path_image'].tolist()
 
-    def path_expt(n):
+    def _path_expt(n):
         return os.path.join(params['path_exp'], n)
 
     # Segment as single model per image
     dict_segms_gmm = experiment_single_gmm(params, paths_img,
-                                           path_expt(FOLDER_SEGM_GMM),
-                                           path_expt(FOLDER_SEGM_GMM_VISU))
+                                           _path_expt(FOLDER_SEGM_GMM),
+                                           _path_expt(FOLDER_SEGM_GMM_VISU))
     gc.collect()
     time.sleep(1)
 
     dict_segms_group = experiment_group_gmm(params, paths_img,
-                                            path_expt(FOLDER_SEGM_GROUP),
-                                            path_expt(FOLDER_SEGM_GROUP_VISU))
+                                            _path_expt(FOLDER_SEGM_GROUP),
+                                            _path_expt(FOLDER_SEGM_GROUP_VISU))
     gc.collect()
     time.sleep(1)
 
     df_ars = compare_segms_metric_ars(dict_segms_gmm, dict_segms_group,
                                       suffix='_gmm-group')
-    df_ars.to_csv(path_expt(NAME_CSV_ARS_CORES))
+    df_ars.to_csv(_path_expt(NAME_CSV_ARS_CORES))
     logging.info(df_ars.describe())
 
     logging.info('DONE')
