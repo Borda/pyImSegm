@@ -48,7 +48,6 @@ COLOR_CONTOUR = (0., 0., 1.)
 def parse_arg_params():
     """ create simple arg parser with default values (input, output, dataset)
 
-    :param dict_params: {str: ...}
     :return obj: object argparse<in, out, ant, name>
     """
     parser = argparse.ArgumentParser()

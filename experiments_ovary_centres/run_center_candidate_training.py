@@ -270,12 +270,12 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
             centers = np.array(LUT_ANNOT_CENTER_RELABEL)[centers]
         else:
             logging.warning('not supported file format %s', ext)
+            centers = None
     else:
         centers = None
 
     if is_drawing(path_out):
-        export_visual_input_image_segm(path_out, idx_name, img_rgb, segm,
-                                       centers)
+        export_visual_input_image_segm(path_out, idx_name, img_rgb, segm, centers)
 
     return idx_name, img_rgb, segm, centers
 
@@ -573,14 +573,14 @@ def detect_center_candidates(name, image, segm, centers_gt, slic, points,
 
     :param str name:
     :param ndarray image:
-    :param ndarray seg:
+    :param ndarray segm:
     :param centers_gt:
     :param slic: np.array
     :param [(int, int)] points:
     :param features:
     :param [str] feature_names:
     :param {} params:
-    :param paths: path
+    :param str path_out:
     :param classif: obj
     :return {}:
     """

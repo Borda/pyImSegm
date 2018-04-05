@@ -236,7 +236,7 @@ def scale_image_intensity(img, im_range=1., quantiles=(2, 98)):
                                      in_range=(p_low, p_high),
                                      out_range='float')
     if im_range == 255:
-        img = (img * im_range).astype(np.uint8)
+        img = np.array(img * im_range).astype(np.uint8)
     return img
 
 
@@ -904,21 +904,21 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
         assert os.path.exists(os.path.dirname(p)), \
             'missing "%s"' % os.path.dirname(p)
 
-    def get_name(path, pattern='*'):
+    def _get_name(path, pattern='*'):
         name = os.path.splitext(os.path.basename(path))[0]
         for s in pattern.split('*'):
             name = name.replace(s, '')
         return name
 
-    def get_paths_names(path_pattern):
+    def _get_paths_names(path_pattern):
         paths_ = glob.glob(path_pattern)
         if len(paths_) == 0:
             return [None], [None]
-        names_ = [get_name(p, os.path.basename(path_pattern)) for p in paths_]
+        names_ = [_get_name(p, os.path.basename(path_pattern)) for p in paths_]
         return paths_, names_
 
     logging.info('find match files...')
-    paths_0, names_0 = get_paths_names(list_path_pattern[0])
+    paths_0, names_0 = _get_paths_names(list_path_pattern[0])
     list_paths = [paths_0]
 
     for path_pattern_n in list_path_pattern[1:]:
@@ -927,7 +927,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
         list_files = glob.glob(path_pattern_n)
         logging.debug('found %i files in %s', len(list_files), path_pattern_n)
         for path_n in list_files:
-            name_n = get_name(path_n, name_pattern)
+            name_n = _get_name(path_n, name_pattern)
             if name_n in names_0:
                 idx = names_0.index(name_n)
                 paths_n[idx] = path_n

@@ -42,11 +42,6 @@ class EllipseModelSegm(sk_fit.EllipseModel):
 
         xc, yc, a, b, theta
 
-    Attributes
-    ----------
-    params : tuple
-        Ellipse model parameters  `xc`, `yc`, `a`, `b`, `theta`.
-
     Example
     -------
     >>> params = 20, 30, 12, 16, np.deg2rad(30)
@@ -157,7 +152,7 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
         ``is_model_valid(model, *random_data)`` and
         ``is_data_valid(*random_data)`` must all take each points array as
         separate arguments.
-    model_class : object
+    model_class : class
         Object with the following object methods:
 
          * ``success = estimate(*points)``
@@ -171,11 +166,6 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
         Maximum distance for a points point to be classified as an inlier.
     max_trials : int, optional
         Maximum number of iterations for random sample selection.
-    stop_sample_num : int, optional
-        Stop iteration if at least this number of inliers are found.
-    stop_residuals_sum : float, optional
-        Stop iteration if sum of residuals is less than or equal to this
-        threshold.
 
 
     Returns

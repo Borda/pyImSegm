@@ -61,8 +61,7 @@ def parse_arg_params():
 def see_images_color_info(path_images, px_thr=THRESHOLD_INVALID_PIXELS):
     """ look to the folder on all images and estimate most frequent colours
 
-    :param path_dir: str
-    :param im_pattern: str
+    :param [str] path_images: list of images
     :param px_th: float, percentage of nb clr pixels to be assumed as important
     :return {}:
     """
@@ -92,6 +91,7 @@ def perform_quantize_image(path_image, list_colors, method='color'):
         im_q = seg_annot.quantize_image_nearest_pixel(im, list_colors)
     else:
         logging.error('not implemented method "%s"', method)
+        im_q = np.zeros(im.shape)
     path_image = os.path.splitext(path_image)[0] + '.png'
     tl_data.io_imsave(path_image, im_q.astype(np.uint8))
     # io.imsave(path_image, im_q)

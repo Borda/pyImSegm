@@ -16,7 +16,6 @@ import logging
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root

@@ -8,7 +8,7 @@ Copyright (C) 2015-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import os
 import logging
 
-from PIL import Image
+# from PIL import Image
 import numpy as np
 
 import imsegm.utils.data_io as tl_data

@@ -11,6 +11,7 @@ import logging
 import random
 import collections
 import traceback
+import itertools
 # import gc
 # import time
 # import multiprocessing as mproc
@@ -1136,7 +1137,7 @@ class HoldOut:
 
     Parameters
     ----------
-    n : total number of samples
+    nb : total number of samples
     hold_idx : int index where the test starts
     random_state :  Seed for the random number generator.
 
@@ -1328,12 +1329,10 @@ class CrossValidatePSetsOut:
         """
         for i in range(0, len(self.set_sizes), self.nb_hold_out):
             test = self.sets_order[i:i + self.nb_hold_out]
-            inds_train, inds_test = [], []
-            for i in self.sets_order:
-                if i in test:
-                    inds_test += self.set_indexes[i]
-                else:
-                    inds_train += self.set_indexes[i]
+            inds_train = list(itertools.chain.from_iterable(
+                self.set_indexes[i] for i in self.sets_order if i not in test))
+            inds_test = list(itertools.chain.from_iterable(
+                self.set_indexes[i] for i in self.sets_order if i in test))
             yield inds_train, inds_test
 
     def __len__(self):

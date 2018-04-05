@@ -176,7 +176,10 @@ def segment_color2d_slic_features_model_graphcut(image, scaler, pca, model,
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
 
-    :param ndarry img: input RGB image
+    :param ndarry image: input RGB image
+    :param obj pca:
+    :param obj scaler:
+    :param obj model:
     :param str clr_space: chose the color space
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
@@ -184,7 +187,6 @@ def segment_color2d_slic_features_model_graphcut(image, scaler, pca, model,
     :param {str: [str]} dict_features: list of features to be extracted
     :param float gc_regul: GC regularisation
     :param str gc_edge_type: select the GC edge type
-    :param float pca_coef: range (0, 1) or None
     :param dict_debug_imgs: {str: ...}
     :return [[int]]: segmentation matrix mapping each pixel into a class
 
@@ -435,7 +437,7 @@ def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4, spacing=(12, 1, 
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
 
-    :param ndarray img: input RGB image
+    :param ndarray image: input RGB image
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
            and "1" nearly square segments

@@ -245,7 +245,7 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
     for n in ['mean', 'std']:
         names = ['%s (%s)' % (c, n) for c in cols]
         dict_eval.update(zip(names, df_summary.T[n].values.tolist()))
-    dict_eval.update(zip(['%s (median)' % (c) for c in cols],
+    dict_eval.update(zip(['%s (median)' % c for c in cols],
                          df_eval.median(axis=0).values.tolist()))
 
     return dict_eval

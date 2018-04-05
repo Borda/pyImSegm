@@ -79,7 +79,8 @@ def estimate_eggs_from_info(row_slice, mask_shape):
     """ finds all eggs for particular slice and mask them by ellipse annotated
     by ant, post and lat in the all info table
 
-    :param str path_img:
+    :param row_slice:
+    :param mask_shape:
     :return ndarray: ndarray
     """
     pos_ant, pos_lat, pos_post = tl_visu.parse_annot_rectangles(row_slice)
@@ -138,9 +139,10 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
     generate points, compute features and using given classifier predict labels
 
     :param (int, DF:row) idx_row:
-    :param {str: ...} params:
-    :param {str: str} paths:
-    :param classif:
+    :param df_annot:
+    :param str path_annot:
+    :param str path_visu:
+    :param str col_prefix:
     :return {str: float}:
     """
     idx, row = idx_row
@@ -239,8 +241,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
 def main(params):
     """ PIPELINE for new detections
 
-    :param {str: str} paths:
-    :param int nb_jobs:
+    :param {str: ...} params:
     """
     logging.info('running...')
 

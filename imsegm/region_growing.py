@@ -146,7 +146,7 @@ def object_segmentation_graphcut_pixels(segm, centres,
                                         dict_debug_imgs=None):
     """ object segmentation using Graph Cut directly on pixel level
 
-    :param ndarray slic: superpixel pre-segmentation
+    :param ndarray centres:
     :param ndarray segm: input structure segmentation
     :param [(int, int)] centres: superpixel centres
     :param [float] labels_fg_prob: set how much particular label belongs to foreground
@@ -582,7 +582,7 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre,
 
     :param (int, int) point: single points
     :param (int, int) centre: center of model
-    :param [[float]] cum_hist: cumulative histogram
+    :param [[float]] cum_distribution: cumulative histogram
     :return float:
 
     >>> chist = [[1.0, 1.0, 0.8, 0.7, 0.6, 0.5, 0.3, 0.0, 0.0],
@@ -1562,7 +1562,7 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
             if len(gc_edges) > 0:
                 graph_labels = cut_general_graph(np.array(gc_edges), edge_weights,
                                                  unary, pairwise, n_iter=999)
-            labels_gc[gc_vestexes] = graph_labels
+                labels_gc[gc_vestexes] = graph_labels
 
         else:
             for i in range(len(centres)):

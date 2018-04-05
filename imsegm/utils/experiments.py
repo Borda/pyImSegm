@@ -81,7 +81,8 @@ class Experiment(object):
         """
         # create results folder for experiments
         if not os.path.exists(self.params.get('path_out')):
-            logging.error('no results folder: %s', repr(self.p.get('path_out')))
+            logging.error('no results folder: %s',
+                          repr(self.params.get('path_out')))
             self.params['path_exp'] = ''
             return
         self.params = create_experiment_folder(self.params,

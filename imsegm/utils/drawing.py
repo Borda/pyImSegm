@@ -592,7 +592,7 @@ def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
 def parse_annot_rectangles(rows_slice):
     """ parse annotation fromDF to lists
 
-    :param row_slice:
+    :param rows_slice:
     :return:
 
     >>> import pandas as pd
@@ -878,7 +878,7 @@ def figure_rg2sp_debug_complete(seg, slic, dict_rg2sp_debug, iter_index=-1,
     :param ndarray seg:
     :param ndarray slic:
     :param dict_rg2sp_debug:
-    :param int iter:
+    :param int iter_index:
     :param int max_size:
     :return Figure:
 
@@ -991,7 +991,7 @@ def make_overlap_images_chess(imgs, chess_field=SIZE_CHESS_FIELD):
     # copy images to the maximal image
     for i, im in enumerate(imgs):
         imgs_w[i][:im.shape[0], :im.shape[1]] = im
-    img = np.zeros(max_size, dtype=im.dtype)
+    img = np.zeros(max_size, dtype=imgs[0].dtype)
     idx_row = 0
     for i in range(int(max_size[0] / chess_field)):
         idx = idx_row

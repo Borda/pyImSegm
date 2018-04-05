@@ -74,9 +74,8 @@ def perform_img_inpaint(path_img, labels):
 def quantize_folder_images(path_images, label, nb_jobs=1):
     """ perform single or multi thread image quantisation
 
-    :param path_dir: str, input directory
-    :param im_pattern: str, image pattern for loading
-    :param nb_jobs: int
+    :param [str] path_images: list of image paths
+    :param int nb_jobs:
     """
     assert os.path.isdir(os.path.dirname(path_images)), \
         'input folder does not exist: %s' % os.path.dirname(path_images)

@@ -4,14 +4,14 @@ Framework for handling annotations
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os, sys
+import os
 import logging
 
 import tqdm
 import numpy as np
 import pandas as pd
 from PIL import Image
-from skimage import io
+# from skimage import io
 from scipy import interpolate
 
 # sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root

@@ -22,7 +22,7 @@ IMAGE_SPACING = (1, 1, 1)
 def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1, slico=False):
     """ segmentation by SLIC superpixels using original SLIC implementation
 
-    :param ndarray im: input color image
+    :param ndarray img: input color image
     :param int sp_size: superpixel initial size
     :param float rltv_compact: relative regularisation in range (0, 1)
         where 0 is for free form and 1 for nearly rectangular superpixels

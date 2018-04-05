@@ -419,7 +419,7 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
     """ load the classifier, and dumped data, subtract the image,
     retrain the classif. without it and do the segmentation
 
-    :param str path_img: path to input image
+    :param str imgs_idx_path: path to input image
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
@@ -453,7 +453,7 @@ def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
     """ load the classifier, and dumped data, subtract the image,
     retrain the classif without it and do the segmentation
 
-    :param str path_img: path to input image
+    :param [str] list_imgs_idx_path: path to input image
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs

@@ -263,7 +263,8 @@ def compute_edge_model(edges, proba, metric='l_T'):
      and so we take the min valus
 
     :param [(int, int)] edges:
-    :param [[float]] features:
+    :param [[float]] proba:
+    :param str metric:
     :return [float]:
 
 
@@ -302,6 +303,9 @@ def compute_edge_model(edges, proba, metric='l_T'):
         # setting min weight ~ max difference in proba as weight
         dist = np.max(diff, axis=1)
         edge_weights = np.exp(- dist / (2 * np.std(dist) ** 2))
+    else:
+        logging.error('not implemented for: %s', metric)
+        edge_weights = np.ones(len(edges))
     return edge_weights
 
 

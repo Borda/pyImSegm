@@ -1636,7 +1636,7 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     if isinstance(segm_open, int):
         seg_binary = morphology.opening(seg_binary, morphology.disk(segm_open))
 
-    pos_rays, pos_shift = list(), list()
+    pos_rays, pos_shift, ray_dist = [], [], []
     for pos in list_positions:
         # logging.debug('position %s', repr(pos))
         ray_dist = compute_ray_features_segm_2d(seg_binary, pos, angle_step,

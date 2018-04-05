@@ -104,8 +104,8 @@ def contour_coords(seg, label=1, include_boundary=False):
 def binary_image_from_coords(coords, size):
     """ create binary image just from point contours
 
-    :param ndarray seg: integer images, typically a segmentation
-    :param int label: selected singe label in segmentation
+    :param ndarray coords:
+    :param (int, int) size:
     :return ndarray:
 
     >>> img = np.zeros((6, 6), dtype=int)
@@ -156,7 +156,7 @@ def compute_distance_map(seg, label=1):
 def segm_labels_assignment(segm, segm_gt):
     """ create labels assign to the particular regions
 
-    :param ndarray seg: input segmentation
+    :param ndarray segm: input segmentation
     :param ndarray segm_gt: true segmentation
     :return:
 
