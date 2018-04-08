@@ -169,6 +169,7 @@ We utilize (un)supervised segmentation according to given training examples or s
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -list images/langerhans_islets/list_lang-isl_imgs-annot.csv \
        -imgs "images/langerhans_islets/image/*.jpg" \
+       --path_config experiments_segmentation/sample_config.json \
        -out results -n langIsl --nb_classes 3 --visual --nb_jobs 2
     ```
 * Perform **Supervised** segmentation with afterwards evaluation.
@@ -176,6 +177,7 @@ We utilize (un)supervised segmentation according to given training examples or s
     python experiments_segmentation/run_segm_slic_classif_graphcut.py \
         -list images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
         -imgs "images/drosophila_ovary_slice/image/*.jpg" \
+       --path_config experiments_segmentation/sample_config.json \
         -out results -n Ovary --img_type 2d_gray --visual --nb_jobs 2
     ```
 * For both experiment you can evaluate segmentation results.

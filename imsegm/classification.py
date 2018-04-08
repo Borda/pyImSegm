@@ -683,7 +683,6 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
             df_scoring[scoring] = scores
         except Exception:
             logging.error(traceback.format_exc())
-    df_stat = df_scoring.describe()
 
     if path_out is not None:
         assert os.path.exists(path_out), 'missing: "%s"' % path_out
@@ -691,10 +690,16 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
         path_csv = os.path.join(path_out, name_csv)
         df_scoring.to_csv(path_csv)
 
-        name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'statistic')
-        path_csv = os.path.join(path_out, name_csv)
-        df_stat.to_csv(path_csv)
-    logging.info('cross_val scores: \n %s', repr(df_stat))
+    if len(df_scoring) > 1:
+        df_stat = df_scoring.describe()
+        logging.info('cross_val scores: \n %s', repr(df_stat))
+        if path_out is not None:
+            assert os.path.exists(path_out), 'missing: "%s"' % path_out
+            name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'statistic')
+            path_csv = os.path.join(path_out, name_csv)
+            df_stat.to_csv(path_csv)
+    else:
+        logging.warning('no statistic collected')
     return df_scoring
 
 
@@ -710,6 +715,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     :param [int] labels: annotation for samples
     :param object cross_val:
     :param str path_out: path for exporting statistic
+    :param int nb_thr: number of thresholds
     :return:
 
     >>> np.random.seed(0)

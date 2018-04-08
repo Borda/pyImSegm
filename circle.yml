@@ -45,8 +45,8 @@ test:
 
     # SEGMENTATION section
     - unset DISPLAY && python experiments_segmentation/run_compute-stat_annot-segm.py
-    - unset DISPLAY && python experiments_segmentation/run_segm_slic_model_graphcut.py --visual
-    - unset DISPLAY && python experiments_segmentation/run_segm_slic_classif_graphcut.py --visual
+    - unset DISPLAY && python experiments_segmentation/run_segm_slic_model_graphcut.py --path_config experiments_segmentation/sample_config.json --visual
+    - unset DISPLAY && python experiments_segmentation/run_segm_slic_classif_graphcut.py --path_config experiments_segmentation/sample_config.json --visual
 
     # CENTER DETECT. section
     - unset DISPLAY && python experiments_ovary_centres/run_create_annotation.py
