@@ -93,7 +93,7 @@ LIST_FOLDERS_DEBUG = (FOLDER_SEGM_VISU, FOLDER_LOO_VISU, FOLDER_LPO_VISU)
 # unique experiment means adding timestemp on the end of folder name
 EACH_UNIQUE_EXPERIMENT = False
 # showing some intermediate debug images from segmentation
-SHOW_DEBUG_IMAGES = False
+SHOW_DEBUG_IMAGES = True
 # relabel annotation such that labels are in sequence no gaps in between them
 ANNOT_RELABEL_SEQUENCE = False
 # whether skip loading config from previous fun
@@ -174,7 +174,7 @@ def load_image_annot_compute_features_labels(idx_row, params,
     :param bool show_debug_imgs: whether show debug images
     :return (...):
     """
-    def path_out_img(params, dir_name, name):
+    def _path_out_img(params, dir_name, name):
         return os.path.join(params['path_exp'], dir_name, name + '.png')
 
     idx, row = idx_row
@@ -186,9 +186,9 @@ def load_image_annot_compute_features_labels(idx_row, params,
         'individual size of image %s and seg_pipe %s for "%s" - "%s"' % \
         (repr(img.shape), repr(annot.shape), row['path_image'], row['path_annot'])
     if show_debug_imgs:
-        plt.imsave(path_out_img(params, FOLDER_IMAGE, idx_name), img,
+        plt.imsave(_path_out_img(params, FOLDER_IMAGE, idx_name), img,
                    cmap=plt.cm.gray)
-        plt.imsave(path_out_img(params, FOLDER_ANNOT, idx_name), annot)
+        plt.imsave(_path_out_img(params, FOLDER_ANNOT, idx_name), annot)
 
     # duplicate gray band to be as rgb
     # if img.ndim == 2:
@@ -198,18 +198,29 @@ def load_image_annot_compute_features_labels(idx_row, params,
     img = seg_pipe.convert_img_color_space(img, params.get('clr_space', 'rgb'))
     logging.debug('computed SLIC with %i labels', slic.max())
     if show_debug_imgs:
-        img_slic = segmentation.mark_boundaries(img / float(img.max()), slic,
-                                                color=(1, 0, 0), mode='subpixel')
-        plt.imsave(path_out_img(params, FOLDER_SLIC, idx_name), img_slic)
-    features, ft_names = seg_fts.compute_selected_features_img2d(img, slic,
-                                                                 params['features'])
+        if 'clr_space' in params and params['clr_space'].lower() != 'rgb' \
+                and img.ndim == 3 and img.shape[-1] in (3, 4):
+            # convert back to rgb
+            clr = params['clr_space'].lower()
+            assert clr in seg_pipe.DICT_CONVERT_COLOR_TO_RGB
+            img_rgb = seg_pipe.DICT_CONVERT_COLOR_TO_RGB[clr](img)
+        else:
+            img_rgb = img / float(np.max(img))
+        img_slic = segmentation.mark_boundaries(img_rgb, slic,
+                                                color=(1, 0, 0),
+                                                mode='subpixel')
+        plt.imsave(_path_out_img(params, FOLDER_SLIC, idx_name),
+                   np.clip(img_slic, 0, 1))
+    features, ft_names = seg_fts.compute_selected_features_img2d(
+                                                img, slic,  params['features'])
 
-    label_hist = seg_label.histogram_regions_labels_norm(slic, annot)
-    labels = np.argmax(label_hist, axis=1)
+    slic_label_hist = seg_label.histogram_regions_labels_norm(slic, annot)
+    labels = np.argmax(slic_label_hist, axis=1)
     slic_annot = labels[slic]
     if show_debug_imgs:
-        plt.imsave(path_out_img(params, FOLDER_SLIC_ANNOT, idx_name), slic_annot)
-    return idx_name, img, annot, slic, features, labels, label_hist, ft_names
+        plt.imsave(_path_out_img(params, FOLDER_SLIC_ANNOT, idx_name),
+                   np.clip(slic_annot, 0, slic_annot.max()))
+    return idx_name, img, annot, slic, features, labels, slic_label_hist, ft_names
 
 
 def dataset_load_images_annot_compute_features(params,
@@ -307,6 +318,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     :param obj classif: trained classifier
     :param str path_out: path for output
     :param str path_visu: the existing patch means export also visualisation
+    :param bool show_debug_imgs: whether show debug images
     :return (str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
@@ -314,7 +326,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     idx_name = get_idx_name(idx, path_img)
     img = load_image(path_img, params['img_type'])
     slic = seg_spx.segment_slic_img2d(img, sp_size=params['slic_size'],
-                                            rltv_compact=params['slic_regul'])
+                                      rltv_compact=params['slic_regul'])
     img = seg_pipe.convert_img_color_space(img, params.get('clr_space', 'rgb'))
     features, _ = seg_fts.compute_selected_features_img2d(img, slic,
                                                           params['features'])
@@ -336,7 +348,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
         path_npz = os.path.join(path_out, idx_name + '.npz')
         np.savez_compressed(path_npz, segm_soft)
     except Exception:
-        logging.warning('classif: %s not support predict_proba(.)',
+        logging.warning('classif: %s not support predict_proba(...)',
                         repr(classif))
         proba = None
         segm_soft = None
@@ -364,7 +376,6 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
         if path_visu is not None and os.path.isdir(path_visu):
             export_draw_image_segm_contour(img, segm_gc, path_visu,
                                            idx_name, '_gc')
-
             if show_debug_imgs:
                 labels_map = np.argmax(proba, axis=1)
                 plt.imsave(os.path.join(path_visu, idx_name + '_map.png'),
@@ -415,7 +426,8 @@ def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
 
 
 def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
-                              path_out, path_visu):
+                              path_out, path_visu,
+                              show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ load the classifier, and dumped data, subtract the image,
     retrain the classif. without it and do the segmentation
 
@@ -423,6 +435,7 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
+    :param bool show_debug_imgs: whether show debug images
     :return (str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
@@ -443,13 +456,15 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
     classif.fit(features, labels)
 
     idx_name, segm, segm_gc = segment_image(imgs_idx_path, params, classif,
-                                            path_out, path_visu)
+                                            path_out, path_visu,
+                                            show_debug_imgs=show_debug_imgs)
     # gc.collect(), time.sleep(1)
     return idx_name, segm, segm_gc
 
 
 def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
-                              path_out, path_visu):
+                              path_out, path_visu,
+                              show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ load the classifier, and dumped data, subtract the image,
     retrain the classif without it and do the segmentation
 
@@ -457,6 +472,7 @@ def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
+    :param bool show_debug_imgs: whether show debug images
     :return (str, ndarray, ndarray):
     """
     dict_imgs, _, _, dict_features, dict_labels, _, _ = \
@@ -481,7 +497,8 @@ def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
     dict_segm, dict_segm_gc = {}, {}
     for imgs_idx_path in list_imgs_idx_path:
         idx_name, segm, segm_gc = segment_image(imgs_idx_path, params, classif,
-                                                path_out, path_visu)
+                                                path_out, path_visu,
+                                                show_debug_imgs=show_debug_imgs)
         dict_segm[idx_name] = segm
         dict_segm_gc[idx_name] = segm_gc
     # gc.collect(), time.sleep(1)
@@ -509,7 +526,8 @@ def get_summary(df, name, list_stat=('mean', 'std', 'median')):
     return dict_state
 
 
-def perform_predictions(params, paths_img, classif):
+def perform_predictions(params, paths_img, classif,
+                        show_debug_imgs=SHOW_DEBUG_IMAGES):
     logging.info('run prediction on training images...')
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
 
@@ -517,7 +535,8 @@ def perform_predictions(params, paths_img, classif):
     path_out = os.path.join(params['path_exp'], FOLDER_SEGM)
     path_visu = os.path.join(params['path_exp'], FOLDER_SEGM_VISU)
     _wrapper_segment = partial(segment_image, params=params, classif=classif,
-                               path_out=path_out, path_visu=path_visu)
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='image segm: prediction')
@@ -528,7 +547,7 @@ def perform_predictions(params, paths_img, classif):
 
 
 def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
-                   path_dump):
+                   path_dump, show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ experiment Leave-One-Out
 
     :param {str: ...} params:
@@ -537,6 +556,7 @@ def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
     :param [str] paths_img:
     :param str path_classif:
     :param str path_dump:
+    :param bool show_debug_imgs: whether show debug images
     :return {}:
     """
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
@@ -546,7 +566,8 @@ def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
     path_visu = os.path.join(params['path_exp'], FOLDER_LOO_VISU)
     _wrapper_segment = partial(retrain_loo_segment_image,
                                path_classif=path_classif, path_dump=path_dump,
-                               path_out=path_out, path_visu=path_visu)
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment LOO')
@@ -572,7 +593,7 @@ def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
 
 
 def experiment_lpo(params, df_stat, dict_annot, paths_img, path_classif,
-                   path_dump, nb_holdout):
+                   path_dump, nb_holdout, show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ experiment Leave-P-samples-Out
 
     :param {str: ...} params:
@@ -582,6 +603,7 @@ def experiment_lpo(params, df_stat, dict_annot, paths_img, path_classif,
     :param str path_classif:
     :param str path_dump:
     :param int nb_holdout:
+    :param bool show_debug_imgs: whether show debug images
     :return {}:
     """
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
@@ -594,7 +616,8 @@ def experiment_lpo(params, df_stat, dict_annot, paths_img, path_classif,
     path_visu = os.path.join(params['path_exp'], FOLDER_LPO_VISU)
     _wrapper_segment = partial(retrain_lpo_segment_image,
                                path_classif=path_classif, path_dump=path_dump,
-                               path_out=path_out, path_visu=path_visu)
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, test_imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment LPO')
@@ -641,7 +664,7 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
         classif, path_classif = seg_clf.create_classif_train_export(
                     params['classif'], features, labels, cross_val=cv,
                     params=params, feature_names=feature_names,
-                    nb_search_iter=params['nb_classif_search'],
+                    nb_search_iter=params.get('nb_classif_search', 1),
                     nb_jobs=params['nb_jobs'], pca_coef=params['pca_coef'],
                     path_out=params['path_exp'])
     params['path_classif'] = path_classif
@@ -665,6 +688,7 @@ def main_train(params):
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running TRAINING...')
+    show_debug_imgs = params.get('visual', False) or SHOW_DEBUG_IMAGES
 
     reload_dir_config = (os.path.isfile(params.get('path_config', ''))
                          or FORCE_RELOAD)
@@ -685,7 +709,8 @@ def main_train(params):
     else:
         dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, \
         dict_label_hist, feature_names = \
-            dataset_load_images_annot_compute_features(params)
+            dataset_load_images_annot_compute_features(params,
+                                                       show_debug_imgs)
         save_dump_data(path_dump, dict_imgs, dict_annot, dict_slics,
                        dict_features, dict_labels, dict_label_hist,
                        feature_names)
@@ -726,17 +751,20 @@ def main_train(params):
     # test classif on images
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     paths_img = df_paths['path_image'].tolist()
-    perform_predictions(params, paths_img, classif)
+    perform_predictions(params, paths_img, classif,
+                        show_debug_imgs=show_debug_imgs)
 
     # LEAVE ONE OUT
     if RUN_CROSS_VAL_LOO:
         df_stat = experiment_loo(params, df_stat, dict_annot, paths_img,
-                                 path_classif, path_dump)
+                                 path_classif, path_dump,
+                                 show_debug_imgs=show_debug_imgs)
 
     # LEAVE P OUT
     if RUN_CROSS_VAL_LPO:
         df_stat = experiment_lpo(params, df_stat, dict_annot, paths_img,
-                                 path_classif, path_dump, nb_holdout)
+                                 path_classif, path_dump, nb_holdout,
+                                 show_debug_imgs=show_debug_imgs)
 
     logging.info('Statistic: \n %s', repr(df_stat.describe()))
     logging.info('training DONE')
@@ -764,7 +792,7 @@ def prepare_output_dir(path_pattern_imgs, path_out, name):
 
 
 def try_segment_image(img_idx_path, params, classif, path_out, path_visu,
-                      show_debug_imgs=False):
+                      show_debug_imgs=SHOW_DEBUG_IMAGES):
     try:
         return segment_image(img_idx_path, params, classif,
                              path_out, path_visu,
@@ -804,7 +832,8 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
 
     logging.debug('run prediction...')
     _wrapper_segment = partial(try_segment_image, params=params, classif=classif,
-                               path_out=path_out, path_visu=path_visu)
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=SHOW_DEBUG_IMAGES)
     list_img_path = list(zip([None] * len(paths_img), paths_img))
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, list_img_path,
                                           nb_jobs=params['nb_jobs'],

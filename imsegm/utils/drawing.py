@@ -427,13 +427,21 @@ def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1,
     :param int slic_size:
     :param float slic_regul:
     :return Figure:
+
+    >>> np.random.seed(0)
+    >>> dict_label_hist = {'a': np.tile([1, 0, 0, 0, 1], (25, 1)),
+    ...                    'b': np.tile([0, 1, 0, 0, 1], (30, 1))}
+    >>> figure_annot_slic_histogram_labels(dict_label_hist)  # doctest: +ELLIPSIS
+    <matplotlib.figure.Figure object at ...>
     """
     matrix_hist_all = np.concatenate(tuple(dict_label_hist.values()), axis=0)
-    nb_labels = matrix_hist_all.shape[1]
+    lb_sums = np.sum(matrix_hist_all, axis=0)
 
     fig = plt.figure(figsize=(10, 5))
     ax = fig.gca()
-    for i in range(nb_labels):
+    for i, nb in enumerate(lb_sums):
+        if nb == 0:
+            continue
         patches, bin_edges = np.histogram(matrix_hist_all[:, i], bins=50,
                                           density=True)
         bins = [(a + b) / 2. for a, b in zip(bin_edges[:-1], bin_edges[1:])]

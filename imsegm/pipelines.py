@@ -26,12 +26,19 @@ CLUSTER_METHOD = seg_clf.DEFAULT_CLUSTERING
 CROSS_VAL_LEAVE_OUT = 2
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.6))
 
-DICT_CONVERT_COLOR = {
+DICT_CONVERT_COLOR_FROM_RGB = {
     'hsv': sk_color.rgb2hsv,
     'luv': sk_color.rgb2luv,
     'lab': sk_color.rgb2lab,
     'hed': sk_color.rgb2hed,
     'xyz': sk_color.rgb2xyz
+}
+DICT_CONVERT_COLOR_TO_RGB = {
+    'hsv': sk_color.hsv2rgb,
+    'luv': sk_color.luv2rgb,
+    'lab': sk_color.lab2rgb,
+    'hed': sk_color.hed2rgb,
+    'xyz': sk_color.xyz2rgb
 }
 
 
@@ -43,8 +50,8 @@ def convert_img_color_space(image, clr_space):
     :return: image
     """
     if image.ndim == 3 and image.shape[2] == 3 \
-            and clr_space in DICT_CONVERT_COLOR:
-        image = DICT_CONVERT_COLOR[clr_space](image)
+            and clr_space in DICT_CONVERT_COLOR_FROM_RGB:
+        image = DICT_CONVERT_COLOR_FROM_RGB[clr_space](image)
     return image
 
 
@@ -179,6 +186,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
 
     UnSupervised:
     >>> np.random.seed(0)
+    >>> seg_fts.USE_CYTHON = False
     >>> image = np.random.random((125, 150, 3)) / 2.
     >>> image[:, :75] += 0.5
     >>> model, _ = estim_model_classes_group([image], nb_classes=2)

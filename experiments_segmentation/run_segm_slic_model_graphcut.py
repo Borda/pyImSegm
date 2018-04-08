@@ -70,7 +70,7 @@ LIST_FOLDERS_DEBUG = (FOLDER_SEGM_GMM_VISU, FOLDER_SEGM_GROUP_VISU)
 # unique experiment means adding timestemp on the end of folder name
 EACH_UNIQUE_EXPERIMENT = False
 # showing some intermediate debug images from segmentation
-SHOW_DEBUG_IMAGES = False
+SHOW_DEBUG_IMAGES = True
 # relabel annotation such that labels are in sequence no gaps in between them
 ANNOT_RELABEL_SEQUENCE = False
 # whether skip loading config from previous fun
@@ -203,12 +203,10 @@ def load_model(path_model):
     with open(path_model, 'rb') as f:
         dict_data = pickle.load(f)
     # npz_file = np.load(path_model)
-    scaler = dict_data['scaler']
-    pca = dict_data['pca']
     model = dict_data['model']
     params = dict_data['params']
     feature_names = dict_data['feature_names']
-    return scaler, pca, model, params, feature_names
+    return model, params, feature_names
 
 
 def save_model(path_model, model, params=None, feature_names=None):
@@ -294,7 +292,8 @@ def export_visual(idx_name, img, segm, dict_debug_imgs=None,
         plt.close(fig)
 
 
-def segment_image_independent(img_idx_path, params, path_out, path_visu=None):
+def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
+                              show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ segment image indecently (estimate model just for this model)
 
     :param (int, str) img_idx_path:
@@ -311,7 +310,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None):
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    dict_debug_imgs = dict() if SHOW_DEBUG_IMAGES else None
+    dict_debug_imgs = dict() if show_debug_imgs else None
     try:
         segm = seg_pipe.pipe_color2d_slic_features_gmm_graphcut(
             img, nb_classes=params['nb_classes'], clr_space=params['clr_space'],
@@ -331,7 +330,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None):
 
 
 def segment_image_model(imgs_idx_path, params, model, path_out=None,
-                        path_visu=None):
+                        path_visu=None, show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ segment image with already estimated model
 
     :param (int, str) imgs_idx_path:
@@ -341,6 +340,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     :param obj model:
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
+    :param bool show_debug_imgs: whether show debug images
     :return (str, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
@@ -351,7 +351,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    dict_debug_imgs = dict() if SHOW_DEBUG_IMAGES else None
+    dict_debug_imgs = dict() if show_debug_imgs else None
 
     try:
         segm = seg_pipe.segment_color2d_slic_features_model_graphcut(
@@ -392,12 +392,14 @@ def compare_segms_metric_ars(dict_segm_a, dict_segm_b, suffix=''):
     return df_ars
 
 
-def experiment_single_gmm(params, paths_img, path_out, path_visu):
+def experiment_single_gmm(params, paths_img, path_out, path_visu,
+                          show_debug_imgs=SHOW_DEBUG_IMAGES):
     imgs_idx_path = list(zip([None] * len(paths_img), paths_img))
     logging.info('Perform image segmentation as single image in each time')
     dict_segms_gmm = {}
     _wrapper_segment = partial(segment_image_independent, params=params,
-                               path_out=path_out, path_visu=path_visu)
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment single GMM')
@@ -406,7 +408,8 @@ def experiment_single_gmm(params, paths_img, path_out, path_visu):
     return dict_segms_gmm
 
 
-def experiment_group_gmm(params, paths_img, path_out, path_visu):
+def experiment_group_gmm(params, paths_img, path_out, path_visu,
+                         show_debug_imgs=SHOW_DEBUG_IMAGES):
     logging.info('load all images')
     list_images = [load_image(path_img, params['img_type'])
                    for path_img in paths_img]
@@ -414,7 +417,7 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu):
     logging.info('Estimate image segmentation from whole sequence of images')
     params['path_model'] = os.path.join(params['path_exp'], NAME_DUMP_MODEL)
     if os.path.isfile(params['path_model']) and not FORCE_RECOMP_DATA:
-        scaler, pca, model, _, _ = load_model(params['path_model'])
+        model, _, _ = load_model(params['path_model'])
     else:
         model, _ = seg_pipe.estim_model_classes_group(
             list_images, nb_classes=params['nb_classes'],
@@ -426,7 +429,8 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu):
     logging.info('Perform image segmentation from group model')
     dict_segms_group = {}
     _wrapper_segment = partial(segment_image_model, params=params, model=model,
-                               path_out=path_out, path_visu=path_visu)
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment group GMM')
@@ -445,6 +449,7 @@ def main(params):
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running...')
+    show_debug_imgs = params.get('visual', False) or SHOW_DEBUG_IMAGES
 
     reload_dir_config = (os.path.isfile(params['path_config']) or FORCE_RELOAD)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
@@ -453,7 +458,7 @@ def main(params):
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_BASE)
-    if params.get('visual', False):
+    if show_debug_imgs:
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
 
     assert os.path.isfile(params['path_train_list']), \
@@ -468,13 +473,15 @@ def main(params):
     # Segment as single model per image
     dict_segms_gmm = experiment_single_gmm(params, paths_img,
                                            _path_expt(FOLDER_SEGM_GMM),
-                                           _path_expt(FOLDER_SEGM_GMM_VISU))
+                                           _path_expt(FOLDER_SEGM_GMM_VISU),
+                                           show_debug_imgs=show_debug_imgs)
     gc.collect()
     time.sleep(1)
 
     dict_segms_group = experiment_group_gmm(params, paths_img,
                                             _path_expt(FOLDER_SEGM_GROUP),
-                                            _path_expt(FOLDER_SEGM_GROUP_VISU))
+                                            _path_expt(FOLDER_SEGM_GROUP_VISU),
+                                            show_debug_imgs=show_debug_imgs)
     gc.collect()
     time.sleep(1)
 
