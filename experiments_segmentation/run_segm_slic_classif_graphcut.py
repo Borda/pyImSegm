@@ -666,14 +666,15 @@ def main_train(params):
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running TRAINING...')
 
-    reload_dir_config = (os.path.isfile(params['path_config']) or FORCE_RELOAD)
+    reload_dir_config = (os.path.isfile(params.get('path_config', ''))
+                         or FORCE_RELOAD)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
                                               stamp_unique=EACH_UNIQUE_EXPERIMENT,
                                               skip_load=reload_dir_config)
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_BASE)
-    if params['visual']:
+    if params.get('visual', False):
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
     df_stat = pd.DataFrame()
 

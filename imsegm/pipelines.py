@@ -220,7 +220,8 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     # gmm.fit(features, np.argmax(proba, axis=1))
     # proba = gmm.predict_proba(features)
 
-    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image, features,
+    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
+                                                    features,
                                                     gc_regul, gc_edge_type,
                                                     dict_debug_imgs=dict_debug_imgs)
     segm = graph_labels[slic]
@@ -292,12 +293,15 @@ def wrapper_compute_color2d_slic_features_labels(img_annot, clr_space,
     return slic, features, labels
 
 
-def train_classif_color2d_slic_features(list_images, list_annots, clr_space='rgb',
+def train_classif_color2d_slic_features(list_images, list_annots,
+                                        clr_space='rgb',
                                         sp_size=30, sp_regul=0.2,
                                         dict_features=FTS_SET_SIMPLE,
-                                        clf_name=CLASSIF_NAME, label_purity=0.9,
+                                        clf_name=CLASSIF_NAME,
+                                        label_purity=0.9,
                                         feature_balance='unique',
                                         pca_coef=None, nb_classif_search=1,
+                                        nb_hold_out=CROSS_VAL_LEAVE_OUT,
                                         nb_jobs=1):
     """ train classifier on list of annotated images
 
@@ -313,6 +317,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, clr_space='rgb
     :param str feature_balance: set how to balance datasets
     :param float pca_coef: select PCA coef or None
     :param int nb_classif_search: number of tries for hyper-parameters seach
+    :param int nb_hold_out: cross-val leave out
     :param int nb_jobs: parallelism
     :return:
     """
@@ -334,21 +339,6 @@ def train_classif_color2d_slic_features(list_images, list_annots, clr_space='rgb
         list_features.append(fts)
         list_labels.append(lbs)
 
-    # for img, annot in zip(list_images, list_annots):
-    #     assert img.shape[:2] == annot.shape[:2]
-    #     slic, features = compute_color2d_superpixels_features(img, clr_space,
-    #                                                           sp_size, sp_regul,
-    #                                                           dict_features,
-    #                                                           fts_norm=False)
-    #     list_slic.append(slic)
-    #     list_features.append(features)
-    #
-    #     label_hist = seg_lbs.histogram_regions_labels_norm(slic, annot)
-    #     labels = np.argmax(label_hist, axis=1)
-    #     purity = np.max(label_hist, axis=1)
-    #     labels[purity < label_purity] = -1
-    #     list_labels.append(labels)
-
     logging.debug('concentrate features...')
     # concentrate features, labels
     features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
@@ -363,21 +353,24 @@ def train_classif_color2d_slic_features(list_images, list_annots, clr_space='rgb
     # clf_pipeline.fit(np.array(features), np.array(labels, dtype=int))
 
     if len(sizes) > (CROSS_VAL_LEAVE_OUT * 5):
-        cv = seg_clf.CrossValidatePSetsOut(sizes, nb_hold_out=CROSS_VAL_LEAVE_OUT)
+        cv = seg_clf.CrossValidatePSetsOut(sizes, nb_hold_out=nb_hold_out)
     # for small nuber of training images this does not make sence
     else:
         cv = 10
 
     classif, _ = seg_clf.create_classif_train_export(clf_name, features, labels,
                                                      nb_search_iter=nb_classif_search,
-                                                     cross_val=cv, nb_jobs=nb_jobs,
+                                                     cross_val=cv,
+                                                     nb_jobs=nb_jobs,
                                                      pca_coef=pca_coef)
 
     return classif, list_slic, list_features, list_labels
 
 
-def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4, spacing=(12, 1, 1),
-                                           sp_size=15, sp_regul=0.2, gc_regul=0.1,
+def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4,
+                                           spacing=(12, 1, 1),
+                                           sp_size=15, sp_regul=0.2,
+                                           gc_regul=0.1,
                                            dict_features=FTS_SET_SIMPLE):
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
@@ -404,7 +397,8 @@ def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4, spacing=(12, 1, 
     # plt.imshow(segments)
     logging.info('extract segments/superpixels features.')
     # f = features.computeColourMean(image, segments)
-    features, _ = seg_fts.compute_selected_features_gray3d(image, slic, dict_features)
+    features, _ = seg_fts.compute_selected_features_gray3d(image, slic,
+                                                           dict_features)
     # merge features together
     logging.debug('list of features RAW: %s', repr(features.shape))
     features[np.isnan(features)] = 0

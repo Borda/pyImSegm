@@ -156,7 +156,7 @@ def arg_parse_params(params):
         assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
     # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
-    if os.path.isfile(args['path_config']):
+    if os.path.isfile(args.get('path_config', '')):
         with open(args['path_config'], 'r') as fd:
             config = json.load(fd)
         params.update(config)
@@ -453,7 +453,7 @@ def main(params):
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_BASE)
-    if params['visual']:
+    if params.get('visual', False):
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
 
     assert os.path.isfile(params['path_train_list']), \
