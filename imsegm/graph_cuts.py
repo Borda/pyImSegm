@@ -8,7 +8,8 @@ import logging
 
 import numpy as np
 from gco import cut_general_graph
-from sklearn import metrics, mixture, cluster, preprocessing
+from sklearn import metrics, preprocessing
+from sklearn import pipeline, preprocessing, cluster, mixture, decomposition
 
 import imsegm.utils.drawing as tl_visu
 import imsegm.superpixels as seg_spx
@@ -49,21 +50,68 @@ def estim_gmm_params(features, prob):
     return gmm_params
 
 
-def estim_class_model(features, nb_classes, proba_type):
-    """ wrapper over several options how to cluster samples
+def estim_class_model(features, nb_classes, proba_type='GMM', pca_coef=None,
+                      scaler=True, init_type=None):
+    """ create pipeline (scaler, PCA, model) over several options how
+    to cluster samples and fit it on data
 
     :param ndarray features:
-    :param int nb_classes:
-    :param str proba_type:
+    :param int nb_classes: number of expected classes
+    :param str proba_type: tyre of used model
+    :param float pca_coef: range (0, 1) or None
+    :param bool scaler: wheter use a scaler
+    :param str init_type: initialsi of
     :return:
+
+    >>> np.random.seed(0)
+    >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
+    ...                     np.random.random((50, 3)) + 1])
+    >>> gmm = estim_class_model(fts, 2)
+    >>> gmm.predict_proba(fts).shape
+    (100, 2)
+    >>> gmm = estim_class_model(fts, 2, proba_type='GMM', init_type='kmeans')
+    >>> gmm.predict_proba(fts).shape
+    (100, 2)
+    >>> gmm = estim_class_model(fts, 2, proba_type='quantiles', pca_coef=0.95)
+    >>> gmm.predict_proba(fts).shape
+    (100, 2)
     """
+    components = []
+    if scaler:
+        components += [('scaler', preprocessing.StandardScaler())]
+    if pca_coef is not None:
+        components += [('reduce_dim', decomposition.PCA(pca_coef))]
+
+    # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
+    gmm = mixture.GaussianMixture(n_components=nb_classes,
+                                    covariance_type='full', max_iter=99)
+    y = None
     if proba_type == 'GMM':
-        model = estim_class_model_gmm(features, nb_classes)
-    elif proba_type == 'quantiles':
-        model = estim_class_model_kmeans(features, nb_classes,
-                                         init_type='quantiles')
+        # model = estim_class_model_gmm(features, nb_classes)
+        if init_type == 'kmeans':
+            # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+            kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++',
+                                    n_jobs=-1)
+            y = kmeans.fit_predict(features)
+
     else:
-        model = estim_class_model_kmeans(features, nb_classes)
+        init_type = 'quantiles' if proba_type == 'quantiles' else 'k-means++'
+        _, y = estim_class_model_kmeans(features, nb_classes, init_type=init_type)
+
+        logging.info('compute probability of each feature to all component')
+        # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
+        gmm.set_params(max_iter=1)
+
+    components += [('model', gmm)]
+    # compose the pipeline
+    model = pipeline.Pipeline(components)
+
+    if y is not None:
+        # fit with examples
+        model.fit(features, y)
+    else:
+        # fit from scrach
+        model.fit(features)
     return model
 
 
@@ -134,7 +182,9 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++'):
     >>> np.random.seed(0)
     >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
     ...                     np.random.random((50, 3)) + 1])
-    >>> gmm = estim_class_model_kmeans(fts, 2)
+    >>> gmm, y = estim_class_model_kmeans(fts, 2)
+    >>> y.shape
+    (100,)
     >>> gmm.predict_proba(fts).shape
     (100, 2)
     """
@@ -148,12 +198,10 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++'):
     else:
         kmeans = cluster.KMeans(nb_classes, init=init_type, n_init=25, n_jobs=-1)
     y = kmeans.fit_predict(features)
-    logging.info('compute probability of each feature to all component')
-    # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
     gmm = mixture.GaussianMixture(n_components=nb_classes,
                                   covariance_type='full', max_iter=1)
     gmm.fit(features, y)
-    return gmm
+    return gmm, y
 
 
 def get_vertexes_edges(segments):

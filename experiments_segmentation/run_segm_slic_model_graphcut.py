@@ -211,7 +211,7 @@ def load_model(path_model):
     return scaler, pca, model, params, feature_names
 
 
-def save_model(path_model, scaler, pca, model, params=None, feature_names=None):
+def save_model(path_model, model, params=None, feature_names=None):
     """ save model on specific destination
 
     :param str path_model:
@@ -224,7 +224,7 @@ def save_model(path_model, scaler, pca, model, params=None, feature_names=None):
     logging.info('save (dump) model to "%s"', path_model)
     # np.savez_compressed(path_model, scaler=scaler, pca=pca,
     #              model=model, params=params, feature_names=feature_names)
-    dict_data = dict(scaler=scaler, pca=pca, model=model, params=params,
+    dict_data = dict(model=model, params=params,
                      feature_names=feature_names)
     with open(path_model, 'wb') as f:
         pickle.dump(dict_data, f)
@@ -330,7 +330,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None):
     return idx_name, segm
 
 
-def segment_image_model(imgs_idx_path, params, scaler, pca, model, path_out=None,
+def segment_image_model(imgs_idx_path, params, model, path_out=None,
                         path_visu=None):
     """ segment image with already estimated model
 
@@ -355,7 +355,7 @@ def segment_image_model(imgs_idx_path, params, scaler, pca, model, path_out=None
 
     try:
         segm = seg_pipe.segment_color2d_slic_features_model_graphcut(
-            img, scaler, pca, model, clr_space=params['clr_space'],
+            img, model, clr_space=params['clr_space'],
             sp_size=params['slic_size'], sp_regul=params['slic_regul'],
             dict_features=params['features'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
@@ -416,17 +416,16 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu):
     if os.path.isfile(params['path_model']) and not FORCE_RECOMP_DATA:
         scaler, pca, model, _, _ = load_model(params['path_model'])
     else:
-        scaler, pca, model = seg_pipe.estim_model_classes_group(
+        model, _ = seg_pipe.estim_model_classes_group(
             list_images, nb_classes=params['nb_classes'],
             clr_space=params['clr_space'], sp_size=params['slic_size'],
             sp_regul=params['slic_regul'], dict_features=params['features'],
             proba_type=params['prob_type'], pca_coef=params['pca_coef'])
-        save_model(params['path_model'], scaler, pca, model)
+        save_model(params['path_model'], model)
 
     logging.info('Perform image segmentation from group model')
     dict_segms_group = {}
-    _wrapper_segment = partial(segment_image_model, params=params,
-                               scaler=scaler, pca=pca, model=model,
+    _wrapper_segment = partial(segment_image_model, params=params, model=model,
                                path_out=path_out, path_visu=path_visu)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],

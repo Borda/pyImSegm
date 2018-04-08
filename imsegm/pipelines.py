@@ -10,7 +10,7 @@ from functools import partial
 
 import numpy as np
 import skimage.color as sk_color
-from sklearn import preprocessing, mixture, decomposition
+# from sklearn import mixture
 
 import imsegm.utils.experiments as tl_expt
 import imsegm.graph_cuts as seg_gc
@@ -94,18 +94,14 @@ def pipe_color2d_slic_features_gmm_graphcut(image, nb_classes=3,
         dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, image,
                                                           kind='avg')
 
-    if pca_coef is not None:
-        pca = decomposition.PCA(pca_coef)
-        features = pca.fit_transform(features)
-
-    model = seg_gc.estim_class_model(features, nb_classes, proba_type)
+    model = seg_gc.estim_class_model(features, nb_classes, proba_type, pca_coef)
     proba = model.predict_proba(features)
     logging.debug('list of probabilities: %s', repr(proba.shape))
 
-    gmm = mixture.GaussianMixture(n_components=nb_classes,
-                                  covariance_type='full', max_iter=1)
-    gmm.fit(features, np.argmax(proba, axis=1))
-    proba = gmm.predict_proba(features)
+    # gmm = mixture.GaussianMixture(n_components=nb_classes,
+    #                               covariance_type='full', max_iter=1)
+    # gmm.fit(features, np.argmax(proba, axis=1))
+    # proba = gmm.predict_proba(features)
 
     graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
             features, gc_regul, gc_edge_type, dict_debug_imgs=dict_debug_imgs)
@@ -116,7 +112,7 @@ def pipe_color2d_slic_features_gmm_graphcut(image, nb_classes=3,
 def estim_model_classes_group(list_images, nb_classes=4, clr_space='rgb',
                               sp_size=30, sp_regul=0.2,
                               dict_features=FTS_SET_SIMPLE,
-                              pca_coef=None, proba_type='GMM',
+                              pca_coef=None, scaler=True, proba_type='GMM',
                               nb_jobs=NB_THREADS):
     """ estimate a model from sequence of input images and return it as result
 
@@ -128,6 +124,7 @@ def estim_model_classes_group(list_images, nb_classes=4, clr_space='rgb',
                    and "1" nearly square slic
     :param {str: [str]} dict_features: list of features to be extracted
     :param float pca_coef: range (0, 1) or None
+    :param bool scaler: wheter use a scaler
     :param str proba_type: model type
     :param int nb_jobs: number of jobs running in parallel
     :return:
@@ -152,21 +149,13 @@ def estim_model_classes_group(list_images, nb_classes=4, clr_space='rgb',
     features = np.concatenate(tuple(list_features), axis=0)
     features = np.nan_to_num(features)
 
-    # scaling
-    scaler = preprocessing.StandardScaler()
-    scaler.fit(features)
-    features = scaler.transform(features)
+    model = seg_gc.estim_class_model(features, nb_classes, proba_type,
+                                     pca_coef, scaler)
 
-    pca = None
-    if pca_coef is not None:
-        pca = decomposition.PCA(pca_coef)
-        features = pca.fit_transform(features)
-
-    model = seg_gc.estim_class_model(features, nb_classes, proba_type)
-    return scaler, pca, model
+    return model, list_features
 
 
-def segment_color2d_slic_features_model_graphcut(image, scaler, pca, model,
+def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
                                                  clr_space='rgb',
                                                  sp_size=30, sp_regul=0.2,
                                                  gc_regul=1.,
@@ -177,9 +166,7 @@ def segment_color2d_slic_features_model_graphcut(image, scaler, pca, model,
     and graphCut segmentation
 
     :param ndarry image: input RGB image
-    :param obj pca:
-    :param obj scaler:
-    :param obj model:
+    :param obj model_pipeline:
     :param str clr_space: chose the color space
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
@@ -190,11 +177,24 @@ def segment_color2d_slic_features_model_graphcut(image, scaler, pca, model,
     :param dict_debug_imgs: {str: ...}
     :return [[int]]: segmentation matrix mapping each pixel into a class
 
+    UnSupervised:
     >>> np.random.seed(0)
     >>> image = np.random.random((125, 150, 3)) / 2.
     >>> image[:, :75] += 0.5
-    >>> sc, pca, model = estim_model_classes_group([image], nb_classes=2)
-    >>> segm = segment_color2d_slic_features_model_graphcut(image, sc, pca, model)
+    >>> model, _ = estim_model_classes_group([image], nb_classes=2)
+    >>> segm = segment_color2d_slic_features_model_graphcut(image, model)
+    >>> segm.shape
+    (125, 150)
+
+    Supervised:
+    >>> np.random.seed(0)
+    >>> seg_fts.USE_CYTHON = False
+    >>> image = np.random.random((125, 150, 3)) / 2.
+    >>> image[:, 75:] += 0.5
+    >>> annot = np.zeros(image.shape[:2], dtype=int)
+    >>> annot[:, 75:] = 1
+    >>> clf, _, _, _ = train_classif_color2d_slic_features([image], [annot])
+    >>> segm = segment_color2d_slic_features_model_graphcut(image, clf)
     >>> segm.shape
     (125, 150)
     """
@@ -209,23 +209,24 @@ def segment_color2d_slic_features_model_graphcut(image, scaler, pca, model,
             image = np.rollaxis(np.tile(image, (3, 1, 1)), 0, 3)
         dict_debug_imgs['image'] = image
         dict_debug_imgs['slic'] = slic
-        dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, image, kind='avg')
+        dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, image,
+                                                          kind='avg')
 
-    features = scaler.transform(features)
-    if pca is not None:
-        features = pca.fit_transform(features)
-
-    proba = model.predict_proba(features)
+    proba = model_pipeline.predict_proba(features)
     logging.debug('list of probabilities: %s', repr(proba.shape))
 
-    gmm = mixture.GaussianMixture(n_components=proba.shape[1],
-                                  covariance_type='full', max_iter=1)
-    gmm.fit(features, np.argmax(proba, axis=1))
-    proba = gmm.predict_proba(features)
+    # gmm = mixture.GaussianMixture(n_components=proba.shape[1],
+    #                               covariance_type='full', max_iter=1)
+    # gmm.fit(features, np.argmax(proba, axis=1))
+    # proba = gmm.predict_proba(features)
 
     graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image, features,
-                                                    gc_regul, gc_edge_type, dict_debug_imgs=dict_debug_imgs)
+                                                    gc_regul, gc_edge_type,
+                                                    dict_debug_imgs=dict_debug_imgs)
     segm = graph_labels[slic]
+    # relabel according classif classes
+    if hasattr(model_pipeline, 'classes_'):
+        segm = model_pipeline.classes_[segm]
     return segm
 
 
@@ -375,62 +376,6 @@ def train_classif_color2d_slic_features(list_images, list_annots, clr_space='rgb
     return classif, list_slic, list_features, list_labels
 
 
-def segment_color2d_slic_features_classif_graphcut(image, classif,
-                                                   clr_space='rgb',
-                                                   sp_size=30, sp_regul=0.2,
-                                                   gc_regul=1.,
-                                                   dict_features=FTS_SET_SIMPLE,
-                                                   gc_edge_type='model',
-                                                   dict_debug_imgs=None):
-    """ take trained classifier and apply it on new images
-
-    :param ndarray image: input image
-    :param classif: trained classifier
-    :param str clr_space: chose the color space
-    :param int sp_size: initial size of a superpixel(meaning edge lenght)
-    :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
-           and "1" nearly square segments
-    :param {str: [str]} dict_features: list of features to be extracted
-    :param gc_regul: regularisation for GC
-    :param str gc_edge_type: select the GC edge type
-    :param dict_debug_imgs:
-    :return:
-
-    >>> np.random.seed(0)
-    >>> seg_fts.USE_CYTHON = False
-    >>> image = np.random.random((125, 150, 3)) / 2.
-    >>> image[:, 75:] += 0.5
-    >>> annot = np.zeros(image.shape[:2], dtype=int)
-    >>> annot[:, 75:] = 1
-    >>> clf, _, _, _ = train_classif_color2d_slic_features([image], [annot])
-    >>> segm = segment_color2d_slic_features_classif_graphcut(image, clf)
-    >>> segm.shape
-    (125, 150)
-    """
-    logging.info('SEGMENTATION Superpixels-Features-Classifier-GraphCut')
-    slic, features = compute_color2d_superpixels_features(image, clr_space,
-                                                          sp_size, sp_regul,
-                                                          dict_features,
-                                                          fts_norm=False)
-
-    proba = classif.predict_proba(features)
-
-    if dict_debug_imgs is not None:
-        if image.ndim == 2:  # duplicate channels to be like RGB
-            image = np.rollaxis(np.tile(image, (3, 1, 1)), 0, 3)
-        dict_debug_imgs['image'] = image
-        dict_debug_imgs['slic'] = slic
-        dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, image, kind='avg')
-
-    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image, features,
-                                                    gc_regul, gc_edge_type,
-                                                    dict_debug_imgs=dict_debug_imgs)
-    segm = graph_labels[slic]
-    # relabel according classif classes
-    segm = classif.classes_[segm]
-    return segm
-
-
 def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4, spacing=(12, 1, 1),
                                            sp_size=15, sp_regul=0.2, gc_regul=0.1,
                                            dict_features=FTS_SET_SIMPLE):
@@ -468,13 +413,13 @@ def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4, spacing=(12, 1, 
     features, _ = seg_fts.norm_features(features)
     logging.debug('list of features NORM: %s', repr(features.shape))
 
-    model = seg_gc.estim_class_model_gmm(features, nb_classes)
+    model = seg_gc.estim_class_model(features, nb_classes)
     proba = model.predict_proba(features)
     logging.debug('list of probabilities: %s', repr(proba.shape))
 
     # resultGraph = graphCut.segment_graph_cut_int_vals(segments, prob, gcReg)
-    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image, features,
-                                                    gc_regul)
+    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
+                                                    features, gc_regul)
 
     return graph_labels[slic]
 
