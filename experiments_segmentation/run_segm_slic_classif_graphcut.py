@@ -18,8 +18,8 @@ see them bellow with explanation for each of them.
 
 SAMPLE run:
 >> python run_segm_slic_classif_graphcut.py \
-    -list images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-    -imgs "images/langerhans_islets/image/*.jpg" \
+    -list data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
+    -imgs "data_images/langerhans_islets/image/*.jpg" \
     -out results -n LangIsl --img_type 2d_rgb --visual 1 --nb_jobs 2
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -76,7 +76,7 @@ NAME_CSV_SEGM_STAT_RESULTS = 'statistic_segm_results.csv'
 NAME_DUMP_TRAIN_DATA = 'dump_training_data.npz'
 
 # setting experiment sub-folders
-FOLDER_IMAGE = 'images'
+FOLDER_IMAGE = 'data_images'
 FOLDER_ANNOT = 'annotations'
 FOLDER_SLIC = 'slic'
 FOLDER_SLIC_ANNOT = 'annot_slic'
@@ -139,7 +139,7 @@ SEGM_PARAMS = {
     'gc_edge_type': 'model',
     'gc_use_trans': False,
 }
-PATH_IMAGES = os.path.join(tl_data.update_path('images'),
+PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SEGM_PARAMS.update({

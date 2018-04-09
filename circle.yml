@@ -35,13 +35,13 @@ test:
     - coverage report && coverage xml -o $CIRCLE_TEST_REPORTS/coverage.xml
 
     # ANNOTATION section
-    - unset DISPLAY && python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png"
-    - unset DISPLAY && python handling_annotations/run_image_color_quantization.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" -m position
-    - unset DISPLAY && python handling_annotations/run_image_convert_label_color.py -imgs "images/drosophila_ovary_slice/segm/*.png" -out images/drosophila_ovary_slice/segm_rgb
-    - unset DISPLAY && python handling_annotations/run_image_convert_label_color.py -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" -out images/drosophila_ovary_slice/segm
-    - unset DISPLAY && python handling_annotations/run_overlap_images_segms.py  -imgs "images/drosophila_ovary_slice/image/*.jpg" -segs images/drosophila_ovary_slice/segm -out results/overlap_ovary_segment
-    - unset DISPLAY && python handling_annotations/run_segm_annot_inpaint.py -imgs "images/drosophila_ovary_slice/segm/*.png" --label 0
-    - unset DISPLAY && python handling_annotations/run_segm_annot_relabel.py -imgs "images/drosophila_ovary_slice/center_levels/*.png" -out results/relabel_center_levels
+    - unset DISPLAY && python handling_annotations/run_image_color_quantization.py -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png"
+    - unset DISPLAY && python handling_annotations/run_image_color_quantization.py -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png" -m position
+    - unset DISPLAY && python handling_annotations/run_image_convert_label_color.py -imgs "data_images/drosophila_ovary_slice/segm/*.png" -out data_images/drosophila_ovary_slice/segm_rgb
+    - unset DISPLAY && python handling_annotations/run_image_convert_label_color.py -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png" -out data_images/drosophila_ovary_slice/segm
+    - unset DISPLAY && python handling_annotations/run_overlap_images_segms.py  -imgs "data_images/drosophila_ovary_slice/image/*.jpg" -segs data_images/drosophila_ovary_slice/segm -out results/overlap_ovary_segment
+    - unset DISPLAY && python handling_annotations/run_segm_annot_inpaint.py -imgs "data_images/drosophila_ovary_slice/segm/*.png" --label 0
+    - unset DISPLAY && python handling_annotations/run_segm_annot_relabel.py -imgs "data_images/drosophila_ovary_slice/center_levels/*.png" -out results/relabel_center_levels
 
     # SEGMENTATION section
     - unset DISPLAY && python experiments_segmentation/run_compute-stat_annot-segm.py

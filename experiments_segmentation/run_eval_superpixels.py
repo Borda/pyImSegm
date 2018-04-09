@@ -3,8 +3,8 @@ Evaluate superpixels quality regarding given annotation
 
 SAMPLE run:
 >> python run_eval_superpixels.py \
-    -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-    -segm "images/drosophila_ovary_slice/annot_eggs/*.png" \
+    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+    -segm "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
     --img_type 2d_gray \
     --slic_size 20 --slic_regul 0.25 --slico 0
 
@@ -32,7 +32,7 @@ from run_segm_slic_model_graphcut import TYPES_LOAD_IMAGE
 
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
-PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_CSV_DISTANCES = 'measured_boundary_distances.csv'
 PARAMS = {

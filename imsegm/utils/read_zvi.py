@@ -14,7 +14,7 @@ read ZVI (Zeiss) image file
 >>> import os, sys
 >>> sys.path += [os.path.abspath(os.path.join('..', '..'))]
 >>> import imsegm.utils.data_io as tl_io
->>> path_file = os.path.join('images', 'others', 'sample.zvi')
+>>> path_file = os.path.join('data_images', 'others', 'sample.zvi')
 >>> path_file = tl_io.update_path(path_file)
 >>> n = get_layer_count(path_file)
 >>> get_dir(path_file) # doctest: +ELLIPSIS

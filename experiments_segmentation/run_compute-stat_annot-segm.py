@@ -2,9 +2,9 @@
 With two given folder find image match and compute segmentation statistic
 
 >> python run_compute_stat_annot_segm.py \
-    -annot "images/drosophila_ovary_slice/annot_struct/*.png" \
+    -annot "data_images/drosophila_ovary_slice/annot_struct/*.png" \
     -segm "results/experiment_segm-supervise_ovary/*.png" \
-    -img "images/drosophila_ovary_slice/image/*.jpg" \
+    -img "data_images/drosophila_ovary_slice/image/*.jpg" \
     -out results/evaluation
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -30,7 +30,7 @@ import imsegm.classification as seg_clf
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 NAME_CVS_OVERALL = 'segm-STATISTIC_%s_stat-overall.csv'
 NAME_CVS_PER_IMAGE = 'segm-STATISTIC_%s_stat-per-images.csv'
-PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 PATHS = {
     'annot': os.path.join(PATH_IMAGES, 'annot_struct', '*.png'),

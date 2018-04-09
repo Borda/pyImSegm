@@ -321,7 +321,7 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     :param [str] pos_columns:
     :return: DF
 
-    >>> path_txt = os.path.join(tl_data.update_path('images'),
+    >>> path_txt = os.path.join(tl_data.update_path('data_images'),
     ...                 'drosophila_ovary_slice', 'info_ovary_images.txt')
     >>> load_info_group_by_slices(path_txt, [4]) # doctest: +NORMALIZE_WHITESPACE
                 ant_x  ant_y  lat_x  lat_y post_x post_y

@@ -4,8 +4,8 @@ folder a figure for each image as image with overlapped contour of the segmentat
 
 SAMPLE run:
 >> python run_overlap_images_segms.py \
-    -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-    -segs images/drosophila_ovary_slice/segm \
+    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+    -segs data_images/drosophila_ovary_slice/segm \
     -out results/overlap_ovary_segment
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>

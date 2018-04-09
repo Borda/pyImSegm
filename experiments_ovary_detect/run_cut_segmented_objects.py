@@ -3,8 +3,8 @@ Cut out images according given object segmentation
 
 SAMPLE run:
 >> python run_cut_segmented_objects.py \
-    -annot "images/drosophila_ovary_slice/annot_eggs/*.png" \
-    -img "images/drosophila_ovary_slice/segm/*.png" \
+    -annot "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
+    -img "data_images/drosophila_ovary_slice/segm/*.png" \
     -out results/cut_images --padding 20
 
 """
@@ -23,7 +23,7 @@ import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
-PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 PATHS = {
     'annot': os.path.join(PATH_IMAGES, 'annot_eggs', '*.png'),

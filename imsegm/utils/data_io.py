@@ -582,12 +582,12 @@ def load_image_tiff_volume(path_img, im_range=None):
     :param float im_range: range to scale image values (1. or 255)
     :return ndarray:
 
-    >>> p_img = os.path.join(update_path('images'), 'drosophila_ovary_3D',
+    >>> p_img = os.path.join(update_path('data_images'), 'drosophila_ovary_3D',
     ...                      'AU10-13_f0011.tif')
     >>> img = load_image_tiff_volume(p_img)
     >>> img.shape
     (30, 323, 512)
-    >>> p_img = os.path.join(update_path('images'),
+    >>> p_img = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', 'image', 'insitu7545.tif')
     >>> img = load_image_tiff_volume(p_img)
     >>> img.shape
@@ -633,14 +633,14 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
     :param float im_range: range to scale image values (1. or 255)
     :return ndarray, ndarray:
 
-    >>> p_img = os.path.join(update_path('images'), 'drosophila_ovary_3D',
+    >>> p_img = os.path.join(update_path('data_images'), 'drosophila_ovary_3D',
     ...                      'AU10-13_f0011.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
     >>> img_b1.shape
     (15, 323, 512)
     >>> img_b2.shape
     (15, 323, 512)
-    >>> p_img = os.path.join(update_path('images'),
+    >>> p_img = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', 'image', 'insitu7545.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
     >>> img_b1.shape
@@ -678,7 +678,7 @@ def load_zvi_volume_double_band_split(path_img):
     :param str path_img: path to the image
     :return ndarray, ndarray:
 
-    >>> p_img = os.path.join(update_path('images'),
+    >>> p_img = os.path.join(update_path('data_images'),
     ...                      'others', 'sample.zvi')
     >>> img_b1, img_b2 = load_zvi_volume_double_band_split(p_img)
     >>> img_b1.shape
@@ -700,7 +700,7 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     :param (int, int) quantiles: scale image values in certain quantile range
     :return:
 
-    >>> p_imgs = os.path.join(update_path('images'),
+    >>> p_imgs = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', 'image')
     >>> p_img = os.path.join(p_imgs, 'insitu7545.jpg')
     >>> img_b1, img_b2 = load_img_double_band_split(p_img)
@@ -710,7 +710,7 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     >>> img_b1, img_b2 = load_img_double_band_split(p_img)
     >>> img_b1.shape
     (647, 1024)
-    >>> p_img = os.path.join(update_path('images'),
+    >>> p_img = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_3D', 'AU10-13_f0011.tif')
     >>> img_b1, img_b2 = load_img_double_band_split(p_img)
     >>> img_b1.shape
@@ -772,7 +772,7 @@ def load_complete_image_folder(path_dir, img_name_pattern='*.png',
     :param [str] skip: skip some prticular images by name
     :return:
 
-    >>> p_imgs = os.path.join(update_path('images'),
+    >>> p_imgs = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', 'image')
     >>> l_imgs, l_names = load_complete_image_folder(p_imgs, '*.jpg')
     >>> len(l_imgs)
@@ -882,7 +882,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     :return: DF<path_1, path_2, ...>
 
     >>> def mpath(d, n):
-    ...     p = os.path.join(update_path('images'),
+    ...     p = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', d, n)
     ...     return p
     >>> df = find_files_match_names_across_dirs([mpath('image', '*.jpg'),

@@ -7,7 +7,7 @@ NOTE, for JPEG there is always some smoothing so only allowed format is PNG
 
 SAMPLE run:
 >> python run_image_color_quantization.py \
-    -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" \
+    -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png" \
     -m position
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -29,7 +29,7 @@ import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
-PATH_IMAGES = os.path.join('images', 'drosophila_ovary_slice', 'segm_rgb', '*.png')
+PATH_IMAGES = os.path.join('data_images', 'drosophila_ovary_slice', 'segm_rgb', '*.png')
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 THRESHOLD_INVALID_PIXELS = 5e-3
 

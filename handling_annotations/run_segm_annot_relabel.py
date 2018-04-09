@@ -3,7 +3,7 @@ Replace labels in annotation
 
 SAMPLE run:
 >> python run_segm_annot_relabel.py \
-    -imgs "images/drosophila_ovary_slice/center_levels/*.png" \
+    -imgs "data_images/drosophila_ovary_slice/center_levels/*.png" \
     -out results/relabel_center_levels \
     --label_old 2 3 --label_new 1 1 --nb_jobs 2
 
@@ -25,7 +25,7 @@ sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 
-PATH_IMAGES = os.path.join('images', 'drosophila_ovary_slice', 'center_levels', '*.png')
+PATH_IMAGES = os.path.join('data_images', 'drosophila_ovary_slice', 'center_levels', '*.png')
 PATH_OUTPUT = os.path.join('results', 'relabel_center_levels')
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 

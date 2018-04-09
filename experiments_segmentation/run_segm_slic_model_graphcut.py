@@ -12,8 +12,8 @@ see them bellow with explanation for each of them.
 
 SAMPLE run:
 >> python run_segm_slic_model_graphcut.py \
-   -list images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-   -imgs "images/langerhans_islets/image/*.jpg" \
+   -list data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
+   -imgs "data_images/langerhans_islets/image/*.jpg" \
    -out results -n LangIsl --nb_classes 3 --visual 1 --nb_jobs 2
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -58,7 +58,7 @@ TYPES_LOAD_IMAGE = ['2d_rgb', '2d_gray']
 NAME_DUMP_MODEL = 'estimated_model.npz'
 NAME_CSV_ARS_CORES = 'metric_ARS.csv'
 # setting experiment sub-folders
-FOLDER_IMAGE = 'images'
+FOLDER_IMAGE = 'data_images'
 FOLDER_ANNOT = 'annotations'
 FOLDER_SEGM_GMM = 'segmentation_GaussMixModel'
 FOLDER_SEGM_GMM_VISU = FOLDER_SEGM_GMM + '___visual'
@@ -104,8 +104,8 @@ SEGM_PARAMS = {
     'gc_use_trans': False,
     'estimate': TYPE_GMM[0],
 }
-PATH_IMAGES = os.path.join(tl_data.update_path('images'), 'drosophila_disc')
-# PATH_IMAGES = tl_data.update_path(os.path.join('images', 'langerhans_islets'))
+PATH_IMAGES = os.path.join(tl_data.update_path('data_images'), 'drosophila_disc')
+# PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'langerhans_islets'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_EXPERIMENT = 'experiment_segm-unSupervised'
 SEGM_PARAMS.update({

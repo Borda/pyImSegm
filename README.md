@@ -121,26 +121,26 @@ We introduce some useful tools for work with image annotation and segmentation.
 * **Quantization:** in case you have some smooth color labeling in your images you can remove them with following quantization script.
     ```bash
     python handling_annotations/run_image_color_quantization.py \
-        -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" \
+        -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png" \
         -m position -thr 0.01 --nb_jobs 2
     ```
 * **Paint labels:** concerting image labels into colour space and other way around.
     ```bash
     python handling_annotations/run_image_convert_label_color.py \
-        -imgs "images/drosophila_ovary_slice/segm/*.png" \
-        -out images/drosophila_ovary_slice/segm_rgb
+        -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
+        -out data_images/drosophila_ovary_slice/segm_rgb
     ```
 * **Visualisation:** having input image and its segmentation we can use simple visualisation which overlap the segmentation over input image. 
     ```bash
     python handling_annotations/run_overlap_images_segms.py \
-        -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-        -segs images/drosophila_ovary_slice/segm \
+        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -segs data_images/drosophila_ovary_slice/segm \
         -out results/overlap_ovary_segment
     ```
 * **Inpainting** selected labels in segmentation.
     ```bash
     python handling_annotations/run_segm_annot_inpaint.py \
-        -imgs "images/drosophila_ovary_slice/segm/*.png" \
+        -imgs "data_images" \
         --label 4
     ```
 * **Replace labels:** change labels in input segmentation into another set of lables in 1:1 schema.
