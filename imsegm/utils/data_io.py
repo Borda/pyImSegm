@@ -942,7 +942,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     return df_paths
 
 
-def get_background_color(image):
+def get_image2d_boundary_color(image):
     """ extract background color as median along image boundaries
 
     :param image:
@@ -956,11 +956,11 @@ def get_background_color(image):
            [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
-    >>> get_background_color(img)
+    >>> get_image2d_boundary_color(img)
     0
-    >>> get_background_color(np.ones((5, 15, 3), dtype=int))
+    >>> get_image2d_boundary_color(np.ones((5, 15, 3), dtype=int))
     array([1, 1, 1])
-    >>> get_background_color(np.ones((5, 15, 3, 1), dtype=int))
+    >>> get_image2d_boundary_color(np.ones((5, 15, 3, 1), dtype=int))
     array(0)
     """
     if image.ndim == 2:
@@ -1035,7 +1035,7 @@ def cut_object(img, mask, padding, use_mask=False, bg_color=None):
     bg_mask = np.argmax(np.bincount(bg_pixels))
 
     if bg_color is None:
-        bg_color = get_background_color(img)
+        bg_color = get_image2d_boundary_color(img)
 
     rotate = np.rad2deg(prop.orientation)
     shift = prop.centroid - (np.array(mask.shape) / 2.)

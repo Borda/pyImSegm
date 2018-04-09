@@ -28,6 +28,7 @@ except Exception:
     logging.warning('descriptors: using pure python libraries')
     USE_CYTHON = False
 
+NAMES_FEATURE_FLAGS = ('mean', 'std', 'eng', 'median', 'mG')
 DEFAULT_FILTERS_SIGMAS = (np.sqrt(2), 2, 2 * np.sqrt(2), 4)
 SHORT_FILTERS_SIGMAS = (np.sqrt(2), 2, 4)
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'eng', 'median'),
@@ -132,6 +133,21 @@ def _check_color_image(image):
     if image.ndim != 3 or image.shape[2] != 3:
         raise ValueError('image is not RGB with dims %s' % repr(image.shape))
     return True
+
+
+def _check_unrecognised_feature_group(dict_feature_flags):
+    unknown = [k for k in dict_feature_flags
+               if k not in ('color', 'tLM', 'tLM_s')]
+    if len(unknown) > 0:
+        logging.warning('unrecognised following feature groups: %s',
+                        repr(unknown))
+
+
+def _check_unrecognised_feature_names(list_feature_flags):
+    unknown = [k for k in list_feature_flags if k not in NAMES_FEATURE_FLAGS]
+    if len(unknown) > 0:
+        logging.warning('unrecognised following feature names: %s',
+                        repr(unknown))
 
 
 def cython_img2d_color_mean(im, seg):
@@ -609,8 +625,7 @@ def numpy_img3d_gray_median(im, seg):
 
 
 def compute_image3d_gray_statistic(image, segm,
-                                   list_feature_flags=('mean', 'std', 'eng',
-                                                       'median', 'mG'),
+                                   list_feature_flags=NAMES_FEATURE_FLAGS,
                                    ch_name='gray'):
     """ compute complete descriptors / statistic on gray (3D) images
 
@@ -692,6 +707,7 @@ def compute_image3d_gray_statistic(image, segm,
             grad = numpy_img3d_gray_mean(grad_matrix, segm)
         features.append(grad)
         names += ['%s_meanGrad' % ch_name]
+    _check_unrecognised_feature_names(list_feature_flags)
     features = np.concatenate(tuple([fts] for fts in features), axis=0)
     features = np.nan_to_num(features).T
     # normalise +/- zeros as set all as positive
@@ -702,8 +718,7 @@ def compute_image3d_gray_statistic(image, segm,
 
 
 def compute_image2d_color_statistic(image, segm,
-                                    list_feature_flags=('mean', 'std', 'eng',
-                                                        'median'),
+                                    list_feature_flags=NAMES_FEATURE_FLAGS,
                                     ch_name='color'):
     """ compute complete descriptors / statistic on color (2D) images
 
@@ -769,6 +784,7 @@ def compute_image2d_color_statistic(image, segm,
         median = numpy_img2d_color_median(image, segm)
         features = np.hstack((features, median))
         names += ['%s_median' % n for n in ch_names]
+    _check_unrecognised_feature_names(list_feature_flags)
     # mean Gradient
     # G = np.zeros_like(image)
     # for i in range(image.shape[0]):
@@ -1082,6 +1098,8 @@ def compute_selected_features_gray3d(img, segments,
                                                    'short')
         features.append(fts)
         names += n
+    _check_unrecognised_feature_group(dict_feature_flags)
+
     if len(features) == 0:
         logging.error('not supported features: %s', repr(dict_feature_flags))
     features = np.concatenate(tuple(features), axis=1)
@@ -1181,6 +1199,8 @@ def compute_selected_features_color2d(img, segments,
                                                    'short')
         features = np.concatenate((features, fts), axis=1)
         names += n
+    _check_unrecognised_feature_group(dict_feature_flags)
+
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
