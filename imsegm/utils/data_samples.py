@@ -21,9 +21,9 @@ SAMPLE_SEG_SIZE_3D_SMALL = (10, 5, 6)
 PATH_IMAGES = tl_data.update_path('data_images')
 IMAGE_LENNA = os.path.join('others', 'lena.png')
 IMAGE_OBJECTS = os.path.join('synthetic', 'reference.jpg')
-IMAGE_3CLS = os.path.join('textures', 'sample_rgb_3cls.jpg')
-IMAGE_STAR_1 = os.path.join('see_starfish', 'star_nb1.jpg')
-IMAGE_STAR_2 = os.path.join('see_starfish', 'stars_nb2.jpg')
+IMAGE_3CLS = os.path.join('synthetic', 'texture_rgb_3cls.jpg')
+IMAGE_STAR_1 = os.path.join('others', 'sea_starfish-1.jpg')
+IMAGE_STAR_2 = os.path.join('others', 'sea_starfish-2.jpg')
 IMAGE_HISTOL_CIMA = \
     os.path.join('histology_CIMA', '29-041-Izd2-w35-CD31-3-les1.jpg')
 IMAGE_HISTOL_FLAGSHIP = \
