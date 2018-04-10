@@ -83,8 +83,8 @@ def estim_class_model(features, nb_classes, proba_type='GMM', pca_coef=None,
         components += [('reduce_dim', decomposition.PCA(pca_coef))]
 
     # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
-    gmm = mixture.GaussianMixture(n_components=nb_classes,
-                                    covariance_type='full', max_iter=99)
+    gmm = mixture.GaussianMixture(n_components=nb_classes, n_init=15,
+                                  covariance_type='full', max_iter=99)
     y = None
     if proba_type == 'GMM':
         # model = estim_class_model_gmm(features, nb_classes)

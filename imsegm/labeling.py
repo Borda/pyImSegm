@@ -10,6 +10,8 @@ import numpy as np
 from scipy import ndimage
 import skimage.segmentation as sk_segm
 
+import imsegm.utils.data_io as tl_data
+
 
 def contour_binary_map(seg, label=1, include_boundary=False):
     """ get object boundaries
@@ -673,3 +675,41 @@ def compute_boundary_distances(segm_ref, segm):
     assert len(points) == len(dist), \
         'number of points and disntances should be equal'
     return points, dist
+
+
+def assume_bg_on_boundary(segm, bg_label=0):
+    """ swap labels such that the bacround label will be mostly on image boundary
+
+    :param ndarray segm:
+    :param int bg_label:
+    :return:
+
+    >>> segm = np.zeros((6, 12), dtype=int)
+    >>> segm[1:5, 4:] = 2
+    >>> assume_bg_on_boundary(segm)
+    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+    >>> segm[segm == 0] = 1
+    >>> assume_bg_on_boundary(segm)
+    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+    """
+    boundary_lb = tl_data.get_image2d_boundary_color(segm)
+    used_lbs = np.unique(segm)
+    if boundary_lb not in used_lbs:
+        segm[segm == boundary_lb] = bg_label
+    else:
+        lut = list(range(used_lbs.max() + 1))
+        lut[boundary_lb] = bg_label
+        lut[bg_label] = boundary_lb
+        segm = np.array(lut)[segm]
+    return segm
+

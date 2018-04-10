@@ -50,6 +50,7 @@ import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
 import imsegm.pipelines as seg_pipe
+import imsegm.labeling as seg_lbs
 import imsegm.descriptors as seg_fts
 # sometimes it freeze in "Cython: computing Colour means for image"
 seg_fts.USE_CYTHON = False
@@ -268,7 +269,7 @@ def export_visual(idx_name, img, segm, dict_debug_imgs=None,
                   path_out=None, path_visu=None):
     """ export visualisations
 
-    :param (int, str) idx_name:
+    :param str idx_name:
     :param ndarray img: input image
     :param ndarray segm: resulting segmentation
     :param dict_debug_imgs: dictionary with debug images
@@ -328,6 +329,8 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
     except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
+
+    segm = seg_lbs.assume_bg_on_boundary(segm)
 
     export_visual(idx_name, img, segm, dict_debug_imgs, path_out, path_visu)
 
@@ -497,6 +500,7 @@ def main(params):
     gc.collect()
     time.sleep(1)
 
+    # Segment as model ober set of images
     dict_segms_group = experiment_group_gmm(params, paths_img,
                                             _path_expt(FOLDER_SEGM_GROUP),
                                             _path_expt(FOLDER_SEGM_GROUP_VISU),
