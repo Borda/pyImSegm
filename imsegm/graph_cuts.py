@@ -8,8 +8,9 @@ import logging
 
 import numpy as np
 from gco import cut_general_graph
+from skimage import filters
 from sklearn import metrics, preprocessing
-from sklearn import pipeline, preprocessing, cluster, mixture, decomposition
+from sklearn import pipeline, cluster, mixture, decomposition
 
 import imsegm.utils.drawing as tl_visu
 import imsegm.superpixels as seg_spx
@@ -30,10 +31,10 @@ def estim_gmm_params(features, prob):
     >>> np.random.seed(0)
     >>> prob = np.array([[1, 0]] * 30 + [[0, 1]] * 40)
     >>> fts = prob + np.random.random(prob.shape)
-    >>> gmm = estim_gmm_params(fts, prob)
-    >>> gmm['weights']
+    >>> mm = estim_gmm_params(fts, prob)
+    >>> mm['weights']
     [0.42857142857142855, 0.5714285714285714]
-    >>> gmm['means']
+    >>> mm['means']
     array([[ 1.49537196,  0.53745455],
            [ 0.54199936,  1.42606497]])
     """
@@ -51,7 +52,7 @@ def estim_gmm_params(features, prob):
 
 
 def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
-                      scaler=True, init_type=None):
+                      scaler=True, max_iter=99):
     """ create pipeline (scaler, PCA, model) over several options how
     to cluster samples and fit it on data
 
@@ -66,14 +67,19 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     >>> np.random.seed(0)
     >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
     ...                     np.random.random((50, 3)) + 1])
-    >>> gmm = estim_class_model(fts, 2)
-    >>> gmm.predict_proba(fts).shape
+    >>> mm = estim_class_model(fts, 2)
+    >>> mm.predict_proba(fts).shape
     (100, 2)
-    >>> gmm = estim_class_model(fts, 2, estim_model='GMM_kmeans', pca_coef=0.95)
-    >>> gmm.predict_proba(fts).shape
+    >>> mm = estim_class_model(fts, 2, estim_model='GMM_kmeans',
+    ...                         pca_coef=0.95, max_iter=3)
+    >>> mm.predict_proba(fts).shape
     (100, 2)
-    >>> gmm = estim_class_model(fts, 2, estim_model='kmeans_quantiles')
-    >>> gmm.predict_proba(fts).shape
+    >>> mm = estim_class_model(fts, 2, estim_model='kmeans_quantiles',
+    ...                         scaler=False, max_iter=3)
+    >>> mm.predict_proba(fts).shape
+    (100, 2)
+    >>> mm = estim_class_model(fts, 2, estim_model='Otsu', max_iter=3)
+    >>> mm.predict_proba(fts).shape
     (100, 2)
     """
     components = []
@@ -82,9 +88,10 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     if pca_coef is not None:
         components += [('reduce_dim', decomposition.PCA(pca_coef))]
 
+    nb_inits = max(1, int(np.sqrt(max_iter)))
     # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
-    mm = mixture.GaussianMixture(n_components=nb_classes, n_init=15,
-                                 covariance_type='full', max_iter=99)
+    mm = mixture.GaussianMixture(n_components=nb_classes, covariance_type='full',
+                                 n_init=nb_inits, max_iter=max_iter)
 
     # split the model and used initilaisation
     if '_' in estim_model:
@@ -107,14 +114,19 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
         # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
         mm.set_params(max_iter=1)
         init_type = 'quantiles' if estim_model == 'quantiles' else 'k-means++'
-        _, y = estim_class_model_kmeans(features, nb_classes, init_type=init_type)
+        _, y = estim_class_model_kmeans(features, nb_classes,
+                                        init_type=init_type, max_iter=max_iter)
 
         logging.info('compute probability of each feature to all component')
 
     elif estim_model == 'BGM':
         mm = mixture.BayesianGaussianMixture(n_components=nb_classes,
-                                             n_init=15, covariance_type='full',
-                                             max_iter=99)
+                                             covariance_type='full',
+                                             n_init=nb_inits, max_iter=max_iter)
+
+    elif estim_model == 'Otsu' and nb_classes == 2:
+        mm.set_params(max_iter=1, n_init=1)
+        y = compute_multivarian_otsu(features)
 
     components += [('model', mm)]
     # compose the pipeline
@@ -129,6 +141,37 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     return model
 
 
+def compute_multivarian_otsu(features):
+    """ compute otsu individually over each sample dimension
+    WARNING: this compute only localy  and since it does compare all
+    combinations of orienting the asign for tight cases it may not decide
+
+    :param ndarray features:
+    :return [bool]:
+
+    >>> np.random.seed(0)
+    >>> fts = np.row_stack([np.random.random((5, 3)) - 1,
+    ...                     np.random.random((5, 3)) + 1])
+    >>> fts[:, 1] = - fts[:, 1]
+    >>> compute_multivarian_otsu(fts).astype(int)
+    array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
+    """
+    ys = np.zeros(features.shape)
+    for i in range(features.shape[-1]):
+        thr = filters.threshold_otsu(features[:, i])
+        asign = features[:, i] > thr
+        if i > 0:
+            m = np.mean(ys[:, :i], axis=1)
+            d1 = np.mean(np.abs(asign - m))
+            d2 = np.mean(np.abs(~asign - m))
+            # check if for this dimension it wount be better to swap it
+            if d2 < d1:
+                asign = ~asign
+        ys[:, i] = asign
+    y = np.mean(ys, axis=1) > 0.5
+    return y
+
+
 # def estim_class_model_gmm(features, nb_classes, init='kmeans'):
 #     """ from all features estimate Gaussian Mixture Model and assuming
 #     each cluster is a single class compute probability that each feature
@@ -141,16 +184,16 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
 #     logging.debug('estimate GMM for all given features %s and %i component',
 #                   repr(features.shape), nb_classes)
 #     # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
-#     gmm = mixture.GMM(n_components=nb_classes, covariance_type='full', n_iter=999)
+#     mm = mixture.GMM(n_components=nb_classes, covariance_type='full', n_iter=999)
 #     if init == 'kmeans':
 #         # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
 #         kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
 #         y = kmeans.fit_predict(features)
-#         gmm.fit(features, y)
+#         mm.fit(features, y)
 #     else:
-#         gmm.fit(features)
+#         mm.fit(features)
 #     logging.info('compute probability of each feature to all component')
-#     return gmm
+#     return mm
 
 
 def estim_class_model_gmm(features, nb_classes, init='kmeans'):
@@ -165,8 +208,8 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     >>> np.random.seed(0)
     >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
     ...                     np.random.random((50, 3)) + 1])
-    >>> gmm = estim_class_model_gmm(fts, 2)
-    >>> gmm.predict_proba(fts).shape
+    >>> mm = estim_class_model_gmm(fts, 2)
+    >>> mm.predict_proba(fts).shape
     (100, 2)
     """
     logging.debug('estimate GMM for all given features %s and %i component',
@@ -186,7 +229,8 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     return gmm
 
 
-def estim_class_model_kmeans(features, nb_classes, init_type='k-means++'):
+def estim_class_model_kmeans(features, nb_classes, init_type='k-means++',
+                             max_iter=99):
     """ from all features estimate Gaussian from k-means clustering
 
     :param [[float]] features: list of features per segment
@@ -196,21 +240,24 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++'):
     >>> np.random.seed(0)
     >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
     ...                     np.random.random((50, 3)) + 1])
-    >>> gmm, y = estim_class_model_kmeans(fts, 2)
+    >>> mm, y = estim_class_model_kmeans(fts, 2, max_iter=9)
     >>> y.shape
     (100,)
-    >>> gmm.predict_proba(fts).shape
+    >>> mm.predict_proba(fts).shape
     (100, 2)
     """
     logging.debug('estimate Gaussian from k-means clustering for all given '
-                  'features %s and %i component', repr(features.shape), nb_classes)
+                  'features %s and %i components', repr(features.shape),
+                  nb_classes)
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
     if init_type == 'quantiles':
         quntiles = np.linspace(5, 95, nb_classes).tolist()
         init_perc = np.array(np.percentile(features, quntiles, axis=0))
         kmeans = cluster.KMeans(nb_classes, init=init_perc, max_iter=2, n_jobs=-1)
     else:
-        kmeans = cluster.KMeans(nb_classes, init=init_type, n_init=25, n_jobs=-1)
+        nb_inits = max(1, int(np.sqrt(max_iter)))
+        kmeans = cluster.KMeans(nb_classes, init=init_type, max_iter=max_iter,
+                                n_init=nb_inits, n_jobs=-1)
     y = kmeans.fit_predict(features)
     gmm = mixture.GaussianMixture(n_components=nb_classes,
                                   covariance_type='full', max_iter=1)
