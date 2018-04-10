@@ -17,10 +17,7 @@ NOTE: there are a few constants to that have an impact on the experiment,
 see them bellow with explanation for each of them.
 
 SAMPLE run:
->> python run_segm_slic_classif_graphcut.py \
-    -list data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-    -imgs "data_images/langerhans_islets/image/*.jpg" \
-    -out results -n LangIsl --img_type 2d_rgb --visual 1 --nb_jobs 2
+>>
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -47,6 +44,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 # from llvmpy._api.llvm.CmpInst import FCMP_OLE
 from skimage import segmentation
+import skimage.color as sk_color
 from sklearn import metrics
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -76,16 +74,17 @@ NAME_CSV_SEGM_STAT_RESULTS = 'statistic_segm_results.csv'
 NAME_DUMP_TRAIN_DATA = 'dump_training_data.npz'
 
 # setting experiment sub-folders
-FOLDER_IMAGE = 'data_images'
+FOLDER_IMAGE = 'images'
 FOLDER_ANNOT = 'annotations'
 FOLDER_SLIC = 'slic'
 FOLDER_SLIC_ANNOT = 'annot_slic'
 FOLDER_SEGM = 'segmentation_trained'
-FOLDER_SEGM_VISU = FOLDER_SEGM + '___visual'
+SUFFIX_VISUAL = '___visual'
+FOLDER_SEGM_VISU = FOLDER_SEGM + SUFFIX_VISUAL
 FOLDER_LOO = 'segmentation_leave-one-out'
-FOLDER_LOO_VISU = FOLDER_LOO + '___visual'
+FOLDER_LOO_VISU = FOLDER_LOO + SUFFIX_VISUAL
 FOLDER_LPO = 'segmentation_leave-P-out'
-FOLDER_LPO_VISU = FOLDER_LPO + '___visual'
+FOLDER_LPO_VISU = FOLDER_LPO + SUFFIX_VISUAL
 LIST_FOLDERS_BASE = (FOLDER_IMAGE, FOLDER_ANNOT, FOLDER_SLIC, FOLDER_SLIC_ANNOT,
                      FOLDER_SEGM, FOLDER_LOO, FOLDER_LPO)
 LIST_FOLDERS_DEBUG = (FOLDER_SEGM_VISU, FOLDER_LOO_VISU, FOLDER_LPO_VISU)
@@ -165,6 +164,17 @@ def visu_histogram_labels(params, dict_label_hist, fig_name=NAME_FIG_LABEL_HISTO
     plt.close(fig)
 
 
+def use_rgb_image(img, clr='rgb'):
+    # clr = params.get('clr_space', 'rgb').lower()
+    if img.ndim == 3 and img.shape[-1] in (3, 4):
+        img_rgb = seg_pipe.convert_img_color_to_rgb(img, clr)
+    elif img.ndim == 2:
+        img_rgb = sk_color.gray2rgb(img)
+    else:
+        img_rgb = img.copy()
+    return img_rgb
+
+
 def load_image_annot_compute_features_labels(idx_row, params,
                                              show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ load image and annotation, and compute superpixel features and labels
@@ -180,7 +190,7 @@ def load_image_annot_compute_features_labels(idx_row, params,
     idx, row = idx_row
     idx_name = get_idx_name(idx, row['path_image'])
     img = load_image(row['path_image'], params['img_type'])
-    annot = load_image(row['path_annot'], 'segm')
+    annot = load_image(row['path_annot'], '2d_segm')
     logging.debug('.. processing: %s', idx_name)
     assert img.shape[:2] == annot.shape[:2], \
         'individual size of image %s and seg_pipe %s for "%s" - "%s"' % \
@@ -195,32 +205,26 @@ def load_image_annot_compute_features_labels(idx_row, params,
     #     img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     slic = seg_spx.segment_slic_img2d(img, sp_size=params['slic_size'],
                                       rltv_compact=params['slic_regul'])
-    img = seg_pipe.convert_img_color_space(img, params.get('clr_space', 'rgb'))
+    img = seg_pipe.convert_img_color_from_rgb(img, params.get('clr_space', 'rgb'))
     logging.debug('computed SLIC with %i labels', slic.max())
     if show_debug_imgs:
-        if 'clr_space' in params and params['clr_space'].lower() != 'rgb' \
-                and img.ndim == 3 and img.shape[-1] in (3, 4):
-            # convert back to rgb
-            clr = params['clr_space'].lower()
-            assert clr in seg_pipe.DICT_CONVERT_COLOR_TO_RGB
-            img_rgb = seg_pipe.DICT_CONVERT_COLOR_TO_RGB[clr](img)
-        else:
-            img_rgb = img / float(np.max(img))
+        img_rgb = use_rgb_image(img, params.get('clr_space', 'rbgb').lower())
         img_slic = segmentation.mark_boundaries(img_rgb, slic,
                                                 color=(1, 0, 0),
                                                 mode='subpixel')
         plt.imsave(_path_out_img(params, FOLDER_SLIC, idx_name),
                    np.clip(img_slic, 0, 1))
-    features, ft_names = seg_fts.compute_selected_features_img2d(
-                                                img, slic,  params['features'])
-
     slic_label_hist = seg_label.histogram_regions_labels_norm(slic, annot)
     labels = np.argmax(slic_label_hist, axis=1)
     slic_annot = labels[slic]
     if show_debug_imgs:
         plt.imsave(_path_out_img(params, FOLDER_SLIC_ANNOT, idx_name),
                    np.clip(slic_annot, 0, slic_annot.max()))
-    return idx_name, img, annot, slic, features, labels, slic_label_hist, ft_names
+
+    features, feature_names = seg_fts.compute_selected_features_img2d(
+                                                img, slic,  params['features'])
+    return idx_name, img, annot, slic, features, labels, \
+           slic_label_hist, feature_names
 
 
 def dataset_load_images_annot_compute_features(params,
@@ -324,10 +328,11 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
     idx_name = get_idx_name(idx, path_img)
-    img = load_image(path_img, params['img_type'])
-    slic = seg_spx.segment_slic_img2d(img, sp_size=params['slic_size'],
+    img_rgb = load_image(path_img, params['img_type'])
+    slic = seg_spx.segment_slic_img2d(img_rgb, sp_size=params['slic_size'],
                                       rltv_compact=params['slic_regul'])
-    img = seg_pipe.convert_img_color_space(img, params.get('clr_space', 'rgb'))
+    img = seg_pipe.convert_img_color_from_rgb(img_rgb, params.get('clr_space',
+                                                                  'rgb'))
     features, _ = seg_fts.compute_selected_features_img2d(img, slic,
                                                           params['features'])
     labels = classif.predict(features)
@@ -340,7 +345,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
 
     # plt.imsave(os.path.join(path_out, idx_name + '_rgb.png'), seg_pipe)
     if path_visu is not None and os.path.isdir(path_visu):
-        export_draw_image_segm_contour(img, segm, path_visu, idx_name)
+        export_draw_image_segm_contour(img_rgb, segm, path_visu, idx_name)
 
     try:  # in case some classiefier do not support predict_proba
         proba = classif.predict_proba(features)
@@ -374,7 +379,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
         # io.imsave(path_img, segm_gc)
 
         if path_visu is not None and os.path.isdir(path_visu):
-            export_draw_image_segm_contour(img, segm_gc, path_visu,
+            export_draw_image_segm_contour(img_rgb, segm_gc, path_visu,
                                            idx_name, '_gc')
             if show_debug_imgs:
                 labels_map = np.argmax(proba, axis=1)
@@ -693,7 +698,7 @@ def main_train(params):
     reload_dir_config = (os.path.isfile(params.get('path_config', ''))
                          or FORCE_RELOAD)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
-                                              stamp_unique=EACH_UNIQUE_EXPERIMENT,
+                      stamp_unique=params.get('unique', EACH_UNIQUE_EXPERIMENT),
                                               skip_load=reload_dir_config)
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
@@ -785,7 +790,7 @@ def prepare_output_dir(path_pattern_imgs, path_out, name):
     path_out = os.path.join(path_out, name)
     if not os.path.isdir(path_out):
         os.mkdir(path_out)
-    path_visu = path_out + '___visual'
+    path_visu = path_out + SUFFIX_VISUAL
     if not os.path.isdir(path_visu):
         os.mkdir(path_visu)
     return path_out, path_visu

@@ -8,7 +8,7 @@
 	"prob_type": "GMM",
 	"balance": "unique",
 	"classif": "RandForest",
-    "nb_classif_search": 50,
+    "nb_classif_search": 250,
 	"gc_edge_type": "model",
 	"gc_regul": 3.0
 }

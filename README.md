@@ -164,21 +164,27 @@ We utilize (un)supervised segmentation according to given training examples or s
         --img_type 2d_gray \
         --slic_size 20 --slic_regul 0.25 --slico 0
     ```
-* Perform **Unsupervised** segmentation.
+* Perform **Unsupervised** segmentation in images given in CSV
     ```bash
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
-       -list images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-       -imgs "images/langerhans_islets/image/*.jpg" \
+       -L images/langerhans_islets/list_lang-isl_imgs-annot.csv -I "" \
        --path_config experiments_segmentation/sample_config.json \
-       -out results -n langIsl --nb_classes 3 --visual --nb_jobs 2
+       -O results -N langIsl --nb_classes 3 --visual --nb_jobs 2
+    ```
+    OR specified on particuler path:
+    ```bash
+    python experiments_segmentation/run_segm_slic_model_graphcut.py \
+       -L "" -I "images/langerhans_islets/image/*.jpg" \
+       --path_config experiments_segmentation/sample_config.json \
+       -O results -N langIsl --nb_classes 3 --visual --nb_jobs 2
     ```
 * Perform **Supervised** segmentation with afterwards evaluation.
     ```bash
     python experiments_segmentation/run_segm_slic_classif_graphcut.py \
-        -list images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
-        -imgs "images/drosophila_ovary_slice/image/*.jpg" \
+        -L images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
+        -I "images/drosophila_ovary_slice/image/*.jpg" \
        --path_config experiments_segmentation/sample_config.json \
-        -out results -n Ovary --img_type 2d_gray --visual --nb_jobs 2
+        -O results -N Ovary --img_type 2d_gray --visual --nb_jobs 2
     ```
 * For both experiment you can evaluate segmentation results.
     ```bash

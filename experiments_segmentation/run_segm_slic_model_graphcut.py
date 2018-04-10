@@ -12,9 +12,9 @@ see them bellow with explanation for each of them.
 
 SAMPLE run:
 >> python run_segm_slic_model_graphcut.py \
-   -list data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-   -imgs "data_images/langerhans_islets/image/*.jpg" \
-   -out results -n LangIsl --nb_classes 3 --visual 1 --nb_jobs 2
+   -L data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
+   -I "data_images/langerhans_islets/image/*.jpg" \
+   -O results -N LangIsl --nb_classes 3 --visual --nb_jobs 2
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -22,6 +22,7 @@ Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import os
 import sys
 import json
+import glob
 import pickle
 import argparse
 import logging
@@ -58,7 +59,7 @@ TYPES_LOAD_IMAGE = ['2d_rgb', '2d_gray']
 NAME_DUMP_MODEL = 'estimated_model.npz'
 NAME_CSV_ARS_CORES = 'metric_ARS.csv'
 # setting experiment sub-folders
-FOLDER_IMAGE = 'data_images'
+FOLDER_IMAGE = 'images'
 FOLDER_ANNOT = 'annotations'
 FOLDER_SEGM_GMM = 'segmentation_GaussMixModel'
 FOLDER_SEGM_GMM_VISU = FOLDER_SEGM_GMM + '___visual'
@@ -123,16 +124,16 @@ def arg_parse_params(params):
     :return {str: ...}:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-list', '--path_train_list', type=str, required=False,
+    parser.add_argument('-L', '--path_train_list', type=str, required=False,
                         help='path to the list of image',
                         default=params['path_train_list'])
-    parser.add_argument('-imgs', '--path_predict_imgs', type=str,
+    parser.add_argument('-I', '--path_predict_imgs', type=str,
                         help='path to folder & name pattern with new image',
                         required=False, default=params['path_predict_imgs'])
-    parser.add_argument('-out', '--path_out', type=str, required=False,
+    parser.add_argument('-O', '--path_out', type=str, required=False,
                         help='path to the output directory',
                         default=params['path_out'])
-    parser.add_argument('-n', '--name', type=str, required=False,
+    parser.add_argument('-N', '--name', type=str, required=False,
                         help='name of the experiment', default=params['name'])
     parser.add_argument('--path_config', type=str, required=False, default='',
                         help='path to the segmentation config')
@@ -147,6 +148,9 @@ def arg_parse_params(params):
                         help='number of processes in parallel')
     parser.add_argument('--visual', required=False, action='store_true',
                         help='export debug visualisations', default=False)
+    parser.add_argument('--unique', required=False, action='store_true',
+                        help='each experiment has uniques stamp',
+                        default=EACH_UNIQUE_EXPERIMENT)
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %s', repr(args))
     for k in (k for k in args if 'path' in k):
@@ -183,8 +187,10 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
         img,  _ = tl_data.load_image_2d(path_img)
         # if img.max() > 1:
         #     img = (img / 255.)
-    elif img_type == 'segm':
+    elif img_type == '2d_segm':
         img,  _ = tl_data.load_image_2d(path_img)
+        if img.ndim == 3:
+            img = img[:, :, 0]
         if ANNOT_RELABEL_SEQUENCE:
             img, _, _ = segmentation.relabel_sequential(img)
     else:
@@ -439,6 +445,22 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
     return dict_segms_group
 
 
+def load_path_images(params):
+    if os.path.isfile(params.get('path_train_list', '')):
+        logging.info('loading images from CSV: %s', params['path_train_list'])
+        df_paths = pd.read_csv(params['path_train_list'], index_col=0)
+        paths_img = df_paths['path_image'].tolist()
+    elif 'path_predict_imgs' in params:
+        logging.info('loading images from path: %s', params['path_predict_imgs'])
+        paths_img = glob.glob(params['path_predict_imgs'])
+        if len(paths_img) == 0:
+            logging.warning('no images found on given path...')
+    else:
+        logging.warning('no images to load!')
+        paths_img = []
+    return paths_img
+
+
 def main(params):
     """ the main body containgn two approches:
     1) segment each image indecently
@@ -453,7 +475,7 @@ def main(params):
 
     reload_dir_config = (os.path.isfile(params['path_config']) or FORCE_RELOAD)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
-                                              stamp_unique=EACH_UNIQUE_EXPERIMENT,
+                      stamp_unique=params.get('unique', EACH_UNIQUE_EXPERIMENT),
                                               skip_load=reload_dir_config)
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
@@ -461,11 +483,8 @@ def main(params):
     if show_debug_imgs:
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
 
-    assert os.path.isfile(params['path_train_list']), \
-        'missing %s' % params['path_train_list']
-    dict_segms_gmm, dict_segms_group = {}, {}
-    df_paths = pd.read_csv(params['path_train_list'], index_col=0)
-    paths_img = df_paths['path_image'].tolist()
+    paths_img = load_path_images(params)
+    assert len(paths_img) > 0, 'missing images'
 
     def _path_expt(n):
         return os.path.join(params['path_exp'], n)

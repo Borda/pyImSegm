@@ -42,16 +42,29 @@ DICT_CONVERT_COLOR_TO_RGB = {
 }
 
 
-def convert_img_color_space(image, clr_space):
+def convert_img_color_from_rgb(image, clr_space):
     """ convert image colour space from RGB to xxx
 
-    :param image: rgb image
-    :param clr_space: str
-    :return: image
+    :param ndarray image: rgb image
+    :param  strclr_space:
+    :return ndarray: image
     """
-    if image.ndim == 3 and image.shape[2] == 3 \
+    if image.ndim == 3 and image.shape[-1] in (3, 4) \
             and clr_space in DICT_CONVERT_COLOR_FROM_RGB:
         image = DICT_CONVERT_COLOR_FROM_RGB[clr_space](image)
+    return image
+
+
+def convert_img_color_to_rgb(image, clr_space):
+    """ convert image colour space to RGB to xxx
+
+    :param ndarray image: rgb image
+    :param str clr_space:
+    :return ndarray: image
+    """
+    if image.ndim == 3 and image.shape[-1] == 3 \
+            and clr_space in DICT_CONVERT_COLOR_TO_RGB:
+        image = DICT_CONVERT_COLOR_TO_RGB[clr_space](image)
     return image
 
 
@@ -261,7 +274,7 @@ def compute_color2d_superpixels_features(image, clr_space='rgb',
     # plt.figure(), plt.imshow(slic)
 
     logging.debug('extract slic/superpixels features.')
-    image = convert_img_color_space(image, clr_space)
+    image = convert_img_color_from_rgb(image, clr_space)
     features, _ = seg_fts.compute_selected_features_img2d(image, slic,
                                                           dict_features)
     logging.debug('list of features RAW: %s', repr(features.shape))

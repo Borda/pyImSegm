@@ -93,7 +93,7 @@ def compute_boundary_distance(idx_row, params, path_out=''):
     _, row = idx_row
     name = os.path.splitext(os.path.basename(row['path_image']))[0]
     img = load_image(row['path_image'], params['img_type'])
-    segm = load_image(row['path_segm'], 'segm')
+    segm = load_image(row['path_segm'], '2d_segm')
 
     logging.debug('segment SLIC...')
     slic = seg_spx.segment_slic_img2d(img,
