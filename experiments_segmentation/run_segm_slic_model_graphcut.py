@@ -16,7 +16,7 @@ SAMPLE run:
    -I "data_images/langerhans_islets/image/*.jpg" \
    -O results -N LangIsl --nb_classes 3 --visual --nb_jobs 2
 
-Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
@@ -62,9 +62,9 @@ NAME_CSV_ARS_CORES = 'metric_ARS.csv'
 # setting experiment sub-folders
 FOLDER_IMAGE = 'images'
 FOLDER_ANNOT = 'annotations'
-FOLDER_SEGM_GMM = 'segmentation_GaussMixModel'
+FOLDER_SEGM_GMM = 'segmentation_MixtureModel'
 FOLDER_SEGM_GMM_VISU = FOLDER_SEGM_GMM + '___visual'
-FOLDER_SEGM_GROUP = 'segmentation_GroupGMM'
+FOLDER_SEGM_GROUP = 'segmentation_GroupMM'
 FOLDER_SEGM_GROUP_VISU = FOLDER_SEGM_GROUP + '___visual'
 LIST_FOLDERS_BASE = (FOLDER_IMAGE, FOLDER_SEGM_GMM, FOLDER_SEGM_GROUP)
 LIST_FOLDERS_DEBUG = (FOLDER_SEGM_GMM_VISU, FOLDER_SEGM_GROUP_VISU)
@@ -275,6 +275,9 @@ def export_visual(idx_name, img, segm, dict_debug_imgs=None,
     :param str path_visu: path to dir with debug images
     """
     logging.info('export results and visualization...')
+    if set(np.unique(segm)) <= set([0, 1]):
+        segm *= 255
+
     path_img = os.path.join(path_out, str(idx_name) + '.png')
     logging.debug('exporting segmentation: %s', path_img)
     im_seg = Image.fromarray(segm.astype(np.uint8))
@@ -372,6 +375,10 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
+
+    boundary_size = int(np.sqrt(np.prod(segm.shape)) * 0.01)
+    segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0,
+                                         boundary_size=boundary_size)
 
     export_visual(idx_name, img, segm, dict_debug_imgs, path_out, path_visu)
 

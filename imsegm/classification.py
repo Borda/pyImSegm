@@ -2,7 +2,7 @@
 Supporting file to create and set parameters for scikit-learn classifiers
 and some prepossessing functions that support classification
 
-Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os

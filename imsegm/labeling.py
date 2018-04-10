@@ -1,7 +1,7 @@
 """
 Framework for labeling
 
-Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
@@ -685,21 +685,21 @@ def assume_bg_on_boundary(segm, bg_label=0, boundary_size=1):
     :return:
 
     >>> segm = np.zeros((6, 12), dtype=int)
-    >>> segm[1:5, 4:] = 2
-    >>> assume_bg_on_boundary(segm)
+    >>> segm[1:4, 4:] = 2
+    >>> assume_bg_on_boundary(segm, boundary_size=1)
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
            [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
            [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
-           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> segm[segm == 0] = 1
-    >>> assume_bg_on_boundary(segm)
+    >>> assume_bg_on_boundary(segm, boundary_size=1)
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
            [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
            [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
-           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
     boundary_lb = tl_data.get_image2d_boundary_color(segm, size=boundary_size)

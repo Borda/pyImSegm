@@ -19,7 +19,7 @@ see them bellow with explanation for each of them.
 SAMPLE run:
 >>
 
-Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os

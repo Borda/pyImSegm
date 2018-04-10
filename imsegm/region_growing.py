@@ -3,7 +3,7 @@ Framework for region growing
  * general GraphCut segmentation with and without shape model
  * region growing with shape prior - greedy & GraphCut
 
-Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging

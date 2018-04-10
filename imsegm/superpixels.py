@@ -6,7 +6,7 @@ Framework for superpixels
 SEE:
 * http://scikit-image.org/docs/dev/auto_examples/plot_segmentations.html
 
-Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 

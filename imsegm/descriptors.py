@@ -5,7 +5,7 @@ Framework for feature extraction
  * Ray features
  * label histogram
 
-Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging

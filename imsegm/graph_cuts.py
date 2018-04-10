@@ -1,7 +1,7 @@
 """
 Framework for GraphCut
 
-Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
@@ -69,10 +69,10 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     >>> gmm = estim_class_model(fts, 2)
     >>> gmm.predict_proba(fts).shape
     (100, 2)
-    >>> gmm = estim_class_model(fts, 2, estim_model='GMM_kmeans')
+    >>> gmm = estim_class_model(fts, 2, estim_model='GMM_kmeans', pca_coef=0.95)
     >>> gmm.predict_proba(fts).shape
     (100, 2)
-    >>> gmm = estim_class_model(fts, 2, estim_model='quantiles', pca_coef=0.95)
+    >>> gmm = estim_class_model(fts, 2, estim_model='kmeans_quantiles')
     >>> gmm.predict_proba(fts).shape
     (100, 2)
     """

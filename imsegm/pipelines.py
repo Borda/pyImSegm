@@ -1,7 +1,7 @@
 """
 Pipelines for supervised and unsupervised segmentation
 
-Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
