@@ -73,7 +73,7 @@ def pipe_color2d_slic_features_gmm_graphcut(image, nb_classes=3,
                                             sp_size=30, sp_regul=0.2,
                                             gc_regul=1.,
                                             dict_features=FTS_SET_SIMPLE,
-                                            proba_type='GMM',
+                                            estim_model='GMM',
                                             gc_edge_type='model_lT',
                                             pca_coef=None,
                                             dict_debug_imgs=None):
@@ -86,9 +86,10 @@ def pipe_color2d_slic_features_gmm_graphcut(image, nb_classes=3,
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
                    and "1" nearly square slic
     :param int nb_classes: number of classes to be segmented(indexing from 0)
-    :param dict_features: {clr: [str], ...}
+    :param {} dict_features: {clr: [str]}
     :param str clr_space: use color space
     :param float gc_regul: GC regularisation
+    :param str estim_model: estimating model
     :param str gc_edge_type: graphCut edge type
     :param float pca_coef: range (0, 1) or None
     :param dict_debug_imgs: {str: ...}
@@ -114,7 +115,7 @@ def pipe_color2d_slic_features_gmm_graphcut(image, nb_classes=3,
         dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, image,
                                                           kind='avg')
 
-    model = seg_gc.estim_class_model(features, nb_classes, proba_type, pca_coef)
+    model = seg_gc.estim_class_model(features, nb_classes, estim_model, pca_coef)
     proba = model.predict_proba(features)
     logging.debug('list of probabilities: %s', repr(proba.shape))
 

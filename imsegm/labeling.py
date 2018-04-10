@@ -677,7 +677,7 @@ def compute_boundary_distances(segm_ref, segm):
     return points, dist
 
 
-def assume_bg_on_boundary(segm, bg_label=0):
+def assume_bg_on_boundary(segm, bg_label=0, boundary_size=1):
     """ swap labels such that the bacround label will be mostly on image boundary
 
     :param ndarray segm:
@@ -702,7 +702,7 @@ def assume_bg_on_boundary(segm, bg_label=0):
            [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-    boundary_lb = tl_data.get_image2d_boundary_color(segm)
+    boundary_lb = tl_data.get_image2d_boundary_color(segm, size=boundary_size)
     used_lbs = np.unique(segm)
     if boundary_lb not in used_lbs:
         segm[segm == boundary_lb] = bg_label

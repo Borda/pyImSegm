@@ -88,7 +88,6 @@ FEATURES_SET_MIN = {'color': ('mean', 'std', 'energy'),
                     'tLM_s': ('mean', )}
 FEATURES_SET_MIX = {'color': ('mean', 'std', 'eng', 'median'),
                     'tLM': ('mean', 'std')}
-TYPE_GMM = ('GMM', 'Group')
 # Default parameter configuration
 SEGM_PARAMS = {
     'name': 'imgDisk',
@@ -99,12 +98,11 @@ SEGM_PARAMS = {
     'slic_regul': 0.2,
     # 'spacing': (12, 1, 1),
     'features': FEATURES_SET_COLOR,
-    'prob_type': 'GMM',
+    'estim_model': 'GMM',
     'pca_coef': None,
     'gc_regul': 2.0,
     'gc_edge_type': 'model',
     'gc_use_trans': False,
-    'estimate': TYPE_GMM[0],
 }
 PATH_IMAGES = os.path.join(tl_data.update_path('data_images'), 'drosophila_disc')
 # PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'langerhans_islets'))
@@ -322,7 +320,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
         segm = seg_pipe.pipe_color2d_slic_features_gmm_graphcut(
             img, nb_classes=params['nb_classes'], clr_space=params['clr_space'],
             sp_size=params['slic_size'], sp_regul=params['slic_regul'],
-            dict_features=params['features'], proba_type=params['prob_type'],
+            dict_features=params['features'], estim_model=params['estim_model'],
             pca_coef=params['pca_coef'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
             dict_debug_imgs=dict_debug_imgs)
@@ -330,7 +328,9 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
 
-    segm = seg_lbs.assume_bg_on_boundary(segm)
+    boundary_size = int(np.sqrt(np.prod(segm.shape)) * 0.01)
+    segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0,
+                                         boundary_size=boundary_size)
 
     export_visual(idx_name, img, segm, dict_debug_imgs, path_out, path_visu)
 
@@ -432,7 +432,7 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
             list_images, nb_classes=params['nb_classes'],
             clr_space=params['clr_space'], sp_size=params['slic_size'],
             sp_regul=params['slic_regul'], dict_features=params['features'],
-            proba_type=params['prob_type'], pca_coef=params['pca_coef'])
+            proba_type=params['estim_model'], pca_coef=params['pca_coef'])
         save_model(params['path_model'], model)
 
     logging.info('Perform image segmentation from group model')

@@ -50,7 +50,7 @@ def estim_gmm_params(features, prob):
     return gmm_params
 
 
-def estim_class_model(features, nb_classes, proba_type='GMM', pca_coef=None,
+def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
                       scaler=True, init_type=None):
     """ create pipeline (scaler, PCA, model) over several options how
     to cluster samples and fit it on data
@@ -69,10 +69,10 @@ def estim_class_model(features, nb_classes, proba_type='GMM', pca_coef=None,
     >>> gmm = estim_class_model(fts, 2)
     >>> gmm.predict_proba(fts).shape
     (100, 2)
-    >>> gmm = estim_class_model(fts, 2, proba_type='GMM', init_type='kmeans')
+    >>> gmm = estim_class_model(fts, 2, estim_model='GMM_kmeans')
     >>> gmm.predict_proba(fts).shape
     (100, 2)
-    >>> gmm = estim_class_model(fts, 2, proba_type='quantiles', pca_coef=0.95)
+    >>> gmm = estim_class_model(fts, 2, estim_model='quantiles', pca_coef=0.95)
     >>> gmm.predict_proba(fts).shape
     (100, 2)
     """
@@ -83,26 +83,40 @@ def estim_class_model(features, nb_classes, proba_type='GMM', pca_coef=None,
         components += [('reduce_dim', decomposition.PCA(pca_coef))]
 
     # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
-    gmm = mixture.GaussianMixture(n_components=nb_classes, n_init=15,
-                                  covariance_type='full', max_iter=99)
+    mm = mixture.GaussianMixture(n_components=nb_classes, n_init=15,
+                                 covariance_type='full', max_iter=99)
+
+    # split the model and used initilaisation
+    if '_' in estim_model:
+        init_type = estim_model.split('_')[-1]
+        estim_model = estim_model.split('_')[0]
+    else:
+        init_type = ''
+
     y = None
-    if proba_type == 'GMM':
+    if estim_model == 'GMM':
         # model = estim_class_model_gmm(features, nb_classes)
         if init_type == 'kmeans':
             # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
             kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++',
                                     n_jobs=-1)
             y = kmeans.fit_predict(features)
+            mm.set_params(n_init=1)
 
-    else:
-        init_type = 'quantiles' if proba_type == 'quantiles' else 'k-means++'
+    elif estim_model == 'kmeans':
+        # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
+        mm.set_params(max_iter=1)
+        init_type = 'quantiles' if estim_model == 'quantiles' else 'k-means++'
         _, y = estim_class_model_kmeans(features, nb_classes, init_type=init_type)
 
         logging.info('compute probability of each feature to all component')
-        # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
-        gmm.set_params(max_iter=1)
 
-    components += [('model', gmm)]
+    elif estim_model == 'BGM':
+        mm = mixture.BayesianGaussianMixture(n_components=nb_classes,
+                                             n_init=15, covariance_type='full',
+                                             max_iter=99)
+
+    components += [('model', mm)]
     # compose the pipeline
     model = pipeline.Pipeline(components)
 

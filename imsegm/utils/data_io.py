@@ -881,20 +881,19 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     :param bool drop_none: drop if there are some none - missing values in rows
     :return: DF<path_1, path_2, ...>
 
-    >>> def mpath(d, n):
-    ...     p = os.path.join(update_path('data_images'),
-    ...                      'drosophila_ovary_slice', d, n)
-    ...     return p
-    >>> df = find_files_match_names_across_dirs([mpath('image', '*.jpg'),
-    ...                                          mpath('segm', '*.png'),
-    ...                                          mpath('center_levels', '*.csv')])
+    >>> def _mp(d, n):
+    ...     return os.path.join(update_path('data_images'),
+    ...                         'drosophila_ovary_slice', d, n)
+    >>> df = find_files_match_names_across_dirs([_mp('image', '*.jpg'),
+    ...                                          _mp('segm', '*.png'),
+    ...                                          _mp('center_levels', '*.csv')])
     >>> len(df) > 0
     True
     >>> df.columns.tolist()
     ['path_1', 'path_2', 'path_3']
-    >>> df = find_files_match_names_across_dirs([mpath('image', '*.png'),
-    ...                                          mpath('segm', '*.jpg'),
-    ...                                          mpath('center_levels', '*.csv')])
+    >>> df = find_files_match_names_across_dirs([_mp('image', '*.png'),
+    ...                                          _mp('segm', '*.jpg'),
+    ...                                          _mp('center_levels', '*.csv')])
     >>> len(df)
     0
     """
@@ -942,7 +941,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     return df_paths
 
 
-def get_image2d_boundary_color(image):
+def get_image2d_boundary_color(image, size=1):
     """ extract background color as median along image boundaries
 
     :param image:
@@ -958,18 +957,20 @@ def get_image2d_boundary_color(image):
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> get_image2d_boundary_color(img)
     0
-    >>> get_image2d_boundary_color(np.ones((5, 15, 3), dtype=int))
+    >>> get_image2d_boundary_color(np.ones((5, 15, 3), dtype=int), size=2)
     array([1, 1, 1])
     >>> get_image2d_boundary_color(np.ones((5, 15, 3, 1), dtype=int))
     array(0)
     """
+    size = int(size)
     if image.ndim == 2:
-        bg_pixels = np.hstack([image[0, :], image[:, 0],
-                               image[-1, :], image[:, -1]])
-        bg_color = np.argmax(np.bincount(bg_pixels))
+        bg_pixels = np.hstack([image[:size, :], image[:, :size].T,
+                               image[-size:, :], image[:, -size:].T])
+        bg_color = np.argmax(np.bincount(bg_pixels.ravel()))
     elif image.ndim == 3:
-        bg_pixels = np.vstack([image[0, :, ...], image[:, 0, ...],
-                               image[-1, :, ...], image[:, -1, ...]])
+        bounds = [image[:size, :, ...], image[:, :size, ...],
+                  image[-size:, :, ...], image[:, -size:, ...]]
+        bg_pixels = np.vstack([b.reshape(-1, image.shape[-1]) for b in bounds])
         bg_color = np.median(bg_pixels, axis=0)
     else:
         logging.error('not supported image dim: %s' % repr(image.shape))

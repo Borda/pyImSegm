@@ -436,7 +436,7 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
     """ load the classifier, and dumped data, subtract the image,
     retrain the classif. without it and do the segmentation
 
-    :param str imgs_idx_path: path to input image
+    :param () imgs_idx_path: path to input image
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
@@ -689,7 +689,7 @@ def main_train(params):
     4) perform Leave-One-Out and Leave-P-Out experiments on images
 
     :param {str: ...} params:
-    :return{str: ...} :
+    :return {str: ...}:
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running TRAINING...')
@@ -815,7 +815,6 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
     :param str path_pattern_imgs:
     :param str path_out:
     :param str name:
-    :return:
     """
     logging.getLogger().setLevel(logging.INFO)
     logging.info('running PREDICTION...')

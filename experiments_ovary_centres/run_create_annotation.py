@@ -157,7 +157,6 @@ def main(path_segs, path_out, nb_jobs):
     :param str path_segs: path with image pattern of images - obj segmentation
     :param str path_out:
     :param int nb_jobs: number of processes in parallel
-    :return ndarray:
     """
     logging.info('running...')
 
