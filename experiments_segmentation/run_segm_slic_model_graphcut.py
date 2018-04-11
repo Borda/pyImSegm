@@ -12,9 +12,9 @@ see them bellow with explanation for each of them.
 
 SAMPLE run:
 >> python run_segm_slic_model_graphcut.py \
-   -L data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-   -I "data_images/langerhans_islets/image/*.jpg" \
-   -O results -N LangIsl --nb_classes 3 --visual --nb_jobs 2
+   -l data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
+   -i "data_images/langerhans_islets/image/*.jpg" \
+   -o results -n LangIsl --nb_classes 3 --visual --nb_jobs 2
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -123,16 +123,16 @@ def arg_parse_params(params):
     :return {str: ...}:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-L', '--path_train_list', type=str, required=False,
+    parser.add_argument('-l', '--path_train_list', type=str, required=False,
                         help='path to the list of image',
                         default=params['path_train_list'])
-    parser.add_argument('-I', '--path_predict_imgs', type=str,
+    parser.add_argument('-i', '--path_predict_imgs', type=str,
                         help='path to folder & name pattern with new image',
                         required=False, default=params['path_predict_imgs'])
-    parser.add_argument('-O', '--path_out', type=str, required=False,
+    parser.add_argument('-o', '--path_out', type=str, required=False,
                         help='path to the output directory',
                         default=params['path_out'])
-    parser.add_argument('-N', '--name', type=str, required=False,
+    parser.add_argument('-n', '--name', type=str, required=False,
                         help='name of the experiment', default=params['name'])
     parser.add_argument('--path_config', type=str, required=False, default='',
                         help='path to the segmentation config')

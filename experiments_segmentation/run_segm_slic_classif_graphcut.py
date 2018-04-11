@@ -17,7 +17,11 @@ NOTE: there are a few constants to that have an impact on the experiment,
 see them bellow with explanation for each of them.
 
 SAMPLE run:
->>
+>> python run_segm_slic_classif_graphcut.py \
+    -l data_images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
+    -i "data_images/drosophila_ovary_slice/image/*.jpg" \
+   --path_config experiments_segmentation/sample_config.json \
+    -o results -n Ovary --img_type 2d_split --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
