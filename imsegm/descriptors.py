@@ -31,8 +31,8 @@ except Exception:
 NAMES_FEATURE_FLAGS = ('mean', 'std', 'energy', 'median', 'meanGrad')
 DEFAULT_FILTERS_SIGMAS = (np.sqrt(2), 2, 2 * np.sqrt(2), 4)
 SHORT_FILTERS_SIGMAS = (np.sqrt(2), 2, 4)
-FEATURES_SET_ALL = {'color': ('mean', 'std', 'energy', 'median'),
-                    'tLM': ('mean', 'std', 'energy', 'meanGrad')}
+FEATURES_SET_ALL = {'color': ('mean', 'std', 'energy', 'median', 'meanGrad'),
+                    'tLM': ('mean', 'std', 'energy', 'median', 'meanGrad')}
 FEATURES_SET_COLOR = {'color': ('mean', 'std', 'energy')}
 FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
 FEATURES_SET_TEXTURE_SHORT = {'tLM_s': ('mean', 'std', 'energy')}
@@ -733,18 +733,17 @@ def compute_image2d_color_statistic(image, segm,
     >>> image[:, 4:9, 2] = 2
     >>> segm = np.array([[0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
     ...                  [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]])
-    >>> features, names = compute_image2d_color_statistic(image, segm,
-    ...                                   ['mean', 'std', 'energy', 'median'])
+    >>> features, names = compute_image2d_color_statistic(image, segm)
     >>> names  # doctest: +NORMALIZE_WHITESPACE
     ['color-ch1_mean', 'color-ch2_mean', 'color-ch3_mean',
      'color-ch1_std', 'color-ch2_std', 'color-ch3_std',
      'color-ch1_energy', 'color-ch2_energy', 'color-ch3_energy',
-     'color-ch1_median', 'color-ch2_median', 'color-ch3_median']
+     'color-ch1_median', 'color-ch2_median', 'color-ch3_median',
+     'color-ch1_meanGrad', 'color-ch2_meanGrad', 'color-ch3_meanGrad']
     >>> features.shape
-    (2, 12)
+    (2, 15)
     >>> np.round(features, 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [[0.6, 1.2, 0.4, 0.5, 1.5, 0.8, 0.6, 3.6, 0.8, 1.0, 0.0, 0.0],
-     [0.2, 1.2, 1.6, 0.4, 1.5, 0.8, 0.2, 3.6, 3.2, 0.0, 0.0, 2.0]]
+    [[0.6, 1.2, 0.4, 0.5, 1.5, 0.8, 0.6, 3.6, 0.8, 1.0, 0.0, 0.0, 0.2, 0.6, 0.4],     [0.2, 1.2, 1.6, 0.4, 1.5, 0.8, 0.2, 3.6, 3.2, 0.0, 0.0, 2.0, -0.2, -0.6, -0.6]]
     """
     _check_color_image(image)
     _check_color_image_segm(image, segm)
@@ -784,6 +783,17 @@ def compute_image2d_color_statistic(image, segm,
         median = numpy_img2d_color_median(image, segm)
         features = np.hstack((features, median))
         names += ['%s_median' % n for n in ch_names]
+    # mean Gradient
+    if 'meanGrad' in list_feature_flags:
+        grad_matrix = np.zeros_like(image)
+        for i in range(image.shape[-1]):
+            grad_matrix[:, :, i] = np.sum(np.gradient(image[:, :, i]), axis=0)
+        if USE_CYTHON:
+            grad = cython_img2d_color_mean(grad_matrix, segm)
+        else:
+            grad = numpy_img2d_color_mean(grad_matrix, segm)
+        features = np.hstack((features, grad))
+        names += ['%s_meanGrad' % n for n in ch_names]
     _check_unrecognised_feature_names(list_feature_flags)
     # mean Gradient
     # G = np.zeros_like(image)
@@ -1113,7 +1123,7 @@ def compute_selected_features_gray3d(img, segments,
 
 def compute_selected_features_gray2d(img, segments,
                                      dict_features_flags=FEATURES_SET_ALL):
-    """
+    """ compute selected features for gray image 2D
 
     :param ndarray img:
     :param ndarray segments:
@@ -1138,7 +1148,7 @@ def compute_selected_features_gray2d(img, segments,
     (2, 45)
     >>> features, names = compute_selected_features_gray2d(image, segm)
     >>> features.shape
-    (2, 84)
+    (2, 105)
     """
     _check_gray_image_segm(img, segments)
 
@@ -1152,7 +1162,7 @@ def compute_selected_features_gray2d(img, segments,
 
 def compute_selected_features_color2d(img, segments,
                                       dict_feature_flags=FEATURES_SET_ALL):
-    """ compute selected features color2d
+    """ compute selected features color image 2D
 
     :param ndarray img:
     :param ndarray segments:
@@ -1178,7 +1188,7 @@ def compute_selected_features_color2d(img, segments,
     (2, 135)
     >>> features, names = compute_selected_features_color2d(image, segm)
     >>> features.shape
-    (2, 192)
+    (2, 315)
     """
     _check_color_image(img)
     features = np.empty((np.max(segments) + 1, 0))
