@@ -74,8 +74,14 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     ...                         pca_coef=0.95, max_iter=3)
     >>> mm.predict_proba(fts).shape
     (100, 2)
+    >>> mm = estim_class_model(fts, 2, estim_model='GMM_Otsu', max_iter=3)
+    >>> mm.predict_proba(fts).shape
+    (100, 2)
     >>> mm = estim_class_model(fts, 2, estim_model='kmeans_quantiles',
     ...                         scaler=False, max_iter=3)
+    >>> mm.predict_proba(fts).shape
+    (100, 2)
+    >>> mm = estim_class_model(fts, 2, estim_model='BGM', max_iter=3)
     >>> mm.predict_proba(fts).shape
     (100, 2)
     >>> mm = estim_class_model(fts, 2, estim_model='Otsu', max_iter=3)
@@ -104,16 +110,19 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     if estim_model == 'GMM':
         # model = estim_class_model_gmm(features, nb_classes)
         if init_type == 'kmeans':
+            mm.set_params(n_init=1)
             # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
             kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++',
                                     n_jobs=-1)
             y = kmeans.fit_predict(features)
+        elif init_type == 'Otsu':
             mm.set_params(n_init=1)
+            y = compute_multivarian_otsu(features)
 
     elif estim_model == 'kmeans':
         # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
         mm.set_params(max_iter=1)
-        init_type = 'quantiles' if estim_model == 'quantiles' else 'k-means++'
+        init_type = 'quantiles' if init_type == 'quantiles' else 'k-means++'
         _, y = estim_class_model_kmeans(features, nb_classes,
                                         init_type=init_type, max_iter=max_iter)
 

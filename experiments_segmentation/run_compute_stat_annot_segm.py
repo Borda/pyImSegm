@@ -5,9 +5,9 @@ With two given folder find image match and compute segmentation statistic
     -annot "data_images/drosophila_ovary_slice/annot_struct/*.png" \
     -segm "results/experiment_segm-supervise_ovary/*.png" \
     -img "data_images/drosophila_ovary_slice/image/*.jpg" \
-    -out results/evaluation
+    -out results/evaluation --visual
 
-Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
@@ -32,6 +32,7 @@ NAME_CVS_OVERALL = 'segm-STATISTIC_%s_stat-overall.csv'
 NAME_CVS_PER_IMAGE = 'segm-STATISTIC_%s_stat-per-images.csv'
 PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
+SUFFIX_VISUAL = '__visual'
 PATHS = {
     'annot': os.path.join(PATH_IMAGES, 'annot_struct', '*.png'),
     'segm': os.path.join(PATH_IMAGES, 'segm', '*.png'),
@@ -58,6 +59,11 @@ def aparse_params(dict_paths):
     parser.add_argument('-out', '--path_out', type=str, required=False,
                         help='path to the output directory',
                         default=dict_paths['output'])
+    parser.add_argument('--nb_jobs', type=int, required=False,
+                        default=NB_THREADS,
+                        help='number of processes in parallel')
+    parser.add_argument('--visual', required=False, action='store_true',
+                        help='export visualisations', default=False)
     args = parser.parse_args()
     logging.info('ARG PARAMETERS: \n %s', repr(args))
     dict_paths = {
@@ -106,7 +112,7 @@ def wrapper_relabel_segm(annot_segm):
     return segm
 
 
-def main(dict_paths, nb_jobs=NB_THREADS, relabel=True):
+def main(dict_paths, nb_jobs=NB_THREADS, visual=True, relabel=True):
     """ main evaluation
 
     :param {str: str} dict_paths:
@@ -127,35 +133,45 @@ def main(dict_paths, nb_jobs=NB_THREADS, relabel=True):
     path_csv = os.path.join(dict_paths['output'], NAME_CVS_PER_IMAGE % name)
     df_paths.to_csv(path_csv)
 
+    assert len(df_paths) > 0, 'nothing to compare'
+
     annots, _ = tl_data.load_images_list(df_paths['path_1'].values.tolist())
     segms, names = tl_data.load_images_list(df_paths['path_2'].values.tolist())
     logging.info('loaded %i annots and %i segms', len(annots), len(segms))
 
     if relabel:
+        logging.info('reabel annotations and segmentations')
         annots = [relabel_sequential(annot)[0] for annot in annots]
-        segms = list(map(wrapper_relabel_segm, zip(annots, segms)))
+        iterate = tl_expt.WrapExecuteSequence(wrapper_relabel_segm,
+                                              zip(annots, segms),
+                                              nb_jobs=nb_jobs, ordered=True)
+        segms = list(iterate)
 
+    logging.info('compute statistic per image')
     path_csv = os.path.join(dict_paths['output'], NAME_CVS_PER_IMAGE % name)
     logging.debug('export to "%s"', path_csv)
     df_stat = seg_clf.compute_stat_per_image(segms, annots, names, nb_jobs)
     df_stat.to_csv(path_csv)
 
+    logging.info('sumarise statistic')
     path_csv = os.path.join(dict_paths['output'], NAME_CVS_OVERALL % name)
     logging.debug('export to "%s"', path_csv)
     df_desc = df_stat.describe()
     logging.info(df_desc.T[['count', 'mean', 'std']])
     df_desc.to_csv(path_csv)
 
-    path_visu = os.path.join(dict_paths['output'], '%s__visual' % name)
-    if not os.path.isdir(path_visu):
-        os.mkdir(path_visu)
-    # for idx, row in df_paths.iterrows():
-    #     export_visual(row, path_visu)
-    _wrapper_visual = partial(export_visual, path_out=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_visual,
-                                          (row for idx, row in df_paths.iterrows()),
-                                          nb_jobs=nb_jobs)
-    list(iterate)
+    if visual:
+        path_visu = os.path.join(dict_paths['output'],
+                                 '%s%s' % (name, SUFFIX_VISUAL))
+        if not os.path.isdir(path_visu):
+            os.mkdir(path_visu)
+        # for idx, row in df_paths.iterrows():
+        #     export_visual(row, path_visu)
+        _wrapper_visual = partial(export_visual, path_out=path_visu)
+        iterate = tl_expt.WrapExecuteSequence(_wrapper_visual,
+                                              (row for idx, row in df_paths.iterrows()),
+                                              nb_jobs=nb_jobs)
+        list(iterate)
 
     logging.info('DONE')
 
@@ -163,4 +179,4 @@ def main(dict_paths, nb_jobs=NB_THREADS, relabel=True):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     dict_paths, args = aparse_params(PATHS)
-    main(dict_paths)
+    main(dict_paths, nb_jobs=args.nb_jobs, visual=args.visual)

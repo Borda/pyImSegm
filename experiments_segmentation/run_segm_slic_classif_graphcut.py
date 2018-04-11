@@ -63,7 +63,7 @@ from run_segm_slic_model_graphcut import (arg_parse_params, load_image,
 NAME_EXPERIMENT = 'experiment_segm-Supervised'
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 
-TYPES_LOAD_IMAGE = ['2d_rgb', '2d_gray']
+TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_FIG_LABEL_HISTO = 'fig_histogram_annot_segments.png'
 NAME_CSV_SEGM_STAT_SLIC_ANNOT = 'statistic_segm_slic_annot.csv'
 NAME_CSV_SEGM_STAT_RESULT_LOO = 'statistic_segm_LOO.csv'
@@ -96,11 +96,11 @@ SHOW_DEBUG_IMAGES = True
 # relabel annotation such that labels are in sequence no gaps in between them
 ANNOT_RELABEL_SEQUENCE = False
 # whether skip loading config from previous fun
-FORCE_RELOAD = False
+FORCE_RELOAD = True
 # even you have dumped data from previous time, all wil be recomputed
-FORCE_RECOMP_DATA = False
+FORCE_RECOMP_DATA = True
 # even you have saved classif. data from previous time, all wil be retrained
-FORCE_RETRAIN_CLASSIF = False
+FORCE_RETRAIN_CLASSIF = True
 # ration of fold size for LPO for hyper-parameter search
 CROSS_VAL_LEAVE_OUT_SEARCH = 0.2
 # ration of fold size for LPO for evaluation
@@ -111,20 +111,20 @@ RUN_CROSS_VAL_LOO = True
 RUN_CROSS_VAL_LPO = True
 
 
-FEATURES_SET_COLOR = {'color': ('mean', 'std', 'eng')}
-FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'eng')}
+FEATURES_SET_COLOR = {'color': ('mean', 'std', 'energy')}
+FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'median'),
-                    'tLM': ('mean', 'std', 'eng', 'mG')}
+                    'tLM': ('mean', 'std', 'energy', 'meanGrad')}
 FEATURES_SET_MIN = {'color': ('mean', 'std', 'energy'),
                     'tLM_s': ('mean', )}
-FEATURES_SET_MIX = {'color': ('mean', 'std', 'eng', 'median'),
+FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
                     'tLM': ('mean', 'std')}
 # Default parameter configuration
 SEGM_PARAMS = {
     'name': 'ovary',
     'nb_classes': None,
     'clr_space': 'rgb',
-    'img_type': '2d_gray',
+    'img_type': '2d_split',
     'slic_size': 35,
     'slic_regul': 0.3,
     # 'spacing': (12, 1, 1),

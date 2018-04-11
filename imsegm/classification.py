@@ -272,6 +272,9 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     0.32...
     >>> d['confusion']
     [[3, 7, 0], [5, 5, 0], [1, 4, 0]]
+    >>> d = compute_classif_metrics(y_pred, y_pred)
+    >>> d['accuracy']  # doctest: +ELLIPSIS
+    1.0
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)

@@ -44,7 +44,7 @@ test:
     - unset DISPLAY && python handling_annotations/run_segm_annot_relabel.py -imgs "data_images/drosophila_ovary_slice/center_levels/*.png" -out results/relabel_center_levels
 
     # SEGMENTATION section
-    - unset DISPLAY && python experiments_segmentation/run_compute-stat_annot-segm.py
+    - unset DISPLAY && python experiments_segmentation/run_compute_stat_annot_segm.py --visual
     - unset DISPLAY && python experiments_segmentation/run_segm_slic_model_graphcut.py --path_config experiments_segmentation/sample_config.json --visual
     - unset DISPLAY && python experiments_segmentation/run_segm_slic_classif_graphcut.py --path_config experiments_segmentation/sample_config.json --visual
 

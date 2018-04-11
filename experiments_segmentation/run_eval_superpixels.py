@@ -5,7 +5,7 @@ SAMPLE run:
 >> python run_eval_superpixels.py \
     -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
     -segm "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
-    --img_type 2d_gray \
+    --img_type 2d_split \
     --slic_size 20 --slic_regul 0.25 --slico 0
 
 Copyright (C) 2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -39,7 +39,7 @@ PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(PATH_IMAGES, 'annot_eggs', '*.png'),
     'path_out': os.path.join(PATH_RESULTS, 'compute_boundary_distances'),
-    'img_type': '2d_gray',
+    'img_type': '2d_split',
 }
 
 

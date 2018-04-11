@@ -46,8 +46,11 @@ def convert_img_color_from_rgb(image, clr_space):
     """ convert image colour space from RGB to xxx
 
     :param ndarray image: rgb image
-    :param  strclr_space:
+    :param  str clr_space:
     :return ndarray: image
+
+    >>> convert_img_color_from_rgb(np.ones((50, 75, 3)), 'hsv').shape
+    (50, 75, 3)
     """
     if image.ndim == 3 and image.shape[-1] in (3, 4) \
             and clr_space in DICT_CONVERT_COLOR_FROM_RGB:
@@ -61,6 +64,9 @@ def convert_img_color_to_rgb(image, clr_space):
     :param ndarray image: rgb image
     :param str clr_space:
     :return ndarray: image
+
+    >>> convert_img_color_to_rgb(np.ones((50, 75, 3)), 'hsv').shape
+    (50, 75, 3)
     """
     if image.ndim == 3 and image.shape[-1] == 3 \
             and clr_space in DICT_CONVERT_COLOR_TO_RGB:
@@ -374,7 +380,7 @@ def train_classif_color2d_slic_features(list_images, list_annots,
     # clf_pipeline = seg_clf.create_clf_pipeline(clf_name, pca_coef)
     # clf_pipeline.fit(np.array(features), np.array(labels, dtype=int))
 
-    if len(sizes) > (CROSS_VAL_LEAVE_OUT * 5):
+    if len(sizes) > (nb_hold_out * 5):
         cv = seg_clf.CrossValidatePSetsOut(sizes, nb_hold_out=nb_hold_out)
     # for small nuber of training images this does not make sence
     else:

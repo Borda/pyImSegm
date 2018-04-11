@@ -161,7 +161,7 @@ We utilize (un)supervised segmentation according to given training examples or s
     python experiments_segmentation/run_eval_superpixels.py \
         -imgs "images/drosophila_ovary_slice/image/*.jpg" \
         -segm "images/drosophila_ovary_slice/annot_eggs/*.png" \
-        --img_type 2d_gray \
+        --img_type 2d_split \
         --slic_size 20 --slic_regul 0.25 --slico 0
     ```
 * Perform **Unsupervised** segmentation in images given in CSV
@@ -184,7 +184,7 @@ We utilize (un)supervised segmentation according to given training examples or s
         -L images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
         -I "images/drosophila_ovary_slice/image/*.jpg" \
        --path_config experiments_segmentation/sample_config.json \
-        -O results -N Ovary --img_type 2d_gray --visual --nb_jobs 2
+        -O results -N Ovary --img_type 2d_split --visual --nb_jobs 2
     ```
 * For both experiment you can evaluate segmentation results.
     ```bash

@@ -138,15 +138,15 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     if not os.path.exists(path_expt):
         os.mkdir(path_expt)
     path_config = os.path.join(path_expt, CONFIG_JSON)
-    params.update({'computer': os.uname(),
-                   'path_exp': path_expt})
     if os.path.exists(path_config) and not skip_load:
+        params_in = params
         logging.debug('loading saved params from file "%s"', CONFIG_JSON)
         with open(path_config, 'r') as fp:
             params = json.load(fp)
-        params.update({'computer': os.uname(),
-                       'path_exp': path_expt})
+        params.update({k: params_in[k] for k in params_in if 'path' in k})
         logging.info('loaded following PARAMETERS: %s', string_dict(params))
+    params.update({'computer': os.uname(),
+                   'path_exp': path_expt})
     logging.debug('saving params to file "%s"', CONFIG_JSON)
     with open(path_config, 'w') as f:
         json.dump(params, f)
@@ -298,7 +298,8 @@ def create_subfolders(path_out, list_folders):
 class WrapExecuteSequence:
     """ wrapper for execution paralle of single thread as for...
 
-    >>> it = WrapExecuteSequence(lambda x: (x, x ** 2), range(5), 1)
+    >>> it = WrapExecuteSequence(lambda x: (x, x ** 2), range(5),
+    ...                          nb_jobs=1, ordered=True)
     >>> list(it)
     [(0, 0), (1, 1), (2, 4), (3, 9), (4, 16)]
     >>> it = WrapExecuteSequence(sum, [[0, 1]] * 5, 2, desc=None)
@@ -309,11 +310,22 @@ class WrapExecuteSequence:
     [0, 0, 0, 0, 0]
     """
 
-    def __init__(self, wrap_func, iterate_vals, nb_jobs=NB_THREADS, desc=''):
+    def __init__(self, wrap_func, iterate_vals, nb_jobs=NB_THREADS, desc='',
+                 ordered=False):
+        """ the init of this wrapper fro parallelism
+
+        :param wrap_func: funtion which will be exectited in the iterations
+        :param [] iterate_vals: list or iterator which will ide in terations
+        :param int nb_jobs: number og jobs running in parallel
+        :param str desc: decrotion for the bar,
+            if it is set None, bar is suppresed
+        :param bool ordered: whether enforce ordering in the parallelism
+        """
         self.wrap_func = wrap_func
         self.iterate_vals = list(iterate_vals)
         self.nb_jobs = nb_jobs
         self.desc = desc
+        self.ordered = ordered
 
     def __iter__(self):
         if self.desc is not None:
@@ -324,7 +336,10 @@ class WrapExecuteSequence:
         if self.nb_jobs > 1:
             logging.debug('perform sequential in %i threads', self.nb_jobs)
             pool = mproc.Pool(self.nb_jobs)
-            for out in pool.imap_unordered(self.wrap_func, self.iterate_vals):
+
+            pooling = pool.imap if self.ordered else pool.imap_unordered
+
+            for out in pooling(self.wrap_func, self.iterate_vals):
                 yield out
                 if tqdm_bar is not None:
                     tqdm_bar.update()
@@ -340,7 +355,8 @@ class WrapExecuteSequence:
         return len(self.iterate_vals)
 
 
-# def wrap_execute_parallel(wrap_func, iterate_vals, nb_jobs=NB_THREADS, desc=''):
+# def wrap_execute_parallel(wrap_func, iterate_vals,
+#                           nb_jobs=NB_THREADS, desc=''):
 #     """ wrapper for execution paralle of single thread as for...
 #
 #     :param func wrap_func:

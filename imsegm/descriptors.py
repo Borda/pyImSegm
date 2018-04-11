@@ -28,14 +28,14 @@ except Exception:
     logging.warning('descriptors: using pure python libraries')
     USE_CYTHON = False
 
-NAMES_FEATURE_FLAGS = ('mean', 'std', 'eng', 'median', 'mG')
+NAMES_FEATURE_FLAGS = ('mean', 'std', 'energy', 'median', 'meanGrad')
 DEFAULT_FILTERS_SIGMAS = (np.sqrt(2), 2, 2 * np.sqrt(2), 4)
 SHORT_FILTERS_SIGMAS = (np.sqrt(2), 2, 4)
-FEATURES_SET_ALL = {'color': ('mean', 'std', 'eng', 'median'),
-                    'tLM': ('mean', 'std', 'eng', 'mG')}
-FEATURES_SET_COLOR = {'color': ('mean', 'std', 'eng')}
-FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'eng')}
-FEATURES_SET_TEXTURE_SHORT = {'tLM_s': ('mean', 'std', 'eng')}
+FEATURES_SET_ALL = {'color': ('mean', 'std', 'energy', 'median'),
+                    'tLM': ('mean', 'std', 'energy', 'meanGrad')}
+FEATURES_SET_COLOR = {'color': ('mean', 'std', 'energy')}
+FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
+FEATURES_SET_TEXTURE_SHORT = {'tLM_s': ('mean', 'std', 'energy')}
 HIST_CIRCLE_DIAGONALS = (10, 20, 30, 40, 50)
 # maxila reposnse is bounded by fix number to preven overflowing
 MAX_SIGNAL_RESPONSE = 1.e6
@@ -684,7 +684,7 @@ def compute_image3d_gray_statistic(image, segm,
         features.append(std)
         names += ['%s_std' % ch_name]
     # ENERGY
-    if 'eng' in list_feature_flags:
+    if 'energy' in list_feature_flags:
         if USE_CYTHON:
             energy = cython_img3d_gray_energy(image, segm)
         else:
@@ -697,7 +697,7 @@ def compute_image3d_gray_statistic(image, segm,
         features.append(median)
         names += ['%s_median' % ch_name]
     # mean Gradient
-    if 'mG' in list_feature_flags:
+    if 'meanGrad' in list_feature_flags:
         grad_matrix = np.zeros_like(image)
         for i in range(image.shape[0]):
             grad_matrix[i, :, :] = np.sum(np.gradient(image[i]), axis=0)
@@ -734,7 +734,7 @@ def compute_image2d_color_statistic(image, segm,
     >>> segm = np.array([[0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
     ...                  [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]])
     >>> features, names = compute_image2d_color_statistic(image, segm,
-    ...                                       ['mean', 'std', 'eng', 'median'])
+    ...                                   ['mean', 'std', 'energy', 'median'])
     >>> names  # doctest: +NORMALIZE_WHITESPACE
     ['color-ch1_mean', 'color-ch2_mean', 'color-ch3_mean',
      'color-ch1_std', 'color-ch2_std', 'color-ch3_std',
@@ -772,7 +772,7 @@ def compute_image2d_color_statistic(image, segm,
         features = np.hstack((features, std))
         names += ['%s_std' % n for n in ch_names]
     # ENERGY
-    if 'eng' in list_feature_flags:
+    if 'energy' in list_feature_flags:
         if USE_CYTHON:
             energy = cython_img2d_color_energy(image, segm)
         else:
@@ -1069,9 +1069,9 @@ def compute_selected_features_gray3d(img, segments,
     >>> names  # doctest: +NORMALIZE_WHITESPACE
     ['gray_mean', 'gray_std', 'gray_median']
     >>> _ = compute_selected_features_gray3d(img, slic,
-    ...                                      {'tLM': ['median', 'std', 'eng']})
+    ...                                  {'tLM': ['median', 'std', 'energy']})
     >>> fts, names = compute_selected_features_gray3d(img, slic,
-    ...                                      {'tLM_s': ['mean', 'std', 'eng']})
+    ...                                  {'tLM_s': ['mean', 'std', 'energy']})
     >>> fts.shape
     (4, 45)
     >>> names  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -1131,9 +1131,9 @@ def compute_selected_features_gray2d(img, segments,
     array([[ 0.9  ,  1.136,  0.5  ],
            [ 0.7  ,  1.187,  0.   ]])
     >>> _ = compute_selected_features_gray2d(image, segm,
-    ...                                      {'tLM': ['mean', 'std', 'median']})
+    ...                                  {'tLM': ['mean', 'std', 'median']})
     >>> features, names = compute_selected_features_gray2d(image, segm,
-    ...                                  {'tLM_s': ['mean', 'std', 'eng']})
+    ...                                  {'tLM_s': ['mean', 'std', 'energy']})
     >>> features.shape
     (2, 45)
     >>> features, names = compute_selected_features_gray2d(image, segm)
@@ -1171,9 +1171,9 @@ def compute_selected_features_color2d(img, segments,
     array([[ 0.6 ,  1.2 ,  0.4 ,  0.49,  1.47,  0.8 ,  1.  ,  0.  ,  0.  ],
            [ 0.2 ,  1.2 ,  1.6 ,  0.4 ,  1.47,  0.8 ,  0.  ,  0.  ,  2.  ]])
     >>> _ = compute_selected_features_color2d(image, segm,
-    ...                                       {'tLM': ['mean', 'std', 'eng']})
+    ...                                   {'tLM': ['mean', 'std', 'energy']})
     >>> features, names = compute_selected_features_color2d(image, segm,
-    ...                                   {'tLM_s': ['mean', 'std', 'eng']})
+    ...                                   {'tLM_s': ['mean', 'std', 'energy']})
     >>> features.shape
     (2, 135)
     >>> features, names = compute_selected_features_color2d(image, segm)

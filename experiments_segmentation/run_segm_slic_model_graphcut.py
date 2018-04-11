@@ -56,7 +56,7 @@ import imsegm.descriptors as seg_fts
 seg_fts.USE_CYTHON = False
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
-TYPES_LOAD_IMAGE = ['2d_rgb', '2d_gray']
+TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_DUMP_MODEL = 'estimated_model.npz'
 NAME_CSV_ARS_CORES = 'metric_ARS.csv'
 # setting experiment sub-folders
@@ -76,17 +76,17 @@ SHOW_DEBUG_IMAGES = True
 # relabel annotation such that labels are in sequence no gaps in between them
 ANNOT_RELABEL_SEQUENCE = False
 # whether skip loading config from previous fun
-FORCE_RELOAD = False
+FORCE_RELOAD = True
 # even you have dumped data from previous time, all wil be recomputed
-FORCE_RECOMP_DATA = False
+FORCE_RECOMP_DATA = True
 
-FEATURES_SET_COLOR = {'color': ('mean', 'std', 'eng')}
-FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'eng')}
+FEATURES_SET_COLOR = {'color': ('mean', 'std', 'energy')}
+FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'median'),
-                    'tLM': ('mean', 'std', 'eng', 'mG')}
+                    'tLM': ('mean', 'std', 'energy', 'meanGrad')}
 FEATURES_SET_MIN = {'color': ('mean', 'std', 'energy'),
                     'tLM_s': ('mean', )}
-FEATURES_SET_MIX = {'color': ('mean', 'std', 'eng', 'median'),
+FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
                     'tLM': ('mean', 'std')}
 # Default parameter configuration
 SEGM_PARAMS = {
@@ -176,7 +176,7 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
     """
     path_img = tl_data.update_path(path_img)
     assert os.path.isfile(path_img), 'missing: "%s"' % path_img
-    if img_type == '2d_gray':
+    if img_type == '2d_split':
         img, _ = tl_data.load_img_double_band_split(path_img)
         assert img.ndim == 2, 'image dims: %s' % repr(img.shape)
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
@@ -412,15 +412,16 @@ def experiment_single_gmm(params, paths_img, path_out, path_visu,
                           show_debug_imgs=SHOW_DEBUG_IMAGES):
     imgs_idx_path = list(zip([None] * len(paths_img), paths_img))
     logging.info('Perform image segmentation as single image in each time')
-    dict_segms_gmm = {}
     _wrapper_segment = partial(segment_image_independent, params=params,
                                path_out=path_out, path_visu=path_visu,
                                show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment single GMM')
-    for name, segm in iterate:
-        dict_segms_gmm[name] = segm
+    # dict_segms_gmm = {}
+    # for name, segm in iterate:
+    #     dict_segms_gmm[name] = segm
+    dict_segms_gmm = dict(iterate)
     return dict_segms_gmm
 
 
@@ -443,15 +444,16 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
         save_model(params['path_model'], model)
 
     logging.info('Perform image segmentation from group model')
-    dict_segms_group = {}
     _wrapper_segment = partial(segment_image_model, params=params, model=model,
                                path_out=path_out, path_visu=path_visu,
                                show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment group GMM')
-    for name, segm in iterate:
-        dict_segms_group[name] = segm
+    # dict_segms_group = {}
+    # for name, segm in iterate:
+    #     dict_segms_group[name] = segm
+    dict_segms_group = dict(iterate)
     return dict_segms_group
 
 
