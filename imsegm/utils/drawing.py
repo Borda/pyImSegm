@@ -1,7 +1,7 @@
 """
 Framework for visualisations
 
-Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
@@ -248,7 +248,7 @@ def figure_image_segm_results(img, seg, subfig_size=9):
     axarr[1].set_title('original image w. segment overlap')
     axarr[1].imshow(color.rgb2gray(img), cmap=plt.cm.Greys_r)
     axarr[1].imshow(seg, alpha=0.2, cmap=plt.cm.jet)
-    axarr[1].contour(seg, levels=np.unique(seg), linewidth=2, cmap=plt.cm.jet)
+    axarr[1].contour(seg, levels=np.unique(seg), linewidths=2, cmap=plt.cm.jet)
 
     axarr[2].set_title('segmentation of all labels')
     axarr[2].imshow(seg, cmap=plt.cm.jet)
@@ -289,12 +289,12 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9):
     axarr[0].set_title('Annotation')
     axarr[0].imshow(img)
     axarr[0].imshow(annot, alpha=0.2)
-    axarr[0].contour(annot, levels=np.unique(annot), linewidth=2)
+    axarr[0].contour(annot, levels=np.unique(annot), linewidths=2)
 
     axarr[1].set_title('Segmentation')
     axarr[1].imshow(img)
     axarr[1].imshow(segm, alpha=0.2)
-    axarr[1].contour(segm, levels=np.unique(segm), linewidth=2)
+    axarr[1].contour(segm, levels=np.unique(segm), linewidths=2)
 
     # visualise the 3th label
     axarr[2].set_title('difference annot & segment')
@@ -307,8 +307,8 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9):
                  boundaries=np.linspace(-max_val - 0.5, max_val + 0.5,
                                         max_val * 2 + 2))
     # plt.clim(-max_val - 0.5, max_val - 0.5)
-    # axarr[2].contour(annot, levels=np.unique(annot), linewidth=1, colors='g')
-    # axarr[2].contour(segm, levels=np.unique(segm), linewidth=1, colors='b')
+    # axarr[2].contour(annot, levels=np.unique(annot), linewidths=1, colors='g')
+    # axarr[2].contour(segm, levels=np.unique(segm), linewidths=1, colors='b')
 
     for i in range(len(axarr)):
         axarr[i].axis('off')
@@ -427,13 +427,21 @@ def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1,
     :param int slic_size:
     :param float slic_regul:
     :return Figure:
+
+    >>> np.random.seed(0)
+    >>> dict_label_hist = {'a': np.tile([1, 0, 0, 0, 1], (25, 1)),
+    ...                    'b': np.tile([0, 1, 0, 0, 1], (30, 1))}
+    >>> figure_annot_slic_histogram_labels(dict_label_hist)  # doctest: +ELLIPSIS
+    <matplotlib.figure.Figure object at ...>
     """
     matrix_hist_all = np.concatenate(tuple(dict_label_hist.values()), axis=0)
-    nb_labels = matrix_hist_all.shape[1]
+    lb_sums = np.sum(matrix_hist_all, axis=0)
 
     fig = plt.figure(figsize=(10, 5))
     ax = fig.gca()
-    for i in range(nb_labels):
+    for i, nb in enumerate(lb_sums):
+        if nb == 0:
+            continue
         patches, bin_edges = np.histogram(matrix_hist_all[:, i], bins=50,
                                           density=True)
         bins = [(a + b) / 2. for a, b in zip(bin_edges[:-1], bin_edges[1:])]
@@ -592,7 +600,7 @@ def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
 def parse_annot_rectangles(rows_slice):
     """ parse annotation fromDF to lists
 
-    :param row_slice:
+    :param rows_slice:
     :return:
 
     >>> import pandas as pd
@@ -732,13 +740,13 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
 
     if slic is not None:
         ax.contour(slic, levels=np.unique(slic), alpha=0.5, colors=clr_slic,
-                   linewidth=0.5)
+                   linewidths=0.5)
     # fig.gca().imshow(mark_boundaries(img, slic))
     if seg_contour is not None and isinstance(seg_contour, np.ndarray):
         assert img.shape[:2] == seg_contour.shape[:2], \
             'image size %s and segm. %s should match' \
             % (repr(img.shape), repr(seg_contour.shape))
-        ax.contour(seg_contour, linewidth=3, levels=np.unique(seg_contour))
+        ax.contour(seg_contour, linewidths=3, levels=np.unique(seg_contour))
     if labels is not None:
         assert len(points) == len(labels), \
             'number of points (%i) and labels (%i) should match' \
@@ -776,7 +784,7 @@ def figure_image_segm_centres(img, segm, centers=None,
         segm_show = segm
         if segm.ndim > 2:
             segm_show = np.argmax(segm, axis=2)
-        ax.contour(segm_show, cmap=cmap_contour, linewidth=0.5)
+        ax.contour(segm_show, cmap=cmap_contour, linewidths=0.5)
     if isinstance(centers, list):
         ax.plot(np.array(centers)[:, 1], np.array(centers)[:, 0], 'o',
                 color=COLOR_ORANGE)
@@ -878,7 +886,7 @@ def figure_rg2sp_debug_complete(seg, slic, dict_rg2sp_debug, iter_index=-1,
     :param ndarray seg:
     :param ndarray slic:
     :param dict_rg2sp_debug:
-    :param int iter:
+    :param int iter_index:
     :param int max_size:
     :return Figure:
 
@@ -991,7 +999,7 @@ def make_overlap_images_chess(imgs, chess_field=SIZE_CHESS_FIELD):
     # copy images to the maximal image
     for i, im in enumerate(imgs):
         imgs_w[i][:im.shape[0], :im.shape[1]] = im
-    img = np.zeros(max_size, dtype=im.dtype)
+    img = np.zeros(max_size, dtype=imgs[0].dtype)
     idx_row = 0
     for i in range(int(max_size[0] / chess_field)):
         idx = idx_row

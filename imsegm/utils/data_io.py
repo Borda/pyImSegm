@@ -1,7 +1,7 @@
 """
 Framework for handling input/output
 
-Copyright (C) 2015-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2015-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
@@ -236,7 +236,7 @@ def scale_image_intensity(img, im_range=1., quantiles=(2, 98)):
                                      in_range=(p_low, p_high),
                                      out_range='float')
     if im_range == 255:
-        img = (img * im_range).astype(np.uint8)
+        img = np.array(img * im_range).astype(np.uint8)
     return img
 
 
@@ -582,12 +582,12 @@ def load_image_tiff_volume(path_img, im_range=None):
     :param float im_range: range to scale image values (1. or 255)
     :return ndarray:
 
-    >>> p_img = os.path.join(update_path('images'), 'drosophila_ovary_3D',
+    >>> p_img = os.path.join(update_path('data_images'), 'drosophila_ovary_3D',
     ...                      'AU10-13_f0011.tif')
     >>> img = load_image_tiff_volume(p_img)
     >>> img.shape
     (30, 323, 512)
-    >>> p_img = os.path.join(update_path('images'),
+    >>> p_img = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', 'image', 'insitu7545.tif')
     >>> img = load_image_tiff_volume(p_img)
     >>> img.shape
@@ -633,14 +633,14 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
     :param float im_range: range to scale image values (1. or 255)
     :return ndarray, ndarray:
 
-    >>> p_img = os.path.join(update_path('images'), 'drosophila_ovary_3D',
+    >>> p_img = os.path.join(update_path('data_images'), 'drosophila_ovary_3D',
     ...                      'AU10-13_f0011.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
     >>> img_b1.shape
     (15, 323, 512)
     >>> img_b2.shape
     (15, 323, 512)
-    >>> p_img = os.path.join(update_path('images'),
+    >>> p_img = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', 'image', 'insitu7545.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
     >>> img_b1.shape
@@ -678,7 +678,7 @@ def load_zvi_volume_double_band_split(path_img):
     :param str path_img: path to the image
     :return ndarray, ndarray:
 
-    >>> p_img = os.path.join(update_path('images'),
+    >>> p_img = os.path.join(update_path('data_images'),
     ...                      'others', 'sample.zvi')
     >>> img_b1, img_b2 = load_zvi_volume_double_band_split(p_img)
     >>> img_b1.shape
@@ -700,7 +700,7 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     :param (int, int) quantiles: scale image values in certain quantile range
     :return:
 
-    >>> p_imgs = os.path.join(update_path('images'),
+    >>> p_imgs = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', 'image')
     >>> p_img = os.path.join(p_imgs, 'insitu7545.jpg')
     >>> img_b1, img_b2 = load_img_double_band_split(p_img)
@@ -710,7 +710,7 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     >>> img_b1, img_b2 = load_img_double_band_split(p_img)
     >>> img_b1.shape
     (647, 1024)
-    >>> p_img = os.path.join(update_path('images'),
+    >>> p_img = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_3D', 'AU10-13_f0011.tif')
     >>> img_b1, img_b2 = load_img_double_band_split(p_img)
     >>> img_b1.shape
@@ -772,7 +772,7 @@ def load_complete_image_folder(path_dir, img_name_pattern='*.png',
     :param [str] skip: skip some prticular images by name
     :return:
 
-    >>> p_imgs = os.path.join(update_path('images'),
+    >>> p_imgs = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', 'image')
     >>> l_imgs, l_names = load_complete_image_folder(p_imgs, '*.jpg')
     >>> len(l_imgs)
@@ -881,20 +881,19 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     :param bool drop_none: drop if there are some none - missing values in rows
     :return: DF<path_1, path_2, ...>
 
-    >>> def mpath(d, n):
-    ...     p = os.path.join(update_path('images'),
-    ...                      'drosophila_ovary_slice', d, n)
-    ...     return p
-    >>> df = find_files_match_names_across_dirs([mpath('image', '*.jpg'),
-    ...                                          mpath('segm', '*.png'),
-    ...                                          mpath('center_levels', '*.csv')])
+    >>> def _mp(d, n):
+    ...     return os.path.join(update_path('data_images'),
+    ...                         'drosophila_ovary_slice', d, n)
+    >>> df = find_files_match_names_across_dirs([_mp('image', '*.jpg'),
+    ...                                          _mp('segm', '*.png'),
+    ...                                          _mp('center_levels', '*.csv')])
     >>> len(df) > 0
     True
     >>> df.columns.tolist()
     ['path_1', 'path_2', 'path_3']
-    >>> df = find_files_match_names_across_dirs([mpath('image', '*.png'),
-    ...                                          mpath('segm', '*.jpg'),
-    ...                                          mpath('center_levels', '*.csv')])
+    >>> df = find_files_match_names_across_dirs([_mp('image', '*.png'),
+    ...                                          _mp('segm', '*.jpg'),
+    ...                                          _mp('center_levels', '*.csv')])
     >>> len(df)
     0
     """
@@ -904,21 +903,21 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
         assert os.path.exists(os.path.dirname(p)), \
             'missing "%s"' % os.path.dirname(p)
 
-    def get_name(path, pattern='*'):
+    def _get_name(path, pattern='*'):
         name = os.path.splitext(os.path.basename(path))[0]
         for s in pattern.split('*'):
             name = name.replace(s, '')
         return name
 
-    def get_paths_names(path_pattern):
+    def _get_paths_names(path_pattern):
         paths_ = glob.glob(path_pattern)
         if len(paths_) == 0:
             return [None], [None]
-        names_ = [get_name(p, os.path.basename(path_pattern)) for p in paths_]
+        names_ = [_get_name(p, os.path.basename(path_pattern)) for p in paths_]
         return paths_, names_
 
     logging.info('find match files...')
-    paths_0, names_0 = get_paths_names(list_path_pattern[0])
+    paths_0, names_0 = _get_paths_names(list_path_pattern[0])
     list_paths = [paths_0]
 
     for path_pattern_n in list_path_pattern[1:]:
@@ -927,7 +926,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
         list_files = glob.glob(path_pattern_n)
         logging.debug('found %i files in %s', len(list_files), path_pattern_n)
         for path_n in list_files:
-            name_n = get_name(path_n, name_pattern)
+            name_n = _get_name(path_n, name_pattern)
             if name_n in names_0:
                 idx = names_0.index(name_n)
                 paths_n[idx] = path_n
@@ -942,7 +941,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     return df_paths
 
 
-def get_background_color(image):
+def get_image2d_boundary_color(image, size=1):
     """ extract background color as median along image boundaries
 
     :param image:
@@ -956,20 +955,22 @@ def get_background_color(image):
            [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
-    >>> get_background_color(img)
+    >>> get_image2d_boundary_color(img)
     0
-    >>> get_background_color(np.ones((5, 15, 3), dtype=int))
+    >>> get_image2d_boundary_color(np.ones((5, 15, 3), dtype=int), size=2)
     array([1, 1, 1])
-    >>> get_background_color(np.ones((5, 15, 3, 1), dtype=int))
+    >>> get_image2d_boundary_color(np.ones((5, 15, 3, 1), dtype=int))
     array(0)
     """
+    size = int(size)
     if image.ndim == 2:
-        bg_pixels = np.hstack([image[0, :], image[:, 0],
-                               image[-1, :], image[:, -1]])
-        bg_color = np.argmax(np.bincount(bg_pixels))
+        bg_pixels = np.hstack([image[:size, :], image[:, :size].T,
+                               image[-size:, :], image[:, -size:].T])
+        bg_color = np.argmax(np.bincount(bg_pixels.ravel()))
     elif image.ndim == 3:
-        bg_pixels = np.vstack([image[0, :, ...], image[:, 0, ...],
-                               image[-1, :, ...], image[:, -1, ...]])
+        bounds = [image[:size, :, ...], image[:, :size, ...],
+                  image[-size:, :, ...], image[:, -size:, ...]]
+        bg_pixels = np.vstack([b.reshape(-1, image.shape[-1]) for b in bounds])
         bg_color = np.median(bg_pixels, axis=0)
     else:
         logging.error('not supported image dim: %s' % repr(image.shape))
@@ -1035,7 +1036,7 @@ def cut_object(img, mask, padding, use_mask=False, bg_color=None):
     bg_mask = np.argmax(np.bincount(bg_pixels))
 
     if bg_color is None:
-        bg_color = get_background_color(img)
+        bg_color = get_image2d_boundary_color(img)
 
     rotate = np.rad2deg(prop.orientation)
     shift = prop.centroid - (np.array(mask.shape) / 2.)

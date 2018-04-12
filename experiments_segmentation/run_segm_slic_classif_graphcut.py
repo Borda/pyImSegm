@@ -18,11 +18,12 @@ see them bellow with explanation for each of them.
 
 SAMPLE run:
 >> python run_segm_slic_classif_graphcut.py \
-    -list images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-    -imgs "images/langerhans_islets/image/*.jpg" \
-    -out results -n LangIsl --img_type 2d_rgb --visual 1 --nb_jobs 2
+    -l data_images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
+    -i "data_images/drosophila_ovary_slice/image/*.jpg" \
+   --path_config experiments_segmentation/sample_config.json \
+    -o results -n Ovary --img_type 2d_split --visual
 
-Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
@@ -47,6 +48,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 # from llvmpy._api.llvm.CmpInst import FCMP_OLE
 from skimage import segmentation
+import skimage.color as sk_color
 from sklearn import metrics
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -65,7 +67,7 @@ from run_segm_slic_model_graphcut import (arg_parse_params, load_image,
 NAME_EXPERIMENT = 'experiment_segm-Supervised'
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 
-TYPES_LOAD_IMAGE = ['2d_rgb', '2d_gray']
+TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_FIG_LABEL_HISTO = 'fig_histogram_annot_segments.png'
 NAME_CSV_SEGM_STAT_SLIC_ANNOT = 'statistic_segm_slic_annot.csv'
 NAME_CSV_SEGM_STAT_RESULT_LOO = 'statistic_segm_LOO.csv'
@@ -81,11 +83,12 @@ FOLDER_ANNOT = 'annotations'
 FOLDER_SLIC = 'slic'
 FOLDER_SLIC_ANNOT = 'annot_slic'
 FOLDER_SEGM = 'segmentation_trained'
-FOLDER_SEGM_VISU = FOLDER_SEGM + '___visual'
+SUFFIX_VISUAL = '___visual'
+FOLDER_SEGM_VISU = FOLDER_SEGM + SUFFIX_VISUAL
 FOLDER_LOO = 'segmentation_leave-one-out'
-FOLDER_LOO_VISU = FOLDER_LOO + '___visual'
+FOLDER_LOO_VISU = FOLDER_LOO + SUFFIX_VISUAL
 FOLDER_LPO = 'segmentation_leave-P-out'
-FOLDER_LPO_VISU = FOLDER_LPO + '___visual'
+FOLDER_LPO_VISU = FOLDER_LPO + SUFFIX_VISUAL
 LIST_FOLDERS_BASE = (FOLDER_IMAGE, FOLDER_ANNOT, FOLDER_SLIC, FOLDER_SLIC_ANNOT,
                      FOLDER_SEGM, FOLDER_LOO, FOLDER_LPO)
 LIST_FOLDERS_DEBUG = (FOLDER_SEGM_VISU, FOLDER_LOO_VISU, FOLDER_LPO_VISU)
@@ -93,15 +96,15 @@ LIST_FOLDERS_DEBUG = (FOLDER_SEGM_VISU, FOLDER_LOO_VISU, FOLDER_LPO_VISU)
 # unique experiment means adding timestemp on the end of folder name
 EACH_UNIQUE_EXPERIMENT = False
 # showing some intermediate debug images from segmentation
-SHOW_DEBUG_IMAGES = False
+SHOW_DEBUG_IMAGES = True
 # relabel annotation such that labels are in sequence no gaps in between them
 ANNOT_RELABEL_SEQUENCE = False
 # whether skip loading config from previous fun
-FORCE_RELOAD = False
+FORCE_RELOAD = True
 # even you have dumped data from previous time, all wil be recomputed
-FORCE_RECOMP_DATA = False
+FORCE_RECOMP_DATA = True
 # even you have saved classif. data from previous time, all wil be retrained
-FORCE_RETRAIN_CLASSIF = False
+FORCE_RETRAIN_CLASSIF = True
 # ration of fold size for LPO for hyper-parameter search
 CROSS_VAL_LEAVE_OUT_SEARCH = 0.2
 # ration of fold size for LPO for evaluation
@@ -112,20 +115,20 @@ RUN_CROSS_VAL_LOO = True
 RUN_CROSS_VAL_LPO = True
 
 
-FEATURES_SET_COLOR = {'color': ('mean', 'std', 'eng')}
-FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'eng')}
+FEATURES_SET_COLOR = {'color': ('mean', 'std', 'energy')}
+FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'median'),
-                    'tLM': ('mean', 'std', 'eng', 'mG')}
+                    'tLM': ('mean', 'std', 'energy', 'meanGrad')}
 FEATURES_SET_MIN = {'color': ('mean', 'std', 'energy'),
                     'tLM_s': ('mean', )}
-FEATURES_SET_MIX = {'color': ('mean', 'std', 'eng', 'median'),
+FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
                     'tLM': ('mean', 'std')}
 # Default parameter configuration
 SEGM_PARAMS = {
     'name': 'ovary',
     'nb_classes': None,
     'clr_space': 'rgb',
-    'img_type': '2d_gray',
+    'img_type': '2d_split',
     'slic_size': 35,
     'slic_regul': 0.3,
     # 'spacing': (12, 1, 1),
@@ -139,7 +142,7 @@ SEGM_PARAMS = {
     'gc_edge_type': 'model',
     'gc_use_trans': False,
 }
-PATH_IMAGES = os.path.join(tl_data.update_path('images'),
+PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SEGM_PARAMS.update({
@@ -165,6 +168,17 @@ def visu_histogram_labels(params, dict_label_hist, fig_name=NAME_FIG_LABEL_HISTO
     plt.close(fig)
 
 
+def use_rgb_image(img, clr='rgb'):
+    # clr = params.get('clr_space', 'rgb').lower()
+    if img.ndim == 3 and img.shape[-1] in (3, 4):
+        img_rgb = seg_pipe.convert_img_color_to_rgb(img, clr)
+    elif img.ndim == 2:
+        img_rgb = sk_color.gray2rgb(img)
+    else:
+        img_rgb = img.copy()
+    return img_rgb
+
+
 def load_image_annot_compute_features_labels(idx_row, params,
                                              show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ load image and annotation, and compute superpixel features and labels
@@ -174,42 +188,47 @@ def load_image_annot_compute_features_labels(idx_row, params,
     :param bool show_debug_imgs: whether show debug images
     :return (...):
     """
-    def path_out_img(params, dir_name, name):
+    def _path_out_img(params, dir_name, name):
         return os.path.join(params['path_exp'], dir_name, name + '.png')
 
     idx, row = idx_row
     idx_name = get_idx_name(idx, row['path_image'])
     img = load_image(row['path_image'], params['img_type'])
-    annot = load_image(row['path_annot'], 'segm')
+    annot = load_image(row['path_annot'], '2d_segm')
     logging.debug('.. processing: %s', idx_name)
     assert img.shape[:2] == annot.shape[:2], \
         'individual size of image %s and seg_pipe %s for "%s" - "%s"' % \
         (repr(img.shape), repr(annot.shape), row['path_image'], row['path_annot'])
     if show_debug_imgs:
-        plt.imsave(path_out_img(params, FOLDER_IMAGE, idx_name), img,
+        plt.imsave(_path_out_img(params, FOLDER_IMAGE, idx_name), img,
                    cmap=plt.cm.gray)
-        plt.imsave(path_out_img(params, FOLDER_ANNOT, idx_name), annot)
+        plt.imsave(_path_out_img(params, FOLDER_ANNOT, idx_name), annot)
 
     # duplicate gray band to be as rgb
     # if img.ndim == 2:
     #     img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     slic = seg_spx.segment_slic_img2d(img, sp_size=params['slic_size'],
                                       rltv_compact=params['slic_regul'])
-    img = seg_pipe.convert_img_color_space(img, params.get('clr_space', 'rgb'))
+    img = seg_pipe.convert_img_color_from_rgb(img, params.get('clr_space', 'rgb'))
     logging.debug('computed SLIC with %i labels', slic.max())
     if show_debug_imgs:
-        img_slic = segmentation.mark_boundaries(img / float(img.max()), slic,
-                                                color=(1, 0, 0), mode='subpixel')
-        plt.imsave(path_out_img(params, FOLDER_SLIC, idx_name), img_slic)
-    features, ft_names = seg_fts.compute_selected_features_img2d(img, slic,
-                                                                 params['features'])
-
-    label_hist = seg_label.histogram_regions_labels_norm(slic, annot)
-    labels = np.argmax(label_hist, axis=1)
+        img_rgb = use_rgb_image(img, params.get('clr_space', 'rbgb').lower())
+        img_slic = segmentation.mark_boundaries(img_rgb, slic,
+                                                color=(1, 0, 0),
+                                                mode='subpixel')
+        plt.imsave(_path_out_img(params, FOLDER_SLIC, idx_name),
+                   np.clip(img_slic, 0, 1))
+    slic_label_hist = seg_label.histogram_regions_labels_norm(slic, annot)
+    labels = np.argmax(slic_label_hist, axis=1)
     slic_annot = labels[slic]
     if show_debug_imgs:
-        plt.imsave(path_out_img(params, FOLDER_SLIC_ANNOT, idx_name), slic_annot)
-    return idx_name, img, annot, slic, features, labels, label_hist, ft_names
+        plt.imsave(_path_out_img(params, FOLDER_SLIC_ANNOT, idx_name),
+                   np.clip(slic_annot, 0, slic_annot.max()))
+
+    features, feature_names = seg_fts.compute_selected_features_img2d(
+                                                img, slic,  params['features'])
+    return idx_name, img, annot, slic, features, labels, \
+           slic_label_hist, feature_names
 
 
 def dataset_load_images_annot_compute_features(params,
@@ -231,9 +250,9 @@ def dataset_load_images_annot_compute_features(params,
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     assert all(n in df_paths.columns for n in ['path_image', 'path_annot']), \
         'missing required columns in loaded csv file'
-    wrapper_load_compute = partial(load_image_annot_compute_features_labels,
-                                   params=params, show_debug_imgs=show_debug_imgs)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_load_compute, df_paths.iterrows(),
+    _wrapper_load_compute = partial(load_image_annot_compute_features_labels,
+                                    params=params, show_debug_imgs=show_debug_imgs)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_load_compute, df_paths.iterrows(),
                                           nb_jobs=params['nb_jobs'],
                                           desc='extract training data')
     for name, img, annot, slic, features, labels, label_hist, feature_names in iterate:
@@ -307,15 +326,17 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     :param obj classif: trained classifier
     :param str path_out: path for output
     :param str path_visu: the existing patch means export also visualisation
+    :param bool show_debug_imgs: whether show debug images
     :return (str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
     idx_name = get_idx_name(idx, path_img)
-    img = load_image(path_img, params['img_type'])
-    slic = seg_spx.segment_slic_img2d(img, sp_size=params['slic_size'],
-                                            rltv_compact=params['slic_regul'])
-    img = seg_pipe.convert_img_color_space(img, params.get('clr_space', 'rgb'))
+    img_rgb = load_image(path_img, params['img_type'])
+    slic = seg_spx.segment_slic_img2d(img_rgb, sp_size=params['slic_size'],
+                                      rltv_compact=params['slic_regul'])
+    img = seg_pipe.convert_img_color_from_rgb(img_rgb, params.get('clr_space',
+                                                                  'rgb'))
     features, _ = seg_fts.compute_selected_features_img2d(img, slic,
                                                           params['features'])
     labels = classif.predict(features)
@@ -328,7 +349,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
 
     # plt.imsave(os.path.join(path_out, idx_name + '_rgb.png'), seg_pipe)
     if path_visu is not None and os.path.isdir(path_visu):
-        export_draw_image_segm_contour(img, segm, path_visu, idx_name)
+        export_draw_image_segm_contour(img_rgb, segm, path_visu, idx_name)
 
     try:  # in case some classiefier do not support predict_proba
         proba = classif.predict_proba(features)
@@ -336,7 +357,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
         path_npz = os.path.join(path_out, idx_name + '.npz')
         np.savez_compressed(path_npz, segm_soft)
     except Exception:
-        logging.warning('classif: %s not support predict_proba(.)',
+        logging.warning('classif: %s not support predict_proba(...)',
                         repr(classif))
         proba = None
         segm_soft = None
@@ -362,9 +383,8 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
         # io.imsave(path_img, segm_gc)
 
         if path_visu is not None and os.path.isdir(path_visu):
-            export_draw_image_segm_contour(img, segm_gc, path_visu,
+            export_draw_image_segm_contour(img_rgb, segm_gc, path_visu,
                                            idx_name, '_gc')
-
             if show_debug_imgs:
                 labels_map = np.argmax(proba, axis=1)
                 plt.imsave(os.path.join(path_visu, idx_name + '_map.png'),
@@ -415,14 +435,16 @@ def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
 
 
 def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
-                              path_out, path_visu):
+                              path_out, path_visu,
+                              show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ load the classifier, and dumped data, subtract the image,
     retrain the classif. without it and do the segmentation
 
-    :param str path_img: path to input image
+    :param () imgs_idx_path: path to input image
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
+    :param bool show_debug_imgs: whether show debug images
     :return (str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
@@ -443,20 +465,23 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
     classif.fit(features, labels)
 
     idx_name, segm, segm_gc = segment_image(imgs_idx_path, params, classif,
-                                            path_out, path_visu)
+                                            path_out, path_visu,
+                                            show_debug_imgs=show_debug_imgs)
     # gc.collect(), time.sleep(1)
     return idx_name, segm, segm_gc
 
 
 def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
-                              path_out, path_visu):
+                              path_out, path_visu,
+                              show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ load the classifier, and dumped data, subtract the image,
     retrain the classif without it and do the segmentation
 
-    :param str path_img: path to input image
+    :param [str] list_imgs_idx_path: path to input image
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
+    :param bool show_debug_imgs: whether show debug images
     :return (str, ndarray, ndarray):
     """
     dict_imgs, _, _, dict_features, dict_labels, _, _ = \
@@ -481,7 +506,8 @@ def retrain_lpo_segment_image(list_imgs_idx_path, path_classif, path_dump,
     dict_segm, dict_segm_gc = {}, {}
     for imgs_idx_path in list_imgs_idx_path:
         idx_name, segm, segm_gc = segment_image(imgs_idx_path, params, classif,
-                                                path_out, path_visu)
+                                                path_out, path_visu,
+                                                show_debug_imgs=show_debug_imgs)
         dict_segm[idx_name] = segm
         dict_segm_gc[idx_name] = segm_gc
     # gc.collect(), time.sleep(1)
@@ -509,16 +535,18 @@ def get_summary(df, name, list_stat=('mean', 'std', 'median')):
     return dict_state
 
 
-def perform_predictions(params, paths_img, classif):
+def perform_predictions(params, paths_img, classif,
+                        show_debug_imgs=SHOW_DEBUG_IMAGES):
     logging.info('run prediction on training images...')
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
 
     dict_segms, dict_segms_gc = dict(), dict()
     path_out = os.path.join(params['path_exp'], FOLDER_SEGM)
     path_visu = os.path.join(params['path_exp'], FOLDER_SEGM_VISU)
-    wrapper_segment = partial(segment_image, params=params, classif=classif,
-                              path_out=path_out, path_visu=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+    _wrapper_segment = partial(segment_image, params=params, classif=classif,
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=show_debug_imgs)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='image segm: prediction')
     for name, segm, segm_gc in iterate:
@@ -528,16 +556,28 @@ def perform_predictions(params, paths_img, classif):
 
 
 def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
-                   path_dump):
+                   path_dump, show_debug_imgs=SHOW_DEBUG_IMAGES):
+    """ experiment Leave-One-Out
+
+    :param {str: ...} params:
+    :param DF df_stat:
+    :param {str: ndarray} dict_annot:
+    :param [str] paths_img:
+    :param str path_classif:
+    :param str path_dump:
+    :param bool show_debug_imgs: whether show debug images
+    :return {}:
+    """
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
     logging.info('run prediction on training images as Leave-One-Out...')
     dict_segms, dict_segms_gc = dict(), dict()
     path_out = os.path.join(params['path_exp'], FOLDER_LOO)
     path_visu = os.path.join(params['path_exp'], FOLDER_LOO_VISU)
-    wrapper_segment = partial(retrain_loo_segment_image,
-                              path_classif=path_classif, path_dump=path_dump,
-                              path_out=path_out, path_visu=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, imgs_idx_path,
+    _wrapper_segment = partial(retrain_loo_segment_image,
+                               path_classif=path_classif, path_dump=path_dump,
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=show_debug_imgs)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment LOO')
     for name, segm, segm_gc in iterate:
@@ -562,7 +602,19 @@ def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
 
 
 def experiment_lpo(params, df_stat, dict_annot, paths_img, path_classif,
-                   path_dump, nb_holdout):
+                   path_dump, nb_holdout, show_debug_imgs=SHOW_DEBUG_IMAGES):
+    """ experiment Leave-P-samples-Out
+
+    :param {str: ...} params:
+    :param DF df_stat:
+    :param {str: ndarray} dict_annot:
+    :param [str] paths_img:
+    :param str path_classif:
+    :param str path_dump:
+    :param int nb_holdout:
+    :param bool show_debug_imgs: whether show debug images
+    :return {}:
+    """
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
     logging.info('run prediction on training images as Leave-%i-Out...',
                  nb_holdout)
@@ -571,10 +623,11 @@ def experiment_lpo(params, df_stat, dict_annot, paths_img, path_classif,
     test_imgs_idx_path = [[imgs_idx_path[i] for i in ids] for _, ids in cv]
     path_out = os.path.join(params['path_exp'], FOLDER_LPO)
     path_visu = os.path.join(params['path_exp'], FOLDER_LPO_VISU)
-    wrapper_segment = partial(retrain_lpo_segment_image,
-                              path_classif=path_classif, path_dump=path_dump,
-                              path_out=path_out, path_visu=path_visu)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, test_imgs_idx_path,
+    _wrapper_segment = partial(retrain_lpo_segment_image,
+                               path_classif=path_classif, path_dump=path_dump,
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=show_debug_imgs)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, test_imgs_idx_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='experiment LPO')
     for dict_seg, dict_seg_gc in iterate:
@@ -620,7 +673,7 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
         classif, path_classif = seg_clf.create_classif_train_export(
                     params['classif'], features, labels, cross_val=cv,
                     params=params, feature_names=feature_names,
-                    nb_search_iter=params['nb_classif_search'],
+                    nb_search_iter=params.get('nb_classif_search', 1),
                     nb_jobs=params['nb_jobs'], pca_coef=params['pca_coef'],
                     path_out=params['path_exp'])
     params['path_classif'] = path_classif
@@ -640,19 +693,21 @@ def main_train(params):
     4) perform Leave-One-Out and Leave-P-Out experiments on images
 
     :param {str: ...} params:
-    :return{str: ...} :
+    :return {str: ...}:
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running TRAINING...')
+    show_debug_imgs = params.get('visual', False) or SHOW_DEBUG_IMAGES
 
-    reload_dir_config = (os.path.isfile(params['path_config']) or FORCE_RELOAD)
+    reload_dir_config = (os.path.isfile(params.get('path_config', ''))
+                         or FORCE_RELOAD)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
-                                              stamp_unique=EACH_UNIQUE_EXPERIMENT,
+                      stamp_unique=params.get('unique', EACH_UNIQUE_EXPERIMENT),
                                               skip_load=reload_dir_config)
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_BASE)
-    if params['visual']:
+    if params.get('visual', False):
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
     df_stat = pd.DataFrame()
 
@@ -663,7 +718,8 @@ def main_train(params):
     else:
         dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, \
         dict_label_hist, feature_names = \
-            dataset_load_images_annot_compute_features(params)
+            dataset_load_images_annot_compute_features(params,
+                                                       show_debug_imgs)
         save_dump_data(path_dump, dict_imgs, dict_annot, dict_slics,
                        dict_features, dict_labels, dict_label_hist,
                        feature_names)
@@ -704,18 +760,22 @@ def main_train(params):
     # test classif on images
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     paths_img = df_paths['path_image'].tolist()
-    perform_predictions(params, paths_img, classif)
+    perform_predictions(params, paths_img, classif,
+                        show_debug_imgs=show_debug_imgs)
 
     # LEAVE ONE OUT
     if RUN_CROSS_VAL_LOO:
         df_stat = experiment_loo(params, df_stat, dict_annot, paths_img,
-                                 path_classif, path_dump)
+                                 path_classif, path_dump,
+                                 show_debug_imgs=show_debug_imgs)
 
     # LEAVE P OUT
     if RUN_CROSS_VAL_LPO:
         df_stat = experiment_lpo(params, df_stat, dict_annot, paths_img,
-                                 path_classif, path_dump, nb_holdout)
+                                 path_classif, path_dump, nb_holdout,
+                                 show_debug_imgs=show_debug_imgs)
 
+    logging.info('Statistic: \n %s', repr(df_stat.describe()))
     logging.info('training DONE')
     return params
 
@@ -734,14 +794,14 @@ def prepare_output_dir(path_pattern_imgs, path_out, name):
     path_out = os.path.join(path_out, name)
     if not os.path.isdir(path_out):
         os.mkdir(path_out)
-    path_visu = path_out + '___visual'
+    path_visu = path_out + SUFFIX_VISUAL
     if not os.path.isdir(path_visu):
         os.mkdir(path_visu)
     return path_out, path_visu
 
 
 def try_segment_image(img_idx_path, params, classif, path_out, path_visu,
-                      show_debug_imgs=False):
+                      show_debug_imgs=SHOW_DEBUG_IMAGES):
     try:
         return segment_image(img_idx_path, params, classif,
                              path_out, path_visu,
@@ -759,7 +819,6 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
     :param str path_pattern_imgs:
     :param str path_out:
     :param str name:
-    :return:
     """
     logging.getLogger().setLevel(logging.INFO)
     logging.info('running PREDICTION...')
@@ -780,10 +839,11 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
                  path_pattern_imgs)
 
     logging.debug('run prediction...')
-    wrapper_segment = partial(try_segment_image, params=params, classif=classif,
-                              path_out=path_out, path_visu=path_visu)
+    _wrapper_segment = partial(try_segment_image, params=params, classif=classif,
+                               path_out=path_out, path_visu=path_visu,
+                               show_debug_imgs=SHOW_DEBUG_IMAGES)
     list_img_path = list(zip([None] * len(paths_img), paths_img))
-    iterate = tl_expt.WrapExecuteSequence(wrapper_segment, list_img_path,
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, list_img_path,
                                           nb_jobs=params['nb_jobs'],
                                           desc='segmenting images')
     for _ in iterate:

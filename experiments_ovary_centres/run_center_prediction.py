@@ -4,8 +4,8 @@ The output is list of potential center candidates.
 
 SAMPLE run:
 >> python run_center_prediction.py -list none \
-    -segs "images/drosophila_ovary_slice/segm/*.png" \
-    -imgs "images/drosophila_ovary_slice/image/*.jpg" \
+    -segs "data_images/drosophila_ovary_slice/segm/*.png" \
+    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
     -centers results/detect-centers-train_ovary/classifier_RandForest.pkl \
     -out results -n ovary
 
@@ -155,10 +155,10 @@ def main(params):
 
     # perform on new images
     df_stat = pd.DataFrame()
-    wrapper_detection = partial(load_compute_detect_centers, params=params_clf,
-                                path_classif=params['path_classif'],
-                                path_output=params['path_expt'])
-    iterate = tl_expt.WrapExecuteSequence(wrapper_detection, df_paths.iterrows(),
+    _wrapper_detection = partial(load_compute_detect_centers, params=params_clf,
+                                 path_classif=params['path_classif'],
+                                 path_output=params['path_expt'])
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_detection, df_paths.iterrows(),
                                           nb_jobs=params['nb_jobs'])
     for dict_center in iterate:
         df_stat = df_stat.append(dict_center, ignore_index=True)

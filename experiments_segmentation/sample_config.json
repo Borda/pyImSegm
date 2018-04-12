@@ -1,0 +1,13 @@
+{
+	"clr_space": "hsv",
+	"slic_size": 35,
+	"slic_regul": 0.2,
+	"features": {"color": ["mean", "std", "eng"]},
+	"pca_coef": null,
+	"estim_model": "GMM",
+	"balance": "unique",
+	"classif": "RandForest",
+    "nb_classif_search": 250,
+	"gc_edge_type": "model",
+	"gc_regul": 3.0
+}

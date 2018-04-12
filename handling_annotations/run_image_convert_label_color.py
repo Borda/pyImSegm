@@ -3,9 +3,9 @@ Convert label image to colors and other way around
 
 SAMPLE run:
 >> python run_image_convert_label_color.py \
-    -imgs "images/drosophila_ovary_slice/segm/*.png" \
-    -out images/drosophila_ovary_slice/segm_rgb \
-    -clrs images/drosophila_ovary_slice/segm_rgb/dict_label-color.json
+    -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
+    -out data_images/drosophila_ovary_slice/segm_rgb \
+    -clrs data_images/drosophila_ovary_slice/segm_rgb/dict_label-color.json
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -27,8 +27,8 @@ import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
-PATH_INPUT = os.path.join('images', 'drosophila_ovary_slice', 'segm', '*.png')
-PATH_OUTPUT = os.path.join('images', 'drosophila_ovary_slice', 'segm_rgb')
+PATH_INPUT = os.path.join('data_images', 'drosophila_ovary_slice', 'segm', '*.png')
+PATH_OUTPUT = os.path.join('data_images', 'drosophila_ovary_slice', 'segm_rgb')
 NAME_JSON_DICT = 'dictionary_label-color.json'
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 
@@ -143,10 +143,11 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_jobs=1):
 
     dict_colors = load_dict_colours(path_json)
     logging.debug('loaded dictionary %s', repr(dict_colors))
-    wrapper_img_convert = partial(perform_img_convert, path_out=path_out,
-                                  dict_colors=dict_colors)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_img_convert, path_imgs,
-                                          nb_jobs=nb_jobs, desc='convert images')
+    _wrapper_img_convert = partial(perform_img_convert, path_out=path_out,
+                                   dict_colors=dict_colors)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_img_convert, path_imgs,
+                                          nb_jobs=nb_jobs,
+                                          desc='convert images')
     list(iterate)
 
 

@@ -3,9 +3,9 @@ Evaluate superpixels quality regarding given annotation
 
 SAMPLE run:
 >> python run_eval_superpixels.py \
-    -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-    -segm "images/drosophila_ovary_slice/annot_eggs/*.png" \
-    --img_type 2d_gray \
+    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+    -segm "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
+    --img_type 2d_split \
     --slic_size 20 --slic_regul 0.25 --slico 0
 
 Copyright (C) 2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -32,14 +32,14 @@ from run_segm_slic_model_graphcut import TYPES_LOAD_IMAGE
 
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
-PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_CSV_DISTANCES = 'measured_boundary_distances.csv'
 PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(PATH_IMAGES, 'annot_eggs', '*.png'),
     'path_out': os.path.join(PATH_RESULTS, 'compute_boundary_distances'),
-    'img_type': '2d_gray',
+    'img_type': '2d_split',
 }
 
 
@@ -93,7 +93,7 @@ def compute_boundary_distance(idx_row, params, path_out=''):
     _, row = idx_row
     name = os.path.splitext(os.path.basename(row['path_image']))[0]
     img = load_image(row['path_image'], params['img_type'])
-    segm = load_image(row['path_segm'], 'segm')
+    segm = load_image(row['path_segm'], '2d_segm')
 
     logging.debug('segment SLIC...')
     slic = seg_spx.segment_slic_img2d(img,
@@ -126,9 +126,9 @@ def main(params):
 
     df_dist = pd.DataFrame()
 
-    wrapper_eval = partial(compute_boundary_distance, params=params,
-                           path_out=params['path_out'])
-    iterate = tl_expt.WrapExecuteSequence(wrapper_eval, df_paths.iterrows(),
+    _wrapper_eval = partial(compute_boundary_distance, params=params,
+                            path_out=params['path_out'])
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_eval, df_paths.iterrows(),
                                           nb_jobs=params['nb_jobs'],
                                           desc='evaluate SLIC')
     for name, dist in iterate:

@@ -34,7 +34,7 @@ OVERLAP_THRESHOLD = 0.45
 NORM_FUNC = np.median  # other options - mean, max, ...
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
-PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 
 PARAMS = {
@@ -93,10 +93,10 @@ def perform_stage(df_group, stage, path_images, path_out):
     if not os.path.isdir(path_out_stage):
         os.mkdir(path_out_stage)
 
-    wrapper_object = partial(extract_ellipse_object, path_images=path_images,
-                             path_out=path_out_stage, norm_size=norm_size)
+    _wrapper_object = partial(extract_ellipse_object, path_images=path_images,
+                              path_out=path_out_stage, norm_size=norm_size)
     desc = 'stage %i - size %s' % (stage, norm_size)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_object, df_group.iterrows(),
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_object, df_group.iterrows(),
                                           nb_jobs=params['nb_jobs'],
                                           desc=desc)
     list(iterate)

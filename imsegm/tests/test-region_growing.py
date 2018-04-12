@@ -1,7 +1,7 @@
 """
 Unit testing for particular segmentation module
 
-Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
@@ -22,7 +22,7 @@ import imsegm.utils.drawing as tl_visu
 import imsegm.superpixels as seg_spx
 import imsegm.region_growing as seg_rg
 
-PATH_OVARY = os.path.join(tl_data.update_path('images', absolute=True),
+PATH_OVARY = os.path.join(tl_data.update_path('data_images', absolute=True),
                          'drosophila_ovary_slice')
 PATH_IMAGE = os.path.join(PATH_OVARY, 'image')
 PATH_SEGM = os.path.join(PATH_OVARY, 'segm')

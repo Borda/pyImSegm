@@ -118,35 +118,34 @@ Short description of our three sets of experiments that together compose single 
 
 We introduce some useful tools for work with image annotation and segmentation.
 
-* In case you have some smooth color labeling in your images you can remove them with following quantization script.
+* **Quantization:** in case you have some smooth color labeling in your images you can remove them with following quantization script.
     ```bash
     python handling_annotations/run_image_color_quantization.py \
-        -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" \
+        -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png" \
         -m position -thr 0.01 --nb_jobs 2
     ```
-* Concerting image labels into colour space and other way around.
+* **Paint labels:** concerting image labels into colour space and other way around.
     ```bash
     python handling_annotations/run_image_convert_label_color.py \
-        -imgs "images/drosophila_ovary_slice/segm/*.png" \
-        -out images/drosophila_ovary_slice/segm_rgb
+        -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
+        -out data_images/drosophila_ovary_slice/segm_rgb
     ```
-* Having input image and its segmentation we can use simple visualisation which overlap the segmentation over input image. 
+* **Visualisation:** having input image and its segmentation we can use simple visualisation which overlap the segmentation over input image. 
     ```bash
     python handling_annotations/run_overlap_images_segms.py \
-        -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-        -segs images/drosophila_ovary_slice/segm \
+        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -segs data_images/drosophila_ovary_slice/segm \
         -out results/overlap_ovary_segment
     ```
-* Inpainting selected labels in segmentation.
+* **Inpainting** selected labels in segmentation.
     ```bash
     python handling_annotations/run_segm_annot_inpaint.py \
-        -imgs "images/drosophila_ovary_slice/segm/*.png" \
+        -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
         --label 4
     ```
-* Change labels in input segmentation into another set of lables in 1:1 schema.
+* **Replace labels:** change labels in input segmentation into another set of lables in 1:1 schema.
     ```bash
     python handling_annotations/run_segm_annot_relabel.py \
-        -imgs "images/drosophila_ovary_slice/center_levels/*.png" \
         -out results/relabel_center_levels \
         --label_old 2 3 --label_new 1 1 
     ```
@@ -159,31 +158,39 @@ We utilize (un)supervised segmentation according to given training examples or s
 * Evaluate superpixels (with given SLIC parameters) quality against given segmentation. It helps find out best SLIC configuration.
     ```bash
     python experiments_segmentation/run_eval_superpixels.py \
-        -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-        -segm "images/drosophila_ovary_slice/annot_eggs/*.png" \
-        --img_type 2d_gray \
+        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -segm "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
+        --img_type 2d_split \
         --slic_size 20 --slic_regul 0.25 --slico 0
     ```
-* Perform **Unsupervised** segmentation.
+* Perform **Unsupervised** segmentation in images given in CSV
     ```bash
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
-       -list images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-       -imgs "images/langerhans_islets/image/*.jpg" \
-       -out results -n langIsl --nb_classes 3 --visual --nb_jobs 2
+       -l data_images/langerhans_islets/list_lang-isl_imgs-annot.csv -i "" \
+       --path_config experiments_segmentation/sample_config.json \
+       -o results -n langIsl --nb_classes 3 --visual --nb_jobs 2
+    ```
+    OR specified on particuler path:
+    ```bash
+    python experiments_segmentation/run_segm_slic_model_graphcut.py \
+       -l "" -i "data_images/langerhans_islets/image/*.jpg" \
+       --path_config experiments_segmentation/sample_config.json \
+       -o results -n langIsl --nb_classes 3 --visual --nb_jobs 2
     ```
 * Perform **Supervised** segmentation with afterwards evaluation.
     ```bash
     python experiments_segmentation/run_segm_slic_classif_graphcut.py \
-        -list images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
-        -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-        -out results -n Ovary --img_type 2d_gray --visual --nb_jobs 2
+        -l data_images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
+        -i "data_images/drosophila_ovary_slice/image/*.jpg" \
+       --path_config experiments_segmentation/sample_config.json \
+        -o results -n Ovary --img_type 2d_split --visual --nb_jobs 2
     ```
 * For both experiment you can evaluate segmentation results.
     ```bash
     python experiments_segmentation/run_compute-stat_annot-segm.py \
-        -annot "images/drosophila_ovary_slice/annot_struct/*.png" \
+        -annot "data_images/drosophila_ovary_slice/annot_struct/*.png" \
         -segm "results/experiment_segm-supervise_ovary/*.png" \
-        -img "images/drosophila_ovary_slice/image/*.jpg" \
+        -img "data_images/drosophila_ovary_slice/image/*.jpg" \
         -out results/evaluation
     ```
 
@@ -203,16 +210,16 @@ In general, the input is a formatted list (CSV file) of input images and annotat
 1. With zone annotation, we train a classifier for center candidate prediction. The annotation can be a CSV file with annotated centers as points, and the zone of positive examples is set uniformly as the circular neighborhood around these points. Another way (preferable) is to use annotated image with marked zones for positive, negative and neutral examples.
     ```bash
     python experiments_ovary_centres/run_center_candidate_training.py -list none \
-        -segs "images/drosophila_ovary_slice/segm/*.png" \
-        -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-        -centers "images/drosophila_ovary_slice/center_levels/*.png" \
+        -segs "data_images/drosophila_ovary_slice/segm/*.png" \
+        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -centers "data_images/drosophila_ovary_slice/center_levels/*.png" \
         -out results -n ovary
     ```
 1. Having trained classifier we perfom center prediction composed from two steps: i. center candidate clustering and candidate clustering.
     ```bash
     python experiments_ovary_centres/run_center_prediction.py -list none \
-        -segs "images/drosophila_ovary_slice/segm/*.png" \
-        -imgs "images/drosophila_ovary_slice/image/*.jpg" \
+        -segs "data_images/drosophila_ovary_slice/segm/*.png" \
+        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
         -centers results/detect-centers-train_ovary/classifier_RandForest.pkl \
         -out results -n ovary
     ```
@@ -269,7 +276,7 @@ python setup.py install
 1. Run several segmentation techniques on each image.
     ```bash
     python experiments_ovary_detect/run_ovary_egg-segmentation.py  \
-        -list images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
+        -list data_images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
         -out output -n ovary_image --nb_jobs 1 \
         -m ellipse_moments \
            ellipse_ransac_mmt \
@@ -289,8 +296,8 @@ python setup.py install
 1. In the end, cut individual segmented objects comes as minimal bounding box.
     ```bash
     python experiments_ovary_detect/run_cut_segmented_objects.py \
-        -annot "images/drosophila_ovary_slice/annot_eggs/*.png" \
-        -img "images/drosophila_ovary_slice/segm/*.png" \
+        -annot "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
+        -img "data_images/drosophila_ovary_slice/segm/*.png" \
         -out results/cut_images --padding 50
     ```
 1. Finally, performing visualisation of segmentation results toghter with expert annotation.

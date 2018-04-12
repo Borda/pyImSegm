@@ -14,9 +14,9 @@ The output is list of potential center candidates
 
 SAMPLE run:
 >> python run_center_candidate_training.py -list none \
-    -imgs "images/drosophila_ovary_slice/image/*.jpg" \
-    -segs "images/drosophila_ovary_slice/segm/*.png" \
-    -centers "images/drosophila_ovary_slice/center_levels/*.png" \
+    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+    -segs "data_images/drosophila_ovary_slice/segm/*.png" \
+    -centers "data_images/drosophila_ovary_slice/center_levels/*.png" \
     -out results -n ovary
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -103,7 +103,7 @@ CENTER_PARAMS = {
     'center_dist_thr': 50,  # distance to from annotated center as a point
 }
 
-PATH_IMAGES = os.path.join(tl_data.update_path('images'),
+PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 CENTER_PARAMS.update({
@@ -270,12 +270,12 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
             centers = np.array(LUT_ANNOT_CENTER_RELABEL)[centers]
         else:
             logging.warning('not supported file format %s', ext)
+            centers = None
     else:
         centers = None
 
     if is_drawing(path_out):
-        export_visual_input_image_segm(path_out, idx_name, img_rgb, segm,
-                                       centers)
+        export_visual_input_image_segm(path_out, idx_name, img_rgb, segm, centers)
 
     return idx_name, img_rgb, segm, centers
 
@@ -459,10 +459,11 @@ def dataset_load_images_segms_compute_features(params, df_paths,
     dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
     logging.info('loading input data (images, segmentation and centers)')
     path_show_in = os.path.join(params['path_expt'], FOLDER_INPUT)
-    wrapper_load_data = partial(load_image_segm_center, path_out=path_show_in,
-                                dict_relabel=params['dict_relabel'])
-    iterate = tl_expt.WrapExecuteSequence(wrapper_load_data, df_paths.iterrows(),
-                                          nb_jobs=nb_jobs, desc='loading input data')
+    _wrapper_load = partial(load_image_segm_center, path_out=path_show_in,
+                            dict_relabel=params['dict_relabel'])
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_load, df_paths.iterrows(),
+                                          nb_jobs=nb_jobs,
+                                          desc='loading input data')
     for name, img, seg, center in iterate:
         dict_imgs[name] = img
         dict_segms[name] = seg
@@ -472,10 +473,10 @@ def dataset_load_images_segms_compute_features(params, df_paths,
     logging.info('estimate candidate points and compute features')
     gene_name_img_seg = ((name, dict_imgs[name], dict_segms[name])
                           for name in dict_imgs)
-    wrapper_points_features = partial(wrapper_estim_points_compute_features,
-                                      params=params)
+    _wrapper_pnt_features = partial(wrapper_estim_points_compute_features,
+                                    params=params)
     feature_names = None
-    iterate = tl_expt.WrapExecuteSequence(wrapper_points_features,
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_pnt_features,
                                           gene_name_img_seg, nb_jobs=nb_jobs,
                                           desc='estimate candidates & features')
     for name, slic, points, features, feature_names in iterate:
@@ -572,14 +573,14 @@ def detect_center_candidates(name, image, segm, centers_gt, slic, points,
 
     :param str name:
     :param ndarray image:
-    :param ndarray seg:
+    :param ndarray segm:
     :param centers_gt:
     :param slic: np.array
     :param [(int, int)] points:
     :param features:
     :param [str] feature_names:
     :param {} params:
-    :param paths: path
+    :param str path_out:
     :param classif: obj
     :return {}:
     """
@@ -650,11 +651,11 @@ def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
     gener_data = ((n, dict_imgs[n], dict_segms[n], dict_centers[n],
                    dict_slics[n], dict_points[n], dict_features[n],
                    feature_names) for n in dict_imgs)
-    wrapper_detection = partial(wrapper_detect_center_candidates,
-                                params=params, classif=classif,
-                                path_output=params['path_expt'])
+    _wrapper_detection = partial(wrapper_detect_center_candidates,
+                                 params=params, classif=classif,
+                                 path_output=params['path_expt'])
     df_stat = pd.DataFrame()
-    iterate = tl_expt.WrapExecuteSequence(wrapper_detection,
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_detection,
                                           gener_data, nb_jobs=params['nb_jobs'])
     for dict_stat in iterate:
         df_stat = df_stat.append(dict_stat, ignore_index=True)

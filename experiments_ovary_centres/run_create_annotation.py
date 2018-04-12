@@ -157,7 +157,6 @@ def main(path_segs, path_out, nb_jobs):
     :param str path_segs: path with image pattern of images - obj segmentation
     :param str path_out:
     :param int nb_jobs: number of processes in parallel
-    :return ndarray:
     """
     logging.info('running...')
 
@@ -171,10 +170,10 @@ def main(path_segs, path_out, nb_jobs):
             'missing: %s' % path_out
         os.mkdir(path_out)
 
-    wrapper_create_annot_centers = partial(create_annot_centers,
-                                           path_out_seg=path_out,
-                                           path_out_csv=path_out)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_create_annot_centers,
+    _wrapper_create_annot_centers = partial(create_annot_centers,
+                                            path_out_seg=path_out,
+                                            path_out_csv=path_out)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_create_annot_centers,
                                           list_imgs, nb_jobs=nb_jobs,
                                           desc='annotating images')
     list(iterate)

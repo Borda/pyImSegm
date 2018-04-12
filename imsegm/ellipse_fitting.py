@@ -1,7 +1,7 @@
 """
 Framework for ellipse fitting
 
-Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import numpy as np
@@ -41,11 +41,6 @@ class EllipseModelSegm(sk_fit.EllipseModel):
     The ``params`` attribute contains the parameters in the following order::
 
         xc, yc, a, b, theta
-
-    Attributes
-    ----------
-    params : tuple
-        Ellipse model parameters  `xc`, `yc`, `a`, `b`, `theta`.
 
     Example
     -------
@@ -157,7 +152,7 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
         ``is_model_valid(model, *random_data)`` and
         ``is_data_valid(*random_data)`` must all take each points array as
         separate arguments.
-    model_class : object
+    model_class : class
         Object with the following object methods:
 
          * ``success = estimate(*points)``
@@ -171,11 +166,6 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
         Maximum distance for a points point to be classified as an inlier.
     max_trials : int, optional
         Maximum number of iterations for random sample selection.
-    stop_sample_num : int, optional
-        Stop iteration if at least this number of inliers are found.
-    stop_residuals_sum : float, optional
-        Stop iteration if sum of residuals is less than or equal to this
-        threshold.
 
 
     Returns

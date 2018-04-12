@@ -1,7 +1,7 @@
 """
 Unit testing for particular segmentation module
 
-Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
@@ -20,7 +20,7 @@ import imsegm.ellipse_fitting as seg_fit
 
 # set some default paths
 PATH_OUTPUT = tl_data.update_path('output', absolute=True)
-PATH_OVARY = os.path.join(tl_data.update_path('images', absolute=True),
+PATH_OVARY = os.path.join(tl_data.update_path('data_images', absolute=True),
                           'drosophila_ovary_slice')
 PATH_IMAGES = os.path.join(PATH_OVARY, 'image')
 PATH_SEGM = os.path.join(PATH_OVARY, 'segm')

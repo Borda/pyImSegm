@@ -2,7 +2,7 @@
 Supporting file to create and set parameters for scikit-learn classifiers
 and some prepossessing functions that support classification
 
-Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
@@ -11,8 +11,7 @@ import logging
 import random
 import collections
 import traceback
-# import gc
-# import time
+import itertools
 # import multiprocessing as mproc
 
 import numpy as np
@@ -261,8 +260,8 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     :return {str: float}:
 
     >>> np.random.seed(0)
-    >>> y_true = np.random.randint(0, 3, 25)
-    >>> y_pred = np.random.randint(0, 2, 25)
+    >>> y_true = np.random.randint(0, 3, 25) * 2
+    >>> y_pred = np.random.randint(0, 2, 25) * 2
     >>> d = compute_classif_metrics(y_true, y_true)
     >>> d['accuracy']  # doctest: +ELLIPSIS
     1.0
@@ -273,6 +272,9 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     0.32...
     >>> d['confusion']
     [[3, 7, 0], [5, 5, 0], [1, 4, 0]]
+    >>> d = compute_classif_metrics(y_pred, y_pred)
+    >>> d['accuracy']  # doctest: +ELLIPSIS
+    1.0
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
@@ -282,18 +284,13 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     logging.debug('unique lbs true: %s, predict %s',
                   repr(np.unique(y_true)), repr(np.unique(y_pred)))
 
-    uq_y_true = np.unique(y_true)
-    # in case the are just two classes relabel them as [0, 1] only
-    # solving sklearn error:
+    uq_labels = np.unique(np.hstack((y_true, y_pred)))
+    # in case there are just two classes, relabel them as [0, 1], sklearn error:
     #  "ValueError: pos_label=1 is not a valid label: array([  0, 255])"
-    if np.array_equal(sorted(uq_y_true), sorted(np.unique(y_pred))) \
-            and len(uq_y_true) <= 2:
-        logging.debug('relabeling original %s to [0, 1]', repr(uq_y_true))
-        lut = np.zeros(uq_y_true.max() + 1)
-        if len(uq_y_true) == 2:
-            lut[uq_y_true[1]] = 1
-        y_true = lut[y_true]
-        y_pred = lut[y_pred]
+    if len(uq_labels) <= 2:
+        # NOTE, this is temporal just for purposes of computing statistic
+        y_true = relabel_sequential(y_true, uq_labels)
+        y_pred = relabel_sequential(y_pred, uq_labels)
 
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.precision_recall_fscore_support.html
     EVAL_STR = 'EVALUATION: {:<2} PRE: {:.3f} REC: {:.3f} F1: {:.3f} S: {:>6}'
@@ -538,6 +535,27 @@ def export_results_clf_search(path_out, clf_name, clf_search):
         f.write('\n'.join(rows))
 
 
+def relabel_sequential(labels, uq_lbs=None):
+    """ relabel sequantila vetor staring from 0
+
+    :param [] labels:
+    :return []:
+
+    >>> relabel_sequential([0, 0, 0, 5, 5, 5, 0, 5])
+    [0, 0, 0, 1, 1, 1, 0, 1]
+    """
+    labels = np.asarray(labels)
+    if uq_lbs is None:
+        uq_lbs = np.unique(labels)
+    lut = np.zeros(np.max(uq_lbs) + 1)
+    logging.debug('relabeling original %s to %s', repr(uq_lbs),
+                  range(len(uq_lbs)))
+    for i, lb in enumerate(uq_lbs):
+        lut[lb] = i
+    labesl_new = lut[labels].astype(labels.dtype).tolist()
+    return labesl_new
+
+
 def create_classif_train_export(clf_name, features, labels, cross_val=10,
                                 nb_search_iter=1, search_type='random',
                                 nb_jobs=NB_JOBS_CLASSIF_SEARCH,
@@ -600,7 +618,9 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
         clf_search = create_classif_search(clf_name, clf_pipeline, nb_labels,
                                            search_type, cross_val,
                                            nb_search_iter, nb_jobs)
-        clf_search.fit(features, labels)
+
+        # NOTE, this is temporal just for purposes of computing statistic
+        clf_search.fit(features, relabel_sequential(labels))
 
         logging.info('Best score: %s', repr(clf_search.best_score_))
         clf_pipeline = clf_search.best_estimator_
@@ -609,9 +629,9 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
         logging.info('Best parameters set: \n %s', repr(best_parameters))
         if path_out is not None and os.path.isdir(path_out):
             export_results_clf_search(path_out, clf_name, clf_search)
-    else:
-        # while there is no search, just train the best one
-        clf_pipeline.fit(features, labels)
+
+    # while there is no search, just train the best one
+    clf_pipeline.fit(features, labels)
 
     if path_out is not None and os.path.isdir(path_out):
         path_classif = save_classifier(path_out, clf_pipeline, clf_name,
@@ -673,7 +693,11 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     df_scoring = pd.DataFrame()
     for scoring in scorings:
         try:
+            uq_labels = np.unique(labels)
             # ValueError: pos_label=1 is not a valid label: array([0, 2])
+            if len(uq_labels) <= 2:
+                # NOTE, this is temporal just for purposes of computing stat.
+                labels = relabel_sequential(labels, uq_labels)
             scores = model_selection.cross_val_score(classif, features, labels,
                                                      cv=cross_val,
                                                      scoring=scoring)
@@ -682,7 +706,6 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
             df_scoring[scoring] = scores
         except Exception:
             logging.error(traceback.format_exc())
-    df_stat = df_scoring.describe()
 
     if path_out is not None:
         assert os.path.exists(path_out), 'missing: "%s"' % path_out
@@ -690,10 +713,16 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
         path_csv = os.path.join(path_out, name_csv)
         df_scoring.to_csv(path_csv)
 
-        name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'statistic')
-        path_csv = os.path.join(path_out, name_csv)
-        df_stat.to_csv(path_csv)
-    logging.info('cross_val scores: \n %s', repr(df_stat))
+    if len(df_scoring) > 1:
+        df_stat = df_scoring.describe()
+        logging.info('cross_val scores: \n %s', repr(df_stat))
+        if path_out is not None:
+            assert os.path.exists(path_out), 'missing: "%s"' % path_out
+            name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'statistic')
+            path_csv = os.path.join(path_out, name_csv)
+            df_stat.to_csv(path_csv)
+    else:
+        logging.warning('no statistic collected')
     return df_scoring
 
 
@@ -709,6 +738,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     :param [int] labels: annotation for samples
     :param object cross_val:
     :param str path_out: path for exporting statistic
+    :param int nb_thr: number of thresholds
     :return:
 
     >>> np.random.seed(0)
@@ -1136,7 +1166,7 @@ class HoldOut:
 
     Parameters
     ----------
-    n : total number of samples
+    nb : total number of samples
     hold_idx : int index where the test starts
     random_state :  Seed for the random number generator.
 
@@ -1328,12 +1358,10 @@ class CrossValidatePSetsOut:
         """
         for i in range(0, len(self.set_sizes), self.nb_hold_out):
             test = self.sets_order[i:i + self.nb_hold_out]
-            inds_train, inds_test = [], []
-            for i in self.sets_order:
-                if i in test:
-                    inds_test += self.set_indexes[i]
-                else:
-                    inds_train += self.set_indexes[i]
+            inds_train = list(itertools.chain.from_iterable(
+                self.set_indexes[i] for i in self.sets_order if i not in test))
+            inds_test = list(itertools.chain.from_iterable(
+                self.set_indexes[i] for i in self.sets_order if i in test))
             yield inds_train, inds_test
 
     def __len__(self):

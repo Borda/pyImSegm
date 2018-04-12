@@ -46,7 +46,7 @@ NAME_DIR_VISUAL_3 = 'ALL_visualisation-3'
 SKIP_DIRS = ['input', 'simple',
              NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3]
 NAME_CSV_STAT = 'segmented-eggs_%s.csv'
-PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 PATHS = {
     'images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
@@ -245,7 +245,7 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
     for n in ['mean', 'std']:
         names = ['%s (%s)' % (c, n) for c in cols]
         dict_eval.update(zip(names, df_summary.T[n].values.tolist()))
-    dict_eval.update(zip(['%s (median)' % (c) for c in cols],
+    dict_eval.update(zip(['%s (median)' % c for c in cols],
                          df_eval.median(axis=0).values.tolist()))
 
     return dict_eval
@@ -271,9 +271,9 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
                     [NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3])
 
     df_all = pd.DataFrame()
-    wrapper_eval = partial(evaluate_folder, dict_paths=dict_paths,
-                           export_visual=export_visual)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_eval, list_results,
+    _wrapper_eval = partial(evaluate_folder, dict_paths=dict_paths,
+                            export_visual=export_visual)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_eval, list_results,
                                           nb_jobs=nb_jobs)
     for dict_eval in iterate:
         df_all = df_all.append(dict_eval, ignore_index=True)

@@ -211,10 +211,10 @@ def main(params):
 
     logging.info('run clustering...')
     df_paths_new = pd.DataFrame()
-    wrapper_clustering = partial(cluster_points_draw_export, params=params,
-                                 path_out=params['path_expt'])
-    iterate = tl_expt.WrapExecuteSequence(wrapper_clustering,
-                                          (dict(row) for idx, row in df_paths.iterrows()),
+    _wrapper_clustering = partial(cluster_points_draw_export, params=params,
+                                  path_out=params['path_expt'])
+    rows = (dict(row) for idx, row in df_paths.iterrows())
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_clustering, rows,
                                           nb_jobs=params['nb_jobs'])
     for dict_center in iterate:
         df_paths_new = df_paths_new.append(dict_center, ignore_index=True)

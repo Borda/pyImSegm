@@ -24,7 +24,7 @@ import imsegm.utils.data_io as tl_data
 import imsegm.region_growing as tl_rg
 
 PATH_DATA = tl_data.update_path('data', absolute=True)
-PATH_IMAGES = os.path.join(tl_data.update_path('images'), 'drosophila_ovary_slice')
+PATH_IMAGES = os.path.join(tl_data.update_path('data_images'), 'drosophila_ovary_slice')
 PATH_ANNOT = os.path.join(PATH_IMAGES, 'annot_eggs', '*.png')
 RAY_STEP = 10
 # names of default files for models

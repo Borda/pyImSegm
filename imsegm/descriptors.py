@@ -5,7 +5,7 @@ Framework for feature extraction
  * Ray features
  * label histogram
 
-Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
@@ -28,13 +28,14 @@ except Exception:
     logging.warning('descriptors: using pure python libraries')
     USE_CYTHON = False
 
+NAMES_FEATURE_FLAGS = ('mean', 'std', 'energy', 'median', 'meanGrad')
 DEFAULT_FILTERS_SIGMAS = (np.sqrt(2), 2, 2 * np.sqrt(2), 4)
 SHORT_FILTERS_SIGMAS = (np.sqrt(2), 2, 4)
-FEATURES_SET_ALL = {'color': ('mean', 'std', 'eng', 'median'),
-                    'tLM': ('mean', 'std', 'eng', 'mG')}
-FEATURES_SET_COLOR = {'color': ('mean', 'std', 'eng')}
-FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'eng')}
-FEATURES_SET_TEXTURE_SHORT = {'tLM_s': ('mean', 'std', 'eng')}
+FEATURES_SET_ALL = {'color': ('mean', 'std', 'energy', 'median', 'meanGrad'),
+                    'tLM': ('mean', 'std', 'energy', 'median', 'meanGrad')}
+FEATURES_SET_COLOR = {'color': ('mean', 'std', 'energy')}
+FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
+FEATURES_SET_TEXTURE_SHORT = {'tLM_s': ('mean', 'std', 'energy')}
 HIST_CIRCLE_DIAGONALS = (10, 20, 30, 40, 50)
 # maxila reposnse is bounded by fix number to preven overflowing
 MAX_SIGNAL_RESPONSE = 1.e6
@@ -132,6 +133,21 @@ def _check_color_image(image):
     if image.ndim != 3 or image.shape[2] != 3:
         raise ValueError('image is not RGB with dims %s' % repr(image.shape))
     return True
+
+
+def _check_unrecognised_feature_group(dict_feature_flags):
+    unknown = [k for k in dict_feature_flags
+               if k not in ('color', 'tLM', 'tLM_s')]
+    if len(unknown) > 0:
+        logging.warning('unrecognised following feature groups: %s',
+                        repr(unknown))
+
+
+def _check_unrecognised_feature_names(list_feature_flags):
+    unknown = [k for k in list_feature_flags if k not in NAMES_FEATURE_FLAGS]
+    if len(unknown) > 0:
+        logging.warning('unrecognised following feature names: %s',
+                        repr(unknown))
 
 
 def cython_img2d_color_mean(im, seg):
@@ -609,8 +625,7 @@ def numpy_img3d_gray_median(im, seg):
 
 
 def compute_image3d_gray_statistic(image, segm,
-                                   list_feature_flags=('mean', 'std', 'eng',
-                                                       'median', 'mG'),
+                                   list_feature_flags=NAMES_FEATURE_FLAGS,
                                    ch_name='gray'):
     """ compute complete descriptors / statistic on gray (3D) images
 
@@ -669,7 +684,7 @@ def compute_image3d_gray_statistic(image, segm,
         features.append(std)
         names += ['%s_std' % ch_name]
     # ENERGY
-    if 'eng' in list_feature_flags:
+    if 'energy' in list_feature_flags:
         if USE_CYTHON:
             energy = cython_img3d_gray_energy(image, segm)
         else:
@@ -682,7 +697,7 @@ def compute_image3d_gray_statistic(image, segm,
         features.append(median)
         names += ['%s_median' % ch_name]
     # mean Gradient
-    if 'mG' in list_feature_flags:
+    if 'meanGrad' in list_feature_flags:
         grad_matrix = np.zeros_like(image)
         for i in range(image.shape[0]):
             grad_matrix[i, :, :] = np.sum(np.gradient(image[i]), axis=0)
@@ -692,6 +707,7 @@ def compute_image3d_gray_statistic(image, segm,
             grad = numpy_img3d_gray_mean(grad_matrix, segm)
         features.append(grad)
         names += ['%s_meanGrad' % ch_name]
+    _check_unrecognised_feature_names(list_feature_flags)
     features = np.concatenate(tuple([fts] for fts in features), axis=0)
     features = np.nan_to_num(features).T
     # normalise +/- zeros as set all as positive
@@ -702,8 +718,7 @@ def compute_image3d_gray_statistic(image, segm,
 
 
 def compute_image2d_color_statistic(image, segm,
-                                    list_feature_flags=('mean', 'std', 'eng',
-                                                        'median'),
+                                    list_feature_flags=NAMES_FEATURE_FLAGS,
                                     ch_name='color'):
     """ compute complete descriptors / statistic on color (2D) images
 
@@ -718,18 +733,17 @@ def compute_image2d_color_statistic(image, segm,
     >>> image[:, 4:9, 2] = 2
     >>> segm = np.array([[0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
     ...                  [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]])
-    >>> features, names = compute_image2d_color_statistic(image, segm,
-    ...                                       ['mean', 'std', 'eng', 'median'])
+    >>> features, names = compute_image2d_color_statistic(image, segm)
     >>> names  # doctest: +NORMALIZE_WHITESPACE
     ['color-ch1_mean', 'color-ch2_mean', 'color-ch3_mean',
      'color-ch1_std', 'color-ch2_std', 'color-ch3_std',
      'color-ch1_energy', 'color-ch2_energy', 'color-ch3_energy',
-     'color-ch1_median', 'color-ch2_median', 'color-ch3_median']
+     'color-ch1_median', 'color-ch2_median', 'color-ch3_median',
+     'color-ch1_meanGrad', 'color-ch2_meanGrad', 'color-ch3_meanGrad']
     >>> features.shape
-    (2, 12)
+    (2, 15)
     >>> np.round(features, 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [[0.6, 1.2, 0.4, 0.5, 1.5, 0.8, 0.6, 3.6, 0.8, 1.0, 0.0, 0.0],
-     [0.2, 1.2, 1.6, 0.4, 1.5, 0.8, 0.2, 3.6, 3.2, 0.0, 0.0, 2.0]]
+    [[0.6, 1.2, 0.4, 0.5, 1.5, 0.8, 0.6, 3.6, 0.8, 1.0, 0.0, 0.0, 0.2, 0.6, 0.4],     [0.2, 1.2, 1.6, 0.4, 1.5, 0.8, 0.2, 3.6, 3.2, 0.0, 0.0, 2.0, -0.2, -0.6, -0.6]]
     """
     _check_color_image(image)
     _check_color_image_segm(image, segm)
@@ -757,7 +771,7 @@ def compute_image2d_color_statistic(image, segm,
         features = np.hstack((features, std))
         names += ['%s_std' % n for n in ch_names]
     # ENERGY
-    if 'eng' in list_feature_flags:
+    if 'energy' in list_feature_flags:
         if USE_CYTHON:
             energy = cython_img2d_color_energy(image, segm)
         else:
@@ -769,6 +783,18 @@ def compute_image2d_color_statistic(image, segm,
         median = numpy_img2d_color_median(image, segm)
         features = np.hstack((features, median))
         names += ['%s_median' % n for n in ch_names]
+    # mean Gradient
+    if 'meanGrad' in list_feature_flags:
+        grad_matrix = np.zeros_like(image)
+        for i in range(image.shape[-1]):
+            grad_matrix[:, :, i] = np.sum(np.gradient(image[:, :, i]), axis=0)
+        if USE_CYTHON:
+            grad = cython_img2d_color_mean(grad_matrix, segm)
+        else:
+            grad = numpy_img2d_color_mean(grad_matrix, segm)
+        features = np.hstack((features, grad))
+        names += ['%s_meanGrad' % n for n in ch_names]
+    _check_unrecognised_feature_names(list_feature_flags)
     # mean Gradient
     # G = np.zeros_like(image)
     # for i in range(image.shape[0]):
@@ -1053,9 +1079,9 @@ def compute_selected_features_gray3d(img, segments,
     >>> names  # doctest: +NORMALIZE_WHITESPACE
     ['gray_mean', 'gray_std', 'gray_median']
     >>> _ = compute_selected_features_gray3d(img, slic,
-    ...                                      {'tLM': ['median', 'std', 'eng']})
+    ...                                  {'tLM': ['median', 'std', 'energy']})
     >>> fts, names = compute_selected_features_gray3d(img, slic,
-    ...                                      {'tLM_s': ['mean', 'std', 'eng']})
+    ...                                  {'tLM_s': ['mean', 'std', 'energy']})
     >>> fts.shape
     (4, 45)
     >>> names  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -1082,6 +1108,8 @@ def compute_selected_features_gray3d(img, segments,
                                                    'short')
         features.append(fts)
         names += n
+    _check_unrecognised_feature_group(dict_feature_flags)
+
     if len(features) == 0:
         logging.error('not supported features: %s', repr(dict_feature_flags))
     features = np.concatenate(tuple(features), axis=1)
@@ -1095,7 +1123,7 @@ def compute_selected_features_gray3d(img, segments,
 
 def compute_selected_features_gray2d(img, segments,
                                      dict_features_flags=FEATURES_SET_ALL):
-    """
+    """ compute selected features for gray image 2D
 
     :param ndarray img:
     :param ndarray segments:
@@ -1113,14 +1141,14 @@ def compute_selected_features_gray2d(img, segments,
     array([[ 0.9  ,  1.136,  0.5  ],
            [ 0.7  ,  1.187,  0.   ]])
     >>> _ = compute_selected_features_gray2d(image, segm,
-    ...                                      {'tLM': ['mean', 'std', 'median']})
+    ...                                  {'tLM': ['mean', 'std', 'median']})
     >>> features, names = compute_selected_features_gray2d(image, segm,
-    ...                                  {'tLM_s': ['mean', 'std', 'eng']})
+    ...                                  {'tLM_s': ['mean', 'std', 'energy']})
     >>> features.shape
     (2, 45)
     >>> features, names = compute_selected_features_gray2d(image, segm)
     >>> features.shape
-    (2, 84)
+    (2, 105)
     """
     _check_gray_image_segm(img, segments)
 
@@ -1134,7 +1162,7 @@ def compute_selected_features_gray2d(img, segments,
 
 def compute_selected_features_color2d(img, segments,
                                       dict_feature_flags=FEATURES_SET_ALL):
-    """ compute selected features color2d
+    """ compute selected features color image 2D
 
     :param ndarray img:
     :param ndarray segments:
@@ -1153,14 +1181,14 @@ def compute_selected_features_color2d(img, segments,
     array([[ 0.6 ,  1.2 ,  0.4 ,  0.49,  1.47,  0.8 ,  1.  ,  0.  ,  0.  ],
            [ 0.2 ,  1.2 ,  1.6 ,  0.4 ,  1.47,  0.8 ,  0.  ,  0.  ,  2.  ]])
     >>> _ = compute_selected_features_color2d(image, segm,
-    ...                                       {'tLM': ['mean', 'std', 'eng']})
+    ...                                   {'tLM': ['mean', 'std', 'energy']})
     >>> features, names = compute_selected_features_color2d(image, segm,
-    ...                                   {'tLM_s': ['mean', 'std', 'eng']})
+    ...                                   {'tLM_s': ['mean', 'std', 'energy']})
     >>> features.shape
     (2, 135)
     >>> features, names = compute_selected_features_color2d(image, segm)
     >>> features.shape
-    (2, 192)
+    (2, 315)
     """
     _check_color_image(img)
     features = np.empty((np.max(segments) + 1, 0))
@@ -1181,6 +1209,8 @@ def compute_selected_features_color2d(img, segments,
                                                    'short')
         features = np.concatenate((features, fts), axis=1)
         names += n
+    _check_unrecognised_feature_group(dict_feature_flags)
+
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
@@ -1636,7 +1666,7 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     if isinstance(segm_open, int):
         seg_binary = morphology.opening(seg_binary, morphology.disk(segm_open))
 
-    pos_rays, pos_shift = list(), list()
+    pos_rays, pos_shift, ray_dist = [], [], []
     for pos in list_positions:
         # logging.debug('position %s', repr(pos))
         ray_dist = compute_ray_features_segm_2d(seg_binary, pos, angle_step,
@@ -1701,18 +1731,18 @@ def interpolate_ray_dist(ray_dists, order='spline'):
                                                               y_train_ext)
         ray_dists[missing] = uinterp_us(x_space[missing])
     elif order == 'cos':
-        def fn_cos(x, t):
+        def _fn_cos(x, t):
             return x[0] + x[1] * np.sin(x[2] + x[3] * t)
 
-        def fn_cos_residual(x, t, y):
-            return fn_cos(x, t) - y
+        def _fn_cos_residual(x, t, y):
+            return _fn_cos(x, t) - y
 
         x0 = np.array([np.mean(y_train), (y_train.max() - y_train.min()) / 2.,
                        0, len(x_space) / np.pi])
-        lsm_res = optimize.least_squares(fn_cos_residual, x0, gtol=1e-1,
+        lsm_res = optimize.least_squares(_fn_cos_residual, x0, gtol=1e-1,
                                          # loss='soft_l1', f_scale=0.1,
                                          args=(x_train, y_train))
-        ray_dists[missing] = fn_cos(lsm_res.x, x_space[missing])
+        ray_dists[missing] = _fn_cos(lsm_res.x, x_space[missing])
 
     return ray_dists
 

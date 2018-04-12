@@ -1,7 +1,7 @@
 """
 Framework for labeling
 
-Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
@@ -9,6 +9,8 @@ import logging
 import numpy as np
 from scipy import ndimage
 import skimage.segmentation as sk_segm
+
+import imsegm.utils.data_io as tl_data
 
 
 def contour_binary_map(seg, label=1, include_boundary=False):
@@ -104,8 +106,8 @@ def contour_coords(seg, label=1, include_boundary=False):
 def binary_image_from_coords(coords, size):
     """ create binary image just from point contours
 
-    :param ndarray seg: integer images, typically a segmentation
-    :param int label: selected singe label in segmentation
+    :param ndarray coords:
+    :param (int, int) size:
     :return ndarray:
 
     >>> img = np.zeros((6, 6), dtype=int)
@@ -156,7 +158,7 @@ def compute_distance_map(seg, label=1):
 def segm_labels_assignment(segm, segm_gt):
     """ create labels assign to the particular regions
 
-    :param ndarray seg: input segmentation
+    :param ndarray segm: input segmentation
     :param ndarray segm_gt: true segmentation
     :return:
 
@@ -673,3 +675,41 @@ def compute_boundary_distances(segm_ref, segm):
     assert len(points) == len(dist), \
         'number of points and disntances should be equal'
     return points, dist
+
+
+def assume_bg_on_boundary(segm, bg_label=0, boundary_size=1):
+    """ swap labels such that the bacround label will be mostly on image boundary
+
+    :param ndarray segm:
+    :param int bg_label:
+    :return:
+
+    >>> segm = np.zeros((6, 12), dtype=int)
+    >>> segm[1:4, 4:] = 2
+    >>> assume_bg_on_boundary(segm, boundary_size=1)
+    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+    >>> segm[segm == 0] = 1
+    >>> assume_bg_on_boundary(segm, boundary_size=1)
+    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+    """
+    boundary_lb = tl_data.get_image2d_boundary_color(segm, size=boundary_size)
+    used_lbs = np.unique(segm)
+    if boundary_lb not in used_lbs:
+        segm[segm == boundary_lb] = bg_label
+    else:
+        lut = list(range(used_lbs.max() + 1))
+        lut[boundary_lb] = bg_label
+        lut[bg_label] = boundary_lb
+        segm = np.array(lut)[segm]
+    return segm
+

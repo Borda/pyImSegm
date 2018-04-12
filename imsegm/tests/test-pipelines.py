@@ -1,7 +1,7 @@
 """
 Unit testing for particular segmentation module
 
-Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
@@ -79,8 +79,9 @@ def run_segm2d_gmm_gc(img2d, dir_name, types_edge=('model', 'const'),
     if not os.path.isdir(path_dir):
         os.mkdir(path_dir)
 
-    scaler, pca, model = pipelines.estim_model_classes_group(
-        [img2d], proba_type='GMM', **dict_params)
+    model, _ = pipelines.estim_model_classes_group([img2d],
+                                                   proba_type='GMM',
+                                                   **dict_params)
     dict_params.pop('nb_classes', None)
     dict_params.pop('pca_coef', None)
 
@@ -92,13 +93,13 @@ def run_segm2d_gmm_gc(img2d, dir_name, types_edge=('model', 'const'),
             #     dict_debug_imgs=dict_imgs, **dict_params)
 
             seg = pipelines.segment_color2d_slic_features_model_graphcut(
-                img2d, scaler, pca, model, gc_regul=regul, gc_edge_type=edge,
+                img2d, model, gc_regul=regul, gc_edge_type=edge,
                 dict_debug_imgs=dict_imgs, **dict_params)
 
             show_segm_debugs_2d(dict_imgs, path_dir,
                         'fig_regul-%.2f_edge-%s_debug.png' % (regul, edge))
             show_segm_results_2d(img2d, seg, path_dir,
-                         'fig_regul-%.2f_edge-%s.png' % (regul, edge))
+                        'fig_regul-%.2f_edge-%s.png' % (regul, edge))
             dict_imgs = None
 
 
@@ -198,7 +199,7 @@ class TestPipelinesClassif(unittest.TestCase):
         classif, _, _, _ = pipelines.train_classif_color2d_slic_features(
             [img], [annot], sp_size, dict_features=FEATURES_TEXTURE)
 
-        _ = pipelines.segment_color2d_slic_features_classif_graphcut(
+        _ = pipelines.segment_color2d_slic_features_model_graphcut(
                     img, classif, sp_size=sp_size, gc_regul=0.,
                     dict_features=FEATURES_TEXTURE, dict_debug_imgs=dict_imgs)
         show_segm_debugs_2d(dict_imgs, path_dir, name % (1, 0, '_debug'))
@@ -206,12 +207,12 @@ class TestPipelinesClassif(unittest.TestCase):
         for edge in tp_edge:
             dict_imgs = dict()
             for regul in list_regul:
-                seg = pipelines.segment_color2d_slic_features_classif_graphcut(
+                seg = pipelines.segment_color2d_slic_features_model_graphcut(
                     img, classif, sp_size=sp_size, gc_regul=regul, gc_edge_type=edge,
                     dict_features=FEATURES_TEXTURE)
                 show_segm_results_2d(img, seg, path_dir, name % (1, regul, edge))
 
-                seg = pipelines.segment_color2d_slic_features_classif_graphcut(
+                seg = pipelines.segment_color2d_slic_features_model_graphcut(
                     img2, classif, sp_size=sp_size, gc_regul=regul, gc_edge_type=edge,
                     dict_features=FEATURES_TEXTURE, dict_debug_imgs=dict_imgs)
                 show_segm_results_2d(img2, seg, path_dir, name % (2, regul, edge))

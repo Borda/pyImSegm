@@ -16,7 +16,6 @@ import logging
 import multiprocessing as mproc
 from functools import partial
 
-import tqdm
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -27,7 +26,7 @@ import run_ellipse_annot_match as r_match
 IMAGE_CHANNEL = 0  # image channel for mass extraction
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
-PATH_IMAGES = tl_data.update_path(os.path.join('images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 
 PARAMS = {
@@ -77,10 +76,10 @@ def main(params):
     if not os.path.isdir(params['path_output']):
         os.mkdir(params['path_output'])
 
-    wrapper_object = partial(perform_orientation_swap,
-                             path_out=params['path_output'])
+    _wrapper_object = partial(perform_orientation_swap,
+                              path_out=params['path_output'])
     dir_name = os.path.dirname(params['path_images'])
-    iterate = tl_expt.WrapExecuteSequence(wrapper_object, list_imgs,
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_object, list_imgs,
                                           nb_jobs=params['nb_jobs'],
                                           desc=dir_name)
     list(iterate)

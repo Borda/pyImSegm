@@ -3,7 +3,7 @@ Remove a label a inpant these pixels
 
 SAMPLE run:
 >> python run_image_annot_inpaint.py \
-    -imgs "images/drosophila_ovary_slice/segm/*.png" \
+    -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
     --label 4 --nb_jobs 2
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -25,7 +25,7 @@ import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
-PATH_IMAGES = os.path.join('images', 'drosophila_ovary_slice', 'segm', '*.png')
+PATH_IMAGES = os.path.join('data_images', 'drosophila_ovary_slice', 'segm', '*.png')
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 
 
@@ -74,18 +74,18 @@ def perform_img_inpaint(path_img, labels):
 def quantize_folder_images(path_images, label, nb_jobs=1):
     """ perform single or multi thread image quantisation
 
-    :param path_dir: str, input directory
-    :param im_pattern: str, image pattern for loading
-    :param nb_jobs: int
+    :param [str] path_images: list of image paths
+    :param int nb_jobs:
     """
     assert os.path.isdir(os.path.dirname(path_images)), \
         'input folder does not exist: %s' % os.path.dirname(path_images)
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
 
-    wrapper_img_inpaint = partial(perform_img_inpaint, labels=label)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_img_inpaint, path_imgs,
-                                          nb_jobs=nb_jobs, desc='quantise images')
+    _wrapper_img_inpaint = partial(perform_img_inpaint, labels=label)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_img_inpaint, path_imgs,
+                                          nb_jobs=nb_jobs,
+                                          desc='quantise images')
     list(iterate)
 
 

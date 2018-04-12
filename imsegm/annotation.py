@@ -1,17 +1,17 @@
 """
 Framework for handling annotations
 
-Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
+Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os, sys
+import os
 import logging
 
 import tqdm
 import numpy as np
 import pandas as pd
 from PIL import Image
-from skimage import io
+# from skimage import io
 from scipy import interpolate
 
 # sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -321,7 +321,7 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     :param [str] pos_columns:
     :return: DF
 
-    >>> path_txt = os.path.join(tl_data.update_path('images'),
+    >>> path_txt = os.path.join(tl_data.update_path('data_images'),
     ...                 'drosophila_ovary_slice', 'info_ovary_images.txt')
     >>> load_info_group_by_slices(path_txt, [4]) # doctest: +NORMALIZE_WHITESPACE
                 ant_x  ant_y  lat_x  lat_y post_x post_y

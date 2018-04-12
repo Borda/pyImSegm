@@ -7,7 +7,7 @@ NOTE, for JPEG there is always some smoothing so only allowed format is PNG
 
 SAMPLE run:
 >> python run_image_color_quantization.py \
-    -imgs "images/drosophila_ovary_slice/segm_rgb/*.png" \
+    -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png" \
     -m position
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -29,7 +29,7 @@ import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
-PATH_IMAGES = os.path.join('images', 'drosophila_ovary_slice', 'segm_rgb', '*.png')
+PATH_IMAGES = os.path.join('data_images', 'drosophila_ovary_slice', 'segm_rgb', '*.png')
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 THRESHOLD_INVALID_PIXELS = 5e-3
 
@@ -61,8 +61,7 @@ def parse_arg_params():
 def see_images_color_info(path_images, px_thr=THRESHOLD_INVALID_PIXELS):
     """ look to the folder on all images and estimate most frequent colours
 
-    :param path_dir: str
-    :param im_pattern: str
+    :param [str] path_images: list of images
     :param px_th: float, percentage of nb clr pixels to be assumed as important
     :return {}:
     """
@@ -83,7 +82,9 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     """
     logging.debug('quantize img: "%s"', path_image)
     im = tl_data.io_imread(path_image)
-    assert im.ndim == 3, 'not valid color image of dims %s' % repr(im.shape)
+    if not im.ndim == 3:
+        logging.warning('not valid color image of dims %s', repr(im.shape))
+        return
     im = im[:, :, :3]
     # im = io.imread(path_image)[:, :, :3]
     if method == 'color':
@@ -92,6 +93,7 @@ def perform_quantize_image(path_image, list_colors, method='color'):
         im_q = seg_annot.quantize_image_nearest_pixel(im, list_colors)
     else:
         logging.error('not implemented method "%s"', method)
+        im_q = np.zeros(im.shape)
     path_image = os.path.splitext(path_image)[0] + '.png'
     tl_data.io_imsave(path_image, im_q.astype(np.uint8))
     # io.imsave(path_image, im_q)
@@ -118,10 +120,11 @@ def quantize_folder_images(path_images, list_colors=None, method='color',
         dict_colors = see_images_color_info(path_images, px_thr=px_threshold)
         list_colors = [c for c in dict_colors]
 
-    wrapper_quantize_img = partial(perform_quantize_image,
-                                   method=method, list_colors=list_colors)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_quantize_img, path_imgs,
-                                          nb_jobs=nb_jobs, desc='quantize images')
+    _wrapper_quantize_img = partial(perform_quantize_image,
+                                    method=method, list_colors=list_colors)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_quantize_img, path_imgs,
+                                          nb_jobs=nb_jobs,
+                                          desc='quantize images')
     list(iterate)
 
 

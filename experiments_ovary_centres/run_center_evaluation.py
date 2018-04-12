@@ -4,8 +4,8 @@ The output is list of potential center candidates
 
 SAMPLE run:
 >> python run_center_evaluation.py -list none \
-    -segs "images/drosophila_ovary_slice/segm/*.png" \
-    -imgs "images/drosophila_ovary_slice/image/*.jpg" \
+    -segs "data_images/drosophila_ovary_slice/segm/*.png" \
+    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
     -centers "results/detect-centers-predict_ovary/centers/*.csv" \
     -out results/detect-centers-predict_ovary
 
@@ -79,7 +79,8 @@ def estimate_eggs_from_info(row_slice, mask_shape):
     """ finds all eggs for particular slice and mask them by ellipse annotated
     by ant, post and lat in the all info table
 
-    :param str path_img:
+    :param row_slice:
+    :param mask_shape:
     :return ndarray: ndarray
     """
     pos_ant, pos_lat, pos_post = tl_visu.parse_annot_rectangles(row_slice)
@@ -138,9 +139,10 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
     generate points, compute features and using given classifier predict labels
 
     :param (int, DF:row) idx_row:
-    :param {str: ...} params:
-    :param {str: str} paths:
-    :param classif:
+    :param df_annot:
+    :param str path_annot:
+    :param str path_visu:
+    :param str col_prefix:
     :return {str: float}:
     """
     idx, row = idx_row
@@ -223,10 +225,11 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
     # perfom on new images
     stage_prefix = '[stage-%s] ' % str_stage
     logging.info('start section %s - load_center_evaluate ...', stage_prefix)
-    wrapper_detection = partial(load_center_evaluate, df_annot=df_slices_info,
-                                path_annot=path_annot, path_visu=path_visu,
-                                col_prefix=stage_prefix)
-    iterate = tl_expt.WrapExecuteSequence(wrapper_detection, df_paths.iterrows(),
+    _wrapper_detection = partial(load_center_evaluate, df_annot=df_slices_info,
+                                 path_annot=path_annot, path_visu=path_visu,
+                                 col_prefix=stage_prefix)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_detection,
+                                          df_paths.iterrows(),
                                           nb_jobs=nb_jobs)
     for dict_eval in iterate:
         df_eval = df_eval.append(dict_eval, ignore_index=True)
@@ -238,8 +241,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
 def main(params):
     """ PIPELINE for new detections
 
-    :param {str: str} paths:
-    :param int nb_jobs:
+    :param {str: ...} params:
     """
     logging.info('running...')
 
