@@ -1212,7 +1212,7 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
-    _, edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+    _, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
     slic_neighbours = seg_spx.get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
     prob_fg_labels = np.array(prob_fg_labels)
@@ -1505,7 +1505,7 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
-    _, edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+    _, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
     slic_neighbours = seg_spx.get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
     prob_fg_labels = np.array(prob_fg_labels)

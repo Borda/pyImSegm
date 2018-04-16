@@ -281,9 +281,9 @@ def get_vertexes_edges(segments):
     :return:
     """
     if segments.ndim == 3:
-        vertices, edges = seg_spx.make_graph_segm_connect3d_conn6(segments)
+        vertices, edges = seg_spx.make_graph_segm_connect_grid3d_conn6(segments)
     elif segments.ndim == 2:
-        vertices, edges = seg_spx.make_graph_segm_connect2d_conn4(segments)
+        vertices, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(segments)
     else:
         return None, None
     return vertices, edges

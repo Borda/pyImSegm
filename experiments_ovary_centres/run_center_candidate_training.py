@@ -147,7 +147,7 @@ def arg_parse_params(params):
                         default=params['path_output'])
     parser.add_argument('-n', '--name', type=str, required=False,
                         help='name of the experiment', default='ovary')
-    parser.add_argument('-config', '--path_config', type=str, required=False,
+    parser.add_argument('-cfg', '--path_config', type=str, required=False,
                         help='path to the configuration', default=None)
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
@@ -357,7 +357,7 @@ def estim_points_compute_features(name, img, segm, params):
     slic = seg_spx.segment_slic_img2d(img, params['slic_size'],
                                       params['slic_regul'])
     slic_centers = seg_spx.superpixel_centers(slic)
-    # slic_edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+    # slic_edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
 
     features, feature_names = compute_points_features(segm, slic_centers,
                                                       params)
