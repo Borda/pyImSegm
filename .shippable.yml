@@ -3,11 +3,6 @@
 # After changing this file, check it on:
 #   http://yaml-online-parser.appspot.com/
 
-env:
-  global:
-    - CI_REPORTS=shippable/testresults
-    - COVERAGE_REPORTS=shippable/codecoverage
-
 build:
   # https://github.com/Shippable/support/issues/3873
   pre_ci_boot:
@@ -16,6 +11,11 @@ build:
   ci:
     - echo $CI_REPORTS && mkdir -p $CI_REPORTS
     - echo $COVERAGE_REPORTS && mkdir -p $COVERAGE_REPORTS
+
+env:
+  global:
+    - CI_REPORTS=shippable/testresults
+    - COVERAGE_REPORTS=shippable/codecoverage
 
 language: python
 

@@ -44,6 +44,8 @@ NAME_CSV_CLASSIF_CV_ROC = 'classif_{}_cross-val_ROC-{}.csv'
 NAME_TXT_CLASSIF_CV_AUC = 'classif_{}_cross-val_AUC-{}.txt'
 METRIC_AVERAGES = ('macro', 'weighted')
 METRIC_SCORING = ('f1_macro', 'accuracy', 'precision_macro', 'recall_macro')
+# rounding unique features, in case to detail precision
+ROUND_UNIQUE_FTS_DIGITS = 3
 
 
 def create_classifiers(nb_jobs=-1):
@@ -1029,7 +1031,7 @@ def down_sample_dict_features_unique(dict_features):
     """
     dict_features_new = dict()
     for label in dict_features:
-        features = dict_features[label]
+        features = np.round(dict_features[label], ROUND_UNIQUE_FTS_DIGITS)
         unique_fts = np.array(unique_rows(features))
         assert features.ndim == unique_fts.ndim, 'feature dim matching'
         assert features.shape[1] == unique_fts.shape[1], \
