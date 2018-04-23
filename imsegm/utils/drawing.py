@@ -358,9 +358,11 @@ def figure_segm_graphcut_debug(dict_imgs, subfig_size=9):
     for i, k in enumerate(['img_graph_edges', 'img_graph_segm']):
         axarr[0, i + 1].set_title(k)
         axarr[0, i + 1].imshow(dict_imgs[k])
+    cax = None
     for i, im_uc in enumerate(dict_imgs['imgs_unary_cost']):
         axarr[1, i].set_title('unary cost #%i' % i)
-        axarr[1, i].imshow(im_uc)
+        cax = axarr[1, i].imshow(im_uc)
+    fig.colorbar(cax)
 
     for j in range(2):
         for i in range(nb_cols):

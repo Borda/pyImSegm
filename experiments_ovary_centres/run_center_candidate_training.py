@@ -656,7 +656,8 @@ def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
                                  path_output=params['path_expt'])
     df_stat = pd.DataFrame()
     iterate = tl_expt.WrapExecuteSequence(_wrapper_detection,
-                                          gener_data, nb_jobs=params['nb_jobs'])
+                                          gener_data, nb_jobs=params['nb_jobs'],
+                                          desc='detect center candidates')
     for dict_stat in iterate:
         df_stat = df_stat.append(dict_stat, ignore_index=True)
         df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STAT_TRAIN))

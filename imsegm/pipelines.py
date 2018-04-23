@@ -162,6 +162,7 @@ def estim_model_classes_group(list_images, nb_classes=4, clr_space='rgb',
                                dict_features=dict_features,
                                clr_space=clr_space, fts_norm=False)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_images,
+                                          desc='compute SLIC & features',
                                           nb_jobs=nb_jobs)
     for slic, features in iterate:
         list_slic.append(slic)
@@ -361,6 +362,7 @@ def train_classif_color2d_slic_features(list_images, list_annots,
                                label_purity=label_purity)
     list_imgs_annot = zip(list_images,  list_annots)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_imgs_annot,
+                                          desc='compute SLIC & features & labels',
                                           nb_jobs=nb_jobs)
     for slic, fts, lbs in iterate:
         list_slic.append(slic)

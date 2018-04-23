@@ -63,8 +63,8 @@ script:
   # SEGMENTATION section
   - rm -r -f results && mkdir results
   - python experiments_segmentation/run_compute_stat_annot_segm.py --visual
-  - python experiments_segmentation/run_segm_slic_model_graphcut.py --path_config ./experiments_segmentation/sample_config.json --nb_jobs 1
-  - python experiments_segmentation/run_segm_slic_classif_graphcut.py --path_config ./experiments_segmentation/sample_config.json --nb_jobs 1
+  - python experiments_segmentation/run_segm_slic_model_graphcut.py --path_config ./experiments_segmentation/sample_config.json
+  - python experiments_segmentation/run_segm_slic_classif_graphcut.py --path_config ./experiments_segmentation/sample_config.json
 
   # CENTER DETECT. section
   - rm -r -f results && mkdir results

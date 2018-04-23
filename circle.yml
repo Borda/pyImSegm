@@ -16,17 +16,17 @@ dependencies:
     - sudo apt-get install pkg-config
     - sudo apt-get install python-dev
     - sudo apt-get install python-tk
-    - mkdir libs
   override:
     # - cd libs && git clone https://github.com/Borda/pyGCO.git
     # - cd libs/pyGCO && pip install -r requirements.txt && python setup.py install
     # - rm -r -f libs/pyGCO
-    # - pip install --upgrade setuptools
+    - pip install --upgrade pip setuptools
     - pip install -r requirements.txt
     - pip install nose coverage pytest pytest-cov
 
 test:
   pre:
+    - mkdir libs
     - gcc --version ; python --version ; pip --version ; pwd ; ls -l
     - mkdir data && mkdir output && mkdir results
     - python setup.py build_ext --inplace

@@ -6,7 +6,7 @@ SAMPLE run:
     -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
     -segm "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
     --img_type 2d_split \
-    --slic_size 20 --slic_regul 0.25 --slico 0
+    --slic_size 20 --slic_regul 0.25 --slico
 
 Copyright (C) 2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

@@ -134,8 +134,8 @@ def arg_parse_params(params):
                         default=params['path_out'])
     parser.add_argument('-n', '--name', type=str, required=False,
                         help='name of the experiment', default=params['name'])
-    parser.add_argument('--path_config', type=str, required=False, default='',
-                        help='path to the segmentation config')
+    parser.add_argument('-cfg', '--path_config', type=str, required=False,
+                        help='path to the segmentation config', default='')
     parser.add_argument('--img_type', type=str, required=False,
                         default=params['img_type'], choices=TYPES_LOAD_IMAGE,
                         help='type of image to be loaded')
@@ -422,6 +422,8 @@ def experiment_single_gmm(params, paths_img, path_out, path_visu,
     # for name, segm in iterate:
     #     dict_segms_gmm[name] = segm
     dict_segms_gmm = dict(iterate)
+    gc.collect()
+    time.sleep(1)
     return dict_segms_gmm
 
 
@@ -454,6 +456,8 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
     # for name, segm in iterate:
     #     dict_segms_group[name] = segm
     dict_segms_group = dict(iterate)
+    gc.collect()
+    time.sleep(1)
     return dict_segms_group
 
 
@@ -471,6 +475,12 @@ def load_path_images(params):
         logging.warning('no images to load!')
         paths_img = []
     return paths_img
+
+
+def write_skip_file(path_dir):
+    assert os.path.isdir(path_dir), 'missing: %s' % path_dir
+    with open(os.path.join(path_dir, 'RESULTS'), 'w') as fp:
+        fp.write('This particular experiment was skipped by user option.')
 
 
 def main(params):
@@ -510,17 +520,21 @@ def main(params):
     time.sleep(1)
 
     # Segment as model ober set of images
-    dict_segms_group = experiment_group_gmm(params, paths_img,
-                                            _path_expt(FOLDER_SEGM_GROUP),
-                                            _path_expt(FOLDER_SEGM_GROUP_VISU),
-                                            show_debug_imgs=show_debug_imgs)
-    gc.collect()
-    time.sleep(1)
+    if params.get('run_groupGMM', False):
+        dict_segms_group = experiment_group_gmm(params, paths_img,
+                                                _path_expt(FOLDER_SEGM_GROUP),
+                                                _path_expt(FOLDER_SEGM_GROUP_VISU),
+                                                show_debug_imgs=show_debug_imgs)
+    else:
+        write_skip_file(_path_expt(FOLDER_SEGM_GROUP))
+        write_skip_file(_path_expt(FOLDER_SEGM_GROUP_VISU))
+        dict_segms_group = None
 
-    df_ars = compare_segms_metric_ars(dict_segms_gmm, dict_segms_group,
-                                      suffix='_gmm-group')
-    df_ars.to_csv(_path_expt(NAME_CSV_ARS_CORES))
-    logging.info(df_ars.describe())
+    if dict_segms_group is not None:
+        df_ars = compare_segms_metric_ars(dict_segms_gmm, dict_segms_group,
+                                          suffix='_gmm-group')
+        df_ars.to_csv(_path_expt(NAME_CSV_ARS_CORES))
+        logging.info(df_ars.describe())
 
     logging.info('DONE')
     return params

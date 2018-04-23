@@ -144,7 +144,8 @@ def main(dict_paths, nb_jobs=NB_THREADS, visual=True, relabel=True):
         annots = [relabel_sequential(annot)[0] for annot in annots]
         iterate = tl_expt.WrapExecuteSequence(wrapper_relabel_segm,
                                               zip(annots, segms),
-                                              nb_jobs=nb_jobs, ordered=True)
+                                              nb_jobs=nb_jobs, ordered=True,
+                                              desc='relabeling')
         segms = list(iterate)
 
     logging.info('compute statistic per image')
@@ -168,8 +169,9 @@ def main(dict_paths, nb_jobs=NB_THREADS, visual=True, relabel=True):
         # for idx, row in df_paths.iterrows():
         #     export_visual(row, path_visu)
         _wrapper_visual = partial(export_visual, path_out=path_visu)
-        iterate = tl_expt.WrapExecuteSequence(_wrapper_visual,
-                                              (row for idx, row in df_paths.iterrows()),
+        it_values = (row for idx, row in df_paths.iterrows())
+        iterate = tl_expt.WrapExecuteSequence(_wrapper_visual, it_values,
+                                              desc='visualisations',
                                               nb_jobs=nb_jobs)
         list(iterate)
 

@@ -327,7 +327,8 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
 
 def compute_classif_stat_segm_annot(set_annot_segm_name, relabel=False):
     annot, segm, name = set_annot_segm_name
-    assert segm.shape == annot.shape, 'dimension do not match: %s - %s' \
+    assert segm.shape == annot.shape, 'dimension do not match for ' \
+                                      'segm: %s - annot: %s' \
                                       % (repr(segm.shape), repr(annot.shape))
     if relabel:
         segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=False)
@@ -380,7 +381,8 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
     df_stat = pd.DataFrame()
     iterate = tl_expt.WrapExecuteSequence(compute_classif_stat_segm_annot,
                                           zip(annots, segms, names),
-                                          nb_jobs=nb_jobs)
+                                          nb_jobs=nb_jobs,
+                                          desc='statistic per image')
     for dict_stat in iterate:
         df_stat = df_stat.append(dict_stat, ignore_index=True)
     df_stat.set_index('name', inplace=True)

@@ -517,7 +517,8 @@ def compute_unary_cost(proba):
     (50, 2)
     """
     proba = proba.copy()
-    proba[proba < 1e-99] = 1e-99
+    # constrain that each class should have at least 0.1%
+    proba[proba < 1e-3] = 1e-3
     # unary_cost = np.array(1. / proba , dtype=np.float64)
     unary_cost = np.abs(np.array(-np.log(proba), dtype=np.float64))
     return unary_cost

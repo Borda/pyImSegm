@@ -161,20 +161,20 @@ We utilize (un)supervised segmentation according to given training examples or s
         -imgs "./data_images/drosophila_ovary_slice/image/*.jpg" \
         -segm "./data_images/drosophila_ovary_slice/annot_eggs/*.png" \
         --img_type 2d_split \
-        --slic_size 20 --slic_regul 0.25 --slico 0
+        --slic_size 20 --slic_regul 0.25 --slico
     ```
 * Perform **Unsupervised** segmentation in images given in CSV
     ```bash
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -l ./data_images/langerhans_islets/list_lang-isl_imgs-annot.csv -i "" \
-       --path_config experiments_segmentation/sample_config.json \
+       --cdf experiments_segmentation/sample_config.json \
        -o ./results -n langIsl --nb_classes 3 --visual --nb_jobs 2
     ```
     OR specified on particular path:
     ```bash
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -l "" -i "./data_images/langerhans_islets/image/*.jpg" \
-       --path_config ./experiments_segmentation/sample_config.json \
+       -cfg ./experiments_segmentation/sample_config.json \
        -o ./results -n langIsl --nb_classes 3 --visual --nb_jobs 2
     ```
 * Perform **Supervised** segmentation with afterwards evaluation.
@@ -182,7 +182,7 @@ We utilize (un)supervised segmentation according to given training examples or s
     python experiments_segmentation/run_segm_slic_classif_graphcut.py \
         -l ./data_images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
         -i "./data_images/drosophila_ovary_slice/image/*.jpg" \
-       --path_config ./experiments_segmentation/sample_config.json \
+        --path_config ./experiments_segmentation/sample_config.json \
         -o ./results -n Ovary --img_type 2d_split --visual --nb_jobs 2
     ```
 * For both experiment you can evaluate segmentation results.
@@ -196,6 +196,23 @@ We utilize (un)supervised segmentation according to given training examples or s
 
 ![unsupervised](figures/imag-disk-20_gmm.jpg)
 ![supervised](figures/imag-disk-20_train.jpg)
+
+The previous two (un)segmentation accept [configuration file](experiments_segmentation/sample_config.json) (JSON) by parameter `-cfg` with some extra parameters which was not passed in arguments, for instance:
+```json
+{
+	"clr_space": "hsv",
+	"slic_size": 35,
+	"slic_regul": 0.2,
+	"features": {"color": ["mean", "std", "eng"]},
+	"classif": "SVM",
+	"nb_classif_search": 150,
+	"gc_edge_type": "model",
+	"gc_regul": 3.0,
+	"run_LOO": false,
+	"run_LPO": true,
+	"cross_val": 0.1
+}
+```
 
 ### Center detection and ellipse fitting
 

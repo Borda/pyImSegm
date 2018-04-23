@@ -62,7 +62,8 @@ import imsegm.classification as seg_clf
 import imsegm.superpixels as seg_spx
 import imsegm.graph_cuts as seg_gc
 from run_segm_slic_model_graphcut import (arg_parse_params, load_image,
-                                          parse_imgs_idx_path, get_idx_name)
+                                          parse_imgs_idx_path, get_idx_name,
+                                          write_skip_file)
 
 NAME_EXPERIMENT = 'experiment_segm-Supervised'
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
@@ -707,7 +708,7 @@ def main_train(params):
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_BASE)
-    if params.get('visual', False):
+    if show_debug_imgs:
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
     df_stat = pd.DataFrame()
 
@@ -752,28 +753,39 @@ def main_train(params):
     # drop "do not care" label which are -1
     features = np.nan_to_num(features)
 
-    nb_holdout = max(1, int(round(len(sizes) * CROSS_VAL_LEAVE_OUT_SEARCH)))
+    nb_holdout = params.get('cross_val', CROSS_VAL_LEAVE_OUT_SEARCH)
+    nb_holdout = max(1, int(round(len(sizes) * nb_holdout)))  # minimum is 1
+    nb_holdout = min(nb_holdout, int(len(sizes) / 2))  # max is half of the set
     params, classif, path_classif = load_train_classifier(params, features,
                                                           labels,  feature_names,
                                                           sizes, nb_holdout)
 
-    # test classif on images
+    # test classif. on images
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     paths_img = df_paths['path_image'].tolist()
     perform_predictions(params, paths_img, classif,
                         show_debug_imgs=show_debug_imgs)
 
+    def _path_expt(n):
+        return os.path.join(params['path_exp'], n)
+
     # LEAVE ONE OUT
-    if RUN_CROSS_VAL_LOO:
+    if params.get('run_LOO', RUN_CROSS_VAL_LOO):
         df_stat = experiment_loo(params, df_stat, dict_annot, paths_img,
                                  path_classif, path_dump,
                                  show_debug_imgs=show_debug_imgs)
+    else:
+        write_skip_file(_path_expt(FOLDER_LOO))
+        write_skip_file(_path_expt(FOLDER_LOO_VISU))
 
     # LEAVE P OUT
-    if RUN_CROSS_VAL_LPO:
+    if params.get('run_LPO', RUN_CROSS_VAL_LPO):
         df_stat = experiment_lpo(params, df_stat, dict_annot, paths_img,
                                  path_classif, path_dump, nb_holdout,
                                  show_debug_imgs=show_debug_imgs)
+    else:
+        write_skip_file(_path_expt(FOLDER_LPO))
+        write_skip_file(_path_expt(FOLDER_LPO_VISU))
 
     logging.info('Statistic: \n %s', repr(df_stat.describe()))
     logging.info('training DONE')

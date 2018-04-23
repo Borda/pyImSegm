@@ -90,7 +90,8 @@ def correlation_coefficient(patch1, patch2):
 
 
 def compute_mean_image(list_img_paths):
-    iterate = tl_expt.WrapExecuteSequence(tl_data.load_image_2d, list_img_paths)
+    iterate = tl_expt.WrapExecuteSequence(tl_data.load_image_2d, list_img_paths,
+                                          desc='compute mean image')
     imgs = [im[:, :, IMAGE_CHANNEL] for im, _ in iterate]
     img_mean = np.median(imgs, axis=0)
     return img_mean
