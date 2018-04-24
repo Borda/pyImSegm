@@ -37,8 +37,7 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
+if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
@@ -311,9 +310,10 @@ def save_dump_data(path_dump_data, imgs, annot, slics, features, labels,
 
 
 def export_draw_image_segm_contour(img, segm, path_out, name, suffix=''):
-    logging.debug('export draw image segmentation countours')
+    logging.debug('export draw image segmentation countours: %s', name)
     fig = tl_visu.figure_image_segm_results(img, segm)
     fig.savefig(os.path.join(path_out, name + suffix + '.png'))
+
     plt.close(fig)
 
 

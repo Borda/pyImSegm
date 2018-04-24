@@ -534,6 +534,7 @@ def compute_pairwise_cost(gc_regul, proba_shape):
     # original and the right way...
     pairwise = create_pairwise_matrix(gc_regul, proba_shape[1])
     pairwise_cost = np.array(pairwise, dtype=np.float64)
+    pairwise_cost[pairwise_cost > 1e3] = 1e3
     return pairwise_cost
 
 
