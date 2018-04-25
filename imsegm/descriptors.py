@@ -19,6 +19,7 @@ from skimage import morphology
 # from numba.decorators import jit
 # from numba import int32, int64, float32
 
+import imsegm.utils.data_io as tl_data
 try:
     import imsegm.features_cython as fts_cython
     # logging.debug('try to load Cython implementation')  # CRASH logger
@@ -35,7 +36,7 @@ FEATURES_SET_ALL = {'color': ('mean', 'std', 'energy', 'median', 'meanGrad'),
                     'tLM': ('mean', 'std', 'energy', 'median', 'meanGrad')}
 FEATURES_SET_COLOR = {'color': ('mean', 'std', 'energy')}
 FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
-FEATURES_SET_TEXTURE_SHORT = {'tLM_s': ('mean', 'std', 'energy')}
+FEATURES_SET_TEXTURE_SHORT = {'tLM_short': ('mean', 'std', 'energy')}
 HIST_CIRCLE_DIAGONALS = (10, 20, 30, 40, 50)
 # maxila reposnse is bounded by fix number to preven overflowing
 MAX_SIGNAL_RESPONSE = 1.e6
@@ -137,7 +138,7 @@ def _check_color_image(image):
 
 def _check_unrecognised_feature_group(dict_feature_flags):
     unknown = [k for k in dict_feature_flags
-               if k not in ('color', 'tLM', 'tLM_s')]
+               if not k.startswith('color') and not k.startswith('tLM')]
     if len(unknown) > 0:
         logging.warning('unrecognised following feature groups: %s',
                         repr(unknown))
@@ -719,7 +720,7 @@ def compute_image3d_gray_statistic(image, segm,
 
 def compute_image2d_color_statistic(image, segm,
                                     list_feature_flags=NAMES_FEATURE_FLAGS,
-                                    ch_name='color'):
+                                    color_name='color'):
     """ compute complete descriptors / statistic on color (2D) images
 
     :param ndarray image:
@@ -751,7 +752,7 @@ def compute_image2d_color_statistic(image, segm,
     image = np.nan_to_num(image)
     features = np.empty((np.max(segm) + 1, 0))
     names = []
-    ch_names = ['%s-ch%i' % (ch_name, i + 1) for i in range(3)]
+    ch_names = ['%s-ch%i' % (color_name, i + 1) for i in range(3)]
 
     # MEAN
     mean = None
@@ -1044,15 +1045,15 @@ def compute_texture_desc_lm_img2d_clr(img, seg, list_feature_flags,
         else:
             response_roll = (response_roll * (np.log(1 + norm) / 0.03)) / norm
         response = np.rollaxis(response_roll, 0, 3)
-        fts, n = compute_image2d_color_statistic(response, seg,
-                                                 list_feature_flags, fl_name)
+        fts, ns = compute_image2d_color_statistic(response, seg,
+                                                  list_feature_flags, fl_name)
         features += [fts]
-        names += n
+        names += ns
     features = np.concatenate(tuple(features), axis=1)
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    names = ['tLM_%s' % n for n in names]
+    names = ['tLM_%s' % ns for ns in names]
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
@@ -1081,7 +1082,7 @@ def compute_selected_features_gray3d(img, segments,
     >>> _ = compute_selected_features_gray3d(img, slic,
     ...                                  {'tLM': ['median', 'std', 'energy']})
     >>> fts, names = compute_selected_features_gray3d(img, slic,
-    ...                                  {'tLM_s': ['mean', 'std', 'energy']})
+    ...                                  {'tLM_short': ['mean', 'std', 'energy']})
     >>> fts.shape
     (4, 45)
     >>> names  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -1092,22 +1093,24 @@ def compute_selected_features_gray3d(img, segments,
     assert len(dict_feature_flags) > 0, 'some features has to be selected'
 
     features, names = [], []
-    if 'color' in dict_feature_flags:
-        fts, n = compute_image3d_gray_statistic(img, segments,
-                                                dict_feature_flags['color'])
+    # COLOR FEATURES
+    if any(k.startswith('color') for k in dict_feature_flags):
+        flags = np.unique([dict_feature_flags[k]
+                           for k in dict_feature_flags if k.startswith('color')])
+        fts, ns = compute_image3d_gray_statistic(img, segments, flags)
         features.append(fts)
-        names += n
-    if 'tLM' in dict_feature_flags:
-        fts, n = compute_texture_desc_lm_img3d_val(img, segments,
-                                                dict_feature_flags['tLM'])
-        features.append(fts)
-        names += n
-    elif 'tLM_s' in dict_feature_flags:
-        fts, n = compute_texture_desc_lm_img3d_val(img, segments,
-                                                   dict_feature_flags['tLM_s'],
-                                                   'short')
-        features.append(fts)
-        names += n
+        names += ns
+
+    # TEXTURE - LEWEN-MALIK
+    k_text = [k for k in dict_feature_flags if k.startswith('tLM')]
+    if len(k_text) > 0:
+        for k in k_text:
+            bank_type = k.split('_')[-1] if '_' in k else 'normal'
+            fts, ns = compute_texture_desc_lm_img3d_val(img, segments,
+                                                        dict_feature_flags[k],
+                                                        bank_type)
+            features.append(fts)
+            names += ns
     _check_unrecognised_feature_group(dict_feature_flags)
 
     if len(features) == 0:
@@ -1143,7 +1146,7 @@ def compute_selected_features_gray2d(img, segments,
     >>> _ = compute_selected_features_gray2d(image, segm,
     ...                                  {'tLM': ['mean', 'std', 'median']})
     >>> features, names = compute_selected_features_gray2d(image, segm,
-    ...                                  {'tLM_s': ['mean', 'std', 'energy']})
+    ...                                  {'tLM_short': ['mean', 'std', 'energy']})
     >>> features.shape
     (2, 45)
     >>> features, names = compute_selected_features_gray2d(image, segm)
@@ -1180,37 +1183,51 @@ def compute_selected_features_color2d(img, segments,
     >>> np.round(features, 3)
     array([[ 0.6 ,  1.2 ,  0.4 ,  0.49,  1.47,  0.8 ,  1.  ,  0.  ,  0.  ],
            [ 0.2 ,  1.2 ,  1.6 ,  0.4 ,  1.47,  0.8 ,  0.  ,  0.  ,  2.  ]])
+    >>> features, names = compute_selected_features_color2d(image, segm,
+    ...                                   {'color_hsv': ['mean', 'std']})
+    >>> np.round(features, 3)
+    array([[ 0.139,  0.533,  1.4  ,  0.176,  0.452,  1.356],
+           [ 0.439,  0.733,  2.   ,  0.244,  0.389,  1.095]])
     >>> _ = compute_selected_features_color2d(image, segm,
     ...                                   {'tLM': ['mean', 'std', 'energy']})
     >>> features, names = compute_selected_features_color2d(image, segm,
-    ...                                   {'tLM_s': ['mean', 'std', 'energy']})
+    ...                                   {'tLM_short': ['mean', 'energy']})
     >>> features.shape
-    (2, 135)
+    (2, 90)
     >>> features, names = compute_selected_features_color2d(image, segm)
     >>> features.shape
     (2, 315)
     """
     _check_color_image(img)
-    features = np.empty((np.max(segments) + 1, 0))
-    names = []
-    if 'color' in dict_feature_flags:
-        fts, n = compute_image2d_color_statistic(img, segments,
-                                                 dict_feature_flags['color'])
-        features = np.concatenate((features, fts), axis=1)
-        names += n
-    if 'tLM' in dict_feature_flags:
-        fts, n = compute_texture_desc_lm_img2d_clr(img, segments,
-                                                   dict_feature_flags['tLM'])
-        features = np.concatenate((features, fts), axis=1)
-        names += n
-    elif 'tLM_s' in dict_feature_flags:
-        fts, n = compute_texture_desc_lm_img2d_clr(img, segments,
-                                                   dict_feature_flags['tLM_s'],
-                                                   'short')
-        features = np.concatenate((features, fts), axis=1)
-        names += n
-    _check_unrecognised_feature_group(dict_feature_flags)
+    features, names = [], []
+    # COLOR SPACES
+    k_color = [k for k in dict_feature_flags if k.startswith('color')]
+    if len(k_color) > 0:
+        for k in k_color:
+            if '_' in k:
+                clr = k.split('_')[-1]
+                img_color = tl_data.convert_img_color_from_rgb(img, clr)
+            else:
+                clr = 'rgb'
+                img_color = img
+            fts, ns = compute_image2d_color_statistic(img_color, segments,
+                                                      dict_feature_flags[k],
+                                                      color_name=clr)
+            features.append(fts)
+            names += ns
+    # TEXTURE - LEWEN-MALIK
+    k_text = [k for k in dict_feature_flags if k.startswith('tLM')]
+    if len(k_text) > 0:
+        for k in k_text:
+            bank_type = k.split('_')[-1] if '_' in k else 'normal'
+            fts, ns = compute_texture_desc_lm_img2d_clr(img, segments,
+                                                        dict_feature_flags[k],
+                                                        bank_type)
+            features.append(fts)
+            names += ns
 
+    _check_unrecognised_feature_group(dict_feature_flags)
+    features = np.concatenate(tuple(features), axis=1)
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0

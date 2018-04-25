@@ -120,7 +120,7 @@ FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'median'),
                     'tLM': ('mean', 'std', 'energy', 'meanGrad')}
 FEATURES_SET_MIN = {'color': ('mean', 'std', 'energy'),
-                    'tLM_s': ('mean', )}
+                    'tLM_short': ('mean', )}
 FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
                     'tLM': ('mean', 'std')}
 # Default parameter configuration
@@ -171,7 +171,7 @@ def visu_histogram_labels(params, dict_label_hist, fig_name=NAME_FIG_LABEL_HISTO
 def use_rgb_image(img, clr='rgb'):
     # clr = params.get('clr_space', 'rgb').lower()
     if img.ndim == 3 and img.shape[-1] in (3, 4):
-        img_rgb = seg_pipe.convert_img_color_to_rgb(img, clr)
+        img_rgb = tl_data.convert_img_color_to_rgb(img, clr)
     elif img.ndim == 2:
         img_rgb = sk_color.gray2rgb(img)
     else:
@@ -209,10 +209,10 @@ def load_image_annot_compute_features_labels(idx_row, params,
     #     img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     slic = seg_spx.segment_slic_img2d(img, sp_size=params['slic_size'],
                                       rltv_compact=params['slic_regul'])
-    img = seg_pipe.convert_img_color_from_rgb(img, params.get('clr_space', 'rgb'))
+    img = tl_data.convert_img_color_from_rgb(img, params.get('clr_space', 'rgb'))
     logging.debug('computed SLIC with %i labels', slic.max())
     if show_debug_imgs:
-        img_rgb = use_rgb_image(img, params.get('clr_space', 'rbgb').lower())
+        img_rgb = use_rgb_image(img)
         img_slic = segmentation.mark_boundaries(img_rgb, slic,
                                                 color=(1, 0, 0),
                                                 mode='subpixel')
@@ -313,7 +313,6 @@ def export_draw_image_segm_contour(img, segm, path_out, name, suffix=''):
     logging.debug('export draw image segmentation countours: %s', name)
     fig = tl_visu.figure_image_segm_results(img, segm)
     fig.savefig(os.path.join(path_out, name + suffix + '.png'))
-
     plt.close(fig)
 
 
@@ -336,7 +335,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     img_rgb = load_image(path_img, params['img_type'])
     slic = seg_spx.segment_slic_img2d(img_rgb, sp_size=params['slic_size'],
                                       rltv_compact=params['slic_regul'])
-    img = seg_pipe.convert_img_color_from_rgb(img_rgb, params.get('clr_space',
+    img = tl_data.convert_img_color_from_rgb(img_rgb, params.get('clr_space',
                                                                   'rgb'))
     features, _ = seg_fts.compute_selected_features_img2d(img, slic,
                                                           params['features'])
@@ -698,7 +697,7 @@ def main_train(params):
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running TRAINING...')
-    show_debug_imgs = params.get('visual', False) or SHOW_DEBUG_IMAGES
+    show_debug_imgs = params.get('visual', False)
 
     reload_dir_config = (os.path.isfile(params.get('path_config', ''))
                          or FORCE_RELOAD)
@@ -851,9 +850,10 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
                  path_pattern_imgs)
 
     logging.debug('run prediction...')
+    show_debug_imgs = params.get('visual', False)
     _wrapper_segment = partial(try_segment_image, params=params, classif=classif,
                                path_out=path_out, path_visu=path_visu,
-                               show_debug_imgs=SHOW_DEBUG_IMAGES)
+                               show_debug_imgs=show_debug_imgs)
     list_img_path = list(zip([None] * len(paths_img), paths_img))
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, list_img_path,
                                           nb_jobs=params['nb_jobs'],

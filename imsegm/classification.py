@@ -76,12 +76,14 @@ def create_classifiers(nb_jobs=-1):
                                                          min_samples_leaf=6,
                                                          n_estimators=200,
                                                          min_samples_split=7),
-        'LogReg': linear_model.LogisticRegression(solver='sag', n_jobs=nb_jobs),
+        'LogistRegr': linear_model.LogisticRegression(solver='sag',
+                                                      n_jobs=nb_jobs),
         'KNN': neighbors.KNeighborsClassifier(n_jobs=nb_jobs),
-        'SVM': svm.SVC(kernel='rbf', probability=True),
+        'SVM': svm.SVC(kernel='rbf', probability=True,
+                       tol=2e-3, max_iter=5000),
         'DecTree': tree.DecisionTreeClassifier(),
         # 'RBM': create_pipeline_neuron_net(),
-        'Adaboost':   ensemble.AdaBoostClassifier(n_estimators=5),
+        'AdaBoost':   ensemble.AdaBoostClassifier(n_estimators=5),
         # 'NuSVM-rbf': svm.NuSVC(kernel='rbf', probability=True),
     }
     return clfs
@@ -147,14 +149,14 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
             'classif__min_samples_split': [2, 3, 5, 7, 9],
             'classif__min_samples_leaf': range(1, 7, 2),
         },
-        'LogReg': {
+        'LogistRegr': {
             'classif__C': np.linspace(0., 1., 5).tolist(),
             # 'classif__penalty': ('l1', 'l2'),
             # 'classif__dual': (False, True),
             'classif__solver': ('lbfgs', 'sag'),
             # 'classif__loss': ('deviance', 'exponential'), # only for 2 cls
         },
-        'Adaboost': {
+        'AdaBoost': {
             'classif__n_estimators': log_space(0, 2, 20),
         }
     }
@@ -202,14 +204,14 @@ def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
             'classif__min_samples_split': sp_randint(2, 9),
             'classif__min_samples_leaf': sp_randint(1, 7),
         },
-        'LogReg': {
+        'LogistRegr': {
             'classif__C': sp_random(0., 1.),
             # 'classif__penalty': ('l1', 'l2'),
             # 'classif__dual': (False, True),
             'classif__solver': ('newton-cg', 'lbfgs', 'sag'),
             # 'classif__loss': ('deviance', 'exponential'),  # only for 2 cls
         },
-        'Adaboost': {
+        'AdaBoost': {
             'classif__n_estimators': sp_randint(2, 100),
         }
     }
@@ -582,7 +584,7 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
     >>> np.random.seed(0)
     >>> lbs = np.random.randint(0, 3, 150)
     >>> fts = np.random.random((150, 5)) + np.tile(lbs, (5, 1)).T
-    >>> clf, p_clf = create_classif_train_export('Adaboost', fts, lbs,
+    >>> clf, p_clf = create_classif_train_export('AdaBoost', fts, lbs,
     ...                 path_out='', search_type='grid')  # doctest: +ELLIPSIS
     Fitting ...
     >>> clf  # doctest: +ELLIPSIS

@@ -200,10 +200,9 @@ We utilize (un)supervised segmentation according to given training examples or s
 The previous two (un)segmentation accept [configuration file](experiments_segmentation/sample_config.json) (JSON) by parameter `-cfg` with some extra parameters which was not passed in arguments, for instance:
 ```json
 {
-	"clr_space": "hsv",
 	"slic_size": 35,
 	"slic_regul": 0.2,
-	"features": {"color": ["mean", "std", "eng"]},
+	"features": {"color_hsv": ["mean", "std", "eng"]},
 	"classif": "SVM",
 	"nb_classif_search": 150,
 	"gc_edge_type": "model",

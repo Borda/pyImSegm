@@ -1,18 +1,20 @@
 {
-	"clr_space": "hsv",
-	"clr_space---OPTIONS": ["hsv", "luv", "lab", "hed", "xyz"],
-	
 	"slic_size": 35,
 	"slic_size---OPTIONS": "unsigned integer",
 	
 	"slic_regul": 0.2,
 	"slic_regul---OPTIONS": "float between 0 ad 1",
 	
-	"features": {"color": ["mean", "std", "energy"]},
+	"features": {"color_rgb": ["mean", "std", "energy"]},
 	"features---OPTIONS": {
 		"color": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_hsv": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_luv": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_lab": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_hed": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_xyz": ["mean", "std", "energy", "median", "meanGrad"],
 		"tLM":   ["mean", "std", "energy", "median", "meanGrad"],
-        "tLM_s": ["mean", "std", "energy", "median", "meanGrad"]
+        "tLM_short": ["mean", "std", "energy", "median", "meanGrad"]
 	},
 	
 	"pca_coef": null,
@@ -30,7 +32,7 @@
 	
 	"classif": "RandForest",
 	"classif---OPTIONS": ["RandForest", "KNN", "SVM", "DecTree",
-						  "GradBoost", "LogReg", "Adaboost"],
+						  "GradBoost", "LogistRegr", "AdaBoost"],
 	
     "nb_classif_search": 50,
 	"nb_classif_search---OPTIONS": "unsigned integer",

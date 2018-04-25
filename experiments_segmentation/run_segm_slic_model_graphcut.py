@@ -84,7 +84,7 @@ FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'median'),
                     'tLM': ('mean', 'std', 'energy', 'meanGrad')}
 FEATURES_SET_MIN = {'color': ('mean', 'std', 'energy'),
-                    'tLM_s': ('mean', )}
+                    'tLM_short': ('mean', )}
 FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
                     'tLM': ('mean', 'std')}
 # Default parameter configuration
@@ -320,7 +320,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
     dict_debug_imgs = dict() if show_debug_imgs else None
     try:
         segm = seg_pipe.pipe_color2d_slic_features_gmm_graphcut(
-            img, nb_classes=params['nb_classes'], clr_space=params['clr_space'],
+            img, nb_classes=params['nb_classes'],
             sp_size=params['slic_size'], sp_regul=params['slic_regul'],
             dict_features=params['features'], estim_model=params['estim_model'],
             pca_coef=params['pca_coef'], gc_regul=params['gc_regul'],
@@ -365,8 +365,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     dict_debug_imgs = dict() if show_debug_imgs else None
 
     try:
-        segm = seg_pipe.segment_color2d_slic_features_model_graphcut(
-            img, model, clr_space=params['clr_space'],
+        segm = seg_pipe.segment_color2d_slic_features_model_graphcut(img, model,
             sp_size=params['slic_size'], sp_regul=params['slic_regul'],
             dict_features=params['features'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
@@ -439,9 +438,9 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
     else:
         model, _ = seg_pipe.estim_model_classes_group(
             list_images, nb_classes=params['nb_classes'],
-            clr_space=params['clr_space'], sp_size=params['slic_size'],
-            sp_regul=params['slic_regul'], dict_features=params['features'],
-            proba_type=params['estim_model'], pca_coef=params['pca_coef'])
+            sp_size=params['slic_size'], sp_regul=params['slic_regul'],
+            dict_features=params['features'], pca_coef=params['pca_coef'],
+            proba_type=params['estim_model'])
         save_model(params['path_model'], model)
 
     logging.info('Perform image segmentation from group model')
@@ -492,7 +491,7 @@ def main(params):
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running...')
-    show_debug_imgs = params.get('visual', False) or SHOW_DEBUG_IMAGES
+    show_debug_imgs = params.get('visual', False)
 
     reload_dir_config = (os.path.isfile(params['path_config']) or FORCE_RELOAD)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,

@@ -22,6 +22,52 @@ import imsegm.utils.read_zvi as read_zvi
 
 COLUMNS_COORDS = ['X', 'Y']
 DEFAULT_PATTERN_SET_LIST_FILE = '*.txt'
+DICT_CONVERT_COLOR_FROM_RGB = {
+    'hsv': color.rgb2hsv,
+    'luv': color.rgb2luv,
+    'lab': color.rgb2lab,
+    'hed': color.rgb2hed,
+    'xyz': color.rgb2xyz
+}
+DICT_CONVERT_COLOR_TO_RGB = {
+    'hsv': color.hsv2rgb,
+    'luv': color.luv2rgb,
+    'lab': color.lab2rgb,
+    'hed': color.hed2rgb,
+    'xyz': color.xyz2rgb
+}
+
+
+def convert_img_color_from_rgb(image, clr_space):
+    """ convert image colour space from RGB to xxx
+
+    :param ndarray image: rgb image
+    :param  str clr_space:
+    :return ndarray: image
+
+    >>> convert_img_color_from_rgb(np.ones((50, 75, 3)), 'hsv').shape
+    (50, 75, 3)
+    """
+    if image.ndim == 3 and image.shape[-1] in (3, 4) \
+            and clr_space in DICT_CONVERT_COLOR_FROM_RGB:
+        image = DICT_CONVERT_COLOR_FROM_RGB[clr_space](image)
+    return image
+
+
+def convert_img_color_to_rgb(image, clr_space):
+    """ convert image colour space to RGB to xxx
+
+    :param ndarray image: rgb image
+    :param str clr_space:
+    :return ndarray: image
+
+    >>> convert_img_color_to_rgb(np.ones((50, 75, 3)), 'hsv').shape
+    (50, 75, 3)
+    """
+    if image.ndim == 3 and image.shape[-1] == 3 \
+            and clr_space in DICT_CONVERT_COLOR_TO_RGB:
+        image = DICT_CONVERT_COLOR_TO_RGB[clr_space](image)
+    return image
 
 
 def update_path(path_file, lim_depth=5, absolute=True):

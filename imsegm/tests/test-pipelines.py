@@ -140,7 +140,7 @@ class TestPipelinesGMM(unittest.TestCase):
 
     def test_segm_gmm_gc_langer(self):
         img = imresize(self.img_islet, (512, 512))
-        params = dict(clr_space='hsv', sp_regul=0.15, sp_size=5)
+        params = dict(sp_regul=0.15, sp_size=5)
 
         run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_langer',
                           types_edge=['model_lT'], list_regul=[0, 1],

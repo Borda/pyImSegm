@@ -611,7 +611,6 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
         edge_weights = compute_edge_model(edges, proba, metric)
     elif edge_type == 'color':
         assert image is not None, '"image" is required'
-        # {'color': ['mean', 'median']}
         image_float = np.array(image, dtype=float)
         if np.max(image) > 1:
             image_float /= 255.
