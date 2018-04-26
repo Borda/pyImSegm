@@ -140,7 +140,7 @@ def main(dict_paths, nb_jobs=NB_THREADS, visual=True, relabel=True):
     logging.info('loaded %i annots and %i segms', len(annots), len(segms))
 
     if relabel:
-        logging.info('reabel annotations and segmentations')
+        logging.info('relabel annotations and segmentations')
         annots = [relabel_sequential(annot)[0] for annot in annots]
         iterate = tl_expt.WrapExecuteSequence(wrapper_relabel_segm,
                                               zip(annots, segms),
@@ -154,7 +154,7 @@ def main(dict_paths, nb_jobs=NB_THREADS, visual=True, relabel=True):
     df_stat = seg_clf.compute_stat_per_image(segms, annots, names, nb_jobs)
     df_stat.to_csv(path_csv)
 
-    logging.info('sumarise statistic')
+    logging.info('summarise statistic')
     path_csv = os.path.join(dict_paths['output'], NAME_CVS_OVERALL % name)
     logging.debug('export to "%s"', path_csv)
     df_desc = df_stat.describe()

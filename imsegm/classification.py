@@ -267,7 +267,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     >>> y_true = np.random.randint(0, 3, 25) * 2
     >>> y_pred = np.random.randint(0, 2, 25) * 2
     >>> d = compute_classif_metrics(y_true, y_true)
-    >>> d['accuracy']  # doctest: +ELLIPSIS
+    >>> d['accuracy']
     1.0
     >>> d['confusion']
     [[10, 0, 0], [0, 10, 0], [0, 0, 5]]
@@ -277,7 +277,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     >>> d['confusion']
     [[3, 7, 0], [5, 5, 0], [1, 4, 0]]
     >>> d = compute_classif_metrics(y_pred, y_pred)
-    >>> d['accuracy']  # doctest: +ELLIPSIS
+    >>> d['accuracy']
     1.0
     """
     y_true = np.array(y_true)
@@ -327,8 +327,21 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     return dict_metrics
 
 
-def compute_classif_stat_segm_annot(set_annot_segm_name, relabel=False):
-    annot, segm, name = set_annot_segm_name
+def compute_classif_stat_segm_annot(annot_segm_name, relabel=False):
+    """ compute classification statistic between annotation and segmentation
+
+    :param (ndarray, ndarray, str) annot_segm_name:
+    :param bool relabel:
+    :return:
+
+    >>> np.random.seed(0)
+    >>> annot = np.random.randint(0, 2, (5, 10))
+    >>> segm = np.random.randint(0, 2, (5, 10))
+    >>> d = compute_classif_stat_segm_annot((annot, segm, 'ttt'), relabel=True)
+    >>> d['(FP+FN)/(TP+FN)']  # doctest: +ELLIPSIS
+    0.846...
+    """
+    annot, segm, name = annot_segm_name
     assert segm.shape == annot.shape, 'dimension do not match for ' \
                                       'segm: %s - annot: %s' \
                                       % (repr(segm.shape), repr(annot.shape))
@@ -337,6 +350,10 @@ def compute_classif_stat_segm_annot(set_annot_segm_name, relabel=False):
     y_true, y_pred = annot.ravel(), segm.ravel()
     dict_stat = compute_classif_metrics(y_true, y_pred,
                                         metric_averages=['macro'])
+    # add binary metric
+    if len(np.unique(y_pred)) == 2:
+        dict_stat['(FP+FN)/(TP+FN)'] = compute_metric_fpfn_tpfn(y_true, y_pred)
+    # set the image name
     dict_stat['name'] = name
     return dict_stat
 
@@ -1129,6 +1146,83 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
         sizes.append(len(labels))
 
     return np.array(features_all), np.array(labels_all, dtype=int), sizes
+
+
+def compute_tp_tn_fp_fn(annot, segm, label_positive=None):
+    """ compute measure TruePositive, TrueNegative, FalsePositive, FalseNegative
+
+    :param ndarray annot:
+    :param ndarray segm:
+    :param int label_positive:
+    :return float:
+
+    >>> np.random.seed(0)
+    >>> annot = np.random.randint(0, 2, (5, 7)) * 9
+    >>> segm = np.random.randint(0, 2, (5, 7)) * 9
+    >>> annot - segm
+    array([[-9,  9,  0, -9,  9,  9,  0],
+           [ 9,  0,  0,  0, -9, -9,  9],
+           [-9,  0, -9, -9, -9,  0,  0],
+           [ 0,  9,  0, -9,  0,  9,  0],
+           [ 9, -9,  9,  0,  9,  0,  9]])
+    >>> compute_tp_tn_fp_fn(annot, segm)
+    (9, 5, 11, 10)
+    >>> compute_tp_tn_fp_fn(annot, np.ones((5, 7)))
+    (nan, nan, nan, nan)
+    >>> compute_tp_tn_fp_fn(np.zeros((5, 7)), np.zeros((5, 7)))
+    (35, 0, 0, 0)
+    """
+    y_true = np.asarray(annot).ravel()
+    y_pred = np.asarray(segm).ravel()
+    uq_labels = np.unique([y_true, y_pred]).tolist()
+    if len(uq_labels) > 2:
+        logging.debug('too many labels: %s', repr(uq_labels))
+        return np.nan,np.nan, np.nan, np.nan
+    elif len(uq_labels) < 2:
+        logging.debug('only one label: %s', repr(uq_labels))
+        return len(y_true), 0, 0, 0
+
+    if label_positive is None or label_positive not in uq_labels:
+        label_positive = uq_labels[-1]
+    uq_labels.remove(label_positive)
+    label_negative = uq_labels[0]
+
+    tp = np.sum(
+        np.logical_and(y_true == label_positive, y_pred == label_positive))
+    tn = np.sum(
+        np.logical_and(y_true == label_negative, y_pred == label_negative))
+    fp = np.sum(
+        np.logical_and(y_true == label_positive, y_pred == label_negative))
+    fn = np.sum(
+        np.logical_and(y_true == label_negative, y_pred == label_positive))
+    return tp, tn, fp, fn
+
+
+def compute_metric_fpfn_tpfn(annot, segm, label_positive=None):
+    """ compute measure (FP + FN) / (TP + FN)
+
+    :param ndarray annot:
+    :param ndarray segm:
+    :param int label_positive:
+    :return float:
+
+    >>> np.random.seed(0)
+    >>> annot = np.random.randint(0, 2, (50, 75)) * 3
+    >>> segm = np.random.randint(0, 2, (50, 75)) * 3
+    >>> compute_metric_fpfn_tpfn(annot, segm)  # doctest: +ELLIPSIS
+    1.02...
+    >>> compute_metric_fpfn_tpfn(annot, annot)
+    0.0
+    >>> compute_metric_fpfn_tpfn(annot, np.ones((50, 75)))
+    nan
+    """
+    tp, tn, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
+    if tp == np.nan:
+        return np.nan
+    elif (fp + fn) == 0:
+        return 0.
+    measure = float(fp + fn) / float(tp + fn)
+    return measure
 
 
 # def stat_weight_by_support(dict_vals, id_val, id_sup):
