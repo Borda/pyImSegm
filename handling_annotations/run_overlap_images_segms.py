@@ -63,12 +63,8 @@ def parse_arg_params():
     paths = dict(zip(['images', 'segms', 'output'],
                      [args.path_images, args.path_segms, args.path_output]))
     for k in paths:
-        if '*' in paths[k] or k == 'output':
-            p_dir = tl_data.update_path(os.path.dirname(paths[k]))
-            paths[k] = os.path.join(p_dir, os.path.basename(paths[k]))
-        else:
-            paths[k] = tl_data.update_path(paths[k])
-            p_dir = paths[k]
+        p_dir = tl_data.update_path(os.path.dirname(paths[k]))
+        paths[k] = os.path.join(p_dir, os.path.basename(paths[k]))
         assert os.path.exists(p_dir), 'missing: %s' % paths[k]
     return paths, args.nb_jobs
 

@@ -157,7 +157,7 @@ def arg_parse_params(params):
         if not isinstance(params[k], str) or params[k].lower() == 'none':
             paths[k] = ''
             continue
-        if '*' in params[k] or k == 'path_expt':
+        if k in ['path_images', 'path_segms', 'path_centers', 'path_expt']:
             p_dir = tl_data.update_path(os.path.dirname(params[k]))
             paths[k] = os.path.join(p_dir, os.path.basename(params[k]))
         else:

@@ -17,6 +17,7 @@ dependencies:
     - sudo apt-get install python-dev
     - sudo apt-get install python-tk
   override:
+    - mkdir libs
     # - cd libs && git clone https://github.com/Borda/pyGCO.git
     # - cd libs/pyGCO && pip install -r requirements.txt && python setup.py install
     # - rm -r -f libs/pyGCO
@@ -26,11 +27,10 @@ dependencies:
 
 test:
   pre:
-    - mkdir libs
-    - gcc --version ; python --version ; pip --version ; pwd ; ls -l
-    - mkdir data && mkdir output && mkdir results
-    - python setup.py build_ext --inplace
     - mkdir -p $CIRCLE_TEST_REPORTS
+    - mkdir data && mkdir output && mkdir results
+    - gcc --version ; python --version ; pip --version ; pwd ; ls -l
+    - python setup.py build_ext --inplace
 
   override:
     - coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=$CIRCLE_TEST_REPORTS/pytest_junit.xml
@@ -49,8 +49,8 @@ test:
 
     # SEGMENTATION section
     - python experiments_segmentation/run_compute_stat_annot_segm.py --visual
-    - python experiments_segmentation/run_segm_slic_model_graphcut.py --path_config experiments_segmentation/sample_config.json --visual
-    - python experiments_segmentation/run_segm_slic_classif_graphcut.py --path_config experiments_segmentation/sample_config.json --visual
+    - python experiments_segmentation/run_segm_slic_model_graphcut.py -i "data_images/drosophila_disc/image/img_[5,6].jpg" -cfg ./experiments_segmentation/sample_config.json --visual
+    - python experiments_segmentation/run_segm_slic_classif_graphcut.py -l data_images/drosophila_ovary_slice/list_imgs-annot-struct_short.csv -i "data_images/drosophila_ovary_slice/image/insitu41*.jpg" -cfg ./experiments_segmentation/sample_config.json --visual
 
     # CENTER DETECT. section
     - python experiments_ovary_centres/run_create_annotation.py

@@ -127,7 +127,6 @@ FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
 SEGM_PARAMS = {
     'name': 'ovary',
     'nb_classes': None,
-    'clr_space': 'rgb',
     'img_type': '2d_split',
     'slic_size': 35,
     'slic_regul': 0.3,
@@ -146,9 +145,9 @@ PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SEGM_PARAMS.update({
-    'path_train_list': os.path.join(PATH_IMAGES,
-                                    'list_imgs-annot-struct_short.csv'),
-    'path_predict_imgs': os.path.join(PATH_IMAGES, 'image', 'insitu43*.tif'),
+    'path_train_list': os.path.join(PATH_IMAGES, 'list_imgs-annot-struct.csv'),
+    # 'path_predict_imgs': os.path.join(PATH_IMAGES, 'image', 'insitu43*.tif'),
+    'path_predict_imgs': '',
     'path_out': PATH_RESULTS,
 })
 
@@ -796,7 +795,7 @@ def try_segment_image(img_idx_path, params, classif, path_out, path_visu,
         return '', None, None
 
 
-def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
+def main_predict(path_classif, path_pattern_imgs, path_out, name='SEGMENT___',
                  params_local=None):
     """ given trained classifier segment new images
 
@@ -807,6 +806,7 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
     """
     logging.getLogger().setLevel(logging.INFO)
     logging.info('running PREDICTION...')
+    assert path_pattern_imgs is not None
 
     dict_classif = seg_clf.load_classifier(path_classif)
     classif = dict_classif['clf_pipeline']

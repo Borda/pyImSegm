@@ -91,7 +91,6 @@ FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
 SEGM_PARAMS = {
     'name': 'imgDisk',
     'nb_classes': 3,
-    'clr_space': 'rgb',
     'img_type': '2d_rgb',
     'slic_size': 35,
     'slic_regul': 0.2,
@@ -108,9 +107,10 @@ PATH_IMAGES = os.path.join(tl_data.update_path('data_images'), 'drosophila_disc'
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_EXPERIMENT = 'experiment_segm-unSupervised'
 SEGM_PARAMS.update({
-    'path_train_list': os.path.join(PATH_IMAGES,
-                                    'list_imaginal-disks_short.csv'),
+    # 'path_train_list': os.path.join(PATH_IMAGES, 'list_imaginal-disks.csv'),
+    'path_train_list': '',
     'path_predict_imgs': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
+    # 'path_predict_imgs': '',
     'path_out': PATH_RESULTS,
 })
 
@@ -125,9 +125,9 @@ def arg_parse_params(params):
     parser.add_argument('-l', '--path_train_list', type=str, required=False,
                         help='path to the list of image',
                         default=params['path_train_list'])
-    parser.add_argument('-i', '--path_predict_imgs', type=str,
+    parser.add_argument('-i', '--path_predict_imgs', type=str, required=False,
                         help='path to folder & name pattern with new image',
-                        required=False, default=params['path_predict_imgs'])
+                        default=params['path_predict_imgs'])
     parser.add_argument('-o', '--path_out', type=str, required=False,
                         help='path to the output directory',
                         default=params['path_out'])
@@ -154,7 +154,7 @@ def arg_parse_params(params):
     for k in (k for k in args if 'path' in k):
         if args[k] == '' or args[k] == 'none': continue
         args[k] = tl_data.update_path(args[k])
-        p = os.path.dirname(args[k]) if '*' in args[k] else args[k]
+        p = os.path.dirname(args[k]) if k == 'path_predict_imgs' else args[k]
         assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
     # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
@@ -332,7 +332,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
 
-    boundary_size = int(np.sqrt(np.prod(segm.shape)) * 0.01)
+    boundary_size = int(params['slic_size'] * 3)
     segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0,
                                          boundary_size=boundary_size)
 
