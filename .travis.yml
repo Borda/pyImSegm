@@ -48,9 +48,9 @@ script:
   - python setup.py install
 
 after_success:
-  # - codecov  # public repository on Travis CI
+   - codecov  # public repository on Travis CI
   # private repository on Travis CI
-  - codecov -t 80efed4e-ac2b-4fea-a642-0a8b1c82e1c8
+#  - codecov -t 80efed4e-ac2b-4fea-a642-0a8b1c82e1c8
   - coverage xml
   - python-codacy-coverage -r coverage.xml
   - coverage report
