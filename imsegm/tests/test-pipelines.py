@@ -92,7 +92,7 @@ def run_segm2d_gmm_gc(img2d, dir_name, types_edge=('model', 'const'),
             #     img2d, gc_regul=regul, gc_edge_type=edge,
             #     debug_visual=dict_imgs, **dict_params)
 
-            seg = pipelines.segment_color2d_slic_features_model_graphcut(
+            seg, _ = pipelines.segment_color2d_slic_features_model_graphcut(
                 img2d, model, gc_regul=regul, gc_edge_type=edge,
                 debug_visual=dict_imgs, **dict_params)
 
@@ -207,12 +207,12 @@ class TestPipelinesClassif(unittest.TestCase):
         for edge in tp_edge:
             dict_imgs = dict()
             for regul in list_regul:
-                seg = pipelines.segment_color2d_slic_features_model_graphcut(
+                seg, _ = pipelines.segment_color2d_slic_features_model_graphcut(
                     img, classif, sp_size=sp_size, gc_regul=regul, gc_edge_type=edge,
                     dict_features=FEATURES_TEXTURE)
                 show_segm_results_2d(img, seg, path_dir, name % (1, regul, edge))
 
-                seg = pipelines.segment_color2d_slic_features_model_graphcut(
+                seg, _ = pipelines.segment_color2d_slic_features_model_graphcut(
                     img2, classif, sp_size=sp_size, gc_regul=regul, gc_edge_type=edge,
                     dict_features=FEATURES_TEXTURE, debug_visual=dict_imgs)
                 show_segm_results_2d(img2, seg, path_dir, name % (2, regul, edge))

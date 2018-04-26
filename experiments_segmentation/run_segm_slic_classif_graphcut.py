@@ -332,73 +332,47 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
     idx_name = get_idx_name(idx, path_img)
-    img_rgb = load_image(path_img, params['img_type'])
-    slic = seg_spx.segment_slic_img2d(img_rgb, sp_size=params['slic_size'],
-                                      rltv_compact=params['slic_regul'])
-    img = tl_data.convert_img_color_from_rgb(img_rgb, params.get('clr_space',
-                                                                  'rgb'))
-    features, _ = seg_fts.compute_selected_features_img2d(img, slic,
-                                                          params['features'])
-    labels = classif.predict(features)
-    segm = labels[slic]
-    path_img = os.path.join(path_out, idx_name + '.png')
-    logging.debug('export segmentation: %s', path_img)
-    img_seg = Image.fromarray(segm.astype(np.uint8))
-    img_seg.convert('L').save(path_img)
-    # io.imsave(path_img, segm)
+    img = load_image(path_img, params['img_type'])
+
+    debug_visual = dict() if show_debug_imgs else None
+
+    gc_regul = params['gc_regul']
+    if params['gc_use_trans']:
+        label_penalty = seg_gc.compute_pairwise_cost_from_transitions(
+                                            params['label_transitions'])
+        gc_regul = (gc_regul * label_penalty)
+
+    segm_gc, segm_soft = seg_pipe.segment_color2d_slic_features_model_graphcut(
+        img, classif, sp_size=params['slic_size'], sp_regul=params['slic_regul'],
+        dict_features=params['features'], gc_regul=gc_regul,
+        gc_edge_type=params['gc_edge_type'],
+        debug_visual=debug_visual)
+    segm_map = np.argmax(segm_soft, axis=-1)
+
+    for segm, suffix in [(segm_gc, ''), (segm_map, '_MAP')]:
+        path_img = os.path.join(path_out, idx_name + suffix + '.png')
+        logging.debug('export segmentation: %s', path_img)
+        img_seg = Image.fromarray(segm.astype(np.uint8))
+        img_seg.convert('L').save(path_img)
+        # io.imsave(path_img, segm_gc)
+
+    path_npz = os.path.join(path_out, idx_name + '.npz')
+    np.savez_compressed(path_npz, segm_soft)
 
     # plt.imsave(os.path.join(path_out, idx_name + '_rgb.png'), seg_pipe)
     if path_visu is not None and os.path.isdir(path_visu):
-        export_draw_image_segm_contour(img_rgb, segm, path_visu, idx_name)
-
-    try:  # in case some classiefier do not support predict_proba
-        proba = classif.predict_proba(features)
-        segm_soft = proba[slic]
-        path_npz = os.path.join(path_out, idx_name + '.npz')
-        np.savez_compressed(path_npz, segm_soft)
-    except Exception:
-        logging.warning('classif: %s not support predict_proba(...)',
-                        repr(classif))
-        proba = None
-        segm_soft = None
-
-    # if probabilities was not estimated of GC regul. is zero
-    if proba is not None and params['gc_regul'] > 0:
-        gc_regul = params['gc_regul']
-        if params['gc_use_trans']:
-            label_penalty = seg_gc.compute_pairwise_cost_from_transitions(
-                                                params['label_transitions'])
-            gc_regul = (gc_regul * label_penalty)
-        labels_gc = seg_gc.segment_graph_cut_general(slic, proba, img, features,
-                                     gc_regul, edge_type=params['gc_edge_type'])
-        # labels_gc = seg_gc.segment_graph_cut_simple(slic, proba, gc_regul)
-        segm_gc = labels_gc[slic]
-        # relabel according classif classes
-        segm_gc = classif.classes_[segm_gc]
-
-        path_img = os.path.join(path_out, idx_name + '_gc.png')
-        logging.debug('export segmentation: %s', path_img)
-        img_seg_gc = Image.fromarray(segm_gc.astype(np.uint8))
-        img_seg_gc.convert('L').save(path_img)
-        # io.imsave(path_img, segm_gc)
-
-        if path_visu is not None and os.path.isdir(path_visu):
-            export_draw_image_segm_contour(img_rgb, segm_gc, path_visu,
-                                           idx_name, '_gc')
-            if show_debug_imgs:
-                labels_map = np.argmax(proba, axis=1)
-                plt.imsave(os.path.join(path_visu, idx_name + '_map.png'),
-                           labels_map[slic])
-                if not segm_soft is None:
-                    for lb in range(segm_soft.shape[2]):
-                        uc_name = idx_name + '_gc_unary-lb%i.png' % lb
-                        plt.imsave(os.path.join(path_visu, uc_name),
-                                   segm_soft[:, :, lb], vmin=0., vmax=1.,
-                                   cmap=plt.cm.Greens)
-    else:
-        segm_gc = np.zeros(segm.shape)
+        export_draw_image_segm_contour(img, segm_gc, path_visu,
+                                       idx_name, '_GC')
+        export_draw_image_segm_contour(img, segm_map, path_visu,
+                                       idx_name, '_MAP')
+        if show_debug_imgs and debug_visual is not None:
+            path_fig = os.path.join(path_visu, str(idx_name) + '_debug.png')
+            logging.debug('exporting (debug) visualization: %s', path_fig)
+            fig = tl_visu.figure_segm_graphcut_debug(debug_visual)
+            fig.savefig(path_fig, bbox_inches='tight', pad_inches=0.1)
+            plt.close(fig)
     # gc.collect(), time.sleep(1)
-    return idx_name, segm, segm_gc
+    return idx_name, segm_map, segm_gc
 
 
 def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,

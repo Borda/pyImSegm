@@ -367,11 +367,13 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     debug_visual = dict() if show_debug_imgs else None
 
     try:
-        segm = seg_pipe.segment_color2d_slic_features_model_graphcut(img, model,
-            sp_size=params['slic_size'], sp_regul=params['slic_regul'],
+        segm, segm_soft = seg_pipe.segment_color2d_slic_features_model_graphcut(
+            img, model, sp_size=params['slic_size'], sp_regul=params['slic_regul'],
             dict_features=params['features'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
             debug_visual=debug_visual)
+        path_npz = os.path.join(path_out, idx_name + '.npz')
+        np.savez_compressed(path_npz, segm_soft)
     except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])

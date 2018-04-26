@@ -161,9 +161,11 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     >>> image = np.random.random((125, 150, 3)) / 2.
     >>> image[:, :75] += 0.5
     >>> model, _ = estim_model_classes_group([image], nb_classes=2)
-    >>> segm = segment_color2d_slic_features_model_graphcut(image, model)
+    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(image, model)
     >>> segm.shape
     (125, 150)
+    >>> seg_soft.shape
+    (125, 150, 2)
 
     Supervised:
     >>> np.random.seed(0)
@@ -173,9 +175,11 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     >>> annot = np.zeros(image.shape[:2], dtype=int)
     >>> annot[:, 75:] = 1
     >>> clf, _, _, _ = train_classif_color2d_slic_features([image], [annot])
-    >>> segm = segment_color2d_slic_features_model_graphcut(image, clf)
+    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(image, clf)
     >>> segm.shape
     (125, 150)
+    >>> seg_soft.shape
+    (125, 150, 2)
     """
     logging.info('PIPELINE Superpixels-Features-Model-GraphCut')
     slic, features = compute_color2d_superpixels_features(image,
@@ -199,6 +203,8 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     # gmm.fit(features, np.argmax(proba, axis=1))
     # proba = gmm.predict_proba(features)
 
+    segm_soft = proba[slic]
+
     graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
                                                     features,
                                                     gc_regul, gc_edge_type,
@@ -207,7 +213,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     # relabel according classif classes
     if hasattr(model_pipeline, 'classes_'):
         segm = model_pipeline.classes_[segm]
-    return segm
+    return segm, segm_soft
 
 
 def compute_color2d_superpixels_features(image,
