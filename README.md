@@ -154,6 +154,7 @@ We introduce some useful tools for work with image annotation and segmentation.
 ### Structure segmentation
 
 We utilize (un)supervised segmentation according to given training examples or some expectations.
+![vusial debug](figures/visual_img_43_debug.jpg)
 
 * Evaluate superpixels (with given SLIC parameters) quality against given segmentation. It helps find out best SLIC configuration.
     ```bash
@@ -177,6 +178,7 @@ We utilize (un)supervised segmentation according to given training examples or s
        -cfg ./experiments_segmentation/sample_config.json \
        -o ./results -n langIsl --nb_classes 3 --visual --nb_jobs 2
     ```
+    ![unsupervised](figures/imag-disk-20_gmm.jpg)
 * Perform **Supervised** segmentation with afterwards evaluation.
     ```bash
     python experiments_segmentation/run_segm_slic_classif_graphcut.py \
@@ -185,6 +187,7 @@ We utilize (un)supervised segmentation according to given training examples or s
         --path_config ./experiments_segmentation/sample_config.json \
         -o ./results -n Ovary --img_type 2d_split --visual --nb_jobs 2
     ```
+    ![supervised](figures/imag-disk-20_train.jpg)
 * For both experiment you can evaluate segmentation results.
     ```bash
     python experiments_segmentation/run_compute-stat_annot-segm.py \
@@ -193,9 +196,7 @@ We utilize (un)supervised segmentation according to given training examples or s
         -img "./data_images/drosophila_ovary_slice/image/*.jpg" \
         -out ./results/evaluation
     ```
-
-![unsupervised](figures/imag-disk-20_gmm.jpg)
-![supervised](figures/imag-disk-20_train.jpg)
+    ![vusial](figures/segm-visual_D03_sy04_100x.jpg)
 
 The previous two (un)segmentation accept [configuration file](experiments_segmentation/sample_config.json) (JSON) by parameter `-cfg` with some extra parameters which was not passed in arguments, for instance:
 ```json
