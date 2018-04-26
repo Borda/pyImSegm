@@ -27,13 +27,10 @@ CROSS_VAL_LEAVE_OUT = 2
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.6))
 
 
-def pipe_color2d_slic_features_model_graphcut(image, nb_classes=3,
+def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
                                               sp_size=30, sp_regul=0.2,
-                                              gc_regul=1.,
-                                              dict_features=FTS_SET_SIMPLE,
-                                              estim_model='GMM',
-                                              gc_edge_type='model_lT',
-                                              pca_coef=None,
+                                              pca_coef=None, estim_model='GMM',
+                                              gc_regul=1., gc_edge_type='model',
                                               debug_visual=None):
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
@@ -54,15 +51,17 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes=3,
     >>> np.random.seed(0)
     >>> image = np.random.random((125, 150, 3)) / 2.
     >>> image[:, :75] += 0.5
-    >>> segm, seg_soft = pipe_color2d_slic_features_model_graphcut(image, 2)
+    >>> segm, seg_soft = pipe_color2d_slic_features_model_graphcut(
+    ...                                         image, 2, {'color': ['mean']})
     >>> segm.shape
     (125, 150)
     >>> seg_soft.shape
     (125, 150, 2)
     """
     logging.info('PIPELINE Superpixels-Features-GMM-GraphCut')
-    slic, features = compute_color2d_superpixels_features(
-                                        image, sp_size, sp_regul, dict_features)
+    slic, features = compute_color2d_superpixels_features(image, dict_features,
+                                                          sp_size=sp_size,
+                                                          sp_regul=sp_regul)
 
     if debug_visual is not None:
         if image.ndim == 2:  # duplicate channels to be like RGB
@@ -89,10 +88,9 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes=3,
     return segm, segm_soft
 
 
-def estim_model_classes_group(list_images, nb_classes=4,
+def estim_model_classes_group(list_images, nb_classes, dict_features,
                               sp_size=30, sp_regul=0.2,
-                              dict_features=FTS_SET_SIMPLE,
-                              pca_coef=None, scaler=True, proba_type='GMM',
+                              scaler=True, pca_coef=None, proba_type='GMM',
                               nb_jobs=NB_THREADS):
     """ estimate a model from sequence of input images and return it as result
 
@@ -111,8 +109,7 @@ def estim_model_classes_group(list_images, nb_classes=4,
     list_slic, list_features = list(), list()
     _wrapper_compute = partial(compute_color2d_superpixels_features,
                                sp_size=sp_size, sp_regul=sp_regul,
-                               dict_features=dict_features,
-                               fts_norm=False)
+                               dict_features=dict_features, fts_norm=False)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_images,
                                           desc='compute SLIC & features',
                                           nb_jobs=nb_jobs)
@@ -136,9 +133,9 @@ def estim_model_classes_group(list_images, nb_classes=4,
 
 
 def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
+                                                 dict_features,
                                                  sp_size=30, sp_regul=0.2,
                                                  gc_regul=1.,
-                                                 dict_features=FTS_SET_SIMPLE,
                                                  gc_edge_type='model',
                                                  debug_visual=None):
     """ complete pipe-line for segmentation using superpixels, extracting features
@@ -160,8 +157,9 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     >>> seg_fts.USE_CYTHON = False
     >>> image = np.random.random((125, 150, 3)) / 2.
     >>> image[:, :75] += 0.5
-    >>> model, _ = estim_model_classes_group([image], nb_classes=2)
-    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(image, model)
+    >>> model, _ = estim_model_classes_group([image], 2, {'color': ['mean']})
+    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(
+    ...                                     image, model, {'color': ['mean']})
     >>> segm.shape
     (125, 150)
     >>> seg_soft.shape
@@ -174,17 +172,19 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     >>> image[:, 75:] += 0.5
     >>> annot = np.zeros(image.shape[:2], dtype=int)
     >>> annot[:, 75:] = 1
-    >>> clf, _, _, _ = train_classif_color2d_slic_features([image], [annot])
-    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(image, clf)
+    >>> clf, _, _, _ = train_classif_color2d_slic_features([image], [annot],
+    ...                                                    {'color': ['mean']})
+    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(
+    ...                                         image, clf, {'color': ['mean']})
     >>> segm.shape
     (125, 150)
     >>> seg_soft.shape
     (125, 150, 2)
     """
     logging.info('PIPELINE Superpixels-Features-Model-GraphCut')
-    slic, features = compute_color2d_superpixels_features(image,
-                                                          sp_size, sp_regul,
-                                                          dict_features,
+    slic, features = compute_color2d_superpixels_features(image, dict_features,
+                                                          sp_size=sp_size,
+                                                          sp_regul=sp_regul,
                                                           fts_norm=False)
 
     if debug_visual is not None:
@@ -216,9 +216,8 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     return segm, segm_soft
 
 
-def compute_color2d_superpixels_features(image,
+def compute_color2d_superpixels_features(image, dict_features,
                                          sp_size=30, sp_regul=0.2,
-                                         dict_features=FTS_SET_SIMPLE,
                                          fts_norm=True):
     """ segment image into superpixels and estimate features per superpixel
 
@@ -258,9 +257,9 @@ def wrapper_compute_color2d_slic_features_labels(img_annot,
     assert img.shape[:2] == annot.shape[:2], \
         'image (%s) and annot (%s) should match' \
         % (repr(img.shape), repr(annot.shape))
-    slic, features = compute_color2d_superpixels_features(img,
-                                                          sp_size, sp_regul,
-                                                          dict_features,
+    slic, features = compute_color2d_superpixels_features(img, dict_features,
+                                                          sp_size=sp_size,
+                                                          sp_regul=sp_regul,
                                                           fts_norm=False)
     neg_label = np.max(annot) + 1 if np.sum(annot < 0) > 0 else None
     if neg_label is not None:
@@ -276,9 +275,8 @@ def wrapper_compute_color2d_slic_features_labels(img_annot,
     return slic, features, labels
 
 
-def train_classif_color2d_slic_features(list_images, list_annots,
+def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
                                         sp_size=30, sp_regul=0.2,
-                                        dict_features=FTS_SET_SIMPLE,
                                         clf_name=CLASSIF_NAME,
                                         label_purity=0.9,
                                         feature_balance='unique',
@@ -349,11 +347,10 @@ def train_classif_color2d_slic_features(list_images, list_annots,
     return classif, list_slic, list_features, list_labels
 
 
-def pipe_gray3d_slic_features_model_graphcut(image, nb_classes=4,
+def pipe_gray3d_slic_features_model_graphcut(image, nb_classes, dict_features,
                                              spacing=(12, 1, 1),
                                              sp_size=15, sp_regul=0.2,
-                                             gc_regul=0.1,
-                                             dict_features=FTS_SET_SIMPLE):
+                                             gc_regul=0.1):
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
 
@@ -369,7 +366,7 @@ def pipe_gray3d_slic_features_model_graphcut(image, nb_classes=4,
     >>> np.random.seed(0)
     >>> image = np.random.random((5, 125, 150)) / 2.
     >>> image[:, :, :75] += 0.5
-    >>> segm = pipe_gray3d_slic_features_model_graphcut(image)
+    >>> segm = pipe_gray3d_slic_features_model_graphcut(image, 2, {'color': ['mean']})
     >>> segm.shape
     (5, 125, 150)
     """

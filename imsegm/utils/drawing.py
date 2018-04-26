@@ -360,7 +360,7 @@ def figure_segm_graphcut_debug(dict_imgs, subfig_size=9):
         axarr[0, i + 1].imshow(dict_imgs[k])
     for i, im_uc in enumerate(dict_imgs['imgs_unary_cost']):
         axarr[1, i].set_title('unary cost #%i' % i)
-        cax = axarr[1, i].imshow(im_uc)
+        axarr[1, i].imshow(im_uc)
 
     for j in range(2):
         for i in range(nb_cols):

@@ -1219,7 +1219,7 @@ def compute_metric_fpfn_tpfn(annot, segm, label_positive=None):
     >>> compute_metric_fpfn_tpfn(annot, np.ones((50, 75)))
     nan
     """
-    tp, tn, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
+    tp, _, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
     if tp == np.nan:
         return np.nan
     elif (fp + fn) == 0:
@@ -1246,7 +1246,7 @@ def compute_metric_tpfp_tpfn(annot, segm, label_positive=None):
     >>> compute_metric_tpfp_tpfn(annot, np.ones((50, 75)))
     nan
     """
-    tp, tn, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
+    tp, _, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
     if tp == np.nan:
         return np.nan
     elif (fp + fn) == 0:

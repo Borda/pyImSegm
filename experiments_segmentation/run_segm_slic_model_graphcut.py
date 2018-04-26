@@ -442,8 +442,8 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
     else:
         model, _ = seg_pipe.estim_model_classes_group(
             list_images, nb_classes=params['nb_classes'],
-            sp_size=params['slic_size'], sp_regul=params['slic_regul'],
-            dict_features=params['features'], pca_coef=params['pca_coef'],
+            dict_features=params['features'], sp_size=params['slic_size'],
+            sp_regul=params['slic_regul'], pca_coef=params['pca_coef'],
             proba_type=params['estim_model'])
         save_model(params['path_model'], model)
 
