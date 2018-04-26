@@ -88,13 +88,13 @@ def run_segm2d_gmm_gc(img2d, dir_name, types_edge=('model', 'const'),
     for edge in types_edge:
         dict_imgs = dict()
         for regul in list_regul:
-            # seg = pipelines.pipe_color2d_slic_features_gmm_graphcut(
+            # seg, _ = pipelines.pipe_color2d_slic_features_model_graphcut(
             #     img2d, gc_regul=regul, gc_edge_type=edge,
-            #     dict_debug_imgs=dict_imgs, **dict_params)
+            #     debug_visual=dict_imgs, **dict_params)
 
             seg = pipelines.segment_color2d_slic_features_model_graphcut(
                 img2d, model, gc_regul=regul, gc_edge_type=edge,
-                dict_debug_imgs=dict_imgs, **dict_params)
+                debug_visual=dict_imgs, **dict_params)
 
             show_segm_debugs_2d(dict_imgs, path_dir,
                         'fig_regul-%.2f_edge-%s_debug.png' % (regul, edge))
@@ -121,10 +121,10 @@ class TestPipelinesGMM(unittest.TestCase):
         path_dir = os.path.join(PATH_OUTPUT, 'test_segm_gmm_gc_objects')
         if not os.path.isdir(path_dir):
             os.mkdir(path_dir)
-        seg = pipelines.pipe_color2d_slic_features_gmm_graphcut(
+        seg, _ = pipelines.pipe_color2d_slic_features_model_graphcut(
             img, nb_classes=4, sp_size=20, sp_regul=0.2,
             dict_features={'color': ['mean']}, gc_regul=1.,
-            gc_edge_type='model', dict_debug_imgs=dict_imgs)
+            gc_edge_type='model', debug_visual=dict_imgs)
 
         show_segm_debugs_2d(dict_imgs, path_dir,
                             'fig_regul-%.2f_edge-%s_debug.png' % (1., 'model'))
@@ -171,7 +171,7 @@ class TestPipelinesGMM(unittest.TestCase):
     def test_segm_gmm_gc_ovary_3d(self):
         # _ = self.img3d
         # TODO, add extension to 3D
-        # seg = pipelines.pipe_gray3d_slic_features_gmm_graphcut(img)
+        # seg = pipelines.pipe_gray3d_slic_features_model_graphcut(img)
         pass
 
 
@@ -201,7 +201,7 @@ class TestPipelinesClassif(unittest.TestCase):
 
         _ = pipelines.segment_color2d_slic_features_model_graphcut(
                     img, classif, sp_size=sp_size, gc_regul=0.,
-                    dict_features=FEATURES_TEXTURE, dict_debug_imgs=dict_imgs)
+                    dict_features=FEATURES_TEXTURE, debug_visual=dict_imgs)
         show_segm_debugs_2d(dict_imgs, path_dir, name % (1, 0, '_debug'))
 
         for edge in tp_edge:
@@ -214,7 +214,7 @@ class TestPipelinesClassif(unittest.TestCase):
 
                 seg = pipelines.segment_color2d_slic_features_model_graphcut(
                     img2, classif, sp_size=sp_size, gc_regul=regul, gc_edge_type=edge,
-                    dict_features=FEATURES_TEXTURE, dict_debug_imgs=dict_imgs)
+                    dict_features=FEATURES_TEXTURE, debug_visual=dict_imgs)
                 show_segm_results_2d(img2, seg, path_dir, name % (2, regul, edge))
                 show_segm_debugs_2d(dict_imgs, path_dir, name % (2, regul, edge))
                 dict_imgs = None

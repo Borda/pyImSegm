@@ -262,14 +262,14 @@ def get_idx_name(idx, path_img):
         return im_name
 
 
-def export_visual(idx_name, img, segm, dict_debug_imgs=None,
+def export_visual(idx_name, img, segm, debug_visual=None,
                   path_out=None, path_visu=None):
     """ export visualisations
 
     :param str idx_name:
     :param ndarray img: input image
     :param ndarray segm: resulting segmentation
-    :param dict_debug_imgs: dictionary with debug images
+    :param debug_visual: dictionary with debug images
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
     """
@@ -291,10 +291,10 @@ def export_visual(idx_name, img, segm, dict_debug_imgs=None,
         plt.close(fig)
 
     if path_visu is not None and os.path.isdir(path_visu) \
-            and dict_debug_imgs is not None:
+            and debug_visual is not None:
         path_fig = os.path.join(path_visu, str(idx_name) + '_debug.png')
         logging.debug('exporting (debug) visualization: %s', path_fig)
-        fig = tl_visu.figure_segm_graphcut_debug(dict_debug_imgs)
+        fig = tl_visu.figure_segm_graphcut_debug(debug_visual)
         fig.savefig(path_fig, bbox_inches='tight', pad_inches=0.1)
         plt.close(fig)
 
@@ -317,15 +317,17 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    dict_debug_imgs = dict() if show_debug_imgs else None
+    debug_visual = dict() if show_debug_imgs else None
     try:
-        segm = seg_pipe.pipe_color2d_slic_features_gmm_graphcut(
+        segm, segm_soft = seg_pipe.pipe_color2d_slic_features_model_graphcut(
             img, nb_classes=params['nb_classes'],
             sp_size=params['slic_size'], sp_regul=params['slic_regul'],
             dict_features=params['features'], estim_model=params['estim_model'],
             pca_coef=params['pca_coef'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
-            dict_debug_imgs=dict_debug_imgs)
+            debug_visual=debug_visual)
+        path_npz = os.path.join(path_out, idx_name + '.npz')
+        np.savez_compressed(path_npz, segm_soft)
     except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
@@ -334,7 +336,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
     segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0,
                                          boundary_size=boundary_size)
 
-    export_visual(idx_name, img, segm, dict_debug_imgs, path_out, path_visu)
+    export_visual(idx_name, img, segm, debug_visual, path_out, path_visu)
 
     # gc.collect(), time.sleep(1)
     return idx_name, segm
@@ -362,14 +364,14 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    dict_debug_imgs = dict() if show_debug_imgs else None
+    debug_visual = dict() if show_debug_imgs else None
 
     try:
         segm = seg_pipe.segment_color2d_slic_features_model_graphcut(img, model,
             sp_size=params['slic_size'], sp_regul=params['slic_regul'],
             dict_features=params['features'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
-            dict_debug_imgs=dict_debug_imgs)
+            debug_visual=debug_visual)
     except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
@@ -378,7 +380,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0,
                                          boundary_size=boundary_size)
 
-    export_visual(idx_name, img, segm, dict_debug_imgs, path_out, path_visu)
+    export_visual(idx_name, img, segm, debug_visual, path_out, path_visu)
 
     # gc.collect(), time.sleep(1)
     return idx_name, segm

@@ -27,49 +27,49 @@ CROSS_VAL_LEAVE_OUT = 2
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.6))
 
 
-def pipe_color2d_slic_features_gmm_graphcut(image, nb_classes=3,
-                                            sp_size=30, sp_regul=0.2,
-                                            gc_regul=1.,
-                                            dict_features=FTS_SET_SIMPLE,
-                                            estim_model='GMM',
-                                            gc_edge_type='model_lT',
-                                            pca_coef=None,
-                                            dict_debug_imgs=None):
+def pipe_color2d_slic_features_model_graphcut(image, nb_classes=3,
+                                              sp_size=30, sp_regul=0.2,
+                                              gc_regul=1.,
+                                              dict_features=FTS_SET_SIMPLE,
+                                              estim_model='GMM',
+                                              gc_edge_type='model_lT',
+                                              pca_coef=None,
+                                              debug_visual=None):
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
 
-    :param float gc_regul: GC regularisation
-    :param image: input RGB image
-    :param int sp_size: initial size of a superpixel(meaning edge lenght)
-    :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
-                   and "1" nearly square slic
+    :param ndarray image: input RGB image
     :param int nb_classes: number of classes to be segmented(indexing from 0)
+    :param int sp_size: initial size of a superpixel(meaning edge length)
+    :param float sp_regul: regularisation in range(0,1) where 0 gives elastic
+                   and 1 nearly square slic
     :param {} dict_features: {clr: [str]}
-    :param float gc_regul: GC regularisation
-    :param str estim_model: estimating model
-    :param str gc_edge_type: graphCut edge type
     :param float pca_coef: range (0, 1) or None
-    :param dict_debug_imgs: {str: ...}
+    :param str estim_model: estimating model
+    :param float gc_regul: GC regularisation
+    :param str gc_edge_type: graphCut edge type
+    :param debug_visual: {str: ...}
     :return [[int]]: segmentation matrix maping each pixel into a class
 
     >>> np.random.seed(0)
     >>> image = np.random.random((125, 150, 3)) / 2.
     >>> image[:, :75] += 0.5
-    >>> segm = pipe_color2d_slic_features_gmm_graphcut(image, nb_classes=2)
+    >>> segm, seg_soft = pipe_color2d_slic_features_model_graphcut(image, 2)
     >>> segm.shape
     (125, 150)
+    >>> seg_soft.shape
+    (125, 150, 2)
     """
     logging.info('PIPELINE Superpixels-Features-GMM-GraphCut')
-    slic, features = compute_color2d_superpixels_features(image,
-                                                          sp_size, sp_regul,
-                                                          dict_features)
+    slic, features = compute_color2d_superpixels_features(
+                                        image, sp_size, sp_regul, dict_features)
 
-    if dict_debug_imgs is not None:
+    if debug_visual is not None:
         if image.ndim == 2:  # duplicate channels to be like RGB
             image = np.rollaxis(np.tile(image, (3, 1, 1)), 0, 3)
-        dict_debug_imgs['image'] = image
-        dict_debug_imgs['slic'] = slic
-        dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, image,
+        debug_visual['image'] = image
+        debug_visual['slic'] = slic
+        debug_visual['slic_mean'] = sk_color.label2rgb(slic, image,
                                                           kind='avg')
 
     model = seg_gc.estim_class_model(features, nb_classes, estim_model, pca_coef)
@@ -81,10 +81,12 @@ def pipe_color2d_slic_features_gmm_graphcut(image, nb_classes=3,
     # gmm.fit(features, np.argmax(proba, axis=1))
     # proba = gmm.predict_proba(features)
 
+    segm_soft = proba[slic]
+
     graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
-            features, gc_regul, gc_edge_type, dict_debug_imgs=dict_debug_imgs)
+            features, gc_regul, gc_edge_type, debug_visual=debug_visual)
     segm = graph_labels[slic]
-    return segm
+    return segm, segm_soft
 
 
 def estim_model_classes_group(list_images, nb_classes=4,
@@ -138,7 +140,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
                                                  gc_regul=1.,
                                                  dict_features=FTS_SET_SIMPLE,
                                                  gc_edge_type='model',
-                                                 dict_debug_imgs=None):
+                                                 debug_visual=None):
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
 
@@ -150,7 +152,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     :param {str: [str]} dict_features: list of features to be extracted
     :param float gc_regul: GC regularisation
     :param str gc_edge_type: select the GC edge type
-    :param dict_debug_imgs: {str: ...}
+    :param debug_visual: {str: ...}
     :return [[int]]: segmentation matrix mapping each pixel into a class
 
     UnSupervised:
@@ -181,12 +183,12 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
                                                           dict_features,
                                                           fts_norm=False)
 
-    if dict_debug_imgs is not None:
+    if debug_visual is not None:
         if image.ndim == 2:  # duplicate channels to be like RGB
             image = np.rollaxis(np.tile(image, (3, 1, 1)), 0, 3)
-        dict_debug_imgs['image'] = image
-        dict_debug_imgs['slic'] = slic
-        dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, image,
+        debug_visual['image'] = image
+        debug_visual['slic'] = slic
+        debug_visual['slic_mean'] = sk_color.label2rgb(slic, image,
                                                           kind='avg')
 
     proba = model_pipeline.predict_proba(features)
@@ -200,7 +202,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
                                                     features,
                                                     gc_regul, gc_edge_type,
-                                                    dict_debug_imgs=dict_debug_imgs)
+                                                    debug_visual=debug_visual)
     segm = graph_labels[slic]
     # relabel according classif classes
     if hasattr(model_pipeline, 'classes_'):
@@ -341,11 +343,11 @@ def train_classif_color2d_slic_features(list_images, list_annots,
     return classif, list_slic, list_features, list_labels
 
 
-def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4,
-                                           spacing=(12, 1, 1),
-                                           sp_size=15, sp_regul=0.2,
-                                           gc_regul=0.1,
-                                           dict_features=FTS_SET_SIMPLE):
+def pipe_gray3d_slic_features_model_graphcut(image, nb_classes=4,
+                                             spacing=(12, 1, 1),
+                                             sp_size=15, sp_regul=0.2,
+                                             gc_regul=0.1,
+                                             dict_features=FTS_SET_SIMPLE):
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
 
@@ -361,7 +363,7 @@ def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4,
     >>> np.random.seed(0)
     >>> image = np.random.random((5, 125, 150)) / 2.
     >>> image[:, :, :75] += 0.5
-    >>> segm = pipe_gray3d_slic_features_gmm_graphcut(image)
+    >>> segm = pipe_gray3d_slic_features_model_graphcut(image)
     >>> segm.shape
     (5, 125, 150)
     """
@@ -399,7 +401,7 @@ def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4,
 #                                                 clf_name=CLASSIF_NAME,
 #                                                 pca_coef=None,
 #                                                 gc_edge_type='model',
-#                                                 dict_debug_imgs=None):
+#                                                 debug_visual=None):
 #     logging.info('PIPELINE Superpixels-Features-Classifier-GraphCut')
 #     classif, _, _, _ = train_classif_color2d_slic_features(
 #         list_images, list_annots, sp_size=sp_size, sp_regul=sp_regul,
@@ -411,15 +413,15 @@ def pipe_gray3d_slic_features_gmm_graphcut(image, nb_classes=4,
 #
 #     proba = classif.predict_proba(features)
 #
-#     if dict_debug_imgs is not None:
+#     if debug_visual is not None:
 #         if img.ndim == 2:  # duplicate channels to be like RGB
 #             img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
-#         dict_debug_imgs['image'] = img
-#         dict_debug_imgs['slic'] = slic
-#         dict_debug_imgs['slic_mean'] = sk_color.label2rgb(slic, img, kind='avg')
+#         debug_visual['image'] = img
+#         debug_visual['slic'] = slic
+#         debug_visual['slic_mean'] = sk_color.label2rgb(slic, img, kind='avg')
 #
 #     graph_labels = seg_gc.segment_graph_cut_general(slic, proba, img, features,
-#                   gc_regul, gc_edge_type, dict_debug_imgs=dict_debug_imgs)
+#                   gc_regul, gc_edge_type, debug_visual=debug_visual)
 #     segm = graph_labels[slic]
 #     # relabel according classif classes
 #     segm = classif.classes_[segm]

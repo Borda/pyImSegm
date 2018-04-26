@@ -340,6 +340,8 @@ def compute_classif_stat_segm_annot(annot_segm_name, relabel=False):
     >>> d = compute_classif_stat_segm_annot((annot, segm, 'ttt'), relabel=True)
     >>> d['(FP+FN)/(TP+FN)']  # doctest: +ELLIPSIS
     0.846...
+    >>> d['(TP+FP)/(TP+FN)']  # doctest: +ELLIPSIS
+    1.153...
     """
     annot, segm, name = annot_segm_name
     assert segm.shape == annot.shape, 'dimension do not match for ' \
@@ -353,6 +355,7 @@ def compute_classif_stat_segm_annot(annot_segm_name, relabel=False):
     # add binary metric
     if len(np.unique(y_pred)) == 2:
         dict_stat['(FP+FN)/(TP+FN)'] = compute_metric_fpfn_tpfn(y_true, y_pred)
+        dict_stat['(TP+FP)/(TP+FN)'] = compute_metric_tpfp_tpfn(y_true, y_pred)
     # set the image name
     dict_stat['name'] = name
     return dict_stat
@@ -1222,6 +1225,33 @@ def compute_metric_fpfn_tpfn(annot, segm, label_positive=None):
     elif (fp + fn) == 0:
         return 0.
     measure = float(fp + fn) / float(tp + fn)
+    return measure
+
+
+def compute_metric_tpfp_tpfn(annot, segm, label_positive=None):
+    """ compute measure (TP + FP) / (TP + FN)
+
+    :param ndarray annot:
+    :param ndarray segm:
+    :param int label_positive:
+    :return float:
+
+    >>> np.random.seed(0)
+    >>> annot = np.random.randint(0, 2, (50, 75)) * 3
+    >>> segm = np.random.randint(0, 2, (50, 75)) * 3
+    >>> compute_metric_tpfp_tpfn(annot, segm)  # doctest: +ELLIPSIS
+    1.03...
+    >>> compute_metric_tpfp_tpfn(annot, annot)
+    0.0
+    >>> compute_metric_tpfp_tpfn(annot, np.ones((50, 75)))
+    nan
+    """
+    tp, tn, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
+    if tp == np.nan:
+        return np.nan
+    elif (fp + fn) == 0:
+        return 0.
+    measure = float(tp + fp) / float(tp + fn)
     return measure
 
 

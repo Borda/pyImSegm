@@ -18,6 +18,7 @@ import traceback
 import multiprocessing as mproc
 from functools import partial
 
+import pandas as pd
 from skimage.segmentation import relabel_sequential
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -28,11 +29,12 @@ import imsegm.labeling as seg_lbs
 import imsegm.classification as seg_clf
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
-NAME_CVS_OVERALL = 'segm-STATISTIC_%s_stat-overall.csv'
-NAME_CVS_PER_IMAGE = 'segm-STATISTIC_%s_stat-per-images.csv'
-PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
+NAME_CVS_OVERALL = 'STATISTIC__%s___Overall.csv'
+NAME_CVS_PER_IMAGE = 'STATISTIC__%s___per-Image.csv'
+PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
+                           'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
-SUFFIX_VISUAL = '__visual'
+SUFFIX_VISUAL = '___visual'
 PATHS = {
     'annot': os.path.join(PATH_IMAGES, 'annot_struct', '*.png'),
     'segm': os.path.join(PATH_IMAGES, 'segm', '*.png'),
@@ -158,7 +160,8 @@ def main(dict_paths, nb_jobs=NB_THREADS, visual=True, relabel=True):
     path_csv = os.path.join(dict_paths['output'], NAME_CVS_OVERALL % name)
     logging.debug('export to "%s"', path_csv)
     df_desc = df_stat.describe()
-    logging.info(df_desc.T[['count', 'mean', 'std']])
+    df_desc = df_desc.append(pd.Series(df_stat.median(), name='median'))
+    logging.info(df_desc.T[['count', 'mean', 'std', 'median']])
     df_desc.to_csv(path_csv)
 
     if visual:
