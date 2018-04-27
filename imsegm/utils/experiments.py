@@ -302,7 +302,7 @@ class WrapExecuteSequence:
     ...                          nb_jobs=1, ordered=True)
     >>> list(it)
     [(0, 0), (1, 1), (2, 4), (3, 9), (4, 16)]
-    >>> it = WrapExecuteSequence(sum, [[0, 1]] * 5, 2, desc=None)
+    >>> it = WrapExecuteSequence(sum, [[0, 1]] * 5, nb_jobs=2, desc=None)
     >>> [o for o in it]
     [1, 1, 1, 1, 1]
     >>> it = WrapExecuteSequence(min, ([0, 1] for i in range(5)))
@@ -314,11 +314,11 @@ class WrapExecuteSequence:
                  ordered=False):
         """ the init of this wrapper fro parallelism
 
-        :param wrap_func: funtion which will be exectited in the iterations
-        :param [] iterate_vals: list or iterator which will ide in terations
+        :param wrap_func: function which will be excited in the iterations
+        :param [] iterate_vals: list or iterator which will ide in iterations
         :param int nb_jobs: number og jobs running in parallel
-        :param str desc: decrotion for the bar,
-            if it is set None, bar is suppresed
+        :param str desc: deception for the bar,
+            if it is set None, bar is suppressed
         :param bool ordered: whether enforce ordering in the parallelism
         """
         self.wrap_func = wrap_func

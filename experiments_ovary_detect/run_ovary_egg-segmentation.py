@@ -143,7 +143,7 @@ def arg_parse_params(params):
                         default=params['path_out'])
     parser.add_argument('-n', '--name', type=str, required=False,
                         help='name of the experiment', default='ovary')
-    parser.add_argument('-config', '--path_config', type=str, required=False,
+    parser.add_argument('-cfg', '--path_config', type=str, required=False,
                         help='path to the configuration', default=None)
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
@@ -167,8 +167,7 @@ def arg_parse_params(params):
     for k in (k for k in arg_params if 'path' in k):
         if arg_params[k] is None: continue
         params[k] = tl_data.update_path(arg_params[k], absolute=True)
-        p = os.path.dirname(params[k]) if '*' in params[k] else params[k]
-        assert os.path.exists(p), 'missing: %s' % p
+        assert os.path.exists(params[k]), 'missing: %s' % params[k]
     # load saved configuration
     logging.info('ARG PARAMETERS: \n %s', repr(params))
     return params

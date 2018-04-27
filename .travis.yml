@@ -15,30 +15,31 @@ sudo: false
 
 python:
   - 2.7
-  - 3.4
+  # - 3.4  # will be deprecated for pandas
   - 3.5
   - 3.6
+  # - "3.7-dev"
 
 # See http://docs.travis-ci.com/user/caching/#pip-cache
 cache: pip
 
 before_install:
   - pip install --upgrade pip
-  - mkdir libs
 
 install:
-  - root=$PWD
+  - mkdir libs
+#  - root=$PWD
 #  - cd $root/libs && git clone https://github.com/Borda/pyGCO.git
-#  - cd $root/libs/pyGCO && pip install -r requirements.txt
-#  - cd $root/libs/pyGCO && python setup.py install
-#  - rm -r -f $here/libs/pyGCO
-  - cd $root
+#  - cd $root/libs/pyGCO && pip install -r requirements.txt && python setup.py install
+#  - rm -r -f $root/libs/pyGCO
+#  - cd $root
 
   - pip install -r requirements.txt
-  - pip install nose>=1.3.7 coverage codecov pytest>=3.0.5 codacy-coverage
+  - pip install "nose>=1.3.7" coverage codecov "pytest>=3.0.5" codacy-coverage
 
 before_script:
   - mkdir data && mkdir output && mkdir results
+  - gcc --version ; python --version ; pip --version ; pwd ; ls -l
   - python setup.py build_ext --inplace
 
 script:
@@ -47,9 +48,9 @@ script:
   - python setup.py install
 
 after_success:
-  # - codecov  # public repository on Travis CI
+  - codecov  # public repository on Travis CI
   # private repository on Travis CI
-  - codecov -t 80efed4e-ac2b-4fea-a642-0a8b1c82e1c8
+  # - codecov -t 80efed4e-ac2b-4fea-a642-0a8b1c82e1c8
   - coverage xml
   - python-codacy-coverage -r coverage.xml
   - coverage report

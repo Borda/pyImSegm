@@ -37,8 +37,7 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
+if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
@@ -62,7 +61,8 @@ import imsegm.classification as seg_clf
 import imsegm.superpixels as seg_spx
 import imsegm.graph_cuts as seg_gc
 from run_segm_slic_model_graphcut import (arg_parse_params, load_image,
-                                          parse_imgs_idx_path, get_idx_name)
+                                          parse_imgs_idx_path, get_idx_name,
+                                          write_skip_file)
 
 NAME_EXPERIMENT = 'experiment_segm-Supervised'
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
@@ -120,14 +120,13 @@ FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'median'),
                     'tLM': ('mean', 'std', 'energy', 'meanGrad')}
 FEATURES_SET_MIN = {'color': ('mean', 'std', 'energy'),
-                    'tLM_s': ('mean', )}
+                    'tLM_short': ('mean', )}
 FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
                     'tLM': ('mean', 'std')}
 # Default parameter configuration
 SEGM_PARAMS = {
     'name': 'ovary',
     'nb_classes': None,
-    'clr_space': 'rgb',
     'img_type': '2d_split',
     'slic_size': 35,
     'slic_regul': 0.3,
@@ -146,9 +145,9 @@ PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SEGM_PARAMS.update({
-    'path_train_list': os.path.join(PATH_IMAGES,
-                                    'list_imgs-annot-struct_short.csv'),
-    'path_predict_imgs': os.path.join(PATH_IMAGES, 'image', 'insitu43*.tif'),
+    'path_train_list': os.path.join(PATH_IMAGES, 'list_imgs-annot-struct.csv'),
+    # 'path_predict_imgs': os.path.join(PATH_IMAGES, 'image', 'insitu43*.tif'),
+    'path_predict_imgs': '',
     'path_out': PATH_RESULTS,
 })
 
@@ -171,7 +170,7 @@ def visu_histogram_labels(params, dict_label_hist, fig_name=NAME_FIG_LABEL_HISTO
 def use_rgb_image(img, clr='rgb'):
     # clr = params.get('clr_space', 'rgb').lower()
     if img.ndim == 3 and img.shape[-1] in (3, 4):
-        img_rgb = seg_pipe.convert_img_color_to_rgb(img, clr)
+        img_rgb = tl_data.convert_img_color_to_rgb(img, clr)
     elif img.ndim == 2:
         img_rgb = sk_color.gray2rgb(img)
     else:
@@ -209,10 +208,10 @@ def load_image_annot_compute_features_labels(idx_row, params,
     #     img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     slic = seg_spx.segment_slic_img2d(img, sp_size=params['slic_size'],
                                       rltv_compact=params['slic_regul'])
-    img = seg_pipe.convert_img_color_from_rgb(img, params.get('clr_space', 'rgb'))
+    img = tl_data.convert_img_color_from_rgb(img, params.get('clr_space', 'rgb'))
     logging.debug('computed SLIC with %i labels', slic.max())
     if show_debug_imgs:
-        img_rgb = use_rgb_image(img, params.get('clr_space', 'rbgb').lower())
+        img_rgb = use_rgb_image(img)
         img_slic = segmentation.mark_boundaries(img_rgb, slic,
                                                 color=(1, 0, 0),
                                                 mode='subpixel')
@@ -310,7 +309,7 @@ def save_dump_data(path_dump_data, imgs, annot, slics, features, labels,
 
 
 def export_draw_image_segm_contour(img, segm, path_out, name, suffix=''):
-    logging.debug('export draw image segmentation countours')
+    logging.debug('export draw image segmentation countours: %s', name)
     fig = tl_visu.figure_image_segm_results(img, segm)
     fig.savefig(os.path.join(path_out, name + suffix + '.png'))
     plt.close(fig)
@@ -332,73 +331,47 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
     idx_name = get_idx_name(idx, path_img)
-    img_rgb = load_image(path_img, params['img_type'])
-    slic = seg_spx.segment_slic_img2d(img_rgb, sp_size=params['slic_size'],
-                                      rltv_compact=params['slic_regul'])
-    img = seg_pipe.convert_img_color_from_rgb(img_rgb, params.get('clr_space',
-                                                                  'rgb'))
-    features, _ = seg_fts.compute_selected_features_img2d(img, slic,
-                                                          params['features'])
-    labels = classif.predict(features)
-    segm = labels[slic]
-    path_img = os.path.join(path_out, idx_name + '.png')
-    logging.debug('export segmentation: %s', path_img)
-    img_seg = Image.fromarray(segm.astype(np.uint8))
-    img_seg.convert('L').save(path_img)
-    # io.imsave(path_img, segm)
+    img = load_image(path_img, params['img_type'])
+
+    debug_visual = dict() if show_debug_imgs else None
+
+    gc_regul = params['gc_regul']
+    if params['gc_use_trans']:
+        label_penalty = seg_gc.compute_pairwise_cost_from_transitions(
+                                            params['label_transitions'])
+        gc_regul = (gc_regul * label_penalty)
+
+    segm_gc, segm_soft = seg_pipe.segment_color2d_slic_features_model_graphcut(
+        img, classif, sp_size=params['slic_size'], sp_regul=params['slic_regul'],
+        dict_features=params['features'], gc_regul=gc_regul,
+        gc_edge_type=params['gc_edge_type'],
+        debug_visual=debug_visual)
+    segm_map = np.argmax(segm_soft, axis=-1)
+
+    for segm, suffix in [(segm_gc, ''), (segm_map, '_MAP')]:
+        path_img = os.path.join(path_out, idx_name + suffix + '.png')
+        logging.debug('export segmentation: %s', path_img)
+        img_seg = Image.fromarray(segm.astype(np.uint8))
+        img_seg.convert('L').save(path_img)
+        # io.imsave(path_img, segm_gc)
+
+    path_npz = os.path.join(path_out, idx_name + '.npz')
+    np.savez_compressed(path_npz, segm_soft)
 
     # plt.imsave(os.path.join(path_out, idx_name + '_rgb.png'), seg_pipe)
     if path_visu is not None and os.path.isdir(path_visu):
-        export_draw_image_segm_contour(img_rgb, segm, path_visu, idx_name)
-
-    try:  # in case some classiefier do not support predict_proba
-        proba = classif.predict_proba(features)
-        segm_soft = proba[slic]
-        path_npz = os.path.join(path_out, idx_name + '.npz')
-        np.savez_compressed(path_npz, segm_soft)
-    except Exception:
-        logging.warning('classif: %s not support predict_proba(...)',
-                        repr(classif))
-        proba = None
-        segm_soft = None
-
-    # if probabilities was not estimated of GC regul. is zero
-    if proba is not None and params['gc_regul'] > 0:
-        gc_regul = params['gc_regul']
-        if params['gc_use_trans']:
-            label_penalty = seg_gc.compute_pairwise_cost_from_transitions(
-                                                params['label_transitions'])
-            gc_regul = (gc_regul * label_penalty)
-        labels_gc = seg_gc.segment_graph_cut_general(slic, proba, img, features,
-                                     gc_regul, edge_type=params['gc_edge_type'])
-        # labels_gc = seg_gc.segment_graph_cut_simple(slic, proba, gc_regul)
-        segm_gc = labels_gc[slic]
-        # relabel according classif classes
-        segm_gc = classif.classes_[segm_gc]
-
-        path_img = os.path.join(path_out, idx_name + '_gc.png')
-        logging.debug('export segmentation: %s', path_img)
-        img_seg_gc = Image.fromarray(segm_gc.astype(np.uint8))
-        img_seg_gc.convert('L').save(path_img)
-        # io.imsave(path_img, segm_gc)
-
-        if path_visu is not None and os.path.isdir(path_visu):
-            export_draw_image_segm_contour(img_rgb, segm_gc, path_visu,
-                                           idx_name, '_gc')
-            if show_debug_imgs:
-                labels_map = np.argmax(proba, axis=1)
-                plt.imsave(os.path.join(path_visu, idx_name + '_map.png'),
-                           labels_map[slic])
-                if not segm_soft is None:
-                    for lb in range(segm_soft.shape[2]):
-                        uc_name = idx_name + '_gc_unary-lb%i.png' % lb
-                        plt.imsave(os.path.join(path_visu, uc_name),
-                                   segm_soft[:, :, lb], vmin=0., vmax=1.,
-                                   cmap=plt.cm.Greens)
-    else:
-        segm_gc = np.zeros(segm.shape)
+        export_draw_image_segm_contour(img, segm_gc, path_visu,
+                                       idx_name, '_GC')
+        export_draw_image_segm_contour(img, segm_map, path_visu,
+                                       idx_name, '_MAP')
+        if show_debug_imgs and debug_visual is not None:
+            path_fig = os.path.join(path_visu, str(idx_name) + '_debug.png')
+            logging.debug('exporting (debug) visualization: %s', path_fig)
+            fig = tl_visu.figure_segm_graphcut_debug(debug_visual)
+            fig.savefig(path_fig, bbox_inches='tight', pad_inches=0.1)
+            plt.close(fig)
     # gc.collect(), time.sleep(1)
-    return idx_name, segm, segm_gc
+    return idx_name, segm_map, segm_gc
 
 
 def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
@@ -697,7 +670,7 @@ def main_train(params):
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running TRAINING...')
-    show_debug_imgs = params.get('visual', False) or SHOW_DEBUG_IMAGES
+    show_debug_imgs = params.get('visual', False)
 
     reload_dir_config = (os.path.isfile(params.get('path_config', ''))
                          or FORCE_RELOAD)
@@ -707,7 +680,7 @@ def main_train(params):
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_BASE)
-    if params.get('visual', False):
+    if show_debug_imgs:
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
     df_stat = pd.DataFrame()
 
@@ -752,28 +725,39 @@ def main_train(params):
     # drop "do not care" label which are -1
     features = np.nan_to_num(features)
 
-    nb_holdout = max(1, int(round(len(sizes) * CROSS_VAL_LEAVE_OUT_SEARCH)))
+    nb_holdout = params.get('cross_val', CROSS_VAL_LEAVE_OUT_SEARCH)
+    nb_holdout = max(1, int(round(len(sizes) * nb_holdout)))  # minimum is 1
+    nb_holdout = min(nb_holdout, int(len(sizes) / 2))  # max is half of the set
     params, classif, path_classif = load_train_classifier(params, features,
                                                           labels,  feature_names,
                                                           sizes, nb_holdout)
 
-    # test classif on images
+    # test classif. on images
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     paths_img = df_paths['path_image'].tolist()
     perform_predictions(params, paths_img, classif,
                         show_debug_imgs=show_debug_imgs)
 
+    def _path_expt(n):
+        return os.path.join(params['path_exp'], n)
+
     # LEAVE ONE OUT
-    if RUN_CROSS_VAL_LOO:
+    if params.get('run_LOO', RUN_CROSS_VAL_LOO):
         df_stat = experiment_loo(params, df_stat, dict_annot, paths_img,
                                  path_classif, path_dump,
                                  show_debug_imgs=show_debug_imgs)
+    else:
+        write_skip_file(_path_expt(FOLDER_LOO))
+        write_skip_file(_path_expt(FOLDER_LOO_VISU))
 
     # LEAVE P OUT
-    if RUN_CROSS_VAL_LPO:
+    if params.get('run_LPO', RUN_CROSS_VAL_LPO):
         df_stat = experiment_lpo(params, df_stat, dict_annot, paths_img,
                                  path_classif, path_dump, nb_holdout,
                                  show_debug_imgs=show_debug_imgs)
+    else:
+        write_skip_file(_path_expt(FOLDER_LPO))
+        write_skip_file(_path_expt(FOLDER_LPO_VISU))
 
     logging.info('Statistic: \n %s', repr(df_stat.describe()))
     logging.info('training DONE')
@@ -811,7 +795,7 @@ def try_segment_image(img_idx_path, params, classif, path_out, path_visu,
         return '', None, None
 
 
-def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
+def main_predict(path_classif, path_pattern_imgs, path_out, name='SEGMENT___',
                  params_local=None):
     """ given trained classifier segment new images
 
@@ -822,6 +806,7 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
     """
     logging.getLogger().setLevel(logging.INFO)
     logging.info('running PREDICTION...')
+    assert path_pattern_imgs is not None
 
     dict_classif = seg_clf.load_classifier(path_classif)
     classif = dict_classif['clf_pipeline']
@@ -839,9 +824,10 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='segment_',
                  path_pattern_imgs)
 
     logging.debug('run prediction...')
+    show_debug_imgs = params.get('visual', False)
     _wrapper_segment = partial(try_segment_image, params=params, classif=classif,
                                path_out=path_out, path_visu=path_visu,
-                               show_debug_imgs=SHOW_DEBUG_IMAGES)
+                               show_debug_imgs=show_debug_imgs)
     list_img_path = list(zip([None] * len(paths_img), paths_img))
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, list_img_path,
                                           nb_jobs=params['nb_jobs'],

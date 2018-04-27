@@ -29,11 +29,11 @@ class TestSuperpixels(unittest.TestCase):
 
     def test_segm_connect(self):
         logging.debug(self.seg2d)
-        vertices, edges = seg_spx.make_graph_segm_connect2d_conn4(self.seg2d)
+        vertices, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(self.seg2d)
         logging.debug('vertices: {} -> edges: {}'.format(vertices, edges))
 
         logging.debug(self.seg3d)
-        vertices, edges = seg_spx.make_graph_segm_connect3d_conn6(self.seg3d)
+        vertices, edges = seg_spx.make_graph_segm_connect_grid3d_conn6(self.seg3d)
         logging.debug('vertices: {} -> edges: {}'.format(vertices, edges))
 
     def test_general(self):
@@ -41,7 +41,7 @@ class TestSuperpixels(unittest.TestCase):
 
         logging.debug(np.max(slic))
 
-        vertices, edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+        vertices, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
         logging.debug(repr(vertices))
         logging.debug(len(edges))
         logging.debug(repr(edges))

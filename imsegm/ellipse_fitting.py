@@ -585,7 +585,7 @@ def filter_boundary_points(segm, slic):
     slic_centers = np.array(seg_spx.superpixel_centers(slic)).astype(int)
     labels = segm[slic_centers[:, 0], slic_centers[:, 1]]
 
-    vertices, edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+    vertices, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
     nb_labels = labels.max() + 1
 
     neighbour_labels = np.zeros((len(vertices), nb_labels))

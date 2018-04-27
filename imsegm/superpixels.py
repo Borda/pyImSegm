@@ -118,7 +118,7 @@ def make_graph_segment_connect_edges(vertices, all_edges):
     :param all_edges:
     :return:
     """
-    # SEE http://peekaboo-vision.blogspot.cz/2011/08/region-connectivity-graphs-in-python.html
+    # SEE: http://peekaboo-vision.blogspot.cz/2011/08/region-connectivity-graphs-in-python.html
     all_edges = all_edges[all_edges[:, 0] != all_edges[:, 1],:]
     all_edges = np.sort(all_edges, axis=1)
     nb_vertices = len(vertices)
@@ -137,8 +137,8 @@ def get_segment_diffs_2d_conn4(grid):
     :param ndarray grid: segmentation
     :return [(int, int)]:
     """
-    down = np.c_[grid[:-1,:].ravel(), grid[1:,:].ravel()]
-    right = np.c_[grid[:,:-1].ravel(), grid[:, 1:].ravel()]
+    down = np.c_[grid[:-1, :].ravel(), grid[1:, :].ravel()]
+    right = np.c_[grid[:, :-1].ravel(), grid[:, 1:].ravel()]
     return np.vstack([right, down])
 
 
@@ -148,20 +148,20 @@ def get_segment_diffs_3d_conn6(grid):
     :param ndarray grid: segmentation
     :return [(int, int, int)]:
     """
-    bellow = np.c_[grid[:-1,:,:].ravel(), grid[1:,:,:].ravel()]
-    down = np.c_[grid[:,:-1,:].ravel(), grid[:, 1:,:].ravel()]
-    right = np.c_[grid[:,:,:-1].ravel(), grid[:,:, 1:].ravel()]
+    bellow = np.c_[grid[:-1, :, :].ravel(), grid[1:, :, :].ravel()]
+    down = np.c_[grid[:, :-1, :].ravel(), grid[:, 1:, :].ravel()]
+    right = np.c_[grid[:, :, :-1].ravel(), grid[:, :, 1:].ravel()]
     return np.vstack([bellow, right, down])
 
 
-def make_graph_segm_connect2d_conn4(grid):
+def make_graph_segm_connect_grid2d_conn4(grid):
     """ construct graph of connected components
 
     :param ndarray grid: segmentation
     :return [int], [(int, int)]:
 
     >>> grid = np.array([[0] * 5 + [1] * 5, [2] * 5 + [3] * 5])
-    >>> v, edges = make_graph_segm_connect2d_conn4(grid)
+    >>> v, edges = make_graph_segm_connect_grid2d_conn4(grid)
     >>> v
     array([0, 1, 2, 3])
     >>> edges
@@ -177,7 +177,7 @@ def make_graph_segm_connect2d_conn4(grid):
     return make_graph_segment_connect_edges(vertices, all_edges)
 
 
-def make_graph_segm_connect3d_conn6(grid):
+def make_graph_segm_connect_grid3d_conn6(grid):
     """ construct graph of connected components
 
     :param ndarray grid: segmentation
@@ -185,7 +185,7 @@ def make_graph_segm_connect3d_conn6(grid):
 
     >>> grid_2d = np.array([[0] * 5 + [1] * 5, [2] * 5 + [3] * 5])
     >>> grid = np.array([grid_2d, grid_2d + 4])
-    >>> v, edges = make_graph_segm_connect3d_conn6(grid)
+    >>> v, edges = make_graph_segm_connect_grid3d_conn6(grid)
     >>> v
     array([0, 1, 2, 3, 4, 5, 6, 7])
     >>> edges  # doctest: +NORMALIZE_WHITESPACE

@@ -1,13 +1,53 @@
 {
-	"clr_space": "hsv",
 	"slic_size": 35,
+	"slic_size---OPTIONS": "unsigned integer",
+	
 	"slic_regul": 0.2,
-	"features": {"color": ["mean", "std", "eng"]},
+	"slic_regul---OPTIONS": "float between 0 ad 1",
+	
+	"features": {"color_rgb": ["mean", "std", "energy"]},
+	"features---OPTIONS": {
+		"color": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_hsv": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_luv": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_lab": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_hed": ["mean", "std", "energy", "median", "meanGrad"],
+		"color_xyz": ["mean", "std", "energy", "median", "meanGrad"],
+		"tLM":   ["mean", "std", "energy", "median", "meanGrad"],
+        "tLM_short": ["mean", "std", "energy", "median", "meanGrad"]
+	},
+	
 	"pca_coef": null,
+	"pca_coef---OPTIONS": "float between 0 and 1 or None",
+	
 	"estim_model": "GMM",
+	"estim_model---OPTIONS": ["GMM", "GMM_kmeans", "GMM_Otsu",
+							  "kmeans", "kmeans_quantiles", "BGM"],
+	
+	"label_purity": 0.95,
+	"label_purity---OPTIONS": "float between 0 ad 1",
+	
 	"balance": "unique",
+	"balance---OPTIONS": ["random", "kmeans", "unique"],
+	
 	"classif": "RandForest",
-    "nb_classif_search": 250,
+	"classif---OPTIONS": ["RandForest", "KNN", "SVM", "DecTree",
+						  "GradBoost", "LogistRegr", "AdaBoost"],
+	
+    "nb_classif_search": 50,
+	"nb_classif_search---OPTIONS": "unsigned integer",
+	
 	"gc_edge_type": "model",
-	"gc_regul": 3.0
+	"gc_edge_type---OPTIONS": ["spatial", "color", "features",
+							   "model", "model_l1", "model_l2", "model_lT"],
+	
+	"gc_regul": 3.0,
+	"gc_regul--OPTIONS": "positive float",
+	
+	"cross_val": 0.1,
+	"cross_val---OPTIONS": "float between 0 and 1",
+
+	"run_LOO": true,
+	"run_LPO": true,
+	"run_groupGMM": true
 }

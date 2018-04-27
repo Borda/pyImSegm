@@ -63,10 +63,10 @@ def arg_parse_params(dict_paths):
         'output': tl_data.update_path(args.path_out),
     }
     for k in dict_paths:
-        if dict_paths[k] == '' or k == 'output':
+        if dict_paths[k] == '':
             continue
         p = os.path.dirname(dict_paths[k]) \
-            if '*' in dict_paths[k] else dict_paths[k]
+            if k in ['annot', 'image', 'output'] else dict_paths[k]
         assert os.path.exists(p), 'missing (%s) "%s"' % (k, p)
     return dict_paths, args
 

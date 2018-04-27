@@ -35,7 +35,7 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
                                       edge_type='model',
                                       coef_shape=0., shape_mean_std=(50., 10.),
                                       add_neighbours=False,
-                                      dict_debug_imgs=None):
+                                      debug_visual=None):
     """ object segmentation using Graph Cut directly on super-pixel level
 
     :param ndarray slic: superpixel pre-segmentation
@@ -48,7 +48,7 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
     :param float coef_shape: set the weight of shape prior
     :param shape_mean_std: mean and STD for shape prior
     :param bool add_neighbours: add also neighboring supepixels to the center
-    :param {} dict_debug_imgs: dictionary with some intermediate results
+    :param {} debug_visual: dictionary with some intermediate results
     :return [[int]]:
 
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3 + [3] * 3 + [4] * 3,
@@ -130,11 +130,11 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
     graph_labels = cut_general_graph(edges, edge_weights, unary_cost,
                                      pairwise_cost, n_iter=999)
 
-    if dict_debug_imgs is not None:
+    if debug_visual is not None:
         list_unary_imgs = []
         for i in range(unary_cost.shape[-1]):
             list_unary_imgs.append(unary_cost[:, i][slic])
-        dict_debug_imgs['unary_imgs'] = list_unary_imgs
+        debug_visual['unary_imgs'] = list_unary_imgs
 
     return graph_labels
 
@@ -143,7 +143,7 @@ def object_segmentation_graphcut_pixels(segm, centres,
                                         labels_fg_prob=(0.1, 0.9),
                                         gc_regul=1, seed_size=0, coef_shape=0.,
                                         shape_mean_std=(50., 10.),
-                                        dict_debug_imgs=None):
+                                        debug_visual=None):
     """ object segmentation using Graph Cut directly on pixel level
 
     :param ndarray centres:
@@ -154,7 +154,7 @@ def object_segmentation_graphcut_pixels(segm, centres,
     :param int seed_size: create circular neighoing around initaial centre
     :param float coef_shape: set the weight of shape prior
     :param shape_mean_std: mean and STD for shape prior
-    :param {} dict_debug_imgs: dictionary with some intermediate results
+    :param {} debug_visual: dictionary with some intermediate results
     :return [[int]]:
 
     >>> segm = np.array([[0] * 10,
@@ -226,11 +226,11 @@ def object_segmentation_graphcut_pixels(segm, centres,
     labels = cut_grid_graph(unary, pairwise, cost_v, cost_h, n_iter=999)
     segm_obj = labels.reshape(*segm.shape)
 
-    if dict_debug_imgs is not None:
+    if debug_visual is not None:
         list_unary_imgs = []
         for i in range(unary.shape[-1]):
             list_unary_imgs.append(unary[:, :, i])
-        dict_debug_imgs['unary_imgs'] = list_unary_imgs
+        debug_visual['unary_imgs'] = list_unary_imgs
     return segm_obj
 
 
@@ -1212,7 +1212,7 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
-    _, edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+    _, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
     slic_neighbours = seg_spx.get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
     prob_fg_labels = np.array(prob_fg_labels)
@@ -1505,7 +1505,7 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
-    _, edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+    _, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
     slic_neighbours = seg_spx.get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
     prob_fg_labels = np.array(prob_fg_labels)

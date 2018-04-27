@@ -147,7 +147,7 @@ def arg_parse_params(params):
                         default=params['path_output'])
     parser.add_argument('-n', '--name', type=str, required=False,
                         help='name of the experiment', default='ovary')
-    parser.add_argument('-config', '--path_config', type=str, required=False,
+    parser.add_argument('-cfg', '--path_config', type=str, required=False,
                         help='path to the configuration', default=None)
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
@@ -157,7 +157,7 @@ def arg_parse_params(params):
         if not isinstance(params[k], str) or params[k].lower() == 'none':
             paths[k] = ''
             continue
-        if '*' in params[k] or k == 'path_expt':
+        if k in ['path_images', 'path_segms', 'path_centers', 'path_expt']:
             p_dir = tl_data.update_path(os.path.dirname(params[k]))
             paths[k] = os.path.join(p_dir, os.path.basename(params[k]))
         else:
@@ -357,7 +357,7 @@ def estim_points_compute_features(name, img, segm, params):
     slic = seg_spx.segment_slic_img2d(img, params['slic_size'],
                                       params['slic_regul'])
     slic_centers = seg_spx.superpixel_centers(slic)
-    # slic_edges = seg_spx.make_graph_segm_connect2d_conn4(slic)
+    # slic_edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
 
     features, feature_names = compute_points_features(segm, slic_centers,
                                                       params)
@@ -656,7 +656,8 @@ def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
                                  path_output=params['path_expt'])
     df_stat = pd.DataFrame()
     iterate = tl_expt.WrapExecuteSequence(_wrapper_detection,
-                                          gener_data, nb_jobs=params['nb_jobs'])
+                                          gener_data, nb_jobs=params['nb_jobs'],
+                                          desc='detect center candidates')
     for dict_stat in iterate:
         df_stat = df_stat.append(dict_stat, ignore_index=True)
         df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STAT_TRAIN))

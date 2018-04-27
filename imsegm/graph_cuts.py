@@ -281,9 +281,9 @@ def get_vertexes_edges(segments):
     :return:
     """
     if segments.ndim == 3:
-        vertices, edges = seg_spx.make_graph_segm_connect3d_conn6(segments)
+        vertices, edges = seg_spx.make_graph_segm_connect_grid3d_conn6(segments)
     elif segments.ndim == 2:
-        vertices, edges = seg_spx.make_graph_segm_connect2d_conn4(segments)
+        vertices, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(segments)
     else:
         return None, None
     return vertices, edges
@@ -517,7 +517,8 @@ def compute_unary_cost(proba):
     (50, 2)
     """
     proba = proba.copy()
-    proba[proba < 1e-99] = 1e-99
+    # constrain that each class should have at least 1.%
+    proba[proba < 1e-2] = 1e-2
     # unary_cost = np.array(1. / proba , dtype=np.float64)
     unary_cost = np.abs(np.array(-np.log(proba), dtype=np.float64))
     return unary_cost
@@ -533,25 +534,26 @@ def compute_pairwise_cost(gc_regul, proba_shape):
     # original and the right way...
     pairwise = create_pairwise_matrix(gc_regul, proba_shape[1])
     pairwise_cost = np.array(pairwise, dtype=np.float64)
+    pairwise_cost[pairwise_cost > 1e2] = 1e2
     return pairwise_cost
 
 
-def insert_gc_debug_images(dict_debug_imgs, segments, graph_labels, unary_cost,
+def insert_gc_debug_images(debug_visual, segments, graph_labels, unary_cost,
                            edges, edge_weights):
     """ wrapper for placing intermediate variable to a dictionary """
-    if dict_debug_imgs is None:
+    if debug_visual is None:
         return
-    dict_debug_imgs['segments'] = segments
-    dict_debug_imgs['edges'] = edges
-    dict_debug_imgs['edge_weights'] = edge_weights
-    dict_debug_imgs['imgs_unary_cost'] = \
+    debug_visual['segments'] = segments
+    debug_visual['edges'] = edges
+    debug_visual['edge_weights'] = edge_weights
+    debug_visual['imgs_unary_cost'] = \
         tl_visu.draw_graphcut_unary_cost_segments(segments, unary_cost)
-    img = dict_debug_imgs.get('slic_mean', None)
+    img = debug_visual.get('slic_mean', None)
     list_centres = seg_spx.superpixel_centers(segments)
-    dict_debug_imgs['img_graph_edges'] = \
+    debug_visual['img_graph_edges'] = \
         tl_visu.draw_graphcut_weighted_edges(segments, list_centres, edges,
                                              edge_weights, img_bg=img)
-    dict_debug_imgs['img_graph_segm'] = \
+    debug_visual['img_graph_segm'] = \
         tl_visu.draw_color_labeling(segments, graph_labels)
 
 
@@ -609,7 +611,6 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
         edge_weights = compute_edge_model(edges, proba, metric)
     elif edge_type == 'color':
         assert image is not None, '"image" is required'
-        # {'color': ['mean', 'median']}
         image_float = np.array(image, dtype=float)
         if np.max(image) > 1:
             image_float /= 255.
@@ -641,14 +642,14 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
 
 def segment_graph_cut_general(segments, proba, image=None, features=None,
                               gc_regul=1., edge_type='model', edge_cost=1.,
-                              dict_debug_imgs=None):
+                              debug_visual=None):
     """ segment the image segmented via superpixels and estimated features
 
     :param ndarray features: features sor each instance
     :param ndarray segments: segmentation mapping each pixel into a class
     :param ndarray proba: probabilities that each feature belongs to each class
     :param gc_regul: regularisation for GrphCut
-    :param {} dict_debug_imgs:
+    :param {} debug_visual:
     :return [int]: labelling by resulting classes
 
     >>> np.random.seed(0)
@@ -680,11 +681,11 @@ def segment_graph_cut_general(segments, proba, image=None, features=None,
     >>> proba += np.random.random(proba.shape) / 2.
     >>> np.argmax(proba, axis=1)
     array([0, 0, 0, 1, 1, 1])
-    >>> dict_debug_imgs = dict()
+    >>> debug_visual = dict()
     >>> segment_graph_cut_general(slic, proba, gc_regul=0., edge_type='',
-    ...                           dict_debug_imgs=dict_debug_imgs)
+    ...                           debug_visual=debug_visual)
     array([0, 0, 0, 1, 1, 1], dtype=int32)
-    >>> sorted(dict_debug_imgs.keys())  #doctest: +NORMALIZE_WHITESPACE
+    >>> sorted(debug_visual.keys())  #doctest: +NORMALIZE_WHITESPACE
     ['edge_weights', 'edges', 'img_graph_edges', 'img_graph_segm',
      'imgs_unary_cost', 'segments']
     """
@@ -708,7 +709,7 @@ def segment_graph_cut_general(segments, proba, image=None, features=None,
                                      # down_weight_factor=np.abs(unary_cost).max()
                                      init_labels=labels, n_iter=9999)
 
-    insert_gc_debug_images(dict_debug_imgs, segments, graph_labels,
+    insert_gc_debug_images(debug_visual, segments, graph_labels,
                            compute_unary_cost(proba), edges, edge_weights)
     return graph_labels
 
@@ -759,7 +760,7 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
     return transitions
 
 
-def compute_pairwise_cost_from_transitions(trans, min_prob=1e-32):
+def compute_pairwise_cost_from_transitions(trans, min_prob=1e-9):
     """ compute pairwise cost from segments-label transitions
 
     :param ndarray trans:
@@ -769,17 +770,17 @@ def compute_pairwise_cost_from_transitions(trans, min_prob=1e-32):
     ...                   [  5.,  10.,  8.],
     ...                   [  0.,   8.,  30.]])
     >>> np.round(compute_pairwise_cost_from_transitions(trans), 3)
-    array([[  0.182,   1.526,  73.683],
+    array([[  0.182,   1.526,  20.723],
            [  1.526,   0.833,   1.056],
-           [ 73.683,   1.056,   0.236]])
+           [ 20.723,   1.056,   0.236]])
     >>> np.round(compute_pairwise_cost_from_transitions(np.ones(3)), 2)
     array([[ 1.1,  1.1,  1.1],
            [ 1.1,  1.1,  1.1],
            [ 1.1,  1.1,  1.1]])
     >>> np.round(compute_pairwise_cost_from_transitions(np.eye(3)), 2)
-    array([[  0.  ,  73.68,  73.68],
-           [ 73.68,   0.  ,  73.68],
-           [ 73.68,  73.68,   0.  ]])
+    array([[  0.  ,  20.72,  20.72],
+           [ 20.72,   0.  ,  20.72],
+           [ 20.72,  20.72,   0.  ]])
     """
     # e_x = np.exp(trans - np.max(trans))  # softmax
     # softmax = e_x / e_x.sum(axis=0)

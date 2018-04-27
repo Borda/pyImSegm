@@ -32,8 +32,7 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
+if os.environ.get('DISPLAY', '') == '':
     logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
@@ -85,14 +84,13 @@ FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'median'),
                     'tLM': ('mean', 'std', 'energy', 'meanGrad')}
 FEATURES_SET_MIN = {'color': ('mean', 'std', 'energy'),
-                    'tLM_s': ('mean', )}
+                    'tLM_short': ('mean', )}
 FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
                     'tLM': ('mean', 'std')}
 # Default parameter configuration
 SEGM_PARAMS = {
     'name': 'imgDisk',
     'nb_classes': 3,
-    'clr_space': 'rgb',
     'img_type': '2d_rgb',
     'slic_size': 35,
     'slic_regul': 0.2,
@@ -109,9 +107,10 @@ PATH_IMAGES = os.path.join(tl_data.update_path('data_images'), 'drosophila_disc'
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_EXPERIMENT = 'experiment_segm-unSupervised'
 SEGM_PARAMS.update({
-    'path_train_list': os.path.join(PATH_IMAGES,
-                                    'list_imaginal-disks_short.csv'),
+    # 'path_train_list': os.path.join(PATH_IMAGES, 'list_imaginal-disks.csv'),
+    'path_train_list': '',
     'path_predict_imgs': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
+    # 'path_predict_imgs': '',
     'path_out': PATH_RESULTS,
 })
 
@@ -126,16 +125,16 @@ def arg_parse_params(params):
     parser.add_argument('-l', '--path_train_list', type=str, required=False,
                         help='path to the list of image',
                         default=params['path_train_list'])
-    parser.add_argument('-i', '--path_predict_imgs', type=str,
+    parser.add_argument('-i', '--path_predict_imgs', type=str, required=False,
                         help='path to folder & name pattern with new image',
-                        required=False, default=params['path_predict_imgs'])
+                        default=params['path_predict_imgs'])
     parser.add_argument('-o', '--path_out', type=str, required=False,
                         help='path to the output directory',
                         default=params['path_out'])
     parser.add_argument('-n', '--name', type=str, required=False,
                         help='name of the experiment', default=params['name'])
-    parser.add_argument('--path_config', type=str, required=False, default='',
-                        help='path to the segmentation config')
+    parser.add_argument('-cfg', '--path_config', type=str, required=False,
+                        help='path to the segmentation config', default='')
     parser.add_argument('--img_type', type=str, required=False,
                         default=params['img_type'], choices=TYPES_LOAD_IMAGE,
                         help='type of image to be loaded')
@@ -155,7 +154,7 @@ def arg_parse_params(params):
     for k in (k for k in args if 'path' in k):
         if args[k] == '' or args[k] == 'none': continue
         args[k] = tl_data.update_path(args[k])
-        p = os.path.dirname(args[k]) if '*' in args[k] else args[k]
+        p = os.path.dirname(args[k]) if k == 'path_predict_imgs' else args[k]
         assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
     # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
@@ -263,14 +262,14 @@ def get_idx_name(idx, path_img):
         return im_name
 
 
-def export_visual(idx_name, img, segm, dict_debug_imgs=None,
+def export_visual(idx_name, img, segm, debug_visual=None,
                   path_out=None, path_visu=None):
     """ export visualisations
 
     :param str idx_name:
     :param ndarray img: input image
     :param ndarray segm: resulting segmentation
-    :param dict_debug_imgs: dictionary with debug images
+    :param debug_visual: dictionary with debug images
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
     """
@@ -292,10 +291,10 @@ def export_visual(idx_name, img, segm, dict_debug_imgs=None,
         plt.close(fig)
 
     if path_visu is not None and os.path.isdir(path_visu) \
-            and dict_debug_imgs is not None:
+            and debug_visual is not None:
         path_fig = os.path.join(path_visu, str(idx_name) + '_debug.png')
         logging.debug('exporting (debug) visualization: %s', path_fig)
-        fig = tl_visu.figure_segm_graphcut_debug(dict_debug_imgs)
+        fig = tl_visu.figure_segm_graphcut_debug(debug_visual)
         fig.savefig(path_fig, bbox_inches='tight', pad_inches=0.1)
         plt.close(fig)
 
@@ -318,24 +317,26 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    dict_debug_imgs = dict() if show_debug_imgs else None
+    debug_visual = dict() if show_debug_imgs else None
     try:
-        segm = seg_pipe.pipe_color2d_slic_features_gmm_graphcut(
-            img, nb_classes=params['nb_classes'], clr_space=params['clr_space'],
+        segm, segm_soft = seg_pipe.pipe_color2d_slic_features_model_graphcut(
+            img, nb_classes=params['nb_classes'],
             sp_size=params['slic_size'], sp_regul=params['slic_regul'],
             dict_features=params['features'], estim_model=params['estim_model'],
             pca_coef=params['pca_coef'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
-            dict_debug_imgs=dict_debug_imgs)
+            debug_visual=debug_visual)
+        path_npz = os.path.join(path_out, idx_name + '.npz')
+        np.savez_compressed(path_npz, segm_soft)
     except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
 
-    boundary_size = int(np.sqrt(np.prod(segm.shape)) * 0.01)
+    boundary_size = int(params['slic_size'] * 3)
     segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0,
                                          boundary_size=boundary_size)
 
-    export_visual(idx_name, img, segm, dict_debug_imgs, path_out, path_visu)
+    export_visual(idx_name, img, segm, debug_visual, path_out, path_visu)
 
     # gc.collect(), time.sleep(1)
     return idx_name, segm
@@ -363,15 +364,16 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    dict_debug_imgs = dict() if show_debug_imgs else None
+    debug_visual = dict() if show_debug_imgs else None
 
     try:
-        segm = seg_pipe.segment_color2d_slic_features_model_graphcut(
-            img, model, clr_space=params['clr_space'],
-            sp_size=params['slic_size'], sp_regul=params['slic_regul'],
+        segm, segm_soft = seg_pipe.segment_color2d_slic_features_model_graphcut(
+            img, model, sp_size=params['slic_size'], sp_regul=params['slic_regul'],
             dict_features=params['features'], gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
-            dict_debug_imgs=dict_debug_imgs)
+            debug_visual=debug_visual)
+        path_npz = os.path.join(path_out, idx_name + '.npz')
+        np.savez_compressed(path_npz, segm_soft)
     except Exception:
         logging.error(traceback.format_exc())
         segm = np.zeros(img.shape[:2])
@@ -380,7 +382,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0,
                                          boundary_size=boundary_size)
 
-    export_visual(idx_name, img, segm, dict_debug_imgs, path_out, path_visu)
+    export_visual(idx_name, img, segm, debug_visual, path_out, path_visu)
 
     # gc.collect(), time.sleep(1)
     return idx_name, segm
@@ -422,6 +424,8 @@ def experiment_single_gmm(params, paths_img, path_out, path_visu,
     # for name, segm in iterate:
     #     dict_segms_gmm[name] = segm
     dict_segms_gmm = dict(iterate)
+    gc.collect()
+    time.sleep(1)
     return dict_segms_gmm
 
 
@@ -438,9 +442,9 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
     else:
         model, _ = seg_pipe.estim_model_classes_group(
             list_images, nb_classes=params['nb_classes'],
-            clr_space=params['clr_space'], sp_size=params['slic_size'],
-            sp_regul=params['slic_regul'], dict_features=params['features'],
-            proba_type=params['estim_model'], pca_coef=params['pca_coef'])
+            dict_features=params['features'], sp_size=params['slic_size'],
+            sp_regul=params['slic_regul'], pca_coef=params['pca_coef'],
+            proba_type=params['estim_model'])
         save_model(params['path_model'], model)
 
     logging.info('Perform image segmentation from group model')
@@ -454,6 +458,8 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
     # for name, segm in iterate:
     #     dict_segms_group[name] = segm
     dict_segms_group = dict(iterate)
+    gc.collect()
+    time.sleep(1)
     return dict_segms_group
 
 
@@ -473,6 +479,12 @@ def load_path_images(params):
     return paths_img
 
 
+def write_skip_file(path_dir):
+    assert os.path.isdir(path_dir), 'missing: %s' % path_dir
+    with open(os.path.join(path_dir, 'RESULTS'), 'w') as fp:
+        fp.write('This particular experiment was skipped by user option.')
+
+
 def main(params):
     """ the main body containgn two approches:
     1) segment each image indecently
@@ -483,7 +495,7 @@ def main(params):
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running...')
-    show_debug_imgs = params.get('visual', False) or SHOW_DEBUG_IMAGES
+    show_debug_imgs = params.get('visual', False)
 
     reload_dir_config = (os.path.isfile(params['path_config']) or FORCE_RELOAD)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
@@ -510,17 +522,21 @@ def main(params):
     time.sleep(1)
 
     # Segment as model ober set of images
-    dict_segms_group = experiment_group_gmm(params, paths_img,
-                                            _path_expt(FOLDER_SEGM_GROUP),
-                                            _path_expt(FOLDER_SEGM_GROUP_VISU),
-                                            show_debug_imgs=show_debug_imgs)
-    gc.collect()
-    time.sleep(1)
+    if params.get('run_groupGMM', False):
+        dict_segms_group = experiment_group_gmm(params, paths_img,
+                                                _path_expt(FOLDER_SEGM_GROUP),
+                                                _path_expt(FOLDER_SEGM_GROUP_VISU),
+                                                show_debug_imgs=show_debug_imgs)
+    else:
+        write_skip_file(_path_expt(FOLDER_SEGM_GROUP))
+        write_skip_file(_path_expt(FOLDER_SEGM_GROUP_VISU))
+        dict_segms_group = None
 
-    df_ars = compare_segms_metric_ars(dict_segms_gmm, dict_segms_group,
-                                      suffix='_gmm-group')
-    df_ars.to_csv(_path_expt(NAME_CSV_ARS_CORES))
-    logging.info(df_ars.describe())
+    if dict_segms_group is not None:
+        df_ars = compare_segms_metric_ars(dict_segms_gmm, dict_segms_group,
+                                          suffix='_gmm-group')
+        df_ars.to_csv(_path_expt(NAME_CSV_ARS_CORES))
+        logging.info(df_ars.describe())
 
     logging.info('DONE')
     return params

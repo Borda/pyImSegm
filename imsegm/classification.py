@@ -44,6 +44,8 @@ NAME_CSV_CLASSIF_CV_ROC = 'classif_{}_cross-val_ROC-{}.csv'
 NAME_TXT_CLASSIF_CV_AUC = 'classif_{}_cross-val_AUC-{}.txt'
 METRIC_AVERAGES = ('macro', 'weighted')
 METRIC_SCORING = ('f1_macro', 'accuracy', 'precision_macro', 'recall_macro')
+# rounding unique features, in case to detail precision
+ROUND_UNIQUE_FTS_DIGITS = 3
 
 
 def create_classifiers(nb_jobs=-1):
@@ -74,12 +76,14 @@ def create_classifiers(nb_jobs=-1):
                                                          min_samples_leaf=6,
                                                          n_estimators=200,
                                                          min_samples_split=7),
-        'LogReg': linear_model.LogisticRegression(solver='sag', n_jobs=nb_jobs),
+        'LogistRegr': linear_model.LogisticRegression(solver='sag',
+                                                      n_jobs=nb_jobs),
         'KNN': neighbors.KNeighborsClassifier(n_jobs=nb_jobs),
-        'SVM': svm.SVC(kernel='rbf', probability=True),
+        'SVM': svm.SVC(kernel='rbf', probability=True,
+                       tol=2e-3, max_iter=5000),
         'DecTree': tree.DecisionTreeClassifier(),
         # 'RBM': create_pipeline_neuron_net(),
-        'Adaboost':   ensemble.AdaBoostClassifier(n_estimators=5),
+        'AdaBoost':   ensemble.AdaBoostClassifier(n_estimators=5),
         # 'NuSVM-rbf': svm.NuSVC(kernel='rbf', probability=True),
     }
     return clfs
@@ -145,14 +149,14 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
             'classif__min_samples_split': [2, 3, 5, 7, 9],
             'classif__min_samples_leaf': range(1, 7, 2),
         },
-        'LogReg': {
+        'LogistRegr': {
             'classif__C': np.linspace(0., 1., 5).tolist(),
             # 'classif__penalty': ('l1', 'l2'),
             # 'classif__dual': (False, True),
             'classif__solver': ('lbfgs', 'sag'),
             # 'classif__loss': ('deviance', 'exponential'), # only for 2 cls
         },
-        'Adaboost': {
+        'AdaBoost': {
             'classif__n_estimators': log_space(0, 2, 20),
         }
     }
@@ -200,14 +204,14 @@ def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
             'classif__min_samples_split': sp_randint(2, 9),
             'classif__min_samples_leaf': sp_randint(1, 7),
         },
-        'LogReg': {
+        'LogistRegr': {
             'classif__C': sp_random(0., 1.),
             # 'classif__penalty': ('l1', 'l2'),
             # 'classif__dual': (False, True),
             'classif__solver': ('newton-cg', 'lbfgs', 'sag'),
             # 'classif__loss': ('deviance', 'exponential'),  # only for 2 cls
         },
-        'Adaboost': {
+        'AdaBoost': {
             'classif__n_estimators': sp_randint(2, 100),
         }
     }
@@ -263,7 +267,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     >>> y_true = np.random.randint(0, 3, 25) * 2
     >>> y_pred = np.random.randint(0, 2, 25) * 2
     >>> d = compute_classif_metrics(y_true, y_true)
-    >>> d['accuracy']  # doctest: +ELLIPSIS
+    >>> d['accuracy']
     1.0
     >>> d['confusion']
     [[10, 0, 0], [0, 10, 0], [0, 0, 5]]
@@ -273,7 +277,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     >>> d['confusion']
     [[3, 7, 0], [5, 5, 0], [1, 4, 0]]
     >>> d = compute_classif_metrics(y_pred, y_pred)
-    >>> d['accuracy']  # doctest: +ELLIPSIS
+    >>> d['accuracy']
     1.0
     """
     y_true = np.array(y_true)
@@ -323,15 +327,36 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     return dict_metrics
 
 
-def compute_classif_stat_segm_annot(set_annot_segm_name, relabel=False):
-    annot, segm, name = set_annot_segm_name
-    assert segm.shape == annot.shape, 'dimension do not match: %s - %s' \
+def compute_classif_stat_segm_annot(annot_segm_name, relabel=False):
+    """ compute classification statistic between annotation and segmentation
+
+    :param (ndarray, ndarray, str) annot_segm_name:
+    :param bool relabel:
+    :return:
+
+    >>> np.random.seed(0)
+    >>> annot = np.random.randint(0, 2, (5, 10))
+    >>> segm = np.random.randint(0, 2, (5, 10))
+    >>> d = compute_classif_stat_segm_annot((annot, segm, 'ttt'), relabel=True)
+    >>> d['(FP+FN)/(TP+FN)']  # doctest: +ELLIPSIS
+    0.846...
+    >>> d['(TP+FP)/(TP+FN)']  # doctest: +ELLIPSIS
+    1.153...
+    """
+    annot, segm, name = annot_segm_name
+    assert segm.shape == annot.shape, 'dimension do not match for ' \
+                                      'segm: %s - annot: %s' \
                                       % (repr(segm.shape), repr(annot.shape))
     if relabel:
         segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=False)
     y_true, y_pred = annot.ravel(), segm.ravel()
     dict_stat = compute_classif_metrics(y_true, y_pred,
                                         metric_averages=['macro'])
+    # add binary metric
+    if len(np.unique(y_pred)) == 2:
+        dict_stat['(FP+FN)/(TP+FN)'] = compute_metric_fpfn_tpfn(y_true, y_pred)
+        dict_stat['(TP+FP)/(TP+FN)'] = compute_metric_tpfp_tpfn(y_true, y_pred)
+    # set the image name
     dict_stat['name'] = name
     return dict_stat
 
@@ -378,7 +403,8 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
     df_stat = pd.DataFrame()
     iterate = tl_expt.WrapExecuteSequence(compute_classif_stat_segm_annot,
                                           zip(annots, segms, names),
-                                          nb_jobs=nb_jobs)
+                                          nb_jobs=nb_jobs,
+                                          desc='statistic per image')
     for dict_stat in iterate:
         df_stat = df_stat.append(dict_stat, ignore_index=True)
     df_stat.set_index('name', inplace=True)
@@ -578,7 +604,7 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
     >>> np.random.seed(0)
     >>> lbs = np.random.randint(0, 3, 150)
     >>> fts = np.random.random((150, 5)) + np.tile(lbs, (5, 1)).T
-    >>> clf, p_clf = create_classif_train_export('Adaboost', fts, lbs,
+    >>> clf, p_clf = create_classif_train_export('AdaBoost', fts, lbs,
     ...                 path_out='', search_type='grid')  # doctest: +ELLIPSIS
     Fitting ...
     >>> clf  # doctest: +ELLIPSIS
@@ -1029,7 +1055,7 @@ def down_sample_dict_features_unique(dict_features):
     """
     dict_features_new = dict()
     for label in dict_features:
-        features = dict_features[label]
+        features = np.round(dict_features[label], ROUND_UNIQUE_FTS_DIGITS)
         unique_fts = np.array(unique_rows(features))
         assert features.ndim == unique_fts.ndim, 'feature dim matching'
         assert features.shape[1] == unique_fts.shape[1], \
@@ -1123,6 +1149,110 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
         sizes.append(len(labels))
 
     return np.array(features_all), np.array(labels_all, dtype=int), sizes
+
+
+def compute_tp_tn_fp_fn(annot, segm, label_positive=None):
+    """ compute measure TruePositive, TrueNegative, FalsePositive, FalseNegative
+
+    :param ndarray annot:
+    :param ndarray segm:
+    :param int label_positive:
+    :return float:
+
+    >>> np.random.seed(0)
+    >>> annot = np.random.randint(0, 2, (5, 7)) * 9
+    >>> segm = np.random.randint(0, 2, (5, 7)) * 9
+    >>> annot - segm
+    array([[-9,  9,  0, -9,  9,  9,  0],
+           [ 9,  0,  0,  0, -9, -9,  9],
+           [-9,  0, -9, -9, -9,  0,  0],
+           [ 0,  9,  0, -9,  0,  9,  0],
+           [ 9, -9,  9,  0,  9,  0,  9]])
+    >>> compute_tp_tn_fp_fn(annot, segm)
+    (9, 5, 11, 10)
+    >>> compute_tp_tn_fp_fn(annot, np.ones((5, 7)))
+    (nan, nan, nan, nan)
+    >>> compute_tp_tn_fp_fn(np.zeros((5, 7)), np.zeros((5, 7)))
+    (35, 0, 0, 0)
+    """
+    y_true = np.asarray(annot).ravel()
+    y_pred = np.asarray(segm).ravel()
+    uq_labels = np.unique([y_true, y_pred]).tolist()
+    if len(uq_labels) > 2:
+        logging.debug('too many labels: %s', repr(uq_labels))
+        return np.nan,np.nan, np.nan, np.nan
+    elif len(uq_labels) < 2:
+        logging.debug('only one label: %s', repr(uq_labels))
+        return len(y_true), 0, 0, 0
+
+    if label_positive is None or label_positive not in uq_labels:
+        label_positive = uq_labels[-1]
+    uq_labels.remove(label_positive)
+    label_negative = uq_labels[0]
+
+    tp = np.sum(
+        np.logical_and(y_true == label_positive, y_pred == label_positive))
+    tn = np.sum(
+        np.logical_and(y_true == label_negative, y_pred == label_negative))
+    fp = np.sum(
+        np.logical_and(y_true == label_positive, y_pred == label_negative))
+    fn = np.sum(
+        np.logical_and(y_true == label_negative, y_pred == label_positive))
+    return tp, tn, fp, fn
+
+
+def compute_metric_fpfn_tpfn(annot, segm, label_positive=None):
+    """ compute measure (FP + FN) / (TP + FN)
+
+    :param ndarray annot:
+    :param ndarray segm:
+    :param int label_positive:
+    :return float:
+
+    >>> np.random.seed(0)
+    >>> annot = np.random.randint(0, 2, (50, 75)) * 3
+    >>> segm = np.random.randint(0, 2, (50, 75)) * 3
+    >>> compute_metric_fpfn_tpfn(annot, segm)  # doctest: +ELLIPSIS
+    1.02...
+    >>> compute_metric_fpfn_tpfn(annot, annot)
+    0.0
+    >>> compute_metric_fpfn_tpfn(annot, np.ones((50, 75)))
+    nan
+    """
+    tp, _, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
+    if tp == np.nan:
+        return np.nan
+    elif (fp + fn) == 0:
+        return 0.
+    measure = float(fp + fn) / float(tp + fn)
+    return measure
+
+
+def compute_metric_tpfp_tpfn(annot, segm, label_positive=None):
+    """ compute measure (TP + FP) / (TP + FN)
+
+    :param ndarray annot:
+    :param ndarray segm:
+    :param int label_positive:
+    :return float:
+
+    >>> np.random.seed(0)
+    >>> annot = np.random.randint(0, 2, (50, 75)) * 3
+    >>> segm = np.random.randint(0, 2, (50, 75)) * 3
+    >>> compute_metric_tpfp_tpfn(annot, segm)  # doctest: +ELLIPSIS
+    1.03...
+    >>> compute_metric_tpfp_tpfn(annot, annot)
+    0.0
+    >>> compute_metric_tpfp_tpfn(annot, np.ones((50, 75)))
+    nan
+    """
+    tp, _, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
+    if tp == np.nan:
+        return np.nan
+    elif (fp + fn) == 0:
+        return 0.
+    measure = float(tp + fp) / float(tp + fn)
+    return measure
 
 
 # def stat_weight_by_support(dict_vals, id_val, id_sup):

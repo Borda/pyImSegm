@@ -18,6 +18,7 @@ import traceback
 import multiprocessing as mproc
 from functools import partial
 
+import pandas as pd
 from skimage.segmentation import relabel_sequential
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -28,11 +29,12 @@ import imsegm.labeling as seg_lbs
 import imsegm.classification as seg_clf
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
-NAME_CVS_OVERALL = 'segm-STATISTIC_%s_stat-overall.csv'
-NAME_CVS_PER_IMAGE = 'segm-STATISTIC_%s_stat-per-images.csv'
-PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
+NAME_CVS_OVERALL = 'STATISTIC__%s___Overall.csv'
+NAME_CVS_PER_IMAGE = 'STATISTIC__%s___per-Image.csv'
+PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
+                           'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
-SUFFIX_VISUAL = '__visual'
+SUFFIX_VISUAL = '___visual'
 PATHS = {
     'annot': os.path.join(PATH_IMAGES, 'annot_struct', '*.png'),
     'segm': os.path.join(PATH_IMAGES, 'segm', '*.png'),
@@ -140,11 +142,12 @@ def main(dict_paths, nb_jobs=NB_THREADS, visual=True, relabel=True):
     logging.info('loaded %i annots and %i segms', len(annots), len(segms))
 
     if relabel:
-        logging.info('reabel annotations and segmentations')
+        logging.info('relabel annotations and segmentations')
         annots = [relabel_sequential(annot)[0] for annot in annots]
         iterate = tl_expt.WrapExecuteSequence(wrapper_relabel_segm,
                                               zip(annots, segms),
-                                              nb_jobs=nb_jobs, ordered=True)
+                                              nb_jobs=nb_jobs, ordered=True,
+                                              desc='relabeling')
         segms = list(iterate)
 
     logging.info('compute statistic per image')
@@ -153,11 +156,12 @@ def main(dict_paths, nb_jobs=NB_THREADS, visual=True, relabel=True):
     df_stat = seg_clf.compute_stat_per_image(segms, annots, names, nb_jobs)
     df_stat.to_csv(path_csv)
 
-    logging.info('sumarise statistic')
+    logging.info('summarise statistic')
     path_csv = os.path.join(dict_paths['output'], NAME_CVS_OVERALL % name)
     logging.debug('export to "%s"', path_csv)
     df_desc = df_stat.describe()
-    logging.info(df_desc.T[['count', 'mean', 'std']])
+    df_desc = df_desc.append(pd.Series(df_stat.median(), name='median'))
+    logging.info(df_desc.T[['count', 'mean', 'std', 'median']])
     df_desc.to_csv(path_csv)
 
     if visual:
@@ -168,8 +172,9 @@ def main(dict_paths, nb_jobs=NB_THREADS, visual=True, relabel=True):
         # for idx, row in df_paths.iterrows():
         #     export_visual(row, path_visu)
         _wrapper_visual = partial(export_visual, path_out=path_visu)
-        iterate = tl_expt.WrapExecuteSequence(_wrapper_visual,
-                                              (row for idx, row in df_paths.iterrows()),
+        it_values = (row for idx, row in df_paths.iterrows())
+        iterate = tl_expt.WrapExecuteSequence(_wrapper_visual, it_values,
+                                              desc='visualisations',
                                               nb_jobs=nb_jobs)
         list(iterate)
 
