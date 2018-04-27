@@ -1,5 +1,6 @@
 """
-With two given folder find image match and compute segmentation statistic
+Compute segmentation statistic against given annotation
+Specify the segmentation and annotation folder and optionaly the image folder
 
 >> python run_compute_stat_annot_segm.py \
     -annot "data_images/drosophila_ovary_slice/annot_struct/*.png" \
@@ -18,7 +19,14 @@ import traceback
 import multiprocessing as mproc
 from functools import partial
 
+import matplotlib
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
+    matplotlib.use('Agg')
+
 import pandas as pd
+import matplotlib.pyplot as plt
 from skimage.segmentation import relabel_sequential
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
@@ -103,6 +111,7 @@ def export_visual(df_row, path_out, relabel=True):
     name = os.path.splitext(os.path.basename(df_row['path_1']))[0]
     logging.debug('>> exporting -> %s', name)
     fig.savefig(os.path.join(path_out, '%s.png' % name))
+    plt.close(fig)
 
 
 def wrapper_relabel_segm(annot_segm):

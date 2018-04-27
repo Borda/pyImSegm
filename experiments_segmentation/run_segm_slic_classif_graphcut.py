@@ -660,6 +660,22 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
     return params, classif, path_classif
 
 
+def filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
+                             label_purity, dict_slics, path_visu=None):
+    for name in dict_labels:
+        weights = np.max(dict_label_hist[name], axis=1)
+        if path_visu is not None and os.path.isdir(path_visu):
+            fig = tl_visu.figure_used_samples(dict_imgs[name], dict_labels[name],
+                                              dict_slics[name], weights, label_purity)
+            path_fig = os.path.join(path_visu, name + '___training.jpg')
+            fig.savefig(path_fig)
+            plt.close(fig)
+        dict_labels[name][weights < label_purity] = -1
+        # show samples purity
+
+    return dict_labels
+
+
 def main_train(params):
     """ the main composed from following steps:
     1) load already computed data (features and labels) or compute them now
@@ -716,9 +732,10 @@ def main_train(params):
         logging.info('summary on edge-label transitions: \n %s',
                      repr(params['label_transitions']))
 
-    for name in dict_labels:
-        weights = np.max(dict_label_hist[name], axis=1)
-        dict_labels[name][weights < params['label_purity']] = -1
+    path_purity_visu = os.path.join(params['path_exp'], FOLDER_SLIC_ANNOT)
+    dict_labels = filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
+                                           params['label_purity'], dict_slics,
+                                           path_purity_visu)
 
     logging.info('prepare features...')
     # concentrate features, labels

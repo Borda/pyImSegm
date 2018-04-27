@@ -18,8 +18,15 @@ import logging
 import multiprocessing as mproc
 from functools import partial
 
+import matplotlib
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
+    matplotlib.use('Agg')
+
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
@@ -106,6 +113,7 @@ def compute_boundary_distance(idx_row, params, path_out=''):
         logging.debug('visualise results...')
         fig = tl_visu.figure_segm_boundary_dist(segm, slic)
         fig.savefig(os.path.join(path_out, name + '.jpg'))
+        plt.close(fig)
 
     return name, np.mean(dists)
 

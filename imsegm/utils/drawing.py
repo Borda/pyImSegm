@@ -235,14 +235,8 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         img = color.gray2rgb(img)
 
-    norm_size = np.array(img.shape[:2]) / float(np.max(img.shape))
-    # reverse dimensions and scale by fig size
-    if norm_size[0] >= norm_size[1]:  # horizontal
-        fig_size = norm_size[::-1] * subfig_size * np.array([3, 1])
-        fig, axarr = plt.subplots(ncols=3, figsize=fig_size)
-    else:  # vertical
-        fig_size = norm_size[::-1] * subfig_size * np.array([1, 3])
-        fig, axarr = plt.subplots(nrows=3, figsize=fig_size)
+    fig, axarr = create_figure_by_image(img.shape[:2], subfig_size,
+                                        nb_subfigs=3)
 
     axarr[0].set_title('original image')
     axarr[0].imshow(img)
@@ -376,6 +370,20 @@ def figure_segm_graphcut_debug(dict_imgs, subfig_size=9):
     return fig
 
 
+def create_figure_by_image(img_size, subfig_size, nb_subfigs=1, extend=0.):
+    norm_size = np.array(img_size) / float(np.max(img_size))
+    # reverse dimensions and scale by fig size
+    if norm_size[0] >= norm_size[1]:  # horizontal
+        fig_size = norm_size[::-1] * subfig_size * np.array([nb_subfigs, 1])
+        fig_size[0] += extend * fig_size[0]
+        fig, axarr = plt.subplots(ncols=nb_subfigs, figsize=fig_size)
+    else:  # vertical
+        fig_size = norm_size[::-1] * subfig_size * np.array([1, nb_subfigs])
+        fig_size[0] += extend * fig_size[0]
+        fig, axarr = plt.subplots(nrows=nb_subfigs, figsize=fig_size)
+    return fig, axarr
+
+
 def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
     """ show figure with result of the ellipse fitting
 
@@ -396,11 +404,10 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
     <matplotlib.figure.Figure object at ...>
     """
     assert len(ellipses) == len(centers) == len(crits), \
-        'number of ellipses (%i) and centers (%i) and criteria (%i) should match' \
-        % (len(ellipses), len(centers), len(crits))
+        'number of ellipses (%i) and centers (%i) and criteria (%i) ' \
+        'should match' % (len(ellipses), len(centers), len(crits))
 
-    fig_size = (fig_size * np.array(img.shape[:2]) / np.max(img.shape))[::-1]
-    fig, ax = plt.subplots(figsize=fig_size)
+    fig, ax = create_figure_by_image(img.shape[:2], fig_size)
     assert img.ndim == 2, \
         'required image dimension is 2 to instead %s' % repr(img.shape)
     ax.imshow(img, cmap=plt.cm.Greys_r)
@@ -491,6 +498,46 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None,
     axarr[1].set_xlim([0, 360])
     axarr[1].legend(loc=0)
     axarr[1].grid()
+    return fig
+
+
+def figure_used_samples(img, labels, slic, weights, label_purity, fig_size=12):
+    """ draw used examples (superpixels)
+
+    :param ndarray img:
+    :param [int] labels:
+    :param ndarray slic:
+    :param [float] weights:
+    :param float label_purity:
+    :param int fig_size:
+    :return Figure:
+
+    >>> img = np.random.random((50, 75, 3))
+    >>> labels = [-1, 0, 2]
+    >>> weights = [0.95, 0.85, 0.9]
+    >>> seg = np.random.randint(0, 3, img.shape[:2])
+    >>> figure_used_samples(img, labels, seg, weights, 0.9)  # doctest: +ELLIPSIS
+    <matplotlib.figure.Figure object at ...>
+    """
+    train = np.zeros(len(weights))
+    train[np.asarray(weights) >= label_purity] = 1
+    w_samples = train[slic]
+    img = color.gray2rgb(img) if img.ndim == 2 else img
+
+    fig, axarr = create_figure_by_image(img.shape[:2], fig_size, nb_subfigs=2,
+                                        extend=0.1)
+    axarr[0].imshow(np.asarray(labels)[slic], cmap=plt.cm.jet)
+    axarr[0].contour(slic, levels=np.unique(slic), colors='w')
+    axarr[0].axis('off')
+
+    axarr[1].imshow(img)
+    axarr[1].contour(slic, levels=np.unique(slic), colors='y')
+    cax = axarr[1].imshow(w_samples, cmap=plt.cm.RdYlGn, vmin=0, vmax=1, alpha=0.5)
+    cbar = plt.colorbar(cax, ticks=[0, 1], boundaries=[-0.5, 0.5, 1.5])
+    cbar.ax.set_yticklabels(['dropped', 'used'])
+    axarr[1].axis('off')
+
+    fig.tight_layout()
     return fig
 
 

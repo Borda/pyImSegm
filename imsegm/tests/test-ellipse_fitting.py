@@ -11,6 +11,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.metrics import adjusted_rand_score
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
@@ -75,6 +76,7 @@ class TestEllipseFitting(unittest.TestCase):
         fig_name = 'ellipse-fitting_%s.pdf' % name
         fig.savefig(os.path.join(PATH_OUTPUT, fig_name),
                     bbox_inches='tight', pad_inches=0)
+        plt.close(fig)
 
         score = adjusted_rand_score(annot.ravel(), segm.ravel())
         self.assertGreaterEqual(score, 0.5)
