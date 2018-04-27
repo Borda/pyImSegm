@@ -48,6 +48,14 @@ METRIC_SCORING = ('f1_macro', 'accuracy', 'precision_macro', 'recall_macro')
 ROUND_UNIQUE_FTS_DIGITS = 3
 
 
+DICT_SCORING = {
+    'f1': metrics.f1_score,
+    'accuracy': metrics.accuracy_score,
+    'precision': metrics.precision_score,
+    'recall': metrics.recall_score,
+}
+
+
 def create_classifiers(nb_jobs=-1):
     """ create all classifiers with default parameters
 
@@ -115,6 +123,9 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
 
     >>> create_clf_param_search_grid('RandForest') # doctest: +ELLIPSIS
     {'classif__...': ...}
+    >>> dict_classif = create_classifiers()
+    >>> all(len(create_clf_param_search_grid(k)) > 0 for k in dict_classif)
+    True
     """
     def log_space(b, e, n):
         return np.unique(np.logspace(b, e, n).astype(int)).tolist()
@@ -174,6 +185,9 @@ def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
 
     >>> create_clf_param_search_distrib()  # doctest: +ELLIPSIS
     {...}
+    >>> dict_classif = create_classifiers()
+    >>> all(len(create_clf_param_search_distrib(k)) > 0 for k in dict_classif)
+    True
     """
     clf_params = {
         'RandForest': {
@@ -584,7 +598,7 @@ def relabel_sequential(labels, uq_lbs=None):
 
 def create_classif_train_export(clf_name, features, labels, cross_val=10,
                                 nb_search_iter=1, search_type='random',
-                                nb_jobs=NB_JOBS_CLASSIF_SEARCH,
+                                eval_metric='f1', nb_jobs=NB_JOBS_CLASSIF_SEARCH,
                                 path_out=None, params=None, pca_coef=0.98,
                                 feature_names=None, label_names=None):
     """ create classifier and train it once or find best parameters.
@@ -641,9 +655,13 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
         # find the best params for the classif.
         logging.debug('Performing param search...')
         nb_labels = len(np.unique(labels))
-        clf_search = create_classif_search(clf_name, clf_pipeline, nb_labels,
-                                           search_type, cross_val,
-                                           nb_search_iter, nb_jobs)
+        clf_search = create_classif_search(clf_name, clf_pipeline,
+                                           nb_labels=nb_labels,
+                                           search_type=search_type,
+                                           cross_val=cross_val,
+                                           eval_scoring=eval_metric,
+                                           nb_iter=nb_search_iter,
+                                           nb_jobs=nb_jobs)
 
         # NOTE, this is temporal just for purposes of computing statistic
         clf_search.fit(features, relabel_sequential(labels))
@@ -874,6 +892,7 @@ def search_params_cut_down_max_nb_iter(clf_parameters, nb_iter):
 
 def create_classif_search(name_clf, clf_pipeline, nb_labels,
                           search_type='random', cross_val=10,
+                          eval_scoring='f1',
                           nb_iter=NB_CLASSIF_SEARCH_ITER,
                           nb_jobs=NB_JOBS_CLASSIF_SEARCH):
     """ create sklearn search depending on spec. random or grid
@@ -885,25 +904,22 @@ def create_classif_search(name_clf, clf_pipeline, nb_labels,
     :param nb_jobs: int, nb jobs running in parallel
     :return:
     """
-    scoring = 'weighted' if nb_labels > 2 else 'binary'
-    f1_scoring = metrics.make_scorer(metrics.f1_score, average=scoring)
-
+    score_weight = 'weighted' if nb_labels > 2 else 'binary'
+    scoring = metrics.make_scorer(DICT_SCORING[eval_scoring.lower()],
+                                  average=score_weight)
     if search_type == 'grid':
         clf_parameters = create_clf_param_search_grid(name_clf)
         logging.info('init Grid search...')
-        clf_search = grid_search.GridSearchCV(clf_pipeline, clf_parameters,
-                                              scoring=f1_scoring, cv=cross_val,
-                                              n_jobs=nb_jobs, verbose=1,
-                                              refit=True)
+        clf_search = grid_search.GridSearchCV(
+            clf_pipeline, clf_parameters, scoring=scoring, cv=cross_val,
+            n_jobs=nb_jobs, verbose=1, refit=True)
     else:
         clf_parameters = create_clf_param_search_distrib(name_clf)
         nb_iter = search_params_cut_down_max_nb_iter(clf_parameters, nb_iter)
         logging.info('init Randomized search...')
-        clf_search = grid_search.RandomizedSearchCV(clf_pipeline, clf_parameters,
-                                                    scoring=f1_scoring,
-                                                    cv=cross_val, n_jobs=nb_jobs,
-                                                    n_iter=nb_iter, verbose=1,
-                                                    refit=True)
+        clf_search = grid_search.RandomizedSearchCV(
+            clf_pipeline, clf_parameters, scoring=scoring, cv=cross_val,
+            n_jobs=nb_jobs, n_iter=nb_iter, verbose=1, refit=True)
     return clf_search
 
 

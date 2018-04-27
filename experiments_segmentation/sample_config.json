@@ -33,6 +33,9 @@
 	"classif": "RandForest",
 	"classif---OPTIONS": ["RandForest", "KNN", "SVM", "DecTree",
 						  "GradBoost", "LogistRegr", "AdaBoost"],
+
+	"classif_metric": "f1",
+	"classif_metric---OPTIONS": ["f1", "accuracy", "precision", "recall"],
 	
     "nb_classif_search": 50,
 	"nb_classif_search---OPTIONS": "unsigned integer",

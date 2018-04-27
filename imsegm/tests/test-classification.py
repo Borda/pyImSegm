@@ -78,7 +78,8 @@ class TestClassification(unittest.TestCase):
         data_test, labels_test = generate_data()
         for n in CLASSIFIER_NAMES:
             logging.info('created classif.: %s', n)
-            clf, _ = seg_clf.create_classif_train_export(n, data_train, labels_train)
+            clf, _ = seg_clf.create_classif_train_export(n, data_train,
+                                                         labels_train)
             self.classif_eval(clf, data_train, labels_train,
                               data_test, labels_test)
 

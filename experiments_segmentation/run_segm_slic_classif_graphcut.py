@@ -82,16 +82,16 @@ FOLDER_IMAGE = 'images'
 FOLDER_ANNOT = 'annotations'
 FOLDER_SLIC = 'slic'
 FOLDER_SLIC_ANNOT = 'annot_slic'
-FOLDER_SEGM = 'segmentation_trained'
+FOLDER_TRAIN = 'segmentation_trained'
 SUFFIX_VISUAL = '___visual'
-FOLDER_SEGM_VISU = FOLDER_SEGM + SUFFIX_VISUAL
+FOLDER_TRAIN_VISU = FOLDER_TRAIN + SUFFIX_VISUAL
 FOLDER_LOO = 'segmentation_leave-one-out'
 FOLDER_LOO_VISU = FOLDER_LOO + SUFFIX_VISUAL
 FOLDER_LPO = 'segmentation_leave-P-out'
 FOLDER_LPO_VISU = FOLDER_LPO + SUFFIX_VISUAL
 LIST_FOLDERS_BASE = (FOLDER_IMAGE, FOLDER_ANNOT, FOLDER_SLIC, FOLDER_SLIC_ANNOT,
-                     FOLDER_SEGM, FOLDER_LOO, FOLDER_LPO)
-LIST_FOLDERS_DEBUG = (FOLDER_SEGM_VISU, FOLDER_LOO_VISU, FOLDER_LPO_VISU)
+                     FOLDER_TRAIN, FOLDER_LOO, FOLDER_LPO)
+LIST_FOLDERS_DEBUG = (FOLDER_TRAIN_VISU, FOLDER_LOO_VISU, FOLDER_LPO_VISU)
 
 # unique experiment means adding timestemp on the end of folder name
 EACH_UNIQUE_EXPERIMENT = False
@@ -514,8 +514,8 @@ def perform_predictions(params, paths_img, classif,
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
 
     dict_segms, dict_segms_gc = dict(), dict()
-    path_out = os.path.join(params['path_exp'], FOLDER_SEGM)
-    path_visu = os.path.join(params['path_exp'], FOLDER_SEGM_VISU)
+    path_out = os.path.join(params['path_exp'], FOLDER_TRAIN)
+    path_visu = os.path.join(params['path_exp'], FOLDER_TRAIN_VISU)
     _wrapper_segment = partial(segment_image, params=params, classif=classif,
                                path_out=path_out, path_visu=path_visu,
                                show_debug_imgs=show_debug_imgs)
@@ -646,8 +646,10 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
         classif, path_classif = seg_clf.create_classif_train_export(
                     params['classif'], features, labels, cross_val=cv,
                     params=params, feature_names=feature_names,
+                    pca_coef=params['pca_coef'],
+                    eval_metric=params.get('classif_metric', 'f1'),
                     nb_search_iter=params.get('nb_classif_search', 1),
-                    nb_jobs=params['nb_jobs'], pca_coef=params['pca_coef'],
+                    nb_jobs=params['nb_jobs'],
                     path_out=params['path_exp'])
     params['path_classif'] = path_classif
     cv = seg_clf.CrossValidatePSetsOut(sizes, nb_hold_out=nb_holdout)
