@@ -660,18 +660,30 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
     return params, classif, path_classif
 
 
+def wrapper_filter_labels(name_img_labels_slic_label_hist, label_purity,
+                          path_visu=None):
+    name, img, labels, slic, label_hist = name_img_labels_slic_label_hist
+    weights = np.max(label_hist, axis=1)
+    if path_visu is not None and os.path.isdir(path_visu):
+        fig = tl_visu.figure_used_samples(img, labels, slic, weights, label_purity)
+        path_fig = os.path.join(path_visu, name + '___training.jpg')
+        fig.savefig(path_fig)
+        plt.close(fig)
+    labels[weights < label_purity] = -1
+    return name, labels
+
+
 def filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
-                             label_purity, dict_slics, path_visu=None):
-    for name in dict_labels:
-        weights = np.max(dict_label_hist[name], axis=1)
-        if path_visu is not None and os.path.isdir(path_visu):
-            fig = tl_visu.figure_used_samples(dict_imgs[name], dict_labels[name],
-                                              dict_slics[name], weights, label_purity)
-            path_fig = os.path.join(path_visu, name + '___training.jpg')
-            fig.savefig(path_fig)
-            plt.close(fig)
-        dict_labels[name][weights < label_purity] = -1
-        # show samples purity
+                             label_purity, dict_slics, path_visu=None,
+                             nb_jobs=NB_THREADS):
+    _w_filter = partial(wrapper_filter_labels, label_purity=label_purity,
+                      path_visu=path_visu)
+    iter_vals = ((n, dict_imgs[n], dict_labels[n], dict_slics[n],
+                  dict_label_hist[n]) for n in dict_labels)
+    iterate = tl_expt.WrapExecuteSequence(_w_filter, iter_vals, nb_jobs=nb_jobs,
+                                          desc='filter labels (purity)')
+    for n, lbs in iterate:
+        dict_labels[n] = lbs
 
     return dict_labels
 
@@ -735,7 +747,8 @@ def main_train(params):
     path_purity_visu = os.path.join(params['path_exp'], FOLDER_SLIC_ANNOT)
     dict_labels = filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
                                            params['label_purity'], dict_slics,
-                                           path_purity_visu)
+                                           path_visu=path_purity_visu,
+                                           nb_jobs=params['nb_jobs'])
 
     logging.info('prepare features...')
     # concentrate features, labels
