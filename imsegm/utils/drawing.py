@@ -211,14 +211,17 @@ def figure_image_adjustment(fig, img_size):
     return fig
 
 
-def figure_image_segm_results(img, seg, subfig_size=9):
+def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
+                              mid_image_gray=True):
     """ creating subfigure with original image, overlapped segmentation contours
     and clean result segmentation...
     it turns the sequence in vertical / horizontal according major image dim
 
-    :param ndarray img:
-    :param ndarray seg:
-    :param int subfig_size:
+    :param ndarray img: image
+    :param ndarray seg: segmentation
+    :param int subfig_size: max image size
+    :param fool mid_image_color: used color image as bacround in middele
+    :param float mid_labels_alpha: alpha for middle segmentation overlap
     :return Figure:
 
     >>> img = np.random.random((100, 150, 3))
@@ -246,8 +249,9 @@ def figure_image_segm_results(img, seg, subfig_size=9):
 
     # visualise the 3th label
     axarr[1].set_title('original image w. segment overlap')
-    axarr[1].imshow(color.rgb2gray(img), cmap=plt.cm.Greys_r)
-    axarr[1].imshow(seg, alpha=0.2, cmap=plt.cm.jet)
+    img_bg = color.rgb2gray(img) if mid_image_gray else img
+    axarr[1].imshow(img_bg, cmap=plt.cm.Greys_r)
+    axarr[1].imshow(seg, alpha=mid_labels_alpha, cmap=plt.cm.jet)
     axarr[1].contour(seg, levels=np.unique(seg), linewidths=2, cmap=plt.cm.jet)
 
     axarr[2].set_title('segmentation of all labels')
