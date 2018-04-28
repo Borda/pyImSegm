@@ -669,7 +669,7 @@ def wrapper_filter_labels(name_img_labels_slic_label_hist, label_purity,
         path_fig = os.path.join(path_visu, name + '___training.jpg')
         fig.savefig(path_fig)
         plt.close(fig)
-    labels[weights < label_purity] = -1
+    labels[weights < label_purity] = np.nan
     return name, labels
 
 
@@ -677,7 +677,7 @@ def filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
                              label_purity, dict_slics, path_visu=None,
                              nb_jobs=NB_THREADS):
     _w_filter = partial(wrapper_filter_labels, label_purity=label_purity,
-                      path_visu=path_visu)
+                        path_visu=path_visu)
     iter_vals = ((n, dict_imgs[n], dict_labels[n], dict_slics[n],
                   dict_label_hist[n]) for n in dict_labels)
     iterate = tl_expt.WrapExecuteSequence(_w_filter, iter_vals, nb_jobs=nb_jobs,
@@ -753,7 +753,8 @@ def main_train(params):
     logging.info('prepare features...')
     # concentrate features, labels
     features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
-        dict_features, dict_labels, balance_type=params['balance'], drop_labels=[-1])
+        dict_features, dict_labels, balance_type=params['balance'],
+        drop_labels=[-1, np.nan])
     # drop "do not care" label which are -1
     features = np.nan_to_num(features)
 

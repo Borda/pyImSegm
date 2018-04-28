@@ -1151,10 +1151,12 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
         features = np.array(imgs_features[name])
         labels = np.array(imgs_labels[name].astype(int))
 
-        if drop_labels is not None:
-            for lb in drop_labels:
-                features = features[labels != lb]
-                labels = labels[labels != lb]
+        drop_labels = [np.nan] if drop_labels is None else drop_labels
+        if np.nan not in drop_labels:
+            drop_labels.append(np.nan)
+        for lb in drop_labels:
+            features = features[labels != lb]
+            labels = labels[labels != lb]
 
         if balance_type is not None:
             # balance_type dataset to have comparable nb of samples
