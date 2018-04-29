@@ -1104,16 +1104,16 @@ def balance_dataset_by_(features, labels, balance_type='random',
         min_samples = min(hist_labels.values())
     dict_features = compose_dict_label_features(features, labels)
 
-    if balance_type == 'random':
+    if balance_type.lower() == 'random':
         dict_features = down_sample_dict_features_random(dict_features,
                                                          min_samples)
-    elif balance_type == 'kmeans':
+    elif balance_type.lower() == 'kmeans':
         dict_features = down_sample_dict_features_kmean(dict_features,
                                                         min_samples)
-    elif balance_type == 'unique':
+    elif balance_type.lower() == 'unique':
         dict_features = down_sample_dict_features_unique(dict_features)
     else:
-        logging.warning('not defined balacing method "%s"', balance_type)
+        logging.warning('not defined balancing method "%s"', balance_type)
 
     features, labels = convert_dict_label_features_2_vectors(dict_features)
     # features, labels = shuffle_features_labels(features, labels)

@@ -28,7 +28,7 @@
 	"label_purity---OPTIONS": "float between 0 ad 1",
 	
 	"balance": "unique",
-	"balance---OPTIONS": ["random", "kmeans", "unique"],
+	"balance---OPTIONS": ["None", "random", "kmeans", "unique"],
 	
 	"classif": "RandForest",
 	"classif---OPTIONS": ["RandForest", "KNN", "SVM", "DecTree",

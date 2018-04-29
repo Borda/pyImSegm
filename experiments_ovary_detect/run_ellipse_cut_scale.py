@@ -37,7 +37,7 @@ NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
 PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 
-PARAMS = {
+DEFAULT_PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
     'path_infofile': os.path.join(PATH_IMAGES, 'info_ovary_images_ellipses.csv'),
     'path_output': os.path.join(PATH_RESULTS, 'cut_stages'),
@@ -132,5 +132,5 @@ def main(params):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    params = r_match.arg_parse_params(PARAMS)
+    params = r_match.arg_parse_params(DEFAULT_PARAMS)
     main(params)

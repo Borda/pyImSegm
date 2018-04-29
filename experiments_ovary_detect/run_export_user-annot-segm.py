@@ -42,7 +42,7 @@ import imsegm.annotation as seg_annot
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
 PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
-PARAMS = {
+DEFAULT_PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(PATH_IMAGES, 'annot_eggs', '*.png'),
     'path_centers': os.path.join(PATH_IMAGES, 'center_levels', '*.csv'),
@@ -225,5 +225,5 @@ def main(params):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    params = arg_parse_params(PARAMS)
+    params = arg_parse_params(DEFAULT_PARAMS)
     main(params)

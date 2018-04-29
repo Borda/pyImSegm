@@ -53,18 +53,18 @@ ANNOT_STAGES = [1, 2, 3, 4, 5]
 
 FOLDER_ANNOT = 'annot_user_stage-%s'
 FOLDER_ANNOT_VISUAL = 'annot_user_stage-%s___visual'
-PARAMS = run_train.CENTER_PARAMS
-PARAMS.update({
+DEFAULT_PARAMS = run_train.CENTER_PARAMS
+DEFAULT_PARAMS.update({
     'stages': [(1, 2, 3, 4, 5),
                (2, 3, 4, 5),
                (1, ), (2, ), (3, ), (4, ), (5, )],
     'path_list': '',
-    'path_centers': os.path.join(os.path.dirname(PARAMS['path_centers']),
+    'path_centers': os.path.join(os.path.dirname(DEFAULT_PARAMS['path_centers']),
                                  '*.csv'),
     'path_infofile': os.path.join(run_train.PATH_IMAGES,
                                   'info_ovary_images.txt'),
-    'path_expt': os.path.join(PARAMS['path_output'],
-                              run_detect.FOLDER_EXPERIMENT % PARAMS['name']),
+    'path_expt': os.path.join(DEFAULT_PARAMS['path_output'],
+                              run_detect.FOLDER_EXPERIMENT % DEFAULT_PARAMS['name']),
 })
 
 NAME_CSV_TRIPLES = run_train.NAME_CSV_TRIPLES
@@ -277,5 +277,5 @@ def main(params):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    params = run_train.arg_parse_params(PARAMS)
+    params = run_train.arg_parse_params(DEFAULT_PARAMS)
     main(params)

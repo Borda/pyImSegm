@@ -1,7 +1,7 @@
 """
-Run supervised segmentation with superpixels and training examples
+Run supervised segmentation experiment with superpixels and training examples
 
-1) train classifier on annotated images with some statistic
+1) train classifier on annotated images with some statistic - LOO, LPO
 2) segment new images in specified folder
 
 Segmentation pipeline:
@@ -346,7 +346,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
         dict_features=params['features'], gc_regul=gc_regul,
         gc_edge_type=params['gc_edge_type'],
         debug_visual=debug_visual)
-    segm_map = np.argmax(segm_soft, axis=-1)
+    segm_map = np.argmax(segm_soft, axis=-1).astype(segm_gc.dtype)
 
     for segm, suffix in [(segm_gc, ''), (segm_map, '_MAP')]:
         path_img = os.path.join(path_out, idx_name + suffix + '.png')
@@ -669,7 +669,7 @@ def wrapper_filter_labels(name_img_labels_slic_label_hist, label_purity,
         path_fig = os.path.join(path_visu, name + '___training.jpg')
         fig.savefig(path_fig)
         plt.close(fig)
-    labels[weights < label_purity] = np.nan
+    labels[weights < label_purity] = -1
     return name, labels
 
 

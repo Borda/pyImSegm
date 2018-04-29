@@ -527,12 +527,13 @@ def figure_used_samples(img, labels, slic, weights, label_purity, fig_size=12):
     fig, axarr = create_figure_by_image(img.shape[:2], fig_size, nb_subfigs=2,
                                         extend=0.15)
     axarr[0].imshow(np.asarray(labels)[slic], cmap=plt.cm.jet)
-    axarr[0].contour(slic, levels=np.unique(slic), colors='w')
+    axarr[0].contour(slic, levels=np.unique(slic), colors='w', linewidths=0.5)
     axarr[0].axis('off')
 
     axarr[1].imshow(img)
-    axarr[1].contour(slic, levels=np.unique(slic), colors='y')
-    cax = axarr[1].imshow(w_samples, cmap=plt.cm.RdYlGn, vmin=0, vmax=1, alpha=0.5)
+    axarr[1].contour(slic, levels=np.unique(slic), colors='w', linewidths=0.5)
+    cax = axarr[1].imshow(w_samples, cmap=plt.cm.RdYlGn,
+                          vmin=0, vmax=1, alpha=0.5)
     cbar = plt.colorbar(cax, ticks=[0, 1], boundaries=[-0.5, 0.5, 1.5])
     cbar.ax.set_yticklabels(['drop', 'used'])
     axarr[1].axis('off')

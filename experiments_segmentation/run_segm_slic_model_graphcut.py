@@ -1,5 +1,5 @@
 """
-Run supervised segmentation with superpixels and training examples
+Run supervised segmentation experiment with superpixels and training examples
 
 Pipeline:
  1. segment SLIC superpixels
@@ -14,7 +14,7 @@ SAMPLE run:
 >> python run_segm_slic_model_graphcut.py \
    -l data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
    -i "data_images/langerhans_islets/image/*.jpg" \
-   -o results -n LangIsl --nb_classes 3 --visual --nb_jobs 2
+   -o results -n LangIsl --nb_classes 3 --nb_jobs 2 --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

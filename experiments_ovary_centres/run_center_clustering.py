@@ -47,15 +47,15 @@ CLUSTER_PARAMS = {
     'DBSCAN_max_dist': 50,
     'DBSCAN_min_samples': 1,
 }
-PARAMS = run_train.CENTER_PARAMS
-PARAMS.update(CLUSTER_PARAMS)
-PARAMS.update({
-    'path_expt': os.path.join(PARAMS['path_output'],
-                              FOLDER_EXPERIMENT % PARAMS['name']),
+DEFAULT_PARAMS = run_train.CENTER_PARAMS
+DEFAULT_PARAMS.update(CLUSTER_PARAMS)
+DEFAULT_PARAMS.update({
+    'path_expt': os.path.join(DEFAULT_PARAMS['path_output'],
+                              FOLDER_EXPERIMENT % DEFAULT_PARAMS['name']),
     'path_images': os.path.join(run_train.PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(run_train.PATH_IMAGES, 'segm', '*.png'),
-    'path_centers': os.path.join(PARAMS['path_output'],
-                                 FOLDER_EXPERIMENT % PARAMS['name'],
+    'path_centers': os.path.join(DEFAULT_PARAMS['path_output'],
+                                 FOLDER_EXPERIMENT % DEFAULT_PARAMS['name'],
                                  'candidates', '*.csv')
 })
 
@@ -227,5 +227,5 @@ def main(params):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    params = run_train.arg_parse_params(PARAMS)
+    params = run_train.arg_parse_params(DEFAULT_PARAMS)
     main(params)
