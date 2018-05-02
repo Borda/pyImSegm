@@ -191,10 +191,10 @@ We utilize (un)supervised segmentation according to given training examples or s
 * For both experiment you can evaluate segmentation results.
     ```bash
     python experiments_segmentation/run_compute-stat_annot-segm.py \
-        -annot "./data_images/drosophila_ovary_slice/annot_struct/*.png" \
-        -segm "./results/experiment_segm-supervise_ovary/*.png" \
-        -img "./data_images/drosophila_ovary_slice/image/*.jpg" \
-        -out ./results/evaluation
+        -a "./data_images/drosophila_ovary_slice/annot_struct/*.png" \
+        -s "./results/experiment_segm-supervise_ovary/*.png" \
+        -i "./data_images/drosophila_ovary_slice/image/*.jpg" \
+        -o ./results/evaluation --visual
     ```
     ![vusial](figures/segm-visual_D03_sy04_100x.jpg)
 

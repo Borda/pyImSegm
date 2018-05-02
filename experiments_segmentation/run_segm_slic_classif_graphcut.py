@@ -375,7 +375,8 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
 
 
 def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
-                            name_csv=NAME_CSV_SEGM_STAT_SLIC_ANNOT, nb_jobs=1):
+                            name_csv=NAME_CSV_SEGM_STAT_SLIC_ANNOT,
+                            drop_labels=None, nb_jobs=1):
     """ evaluate the segmentation results according given annotation
 
     :param {str: ...} params:
@@ -394,10 +395,11 @@ def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
     list_annot = [dict_annot[n] for n in dict_annot]
     list_segm = [dict_segm[n] for n in dict_annot]
     df_stat = seg_clf.compute_stat_per_image(list_segm, list_annot,
-                                             [n for n in dict_annot], nb_jobs)
+                                             [n for n in dict_annot], nb_jobs,
+                                             drop_labels=drop_labels)
 
     path_csv = os.path.join(params['path_exp'], name_csv)
-    logging.info('STAT on seg_pipe and annot (%s):', name_csv)
+    logging.info('STATISTIC on segm and annot (%s):', name_csv)
     df_stat.to_csv(path_csv)
 
     logging.info(metrics.classification_report(
@@ -411,7 +413,7 @@ def retrain_loo_segment_image(imgs_idx_path, path_classif, path_dump,
                               path_out, path_visu,
                               show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ load the classifier, and dumped data, subtract the image,
-    retrain the classif. without it and do the segmentation
+    retrain the classif. and do the segmentation
 
     :param () imgs_idx_path: path to input image
     :param str path_classif: path to saved classifier
@@ -561,11 +563,13 @@ def experiment_loo(params, df_stat, dict_annot, paths_img, path_classif,
 
     df = eval_segment_with_annot(params, dict_annot, dict_segms, None,
                                  NAME_CSV_SEGM_STAT_RESULT_LOO,
+                                 params.get('drop_labels', None),
                                  params['nb_jobs'])
     df_stat = df_stat.append(get_summary(df, 'segm (LOO)'),
                              ignore_index=True)
     df = eval_segment_with_annot(params, dict_annot, dict_segms_gc, None,
                                  NAME_CSV_SEGM_STAT_RESULT_LOO_GC,
+                                 params.get('drop_labels', None),
                                  params['nb_jobs'])
     df_stat = df_stat.append(get_summary(df, 'segm GC (LOO)'),
                              ignore_index=True)
@@ -611,11 +615,13 @@ def experiment_lpo(params, df_stat, dict_annot, paths_img, path_classif,
 
     df = eval_segment_with_annot(params, dict_annot, dict_segms, None,
                                  NAME_CSV_SEGM_STAT_RESULT_LPO % nb_holdout,
+                                 params.get('drop_labels', None),
                                  params['nb_jobs'])
     df_stat = df_stat.append(get_summary(df, 'segm (L-%i-O)' % nb_holdout),
                              ignore_index=True)
     df = eval_segment_with_annot(params, dict_annot, dict_segms_gc, None,
                                  NAME_CSV_SEGM_STAT_RESULT_LPO_GC % nb_holdout,
+                                 params.get('drop_labels', None),
                                  params['nb_jobs'])
     df_stat = df_stat.append(get_summary(df, 'segm GC (L-%i-O)' % nb_holdout),
                              ignore_index=True)
@@ -738,6 +744,7 @@ def main_train(params):
                        for n in dict_annot}
     df = eval_segment_with_annot(params, dict_annot, dict_annot_slic,
                                  dict_label_hist, NAME_CSV_SEGM_STAT_SLIC_ANNOT,
+                                 params.get('drop_labels', None),
                                  params['nb_jobs'])
     df_stat = df_stat.append(get_summary(df, 'SLIC-annot'), ignore_index=True)
     path_csv_stat = os.path.join(params['path_exp'], NAME_CSV_SEGM_STAT_RESULTS)
