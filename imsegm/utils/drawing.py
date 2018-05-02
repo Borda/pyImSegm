@@ -197,8 +197,9 @@ def figure_image_adjustment(fig, img_size):
     :param (int, int) img_size: 
     :return:
 
-    >>> figure_image_adjustment(plt.figure(), (150, 200))  # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_image_adjustment(plt.figure(), (150, 200))
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     ax = fig.gca()
     ax.set_xlim([0, img_size[1]])
@@ -226,8 +227,9 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
 
     >>> img = np.random.random((100, 150, 3))
     >>> seg = np.random.randint(0, 2, (100, 150))
-    >>> figure_image_segm_results(img, seg)  # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_image_segm_results(img, seg)
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     assert img.shape[:2] == seg.shape[:2], \
         'different image %s & seg_pipe %s sizes' % (repr(img.shape), repr(seg.shape))
@@ -272,8 +274,9 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9):
 
     >>> img = np.random.random((100, 150, 3))
     >>> seg = np.random.randint(0, 2, (100, 150))
-    >>> figure_overlap_annot_segm_image(seg, seg, img)  # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_overlap_annot_segm_image(seg, seg, img)
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     norm_size = np.array(annot.shape) / float(np.max(annot.shape))
     fig_size = norm_size[::-1] * subfig_size * np.array([3, 1])
@@ -334,8 +337,9 @@ def figure_segm_graphcut_debug(dict_imgs, subfig_size=9):
     ...     'img_graph_segm': np.random.random((100, 150, 3)),
     ...     'imgs_unary_cost': [np.random.random((100, 150, 3))],
     ... }
-    >>> figure_segm_graphcut_debug(dict_imgs)  # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_segm_graphcut_debug(dict_imgs)
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     assert all(n in dict_imgs for n in ['image', 'slic', 'slic_mean',
                                         'img_graph_edges', 'img_graph_segm',
@@ -400,8 +404,9 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
     >>> ells = np.random.random((3, 5)) * 25
     >>> centers = np.random.random((3, 2)) * 25
     >>> crits = np.random.random(3)
-    >>> figure_ellipse_fitting(img[:, :, 0], seg, ells, centers, crits)  # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_ellipse_fitting(img[:, :, 0], seg, ells, centers, crits)
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     assert len(ellipses) == len(centers) == len(crits), \
         'number of ellipses (%i) and centers (%i) and criteria (%i) ' \
@@ -442,8 +447,9 @@ def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1,
     >>> np.random.seed(0)
     >>> dict_label_hist = {'a': np.tile([1, 0, 0, 0, 1], (25, 1)),
     ...                    'b': np.tile([0, 1, 0, 0, 1], (30, 1))}
-    >>> figure_annot_slic_histogram_labels(dict_label_hist)  # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_annot_slic_histogram_labels(dict_label_hist)
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     matrix_hist_all = np.concatenate(tuple(dict_label_hist.values()), axis=0)
     lb_sums = np.sum(matrix_hist_all, axis=0)
@@ -516,8 +522,9 @@ def figure_used_samples(img, labels, slic, weights, label_purity, fig_size=12):
     >>> labels = [-1, 0, 2]
     >>> weights = [0.95, 0.85, 0.9]
     >>> seg = np.random.randint(0, 3, img.shape[:2])
-    >>> figure_used_samples(img, labels, seg, weights, 0.9)  # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_used_samples(img, labels, seg, weights, 0.9)
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     train = np.zeros(len(weights))
     train[np.asarray(weights) >= label_purity] = 1
@@ -826,8 +833,9 @@ def figure_image_segm_centres(img, segm, centers=None,
     >>> img = np.random.random((100, 150, 3))
     >>> seg = np.random.randint(0, 2, (100, 150))
     >>> centre = [[55, 60]]
-    >>> figure_image_segm_centres(img, seg, centre)  # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_image_segm_centres(img, seg, centre)
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     fig, ax = plt.subplots()
 
@@ -953,8 +961,9 @@ def figure_rg2sp_debug_complete(seg, slic, dict_rg2sp_debug, iter_index=-1,
     ...     'shifts': np.random.random((15, 3)),
     ...     'energy': np.random.random(15),
     ... }
-    >>> figure_rg2sp_debug_complete(seg, slic, dict_debug) # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_rg2sp_debug_complete(seg, slic, dict_debug)
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     nb_objects = dict_rg2sp_debug['lut_data_cost'].shape[1] - 1
     nb_subfigs = max(3, nb_objects)
@@ -1128,8 +1137,9 @@ def figure_segm_boundary_dist(segm_ref, segm, subfig_size=9):
 
     >>> seg = np.zeros((100, 100))
     >>> seg[35:80, 10:65] = 1
-    >>> figure_segm_boundary_dist(seg, seg.T) # doctest: +ELLIPSIS
-    <matplotlib.figure.Figure object at ...>
+    >>> fig = figure_segm_boundary_dist(seg, seg.T)
+    >>> isinstance(fig, matplotlib.figure.Figure)
+    True
     """
     assert segm_ref.shape == segm.shape, \
         'ref segm (%s) and segm (%s) should match' \

@@ -96,3 +96,5 @@ after_success:
   - coverage xml -o $COVERAGE_REPORTS/coverage.xml
   - codecov  # public repository on Travis CI
   - coverage report
+
+  - cd .. && python -c "import imsegm.descriptors"

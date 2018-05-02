@@ -54,3 +54,4 @@ after_success:
   - coverage xml
   - python-codacy-coverage -r coverage.xml
   - coverage report
+  - cd .. && python -c "import imsegm.descriptors"

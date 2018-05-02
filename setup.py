@@ -21,10 +21,10 @@ import pip
 import logging
 import pkg_resources
 try:
-    from setuptools import setup, Extension # , Command, find_packages
+    from setuptools import setup, Extension, find_packages  # , Command
     from setuptools.command.build_ext import build_ext
 except ImportError:
-    from distutils.core import setup, Extension # , Command, find_packages
+    from distutils.core import setup, Extension, find_packages  # , Command
     from distutils.command.build_ext import build_ext
 
 # from Cython.Distutils import build_ext
@@ -67,7 +67,7 @@ except Exception:
 
 setup(
     name='ImSegm',
-    version='0.1',
+    version='0.1.2',
     url='https://borda.github.com/pyImSegm',
 
     author='Jiri Borovec',
@@ -76,7 +76,7 @@ setup(
     description='superpixel image segmentation: '
                 '(un)supervised, center detection, region growing',
 
-    packages=["imsegm"],
+    packages=find_packages(),
     cmdclass={'build_ext': BuildExt},
     ext_modules=[Extension('imsegm.features_cython',
                            language='c++',
@@ -91,7 +91,7 @@ setup(
     include_package_data=True,
 
     long_description="""Image segmentation package contains several useful features:
- * supervised and unsupervised segmentation on superpixels using GrapCut,
+ * supervised and unsupervised segmentation on superpixels using GraphCut,
  * detection object centres and cluster candidates,
  * region growing on superpixel level with a shape prior.""",
     classifiers=[
