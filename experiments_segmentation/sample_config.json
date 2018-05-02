@@ -43,6 +43,9 @@
 	"gc_edge_type": "model",
 	"gc_edge_type---OPTIONS": ["spatial", "color", "features",
 							   "model", "model_l1", "model_l2", "model_lT"],
+
+	"drop_labels": [],
+	"drop_labels---OPTIONS": "list of labels to be skipped",
 	
 	"gc_regul": 3.0,
 	"gc_regul--OPTIONS": "positive float",

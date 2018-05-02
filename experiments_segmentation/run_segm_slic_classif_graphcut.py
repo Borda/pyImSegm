@@ -661,23 +661,29 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
 
 
 def wrapper_filter_labels(name_img_labels_slic_label_hist, label_purity,
-                          path_visu=None):
+                          drop_labels=None, path_visu=None):
     name, img, labels, slic, label_hist = name_img_labels_slic_label_hist
     weights = np.max(label_hist, axis=1)
     if path_visu is not None and os.path.isdir(path_visu):
-        fig = tl_visu.figure_used_samples(img, labels, slic, weights, label_purity)
+        used = np.zeros(len(weights))
+        used[np.asarray(weights) >= label_purity] = 1
+        if drop_labels is not None:
+            for lb in drop_labels:
+                used[labels == lb] = 0
+        fig = tl_visu.figure_used_samples(img, labels, slic, used)
         path_fig = os.path.join(path_visu, name + '___training.jpg')
         fig.savefig(path_fig)
         plt.close(fig)
     labels[weights < label_purity] = -1
+
     return name, labels
 
 
 def filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
-                             label_purity, dict_slics, path_visu=None,
-                             nb_jobs=NB_THREADS):
+                             label_purity, dict_slics, drop_labels=None,
+                             path_visu=None, nb_jobs=NB_THREADS):
     _w_filter = partial(wrapper_filter_labels, label_purity=label_purity,
-                        path_visu=path_visu)
+                        drop_labels=drop_labels, path_visu=path_visu)
     iter_vals = ((n, dict_imgs[n], dict_labels[n], dict_slics[n],
                   dict_label_hist[n]) for n in dict_labels)
     iterate = tl_expt.WrapExecuteSequence(_w_filter, iter_vals, nb_jobs=nb_jobs,
@@ -747,6 +753,7 @@ def main_train(params):
     path_purity_visu = os.path.join(params['path_exp'], FOLDER_SLIC_ANNOT)
     dict_labels = filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
                                            params['label_purity'], dict_slics,
+                                           drop_labels=params.get('drop_labels', None),
                                            path_visu=path_purity_visu,
                                            nb_jobs=params['nb_jobs'])
 
@@ -754,7 +761,7 @@ def main_train(params):
     # concentrate features, labels
     features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
         dict_features, dict_labels, balance_type=params['balance'],
-        drop_labels=[-1, np.nan])
+        drop_labels=[-1, np.nan] + params.get('drop_labels', []))
     # drop "do not care" label which are -1
     features = np.nan_to_num(features)
 

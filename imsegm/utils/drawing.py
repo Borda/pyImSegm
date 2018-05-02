@@ -263,7 +263,8 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
     return fig
 
 
-def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9):
+def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9,
+                                    drop_labels=None):
     """ figure showing overlap annotation - segmentation - image
 
     :param ndarray annot:
@@ -274,7 +275,7 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9):
 
     >>> img = np.random.random((100, 150, 3))
     >>> seg = np.random.randint(0, 2, (100, 150))
-    >>> fig = figure_overlap_annot_segm_image(seg, seg, img)
+    >>> fig = figure_overlap_annot_segm_image(seg, seg, img, drop_labels=[5])
     >>> isinstance(fig, matplotlib.figure.Figure)
     True
     """
@@ -301,8 +302,12 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9):
     axarr[2].set_title('difference annot & segment')
     # axarr[2].imshow(~(annot == segm), cmap=plt.cm.Reds)
     max_val = np.max(annot.astype(int))
-    cax = axarr[2].imshow(annot - segm, alpha=0.5,
-                          vmin=-max_val, vmax=max_val, cmap=plt.cm.bwr)
+    diff = annot - segm
+    if drop_labels is not None:
+        for lb in drop_labels:
+            diff[annot == lb] = 0
+    cax = axarr[2].imshow(diff, vmin=-max_val, vmax=max_val, alpha=0.5,
+                          cmap=plt.cm.bwr)
     # vals = np.linspace(-max_val, max_val, max_val * 2 + 1)
     plt.colorbar(cax, ticks=np.linspace(-max_val, max_val, max_val * 2 + 1),
                  boundaries=np.linspace(-max_val - 0.5, max_val + 0.5,
@@ -507,7 +512,7 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None,
     return fig
 
 
-def figure_used_samples(img, labels, slic, weights, label_purity, fig_size=12):
+def figure_used_samples(img, labels, slic, used_samples, fig_size=12):
     """ draw used examples (superpixels)
 
     :param ndarray img:
@@ -520,15 +525,13 @@ def figure_used_samples(img, labels, slic, weights, label_purity, fig_size=12):
 
     >>> img = np.random.random((50, 75, 3))
     >>> labels = [-1, 0, 2]
-    >>> weights = [0.95, 0.85, 0.9]
+    >>> used = [1, 0, 0]
     >>> seg = np.random.randint(0, 3, img.shape[:2])
-    >>> fig = figure_used_samples(img, labels, seg, weights, 0.9)
+    >>> fig = figure_used_samples(img, labels, seg, used)
     >>> isinstance(fig, matplotlib.figure.Figure)
     True
     """
-    train = np.zeros(len(weights))
-    train[np.asarray(weights) >= label_purity] = 1
-    w_samples = train[slic]
+    w_samples = np.asarray(used_samples)[slic]
     img = color.gray2rgb(img) if img.ndim == 2 else img
 
     fig, axarr = create_figure_by_image(img.shape[:2], fig_size, nb_subfigs=2,

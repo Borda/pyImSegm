@@ -44,7 +44,7 @@ def arg_parse_params(dict_paths):
     parser.add_argument('-imgs', '--path_image', type=str, required=False,
                         help='path to directory & name pattern for images',
                         default=dict_paths['image'])
-    parser.add_argument('-out', '--path_out', type=str, required=False,
+    parser.add_argument('-out', '--path_output', type=str, required=False,
                         help='path to the output directory',
                         default=dict_paths['output'])
     parser.add_argument('--padding', type=int, required=False,
@@ -55,19 +55,15 @@ def arg_parse_params(dict_paths):
                         help='using background color', default=None, nargs='+')
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %s', repr(args))
-    dict_paths = {
-        'annot': tl_data.update_path(args.path_annot),
-        'image': tl_data.update_path(args.path_image),
-        'output': tl_data.update_path(args.path_out),
-    }
+    dict_paths = {k.split('_')[-1]:
+                      os.path.join(tl_data.update_path(os.path.dirname(args[k])),
+                                   os.path.basename(args[k]))
+                  for k in args if k.startswith('path_')}
     for k in dict_paths:
-        if dict_paths[k] == '':
-            continue
-        p = os.path.dirname(dict_paths[k]) \
-            if k in ['annot', 'image', 'output'] else dict_paths[k]
-        assert os.path.exists(p), 'missing (%s) "%s"' % (k, p)
+        assert os.path.exists(os.path.dirname(dict_paths[k])), \
+            'missing (%s) "%s"' % (k, os.path.dirname(dict_paths[k]))
     return dict_paths, args
 
 
@@ -126,4 +122,5 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     dict_paths, args = arg_parse_params(PATHS)
-    main(dict_paths, args.padding, args.mask, args.background, args.nb_jobs)
+    main(dict_paths, args['padding'], args['mask'],
+         args['background'], args['nb_jobs'])

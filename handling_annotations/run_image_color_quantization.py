@@ -43,8 +43,8 @@ def parse_arg_params():
     parser.add_argument('-imgs', '--path_images', type=str, required=True,
                         help='path to dir with images', default=PATH_IMAGES)
     parser.add_argument('-m', '--method', type=str, required=False,
-                        help='method for quantisation color/position', default='color',
-                        choices=['color', 'position'])
+                        help='method for quantisation color/position',
+                        default='color', choices=['color', 'position'])
     parser.add_argument('-thr', '--px_threshold', type=float, required=False,
                         help='percentage of pixels of a color to be removed',
                         default=THRESHOLD_INVALID_PIXELS)
