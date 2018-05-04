@@ -364,10 +364,10 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
     0.846...
     >>> d['(TP+FP)/(TP+FN)']  # doctest: +ELLIPSIS
     1.153...
-    >>> d = compute_classif_stat_segm_annot((annot, segm, 'ttt'), relabel=False,
-    ...                                     drop_labels=[0])
+    >>> d = compute_classif_stat_segm_annot((annot, segm + 1, 'ttt'),
+    ...                                     relabel=False, drop_labels=[0])
     >>> d['confusion']
-    [[0, 0], [13, 17]]
+    [[13, 17], [0, 0]]
     """
     annot, segm, name = annot_segm_name
     assert segm.shape == annot.shape, 'dimension do not match for ' \
@@ -379,6 +379,7 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
         mask = np.ones(y_true.shape, dtype=bool)
         for lb in drop_labels:
             mask[y_true == lb] = 0
+            mask[y_pred == lb] = 0
         y_true = y_true[mask]
         y_pred = y_pred[mask]
     # relabel such that the classes maximaly match

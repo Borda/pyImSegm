@@ -518,8 +518,7 @@ def figure_used_samples(img, labels, slic, used_samples, fig_size=12):
     :param ndarray img:
     :param [int] labels:
     :param ndarray slic:
-    :param [float] weights:
-    :param float label_purity:
+    :param [bool] used_samples:
     :param int fig_size:
     :return Figure:
 

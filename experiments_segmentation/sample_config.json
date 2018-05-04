@@ -53,7 +53,6 @@
 	"cross_val": 0.1,
 	"cross_val---OPTIONS": "float between 0 and 1",
 
-	"run_LOO": true,
 	"run_LPO": true,
 	"run_groupGMM": true
 }
