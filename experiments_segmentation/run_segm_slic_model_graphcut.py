@@ -142,8 +142,8 @@ def arg_parse_params(params):
                         help='number of classes for segmentation',
                         default=params.get('nb_classes', 2))
     parser.add_argument('--nb_jobs', type=int, required=False,
-                        default=NB_THREADS,
-                        help='number of processes in parallel')
+                        help='number of processes in parallel',
+                        default=NB_THREADS)
     parser.add_argument('--visual', required=False, action='store_true',
                         help='export debug visualisations', default=False)
     parser.add_argument('--unique', required=False, action='store_true',

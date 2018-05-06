@@ -57,10 +57,8 @@ Here's the long and short of it:
 * Refer to array dimensions as (plane), row, column, not as x, y, z. See :ref:`Coordinate conventions <numpy-images-coordinate-conventions>` in the user guide for more information.
 * Functions should support all input image dtypes.  Use utility functions such as ``img_as_float`` to help convert to an appropriate type.  The output format can be whatever is most efficient.  This allows us to string together several functions into a pipeline
 * Use ``Py_ssize_t`` as data type for all indexing, shape and size variables in C/C++ and Cython code.
-* Use relative module imports, i.e. ``from .._shared import xyz`` rather than ``from skimage._shared import xyz``.
 * Wrap Cython code in a pure Python function, which defines the API. This improves compatibility with code introspection tools, which are often not aware of Cython code.
-* For Cython functions, release the GIL whenever possible, using
-  ``with nogil:``.
+* For Cython functions, release the GIL whenever possible, using ``with nogil:``.
 
 
 ## Testing
@@ -76,12 +74,12 @@ the library is installed in development mode::
 ```
 Now, run all tests using::
 ```
-    $ PYTHONPATH=. pytest pyImSegm
+    $ pytest -v pyImSegm
 ```
 Use ``--doctest-modules`` to run doctests.
 For example, run all tests and all doctests using::
 ```
-    $ PYTHONPATH=. pytest --doctest-modules --with-xunit --with-coverage pyImSegm 
+    $ pytest -v --doctest-modules --with-xunit --with-coverage pyImSegm 
 ```
 
 ## Test coverage
@@ -92,7 +90,7 @@ To measure the test coverage, install `pytest-cov <http://pytest-cov.readthedocs
 ```
   $ coverage report
 ```
-This will print a report with one line for each file in `skimage`,
+This will print a report with one line for each file in `imsegm`,
 detailing the test coverage::
 ```
   Name                             Stmts   Exec  Cover   Missing
