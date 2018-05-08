@@ -1,5 +1,7 @@
 """
 Evaluate superpixels quality regarding given annotation
+Perform experiment with specified parameters and export output statistic
+per image if the output path is given
 
 SAMPLE run:
 >> python run_eval_superpixels.py \
@@ -18,8 +20,15 @@ import logging
 import multiprocessing as mproc
 from functools import partial
 
+import matplotlib
+if os.environ.get('DISPLAY', '') == '' \
+        and matplotlib.rcParams['backend'] != 'agg':
+    logging.warning('No display found. Using non-interactive Agg backend.')
+    matplotlib.use('Agg')
+
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
@@ -32,10 +41,12 @@ from run_segm_slic_model_graphcut import TYPES_LOAD_IMAGE
 
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
-PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
+PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
+                           'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
-NAME_CSV_DISTANCES = 'measured_boundary_distances.csv'
-PARAMS = {
+NAME_CSV_DISTANCES = 'measured_boundary_distances' \
+                     '_SLIC_size-%i_regul-%.2f_slico-%i.csv'
+DEFAULT_PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(PATH_IMAGES, 'annot_eggs', '*.png'),
     'path_out': os.path.join(PATH_RESULTS, 'compute_boundary_distances'),
@@ -106,6 +117,7 @@ def compute_boundary_distance(idx_row, params, path_out=''):
         logging.debug('visualise results...')
         fig = tl_visu.figure_segm_boundary_dist(segm, slic)
         fig.savefig(os.path.join(path_out, name + '.jpg'))
+        plt.close(fig)
 
     return name, np.mean(dists)
 
@@ -137,7 +149,10 @@ def main(params):
     df_dist.set_index('name', inplace=True)
 
     if os.path.isdir(params['path_out']):
-        df_dist.to_csv(os.path.join(params['path_out'], NAME_CSV_DISTANCES))
+        csv_name = NAME_CSV_DISTANCES % (params['slic_size'],
+                                         params['slic_regul'],
+                                         params['slico'])
+        df_dist.to_csv(os.path.join(params['path_out'], csv_name))
     logging.info('STATISTIC:')
     logging.info(df_dist.describe())
 
@@ -147,6 +162,6 @@ def main(params):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
-    params = arg_parse_params(PARAMS)
+    params = arg_parse_params(DEFAULT_PARAMS)
 
     main(params)

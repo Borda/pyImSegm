@@ -339,10 +339,9 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
         cv = 10
 
     classif, _ = seg_clf.create_classif_train_export(clf_name, features, labels,
+                                                     pca_coef=pca_coef, cross_val=cv,
                                                      nb_search_iter=nb_classif_search,
-                                                     cross_val=cv,
-                                                     nb_jobs=nb_jobs,
-                                                     pca_coef=pca_coef)
+                                                     nb_jobs=nb_jobs)
 
     return classif, list_slic, list_features, list_labels
 

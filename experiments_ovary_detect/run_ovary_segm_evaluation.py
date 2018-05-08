@@ -107,8 +107,8 @@ def compute_metrics(row):
     :param {str: ...} row:
     :return {str: float}:
     """
-    logging.debug('loading annot "%s"\n and segm "%s"',
-                  row['path_annot'], row['path_egg-segm'])
+    logging.debug('loading annot "%s"\n and segm "%s"', row['path_annot'],
+                  row['path_egg-segm'])
     annot, _ = tl_data.load_image_2d(row['path_annot'])
     segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
     assert annot.shape == segm.shape, 'dimension do mot match %s - %s' % \
@@ -120,9 +120,9 @@ def compute_metrics(row):
         segm_obj = (segm == lb)
         # label_hist = seg_lb.histogram_regions_labels_counts(segm, annot_obj)
         # segm_obj = np.argmax(label_hist, axis=1)[segm]
-        jacoby = np.sum(np.logical_and(annot_obj, segm_obj)) \
-                 / float(np.sum(np.logical_or(annot_obj, segm_obj)))
-        list_jacob.append(jacoby)
+        jaccoby = np.sum(np.logical_and(annot_obj, segm_obj)) \
+                  / float(np.sum(np.logical_or(annot_obj, segm_obj)))
+        list_jacob.append(jaccoby)
     if len(list_jacob) == 0:
         list_jacob.append(0)
 

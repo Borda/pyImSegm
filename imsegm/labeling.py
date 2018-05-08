@@ -496,9 +496,8 @@ def compute_labels_overlap_matrix(seg1, seg2):
                                      % (repr(seg1.shape), repr(seg2.shape))
     maxims = [np.max(seg1) + 1, np.max(seg2) + 1]
     overlap = np.zeros(maxims, dtype=int)
-    for i in range(seg1.shape[0]):
-        for j in range(seg1.shape[1]):
-            lb1, lb2 = seg1[i, j], seg2[i, j]
+    for lb1, lb2 in zip(seg1.ravel(), seg2.ravel()):
+        if lb1 >= 0 and lb2 >= 0:
             overlap[lb1, lb2] += 1
     # logging.debug(res)
     return overlap
@@ -545,9 +544,18 @@ def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
            [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
            [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0],
            [0, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 0]])
+    >>> atlas2[0, 0] = -1
+    >>> relabel_max_overlap_unique(atlas1, atlas2, keep_bg=True)
+    array([[-1,  5,  5,  0,  0,  0,  0,  1,  1,  1,  1,  1,  0,  0,  0],
+           [ 5,  5,  5,  0,  0,  0,  0,  1,  1,  1,  1,  1,  0,  0,  0],
+           [ 0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  0,  0,  0],
+           [ 0,  3,  3,  3,  3,  3,  3,  0,  0,  0,  0,  0,  0,  0,  0],
+           [ 0,  3,  3,  3,  3,  3,  3,  2,  2,  2,  2,  2,  2,  2,  0],
+           [ 0,  3,  3,  3,  3,  3,  3,  2,  2,  2,  2,  2,  2,  2,  0],
+           [ 0,  3,  3,  3,  3,  3,  3,  2,  2,  2,  2,  2,  2,  2,  0]])
     """
     assert seg_ref.shape == seg_relabel.shape, \
-        'Ref segm (%s) and segm (%s) should match' \
+        'Reference segm (%s) and input segm (%s) should match' \
         % (repr(seg_ref.shape), repr(seg_relabel.shape))
     overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
 
@@ -556,23 +564,30 @@ def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
         lut[0] = 0
         overlap[0, :] = 0
         overlap[:, 0] = 0
+    # select always the maximal value and reset it
     for i in range(max(overlap.shape) + 1):
-        if np.sum(overlap) == 0: break
+        if np.sum(overlap) == 0:
+            break
         lb_ref, lb_est = np.argwhere(overlap.max() == overlap)[0]
         lut[lb_est] = lb_ref
         overlap[lb_ref, :] = 0
         overlap[:, lb_est] = 0
-
+    # fill all not used by its equal id it is not used yet
     for i, lb in enumerate(lut):
         if lb == -1 and i not in lut:
             lut[i] = i
+    # fill by any unused yet
     for i, lb in enumerate(lut):
-        if lb > -1: continue
+        if lb > -1:
+            continue
         for j in range(len(lut)):
             if j not in lut:
                 lut[i] = j
+    # lut[lut == -1] = 0
 
-    seg_new = np.array(lut)[seg_relabel]
+    seg_new = np.array(lut)[seg_relabel].astype(int)
+    # hold all negative labels
+    seg_new[seg_relabel < 0] = seg_relabel[seg_relabel < 0]
     return seg_new
 
 
@@ -636,7 +651,9 @@ def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
     ptn_sum = np.sum(overlap, axis=0)
     if 0 in ptn_sum:
         lut[ptn_sum == 0] = np.arange(len(lut))[ptn_sum == 0]
-    seg_new = lut[seg_relabel]
+    seg_new = lut[seg_relabel].astype(int)
+    # hold all negative labels
+    seg_new[seg_relabel < 0] = seg_relabel[seg_relabel < 0]
     return seg_new
 
 

@@ -334,7 +334,7 @@ class WrapExecuteSequence:
             tqdm_bar = None
 
         if self.nb_jobs > 1:
-            logging.debug('perform sequential in %i threads', self.nb_jobs)
+            logging.debug('perform parallel in %i threads', self.nb_jobs)
             pool = mproc.Pool(self.nb_jobs)
 
             pooling = pool.imap if self.ordered else pool.imap_unordered

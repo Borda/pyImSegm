@@ -30,7 +30,7 @@ PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SWAP_CONDITION = 'cc'
-PARAMS = {
+DEFAULT_PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image_cut-stage-2', '*.png'),
     'path_output': os.path.join(PATH_RESULTS, 'image_cut-stage-2'),
 }
@@ -129,5 +129,5 @@ def main(params):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    params = r_match.arg_parse_params(PARAMS)
+    params = r_match.arg_parse_params(DEFAULT_PARAMS)
     main(params)

@@ -43,10 +43,10 @@ LIST_SUBFOLDER = [FOLDER_INPUTS, FOLDER_POINTS, FOLDER_POINTS_VISU,
 FOLDER_EXPERIMENT = 'detect-centers-predict_%s'
 
 # This sampling only influnece the number of point to be evaluated in the image
-PARAMS = run_train.CENTER_PARAMS
-PARAMS.update(run_clust.CLUSTER_PARAMS)
-PARAMS['path_centers'] = os.path.join(PARAMS['path_output'],
-                                      run_train.FOLDER_EXPERIMENT % PARAMS['name'],
+DEFAULT_PARAMS = run_train.CENTER_PARAMS
+DEFAULT_PARAMS.update(run_clust.CLUSTER_PARAMS)
+DEFAULT_PARAMS['path_centers'] = os.path.join(DEFAULT_PARAMS['path_output'],
+                                              run_train.FOLDER_EXPERIMENT % DEFAULT_PARAMS['name'],
                                       'classifier_RandForest.pkl')
 
 
@@ -173,7 +173,7 @@ def main(params):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    params = run_train.arg_parse_params(PARAMS)
+    params = run_train.arg_parse_params(DEFAULT_PARAMS)
 
     params['path_classif'] = params['path_centers']
     assert os.path.isfile(params['path_classif']), \

@@ -12,7 +12,7 @@ import random
 import collections
 import traceback
 import itertools
-# import multiprocessing as mproc
+from functools import partial
 
 import numpy as np
 import pandas as pd
@@ -46,6 +46,14 @@ METRIC_AVERAGES = ('macro', 'weighted')
 METRIC_SCORING = ('f1_macro', 'accuracy', 'precision_macro', 'recall_macro')
 # rounding unique features, in case to detail precision
 ROUND_UNIQUE_FTS_DIGITS = 3
+
+
+DICT_SCORING = {
+    'f1': metrics.f1_score,
+    'accuracy': metrics.accuracy_score,
+    'precision': metrics.precision_score,
+    'recall': metrics.recall_score,
+}
 
 
 def create_classifiers(nb_jobs=-1):
@@ -115,6 +123,9 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
 
     >>> create_clf_param_search_grid('RandForest') # doctest: +ELLIPSIS
     {'classif__...': ...}
+    >>> dict_classif = create_classifiers()
+    >>> all(len(create_clf_param_search_grid(k)) > 0 for k in dict_classif)
+    True
     """
     def log_space(b, e, n):
         return np.unique(np.logspace(b, e, n).astype(int)).tolist()
@@ -174,6 +185,9 @@ def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
 
     >>> create_clf_param_search_distrib()  # doctest: +ELLIPSIS
     {...}
+    >>> dict_classif = create_classifiers()
+    >>> all(len(create_clf_param_search_distrib(k)) > 0 for k in dict_classif)
+    True
     """
     clf_params = {
         'RandForest': {
@@ -327,7 +341,8 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     return dict_metrics
 
 
-def compute_classif_stat_segm_annot(annot_segm_name, relabel=False):
+def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
+                                    relabel=False):
     """ compute classification statistic between annotation and segmentation
 
     :param (ndarray, ndarray, str) annot_segm_name:
@@ -337,19 +352,40 @@ def compute_classif_stat_segm_annot(annot_segm_name, relabel=False):
     >>> np.random.seed(0)
     >>> annot = np.random.randint(0, 2, (5, 10))
     >>> segm = np.random.randint(0, 2, (5, 10))
-    >>> d = compute_classif_stat_segm_annot((annot, segm, 'ttt'), relabel=True)
+    >>> d = compute_classif_stat_segm_annot((annot, annot, 'ttt'), relabel=True,
+    ...                                     drop_labels=[5])
+    >>> d['(FP+FN)/(TP+FN)']  # doctest: +ELLIPSIS
+    0.0
+    >>> d['(TP+FP)/(TP+FN)']  # doctest: +ELLIPSIS
+    1.0
+    >>> d = compute_classif_stat_segm_annot((annot, segm, 'ttt'), relabel=True,
+    ...                                     drop_labels=[5])
     >>> d['(FP+FN)/(TP+FN)']  # doctest: +ELLIPSIS
     0.846...
     >>> d['(TP+FP)/(TP+FN)']  # doctest: +ELLIPSIS
     1.153...
+    >>> d = compute_classif_stat_segm_annot((annot, segm + 1, 'ttt'),
+    ...                                     relabel=False, drop_labels=[0])
+    >>> d['confusion']
+    [[13, 17], [0, 0]]
     """
     annot, segm, name = annot_segm_name
     assert segm.shape == annot.shape, 'dimension do not match for ' \
                                       'segm: %s - annot: %s' \
                                       % (repr(segm.shape), repr(annot.shape))
-    if relabel:
-        segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=False)
     y_true, y_pred = annot.ravel(), segm.ravel()
+    # filter particular labels
+    if drop_labels is not None:
+        mask = np.ones(y_true.shape, dtype=bool)
+        for lb in drop_labels:
+            mask[y_true == lb] = 0
+            mask[y_pred == lb] = 0
+        y_true = y_true[mask]
+        y_pred = y_pred[mask]
+    # relabel such that the classes maximaly match
+    if relabel:
+        y_pred = seg_lbs.relabel_max_overlap_unique(y_true, y_pred,
+                                                    keep_bg=False)
     dict_stat = compute_classif_metrics(y_true, y_pred,
                                         metric_averages=['macro'])
     # add binary metric
@@ -361,7 +397,8 @@ def compute_classif_stat_segm_annot(annot_segm_name, relabel=False):
     return dict_stat
 
 
-def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
+def compute_stat_per_image(segms, annots, names=None, nb_jobs=1,
+                           drop_labels=None, relabel=False):
     """ compute statistic over multiple segmentations with annotation
 
     :param [ndarray] segms:
@@ -374,7 +411,8 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
     >>> np.random.seed(0)
     >>> img_true = np.random.randint(0, 3, (50, 100))
     >>> img_pred = np.random.randint(0, 2, (50, 100))
-    >>> df = compute_stat_per_image([img_true], [img_true], nb_jobs=2)
+    >>> df = compute_stat_per_image([img_true], [img_true], nb_jobs=2,
+    ...                             relabel=True)
     >>> df.iloc[0]  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ARS                                                         1
     accuracy                                                    1
@@ -384,7 +422,7 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
     recall_macro                                                1
     support_macro                                            None
     Name: 0, dtype: object
-    >>> df = compute_stat_per_image([img_true], [img_pred])
+    >>> df = compute_stat_per_image([img_true], [img_pred], drop_labels=[-1])
     >>> df.iloc[0]  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ARS                                                       0.0...
     accuracy                                                  0.3384
@@ -400,13 +438,14 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1):
         % (len(segms), len(annots))
     if names is None:
         names = map(str, range(len(segms)))
-    df_stat = pd.DataFrame()
-    iterate = tl_expt.WrapExecuteSequence(compute_classif_stat_segm_annot,
+    _compute_stat = partial(compute_classif_stat_segm_annot,
+                            drop_labels=drop_labels, relabel=relabel)
+    iterate = tl_expt.WrapExecuteSequence(_compute_stat,
                                           zip(annots, segms, names),
                                           nb_jobs=nb_jobs,
                                           desc='statistic per image')
-    for dict_stat in iterate:
-        df_stat = df_stat.append(dict_stat, ignore_index=True)
+    list_stat = list(iterate)
+    df_stat = pd.DataFrame(list_stat)
     df_stat.set_index('name', inplace=True)
     return df_stat
 
@@ -584,7 +623,7 @@ def relabel_sequential(labels, uq_lbs=None):
 
 def create_classif_train_export(clf_name, features, labels, cross_val=10,
                                 nb_search_iter=1, search_type='random',
-                                nb_jobs=NB_JOBS_CLASSIF_SEARCH,
+                                eval_metric='f1', nb_jobs=NB_JOBS_CLASSIF_SEARCH,
                                 path_out=None, params=None, pca_coef=0.98,
                                 feature_names=None, label_names=None):
     """ create classifier and train it once or find best parameters.
@@ -641,9 +680,13 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
         # find the best params for the classif.
         logging.debug('Performing param search...')
         nb_labels = len(np.unique(labels))
-        clf_search = create_classif_search(clf_name, clf_pipeline, nb_labels,
-                                           search_type, cross_val,
-                                           nb_search_iter, nb_jobs)
+        clf_search = create_classif_search(clf_name, clf_pipeline,
+                                           nb_labels=nb_labels,
+                                           search_type=search_type,
+                                           cross_val=cross_val,
+                                           eval_scoring=eval_metric,
+                                           nb_iter=nb_search_iter,
+                                           nb_jobs=nb_jobs)
 
         # NOTE, this is temporal just for purposes of computing statistic
         clf_search.fit(features, relabel_sequential(labels))
@@ -823,8 +866,8 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
         classif.fit(features_train, labels_train)
         proba = classif.predict_proba(features_test)
         # Compute ROC curve and area the curve
-        for i, j in enumerate(unique_labels):
-            fpr, tpr, _ = metrics.roc_curve(labels_bin[test, j], proba[:, i])
+        for i, lb in enumerate(unique_labels):
+            fpr, tpr, _ = metrics.roc_curve(labels_bin[test, lb], proba[:, i])
             fpr = [0.] + fpr.tolist() + [1.]
             tpr = [0.] + tpr.tolist() + [1.]
             mean_tpr += interp(mean_fpr, fpr, tpr)
@@ -874,6 +917,7 @@ def search_params_cut_down_max_nb_iter(clf_parameters, nb_iter):
 
 def create_classif_search(name_clf, clf_pipeline, nb_labels,
                           search_type='random', cross_val=10,
+                          eval_scoring='f1',
                           nb_iter=NB_CLASSIF_SEARCH_ITER,
                           nb_jobs=NB_JOBS_CLASSIF_SEARCH):
     """ create sklearn search depending on spec. random or grid
@@ -885,25 +929,22 @@ def create_classif_search(name_clf, clf_pipeline, nb_labels,
     :param nb_jobs: int, nb jobs running in parallel
     :return:
     """
-    scoring = 'weighted' if nb_labels > 2 else 'binary'
-    f1_scoring = metrics.make_scorer(metrics.f1_score, average=scoring)
-
+    score_weight = 'weighted' if nb_labels > 2 else 'binary'
+    scoring = metrics.make_scorer(DICT_SCORING[eval_scoring.lower()],
+                                  average=score_weight)
     if search_type == 'grid':
         clf_parameters = create_clf_param_search_grid(name_clf)
         logging.info('init Grid search...')
-        clf_search = grid_search.GridSearchCV(clf_pipeline, clf_parameters,
-                                              scoring=f1_scoring, cv=cross_val,
-                                              n_jobs=nb_jobs, verbose=1,
-                                              refit=True)
+        clf_search = grid_search.GridSearchCV(
+            clf_pipeline, clf_parameters, scoring=scoring, cv=cross_val,
+            n_jobs=nb_jobs, verbose=1, refit=True)
     else:
         clf_parameters = create_clf_param_search_distrib(name_clf)
         nb_iter = search_params_cut_down_max_nb_iter(clf_parameters, nb_iter)
         logging.info('init Randomized search...')
-        clf_search = grid_search.RandomizedSearchCV(clf_pipeline, clf_parameters,
-                                                    scoring=f1_scoring,
-                                                    cv=cross_val, n_jobs=nb_jobs,
-                                                    n_iter=nb_iter, verbose=1,
-                                                    refit=True)
+        clf_search = grid_search.RandomizedSearchCV(
+            clf_pipeline, clf_parameters, scoring=scoring, cv=cross_val,
+            n_jobs=nb_jobs, n_iter=nb_iter, verbose=1, refit=True)
     return clf_search
 
 
@@ -1088,16 +1129,16 @@ def balance_dataset_by_(features, labels, balance_type='random',
         min_samples = min(hist_labels.values())
     dict_features = compose_dict_label_features(features, labels)
 
-    if balance_type == 'random':
+    if balance_type.lower() == 'random':
         dict_features = down_sample_dict_features_random(dict_features,
                                                          min_samples)
-    elif balance_type == 'kmeans':
+    elif balance_type.lower() == 'kmeans':
         dict_features = down_sample_dict_features_kmean(dict_features,
                                                         min_samples)
-    elif balance_type == 'unique':
+    elif balance_type.lower() == 'unique':
         dict_features = down_sample_dict_features_unique(dict_features)
     else:
-        logging.warning('not defined balacing method "%s"', balance_type)
+        logging.warning('not defined balancing method "%s"', balance_type)
 
     features, labels = convert_dict_label_features_2_vectors(dict_features)
     # features, labels = shuffle_features_labels(features, labels)
@@ -1135,10 +1176,10 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
         features = np.array(imgs_features[name])
         labels = np.array(imgs_labels[name].astype(int))
 
-        if drop_labels is not None:
-            for lb in drop_labels:
-                features = features[labels != lb]
-                labels = labels[labels != lb]
+        drop_labels = [] if drop_labels is None else drop_labels
+        for lb in drop_labels:
+            features = features[labels != lb]
+            labels = labels[labels != lb]
 
         if balance_type is not None:
             # balance_type dataset to have comparable nb of samples
@@ -1168,6 +1209,8 @@ def compute_tp_tn_fp_fn(annot, segm, label_positive=None):
            [-9,  0, -9, -9, -9,  0,  0],
            [ 0,  9,  0, -9,  0,  9,  0],
            [ 9, -9,  9,  0,  9,  0,  9]])
+    >>> compute_tp_tn_fp_fn(annot, annot)
+    (20, 15, 0, 0)
     >>> compute_tp_tn_fp_fn(annot, segm)
     (9, 5, 11, 10)
     >>> compute_tp_tn_fp_fn(annot, np.ones((5, 7)))
@@ -1180,7 +1223,7 @@ def compute_tp_tn_fp_fn(annot, segm, label_positive=None):
     uq_labels = np.unique([y_true, y_pred]).tolist()
     if len(uq_labels) > 2:
         logging.debug('too many labels: %s', repr(uq_labels))
-        return np.nan,np.nan, np.nan, np.nan
+        return np.nan, np.nan, np.nan, np.nan
     elif len(uq_labels) < 2:
         logging.debug('only one label: %s', repr(uq_labels))
         return len(y_true), 0, 0, 0
@@ -1242,14 +1285,14 @@ def compute_metric_tpfp_tpfn(annot, segm, label_positive=None):
     >>> compute_metric_tpfp_tpfn(annot, segm)  # doctest: +ELLIPSIS
     1.03...
     >>> compute_metric_tpfp_tpfn(annot, annot)
-    0.0
+    1.0
     >>> compute_metric_tpfp_tpfn(annot, np.ones((50, 75)))
     nan
     """
     tp, _, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
     if tp == np.nan:
         return np.nan
-    elif (fp + fn) == 0:
+    elif (tp + fn) == 0:
         return 0.
     measure = float(tp + fp) / float(tp + fn)
     return measure

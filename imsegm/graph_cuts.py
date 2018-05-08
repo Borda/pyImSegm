@@ -19,6 +19,8 @@ import imsegm.descriptors as seg_fts
 DEFAULT_GC_ITERATIONS = 25
 COEF_INT_CONVERSION = 1e6
 DEBUG_NB_SHOW_SAMPLES = 15
+MIN_UNARY_PROB = 1e-2
+MAX_PAIRWISE_COST = 1e3
 
 
 def estim_gmm_params(features, prob):
@@ -507,10 +509,11 @@ def create_pairwise_matrix(gc_regul, nb_classes):
     return pairwise
 
 
-def compute_unary_cost(proba):
+def compute_unary_cost(proba, min_proba=MIN_UNARY_PROB):
     """ compute the GC unary cost with some threshold on minimal values
 
     :param ndarray proba:
+    :param float min_proba:
     :return ndarray:
 
     >>> compute_unary_cost(np.random.random((50, 2))).shape
@@ -518,23 +521,25 @@ def compute_unary_cost(proba):
     """
     proba = proba.copy()
     # constrain that each class should have at least 1.%
-    proba[proba < 1e-2] = 1e-2
+    proba[proba < min_proba] = min_proba
     # unary_cost = np.array(1. / proba , dtype=np.float64)
     unary_cost = np.abs(np.array(-np.log(proba), dtype=np.float64))
     return unary_cost
 
 
-def compute_pairwise_cost(gc_regul, proba_shape):
+def compute_pairwise_cost(gc_regul, proba_shape,
+                          max_pairwise_cost=MAX_PAIRWISE_COST):
     """ wrapper for creating GC pairwise cost
 
     :param gc_regul:
     :param (int, int) proba_shape:
+    :param float max_pairwise_cost:
     :return ndarray:
     """
     # original and the right way...
     pairwise = create_pairwise_matrix(gc_regul, proba_shape[1])
     pairwise_cost = np.array(pairwise, dtype=np.float64)
-    pairwise_cost[pairwise_cost > 1e2] = 1e2
+    pairwise_cost[pairwise_cost > max_pairwise_cost] = max_pairwise_cost
     return pairwise_cost
 
 

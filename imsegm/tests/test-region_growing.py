@@ -23,7 +23,7 @@ import imsegm.superpixels as seg_spx
 import imsegm.region_growing as seg_rg
 
 PATH_OVARY = os.path.join(tl_data.update_path('data_images', absolute=True),
-                         'drosophila_ovary_slice')
+                          'drosophila_ovary_slice')
 PATH_IMAGE = os.path.join(PATH_OVARY, 'image')
 PATH_SEGM = os.path.join(PATH_OVARY, 'segm')
 PATH_ANNOT = os.path.join(PATH_OVARY, 'annot_eggs')
@@ -70,6 +70,7 @@ def expert_segm(name, img, seg, segm_obj, annot, str_type='xxx'):
     ax[1].contour(annot, cmap=plt.cm.jet)
     fig.savefig(os.path.join(PATH_OUTPUT, '%s_%s.pdf' % (str_type, name)),
                 bbox_inches='tight', pad_inches=0)
+    plt.close(fig)
 
 
 class TestRegionGrowing(unittest.TestCase):
@@ -120,6 +121,7 @@ class TestRegionGrowing(unittest.TestCase):
 
         fig.savefig(os.path.join(PATH_OUTPUT, 'RG2Sp_shape-modeling.pdf'),
                     bbox_inches='tight', pad_inches=0)
+        plt.close(fig)
 
     def test_region_growing_greedy(self, name='insitu7545'):
         """    """

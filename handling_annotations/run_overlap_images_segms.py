@@ -43,6 +43,8 @@ BOOL_SHOW_SEGM_BINARY = False
 BOOL_ANNOT_RELABEL = True
 SIZE_SUB_FIGURE = 9
 COLOR_CONTOUR = (0., 0., 1.)
+MIDDLE_ALPHA_OVERLAP = 0.
+MIDDLE_IMAGE_GRAY = False
 
 
 def parse_arg_params():
@@ -52,7 +54,7 @@ def parse_arg_params():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=True,
-                        help='path to the input images')
+                        help='path to the input images + name pattern')
     parser.add_argument('-segs', '--path_segms', type=str, required=True,
                         help='path to the input segms')
     parser.add_argument('-out', '--path_output', type=str, required=True,
@@ -83,7 +85,7 @@ def visualise_overlap(path_img, path_seg, path_out,
         img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
 
     if b_img_scale:
-        p_low, p_high = np.percentile(img, (3, 98))
+        p_low, p_high = np.percentile(img, q=(3, 98))
         # plt.imshow(255 - img, cmap='Greys')
         img = exposure.rescale_intensity(img, in_range=(p_low, p_high),
                                          out_range='uint8')
@@ -97,7 +99,9 @@ def visualise_overlap(path_img, path_seg, path_out,
     #     mask = (np.sum(img, axis=2) == 0)
     #     img[mask] = [255, 255, 255]
 
-    fig = tl_visu.figure_image_segm_results(img, seg, SIZE_SUB_FIGURE)
+    fig = tl_visu.figure_image_segm_results(img, seg, SIZE_SUB_FIGURE,
+                                            MIDDLE_ALPHA_OVERLAP,
+                                            MIDDLE_IMAGE_GRAY)
     fig.savefig(path_out)
     plt.close(fig)
 
@@ -125,6 +129,9 @@ def perform_visu_overlap(path_img, paths):
 
 def main(paths, nb_jobs=NB_THREADS):
     logging.info('running...')
+    assert paths['segms'] != paths['output'], 'overwriting segmentation dir'
+    assert os.path.basename(paths['images']) != paths['output'], \
+        'overwriting image dir'
 
     logging.info(tl_expt.string_dict(paths, desc='PATHS'))
     if not os.path.exists(paths['output']):

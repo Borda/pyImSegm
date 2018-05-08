@@ -1,5 +1,5 @@
 """
-Run supervised segmentation with superpixels and training examples
+Run supervised segmentation experiment with superpixels and training examples
 
 Pipeline:
  1. segment SLIC superpixels
@@ -14,7 +14,7 @@ SAMPLE run:
 >> python run_segm_slic_model_graphcut.py \
    -l data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
    -i "data_images/langerhans_islets/image/*.jpg" \
-   -o results -n LangIsl --nb_classes 3 --visual --nb_jobs 2
+   -o results -n LangIsl --nb_classes 3 --nb_jobs 2 --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -142,8 +142,8 @@ def arg_parse_params(params):
                         help='number of classes for segmentation',
                         default=params.get('nb_classes', 2))
     parser.add_argument('--nb_jobs', type=int, required=False,
-                        default=NB_THREADS,
-                        help='number of processes in parallel')
+                        help='number of processes in parallel',
+                        default=NB_THREADS)
     parser.add_argument('--visual', required=False, action='store_true',
                         help='export debug visualisations', default=False)
     parser.add_argument('--unique', required=False, action='store_true',
@@ -495,7 +495,7 @@ def main(params):
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running...')
-    show_debug_imgs = params.get('visual', False)
+    show_visual = params.get('visual', False)
 
     reload_dir_config = (os.path.isfile(params['path_config']) or FORCE_RELOAD)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
@@ -504,7 +504,7 @@ def main(params):
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_BASE)
-    if show_debug_imgs:
+    if show_visual:
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
 
     paths_img = load_path_images(params)
@@ -514,22 +514,24 @@ def main(params):
         return os.path.join(params['path_exp'], n)
 
     # Segment as single model per image
+    path_visu = _path_expt(FOLDER_SEGM_GMM_VISU) if show_visual else None
     dict_segms_gmm = experiment_single_gmm(params, paths_img,
                                            _path_expt(FOLDER_SEGM_GMM),
-                                           _path_expt(FOLDER_SEGM_GMM_VISU),
-                                           show_debug_imgs=show_debug_imgs)
+                                           path_visu,
+                                           show_debug_imgs=show_visual)
     gc.collect()
     time.sleep(1)
 
     # Segment as model ober set of images
     if params.get('run_groupGMM', False):
+        path_visu = _path_expt(FOLDER_SEGM_GROUP_VISU) if show_visual else None
         dict_segms_group = experiment_group_gmm(params, paths_img,
                                                 _path_expt(FOLDER_SEGM_GROUP),
-                                                _path_expt(FOLDER_SEGM_GROUP_VISU),
-                                                show_debug_imgs=show_debug_imgs)
+                                                path_visu,
+                                                show_debug_imgs=show_visual)
     else:
         write_skip_file(_path_expt(FOLDER_SEGM_GROUP))
-        write_skip_file(_path_expt(FOLDER_SEGM_GROUP_VISU))
+        # write_skip_file(_path_expt(FOLDER_SEGM_GROUP_VISU))
         dict_segms_group = None
 
     if dict_segms_group is not None:
