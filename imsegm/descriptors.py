@@ -1597,24 +1597,36 @@ def shift_ray_features(ray_dist):
     :param [float] ray_dist:
     :return [float]:
 
-    >>> vec = np.array([43, 46, 46, 39, 28, 18, 12, 10,  9, 12, 17, 22])
+    >>> vec = np.array([43, 46, 44, 39, 28, 18, 12, 10,  9, 12, 22, 28])
     >>> ray, shift = shift_ray_features(vec)
-    >>> shift
-    30.0
+    >>> shift   # doctest: +ELLIPSIS
+    41.50...
     >>> ray
-    array([46, 46, 39, 28, 18, 12, 10,  9, 12, 17, 22, 43])
+    array([46, 44, 39, 28, 18, 12, 10,  9, 12, 22, 28, 43])
     >>> ray2, shift = shift_ray_features(ray)
-    >>> shift
-    0.0
+    >>> shift  # doctest: +ELLIPSIS
+    11.50...
     >>> np.array_equal(ray, ray2)
     True
     """
     angle_step = 360 / len(ray_dist)
-    max_loc = np.argmax(ray_dist)
-    ray_dist = ray_dist[max_loc:].tolist() + ray_dist[:max_loc].tolist()
-    shift = float(max_loc * angle_step)
-
-    return np.array(ray_dist), shift
+    # max_loc = np.argmax(ray_dist)
+    # shift = float(max_loc * angle_step)
+    # use major phase from FFT, see following
+    # https://www.ritchievink.com/blog/2017/04/23/understanding-the-fourier-transform-by-example/
+    # https://www.gaussianwaves.com/2015/11/interpreting-fft-results-obtaining-magnitude-and-phase-information/
+    ray_dist_ext = np.hstack([ray_dist] * 5)
+    spectrum = np.fft.fft(ray_dist_ext - np.mean(ray_dist_ext)) / float(len(ray_dist_ext))
+    # freq = np.fft.fftfreq(len(ray_dist_ext), angle_step)
+    magnitude = np.abs(spectrum)[:len(ray_dist_ext) // 2]
+    idx_max_mag = np.argmax(magnitude)
+    phase = np.angle(spectrum)[:len(ray_dist_ext) // 2]
+    shift = np.rad2deg(- phase[idx_max_mag])
+    shift = (360 + shift) if shift < 0 else shift
+    # round the shift to dicreate angular steps
+    shift_disc = int(round(shift / angle_step))
+    ray_dist_shift = ray_dist[shift_disc:].tolist() + ray_dist[:shift_disc].tolist()
+    return np.array(ray_dist_shift), shift
 
 
 def compute_ray_features_positions(segm, list_positions, angle_step=5.,
@@ -1643,12 +1655,12 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     >>> seg[x, y] = 2
     >>> points = [(50, 50), (60, 40), (45, 55)]
     >>> ray_dist, shift, _ = compute_ray_features_positions(seg, points, 20)
-    >>> shift
-    [300.0, 300.0, 40.0]
+    >>> shift  # doctest: +ELLIPSIS
+    [315.1..., 316.0..., 90.0...]
     >>> ray_dist.tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [[38, 37, 36, 35, 32, 30, 27, 25, 24, 23, 23, 24, 25, 26, 28, 31, 33, 35],
-     [50, 50, 47, 41, 32, 23, 17, 13, 10, 9, 10, 9, 11, 14, 19, 26, 36, 44],
-    [31, 30, 30, 30, 30, 31, 30, 30, 29, 30, 30, 30, 30, 30, 30, 29, 30, 30]]
+    [[37, 36, 35, 32, 30, 27, 25, 24, 23, 23, 24, 25, 26, 28, 31, 33, 35, 38],
+     [50, 47, 41, 32, 23, 17, 13, 10, 9, 10, 9, 11, 14, 19, 26, 36, 44, 50],
+     [30, 30, 31, 30, 30, 29, 30, 30, 30, 30, 30, 30, 29, 30, 30, 31, 30, 30]]
     >>> noise_pos = np.random.randint(10, 80, (2, 300))
     >>> seg[noise_pos[0], noise_pos[1]] = 0  # add random noise
     >>> ray_dist, shift, names = compute_ray_features_positions(seg, points,
@@ -1657,8 +1669,8 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     ['ray-lb_0-agl_0', 'ray-lb_0-agl_45', 'ray-lb_0-agl_90',
      'ray-lb_0-agl_135', 'ray-lb_0-agl_180', 'ray-lb_0-agl_225',
      'ray-lb_0-agl_270', 'ray-lb_0-agl_315']
-    >>> shift
-    [315.0, 315.0, 45.0]
+    >>> shift  # doctest: +ELLIPSIS
+    [315.0..., 315.0..., 66.8...]
     >>> ray_dist
     array([[38, 35, 29, 25, 24, 25, 29, 35],
            [52, 41, 21, 11,  9, 11, 21, 41],
