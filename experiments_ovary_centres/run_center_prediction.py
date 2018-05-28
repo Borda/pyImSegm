@@ -133,7 +133,6 @@ def main(params):
 
     :param {str: str} paths:
     """
-    logging.info('running...')
     params = run_train.prepare_experiment_folder(params, FOLDER_EXPERIMENT)
 
     # run_train.check_pathes_patterns(paths)
@@ -168,11 +167,11 @@ def main(params):
     df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES))
     logging.info('STATISTIC: \n %s', repr(df_stat.describe()))
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    logging.info('running...')
+
     params = run_train.arg_parse_params(DEFAULT_PARAMS)
 
     params['path_classif'] = params['path_centers']
@@ -180,3 +179,5 @@ if __name__ == '__main__':
         'missing classifier: %s' % params['path_classif']
 
     main(params)
+
+    logging.info('DONE')

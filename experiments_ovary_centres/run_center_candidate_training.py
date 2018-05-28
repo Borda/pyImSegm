@@ -705,7 +705,6 @@ def main_train(params):
 
     :param {str: any} params:
     """
-    logging.info('run TRAINING...')
     params = prepare_experiment_folder(params, FOLDER_EXPERIMENT)
 
     tl_expt.set_experiment_logger(params['path_expt'])
@@ -764,10 +763,12 @@ def main_train(params):
         experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
                        dict_points, dict_features, feature_names)
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    logging.info('run TRAINING...')
+
     params = arg_parse_params(CENTER_PARAMS)
     main_train(params)
+
+    logging.info('DONE')

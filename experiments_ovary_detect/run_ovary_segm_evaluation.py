@@ -283,8 +283,6 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
     logging.info('STATISTIC: \n %s', repr(df_all))
     df_all.to_csv(os.path.join(dict_paths['results'], NAME_CSV_STAT % 'OVERALL'))
 
-    logging.info('Done :]')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)

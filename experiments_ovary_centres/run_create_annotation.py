@@ -158,8 +158,6 @@ def main(path_segs, path_out, nb_jobs):
     :param str path_out:
     :param int nb_jobs: number of processes in parallel
     """
-    logging.info('running...')
-
     assert os.path.dirname(path_segs) != path_out, \
         'the output dir has to be different then the input object segmentation'
     list_imgs = glob.glob(path_segs)
@@ -178,11 +176,13 @@ def main(path_segs, path_out, nb_jobs):
                                           desc='annotating images')
     list(iterate)
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    logging.info('running...')
+
     params = run_train.arg_parse_params(PARAMS)
     path_out = os.path.join(params['path_output'], NAME_DIR)
     main(params['path_segms'], path_out, params['nb_jobs'])
+
+    logging.info('DONE')

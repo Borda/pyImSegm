@@ -107,8 +107,6 @@ def main(params):
 
     :param {str: str} params:
     """
-    logging.info('running...')
-
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     list_img_paths = sorted([p for p in glob.glob(params['path_images'])
@@ -129,10 +127,12 @@ def main(params):
                                           desc=dir_name)
     list(iterate)
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
+
     params = r_match.arg_parse_params(DEFAULT_PARAMS)
     main(params)
+
+    logging.info('DONE')

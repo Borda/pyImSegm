@@ -243,8 +243,6 @@ def main(params):
 
     :param {str: ...} params:
     """
-    logging.info('running...')
-
     tl_expt.set_experiment_logger(params['path_expt'])
     # tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
@@ -272,10 +270,12 @@ def main(params):
         logging.info('STATISTIC: \n %s', repr(df_stat))
         df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STATISTIC))
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    logging.info('running...')
+
     params = run_train.arg_parse_params(DEFAULT_PARAMS)
     main(params)
+
+    logging.info('DONE')

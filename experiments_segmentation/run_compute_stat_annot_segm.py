@@ -156,7 +156,6 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True,
     :param int nb_jobs: number of thred running in parallel
     :param bool relabel: whether relabel segmentation as sequential
     """
-    logging.info('running...')
     if not os.path.isdir(dict_paths['output']):
         assert os.path.isdir(os.path.dirname(dict_paths['output'])), \
             'missing folder: %s' % dict_paths['output']
@@ -227,12 +226,14 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True,
                                               nb_jobs=nb_jobs)
         list(iterate)
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
+
     dict_paths, args = aparse_params(PATHS)
     main(dict_paths, nb_jobs=args['nb_jobs'], visual=args['visual'],
          drop_labels=args['drop_labels'], relabel=args['relabel'],
          segm_alpha=args['overlap'])
+
+    logging.info('DONE')

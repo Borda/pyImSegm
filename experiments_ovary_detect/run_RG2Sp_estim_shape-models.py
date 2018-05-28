@@ -107,10 +107,12 @@ def main(path_annot, path_out, nb_comp=5):
                      'cdfs': list_mean_cdf,
                      'mix_model': model}, fp)
 
-    logging.info('Done')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
+
     params = arg_parse_params()
     main(params['path_annot'], params['path_out'], params['nb_comp'])
+
+    logging.info('Done')

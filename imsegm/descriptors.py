@@ -1441,8 +1441,8 @@ def compute_label_hist_proba(segm, position, struc_elem):
 #     return None
 
 
-def compute_ray_features_segm_2d_OLD(seg_binary, position, angle_step=5.,
-                                     smooth_coef=0, edge='up'):
+def compute_ray_features_segm_2d_vectors(seg_binary, position, angle_step=5.,
+                                         smooth_coef=0, edge='up'):
     """ USES WHOLE IMAGE ROTATION SO IT IS VERY SLOW
     compute ray features vector , shift them to be startig from larges
     and smooth_coef them by gauss filter
@@ -1460,11 +1460,11 @@ def compute_ray_features_segm_2d_OLD(seg_binary, position, angle_step=5.,
     >>> seg = np.ones((100, 100), dtype=bool)
     >>> x, y = draw.circle(45, 55, 30, shape=seg.shape)
     >>> seg[x, y] = False
-    >>> compute_ray_features_segm_2d_OLD(seg, (50, 50), 45)
+    >>> compute_ray_features_segm_2d_vectors(seg, (50, 50), 45)
     array([35, 29, 25, 23, 24, 29, 34, 36])
-    >>> compute_ray_features_segm_2d_OLD(seg, (60, 40), 30, smooth_coef=1)
+    >>> compute_ray_features_segm_2d_vectors(seg, (60, 40), 30, smooth_coef=1)
     array([35, 27, 18, 12, 10,  9, 12, 18, 27, 37, 45, 49])
-    >>> compute_ray_features_segm_2d_OLD(seg, (40, 60), 20).tolist()
+    >>> compute_ray_features_segm_2d_vectors(seg, (40, 60), 20).tolist()
     [25, 27, 29, 32, 34, 35, 37, 36, 36, 34, 32, 29, 27, 25, 24, 23, 24, 24]
     """
     seg_binary = seg_binary.astype(bool)

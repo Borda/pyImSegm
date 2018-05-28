@@ -220,10 +220,13 @@ def main(params):
     iterate = tl_expt.WrapExecuteSequence(_wrapper_export, df_paths.iterrows(),
                                           nb_jobs=params['nb_jobs'])
     list(iterate)
-    logging.info('DONE')
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    logging.info('running...')
+
     params = arg_parse_params(DEFAULT_PARAMS)
     main(params)
+
+    logging.info('DONE')
