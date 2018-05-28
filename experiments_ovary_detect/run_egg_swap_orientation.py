@@ -3,7 +3,7 @@ Rotate the extracted eggs according major mass in main diagonal
 
 SAMPLE run:
 >> python run_egg_swap_orientation.py \
-    -imgs ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages/2/*.png \
+    -imgs "~/Medical-drosophila/RESULTS/images_cut_ellipse_stages/2/*.png" \
     -out ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages/2
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -47,6 +47,9 @@ def perform_orientation_swap(path_img, path_out, img_template,
     :param str swap_type: used swap condition
     """
     img, _ = tl_data.load_image_2d(path_img)
+    # cut the same image
+    img_size = img_template.shape
+    img = img[:img_size[0], :img_size[1]]
 
     if swap_type == 'cc':
         b_swap = condition_swap_correl(img, img_template)
@@ -93,6 +96,8 @@ def compute_mean_image(list_img_paths):
     iterate = tl_expt.WrapExecuteSequence(tl_data.load_image_2d, list_img_paths,
                                           desc='compute mean image')
     imgs = [im[:, :, IMAGE_CHANNEL] for im, _ in iterate]
+    min_size = np.min([img.shape for img in imgs], axis=0)
+    imgs = [img[:min_size[0], :min_size[1]] for img in imgs]
     img_mean = np.median(imgs, axis=0)
     return img_mean
 
