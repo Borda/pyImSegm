@@ -26,6 +26,7 @@ try:
     USE_CYTHON = True
 except Exception:
     # NOTE: in some cases following warning may crash all message logging
+    # logging.basicConfig(level=logging.INFO)
     logging.warning('descriptors: using pure python libraries')
     USE_CYTHON = False
 
