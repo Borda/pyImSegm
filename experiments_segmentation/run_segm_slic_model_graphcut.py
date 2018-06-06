@@ -444,7 +444,7 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
             list_images, nb_classes=params['nb_classes'],
             dict_features=params['features'], sp_size=params['slic_size'],
             sp_regul=params['slic_regul'], pca_coef=params['pca_coef'],
-            proba_type=params['estim_model'])
+            model_type=params['estim_model'])
         save_model(params['path_model'], model)
 
     logging.info('Perform image segmentation from group model')

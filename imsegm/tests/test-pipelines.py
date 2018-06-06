@@ -81,7 +81,7 @@ def run_segm2d_gmm_gc(img2d, dir_name, dict_params, types_edge=('model', 'const'
     if not os.path.isdir(path_dir):
         os.mkdir(path_dir)
 
-    model, _ = pipelines.estim_model_classes_group([img2d], proba_type='GMM',
+    model, _ = pipelines.estim_model_classes_group([img2d], model_type='GMM',
                                                    **dict_params)
     dict_params.pop('nb_classes', None)
     dict_params.pop('pca_coef', None)
