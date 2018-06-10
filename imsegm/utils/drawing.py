@@ -190,6 +190,25 @@ def ellipse_perimeter(r, c, r_radius, c_radius, orientation=0., shape=None):
     return rr, cc
 
 
+def norm_aplha(alpha):
+    """ normalise alpha in range (0, 1)
+
+    :param float alpha:
+    :return float:
+
+    >>> norm_aplha(0.5)
+    0.5
+    >>> norm_aplha(255)
+    1.0
+    >>> norm_aplha(-1)
+    0
+    """
+    alpha = alpha / 255. if alpha > 1. else alpha
+    alpha = 0 if alpha < 0. else alpha
+    alpha = 1. if alpha > 1. else alpha
+    return alpha
+
+
 def figure_image_adjustment(fig, img_size):
     """ adjust figure as nice image without axis
 
@@ -250,7 +269,7 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
     axarr[1].imshow(seg, alpha=mid_labels_alpha, cmap=plt.cm.jet)
     axarr[1].contour(seg, levels=np.unique(seg), linewidths=2, cmap=plt.cm.jet)
 
-    axarr[2].set_title('segmentation of all labels')
+    axarr[2].set_title('segmentation - all labels')
     axarr[2].imshow(seg, cmap=plt.cm.jet)
 
     for ax in axarr:
@@ -264,7 +283,7 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
 
 
 def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9,
-                                    drop_labels=None):
+                                    drop_labels=None, segm_alpha=0.2):
     """ figure showing overlap annotation - segmentation - image
 
     :param ndarray annot:
@@ -290,16 +309,16 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9,
 
     axarr[0].set_title('Annotation')
     axarr[0].imshow(img)
-    axarr[0].imshow(annot, alpha=0.2)
+    axarr[0].imshow(annot, alpha=segm_alpha)
     axarr[0].contour(annot, levels=np.unique(annot), linewidths=2)
 
     axarr[1].set_title('Segmentation')
     axarr[1].imshow(img)
-    axarr[1].imshow(segm, alpha=0.2)
+    axarr[1].imshow(segm, alpha=segm_alpha)
     axarr[1].contour(segm, levels=np.unique(segm), linewidths=2)
 
     # visualise the 3th label
-    axarr[2].set_title('difference annot & segment')
+    axarr[2].set_title('difference: annot. & segment')
     # axarr[2].imshow(~(annot == segm), cmap=plt.cm.Reds)
     max_val = np.max(annot.astype(int))
     diff = annot - segm

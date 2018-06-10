@@ -59,6 +59,8 @@ def parse_arg_params():
                         help='path to the input segms')
     parser.add_argument('-out', '--path_output', type=str, required=True,
                         help='path to the output')
+    parser.add_argument('--overlap', type=float, required=False,
+                        help='alpha for segmentation', default=0.)
     parser.add_argument('--nb_jobs', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = parser.parse_args()
@@ -68,15 +70,19 @@ def parse_arg_params():
         p_dir = tl_data.update_path(os.path.dirname(paths[k]))
         paths[k] = os.path.join(p_dir, os.path.basename(paths[k]))
         assert os.path.exists(p_dir), 'missing: %s' % paths[k]
-    return paths, args.nb_jobs
+    return paths, args
 
 
 def visualise_overlap(path_img, path_seg, path_out,
                       b_img_scale=BOOL_IMAGE_RESCALE_INTENSITY,
                       b_img_contour=BOOL_SAVE_IMAGE_CONTOUR,
-                      b_relabel=BOOL_ANNOT_RELABEL):
+                      b_relabel=BOOL_ANNOT_RELABEL,
+                      segm_alpha=MIDDLE_ALPHA_OVERLAP):
     img, _ = tl_data.load_image_2d(path_img)
     seg, _ = tl_data.load_image_2d(path_seg)
+
+    # normalise alpha in range (0, 1)
+    segm_alpha = tl_visu.norm_aplha(segm_alpha)
 
     if b_relabel:
         seg, _, _ = segmentation.relabel_sequential(seg)
@@ -100,13 +106,13 @@ def visualise_overlap(path_img, path_seg, path_out,
     #     img[mask] = [255, 255, 255]
 
     fig = tl_visu.figure_image_segm_results(img, seg, SIZE_SUB_FIGURE,
-                                            MIDDLE_ALPHA_OVERLAP,
-                                            MIDDLE_IMAGE_GRAY)
+                                            mid_labels_alpha=segm_alpha,
+                                            mid_image_gray=MIDDLE_IMAGE_GRAY)
     fig.savefig(path_out)
     plt.close(fig)
 
 
-def perform_visu_overlap(path_img, paths):
+def perform_visu_overlap(path_img, paths, segm_alpha=MIDDLE_ALPHA_OVERLAP):
     # create the rest of paths
     img_name = os.path.splitext(os.path.basename(path_img))[0]
     path_seg = os.path.join(paths['segms'], img_name + '.png')
@@ -120,14 +126,14 @@ def perform_visu_overlap(path_img, paths):
         return False
 
     try:
-        visualise_overlap(path_img, path_seg, path_out)
+        visualise_overlap(path_img, path_seg, path_out, segm_alpha=segm_alpha)
     except Exception:
         logging.error(traceback.format_exc())
         return False
     return True
 
 
-def main(paths, nb_jobs=NB_THREADS):
+def main(paths, nb_jobs=NB_THREADS, segm_alpha=MIDDLE_ALPHA_OVERLAP):
     logging.info('running...')
     assert paths['segms'] != paths['output'], 'overwriting segmentation dir'
     assert os.path.basename(paths['images']) != paths['output'], \
@@ -142,10 +148,11 @@ def main(paths, nb_jobs=NB_THREADS):
     paths_imgs = glob.glob(paths['images'])
     logging.info('found %i images in dir "%s"', len(paths_imgs), paths['images'])
 
-    warped_overlap = partial(perform_visu_overlap, paths=paths)
+    _warped_overlap = partial(perform_visu_overlap, paths=paths,
+                              segm_alpha=segm_alpha)
 
     created = []
-    iterate = tl_expt.WrapExecuteSequence(warped_overlap, paths_imgs,
+    iterate = tl_expt.WrapExecuteSequence(_warped_overlap, paths_imgs,
                                           nb_jobs=nb_jobs, desc='overlapping')
     for r in iterate:
         created.append(r)
@@ -156,5 +163,5 @@ def main(paths, nb_jobs=NB_THREADS):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    paths, nb_jobs = parse_arg_params()
-    main(paths, nb_jobs)
+    paths, args = parse_arg_params()
+    main(paths, args.nb_jobs, args.overlap)

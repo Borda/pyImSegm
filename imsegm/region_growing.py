@@ -286,7 +286,7 @@ def compute_object_shapes(list_img_objects, ray_step=5, interp_order=3,
     >>> list_imgs = [img1, img2]
     >>> list_rays, list_shifts = compute_object_shapes(list_imgs, ray_step=45)
     >>> list_rays # doctest: +NORMALIZE_WHITESPACE
-    [[19, 14, 19, 14, 19, 17, 9, 17],
+    [[19, 17, 9, 17, 19, 14, 19, 14],
      [29, 21, 28, 20, 28, 20, 28, 21],
      [22, 16, 21, 15, 21, 15, 21, 16],
      [22, 16, 21, 15, 21, 15, 21, 16],

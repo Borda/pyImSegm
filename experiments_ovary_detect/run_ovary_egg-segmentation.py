@@ -783,7 +783,6 @@ def main(params, debug_export=DEBUG_EXPORT):
     :param bool debug_export: whether export visualisations
     """
     logging.getLogger().setLevel(logging.DEBUG)
-    logging.info('running...')
 
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
                                               stamp_unique=EACH_UNIQUE_EXPERIMENT)
@@ -811,10 +810,12 @@ def main(params, debug_export=DEBUG_EXPORT):
                                           nb_jobs=params['nb_jobs'])
     list(iterate)
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
+
     params = arg_parse_params(SEGM_PARAMS)
     main(params)
+
+    logging.info('DONE')

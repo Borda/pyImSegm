@@ -98,7 +98,6 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
     :param int padding:
     :param int nb_jobs:
     """
-    logging.info('running...')
     if not os.path.isdir(dict_paths['output']):
         assert os.path.isdir(os.path.dirname(dict_paths['output'])), \
             '"%s" should be folder' % dict_paths['output']
@@ -116,11 +115,13 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
                                           nb_jobs=nb_jobs)
     list(iterate)
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
+
     dict_paths, args = arg_parse_params(PATHS)
     main(dict_paths, args['padding'], args['mask'],
          args['background'], args['nb_jobs'])
+
+    logging.info('DONE')

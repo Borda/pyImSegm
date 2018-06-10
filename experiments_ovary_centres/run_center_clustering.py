@@ -194,8 +194,6 @@ def main(params):
 
     :param {str: any} params:
     """
-    logging.info('running...')
-
     with open(os.path.join(params['path_expt'],
                            'config_clustering.json'), 'w') as fp:
         json.dump(params, fp)
@@ -222,10 +220,12 @@ def main(params):
     df_paths_new.set_index('image', inplace=True)
     df_paths_new.to_csv(path_cover)
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    logging.info('running...')
+
     params = run_train.arg_parse_params(DEFAULT_PARAMS)
     main(params)
+
+    logging.info('DONE')

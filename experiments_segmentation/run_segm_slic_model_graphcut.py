@@ -444,7 +444,7 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
             list_images, nb_classes=params['nb_classes'],
             dict_features=params['features'], sp_size=params['slic_size'],
             sp_regul=params['slic_regul'], pca_coef=params['pca_coef'],
-            proba_type=params['estim_model'])
+            model_type=params['estim_model'])
         save_model(params['path_model'], model)
 
     logging.info('Perform image segmentation from group model')
@@ -494,7 +494,6 @@ def main(params):
     :return {str: ...}:
     """
     logging.getLogger().setLevel(logging.DEBUG)
-    logging.info('running...')
     show_visual = params.get('visual', False)
 
     reload_dir_config = (os.path.isfile(params['path_config']) or FORCE_RELOAD)
@@ -540,13 +539,15 @@ def main(params):
         df_ars.to_csv(_path_expt(NAME_CSV_ARS_CORES))
         logging.info(df_ars.describe())
 
-    logging.info('DONE')
     return params
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
 
     params = arg_parse_params(SEGM_PARAMS)
 
     params = main(params)
+
+    logging.info('DONE')

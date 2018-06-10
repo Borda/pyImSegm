@@ -23,7 +23,7 @@ sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
 import imsegm.utils.data_io as tl_data
 import imsegm.region_growing as tl_rg
 
-PATH_DATA = tl_data.update_path('data', absolute=True)
+PATH_DATA = tl_data.update_path('data_images', absolute=True)
 PATH_IMAGES = os.path.join(tl_data.update_path('data_images'), 'drosophila_ovary_slice')
 PATH_ANNOT = os.path.join(PATH_IMAGES, 'annot_eggs', '*.png')
 RAY_STEP = 10
@@ -107,10 +107,12 @@ def main(path_annot, path_out, nb_comp=5):
                      'cdfs': list_mean_cdf,
                      'mix_model': model}, fp)
 
-    logging.info('Done')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
+
     params = arg_parse_params()
     main(params['path_annot'], params['path_out'], params['nb_comp'])
+
+    logging.info('Done')

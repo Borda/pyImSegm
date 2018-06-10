@@ -553,8 +553,7 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1,
     >>> pts = prepare_boundary_points_ray_dist(seg, [(4, 9)], 2,
     ...                                        sel_bg=0, sel_fg=0)
     >>> np.round(pts).tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [[[0.0, 2.0],
-      [4.0, 16.0],
+    [[[4.0, 16.0],
       [6.0, 15.0],
       [9.0, 6.0],
       [6.0, 5.0],
@@ -563,13 +562,14 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1,
     """
     seg_bg, _ = split_segm_background_foreground(seg, sel_bg, sel_fg)
 
-    points = np.array((0, np.asarray(centers).shape[1]))
+    points = []
     for center in centers:
         ray = seg_fts.compute_ray_features_segm_2d(seg_bg, center)
         points_bg = seg_fts.reconstruct_ray_features_2d(center, ray, 0)
         points_bg = seg_fts.reduce_close_points(points_bg, close_points)
 
-        points = np.vstack((points, points_bg))
+        points += points_bg.tolist()
+    points = np.array(points)
 
     dists = spatial.distance.cdist(points, centers, metric='euclidean')
     close_center = np.argmin(dists, axis=1)

@@ -127,8 +127,6 @@ def main(params):
 
     :param {str: ...} params:
     """
-    logging.info('running...')
-
     if os.path.isdir(params['path_out']):
         logging.info('Missing output dir -> no visual export & results table.')
 
@@ -156,12 +154,13 @@ def main(params):
     logging.info('STATISTIC:')
     logging.info(df_dist.describe())
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
 
     params = arg_parse_params(DEFAULT_PARAMS)
 
     main(params)
+
+    logging.info('DONE')

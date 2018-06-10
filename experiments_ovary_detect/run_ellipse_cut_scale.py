@@ -107,8 +107,6 @@ def main(params):
 
     :param {str: str} params:
     """
-    logging.info('running...')
-
     # tl_expt.set_experiment_logger(params['path_expt'])
     # tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
@@ -127,10 +125,12 @@ def main(params):
     for stage, df_stage in df_info.groupby('stage'):
         perform_stage(df_stage, stage, path_dir_imgs, params['path_output'])
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
+
     params = r_match.arg_parse_params(DEFAULT_PARAMS)
     main(params)
+
+    logging.info('DONE')

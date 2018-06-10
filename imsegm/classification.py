@@ -127,21 +127,21 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
     >>> all(len(create_clf_param_search_grid(k)) > 0 for k in dict_classif)
     True
     """
-    def log_space(b, e, n):
+    def _log_space(b, e, n):
         return np.unique(np.logspace(b, e, n).astype(int)).tolist()
 
     clf_params = {
         'RandForest': {
-            'classif__n_estimators': log_space(0, 2, 40),
+            'classif__n_estimators': _log_space(0, 2, 40),
             'classif__min_samples_split': [2, 3, 5, 7, 9],
             'classif__min_samples_leaf': [1, 2, 4, 6, 9],
             'classif__criterion': ('gini', 'entropy'),
         },
         'KNN': {
-            'classif__n_neighbors': log_space(0, 2, 20),
+            'classif__n_neighbors': _log_space(0, 2, 20),
             'classif__algorithm': ('ball_tree', 'kd_tree'),  # , 'brute'
             'classif__weights': ('uniform', 'distance'),
-            'classif__leaf_size': log_space(0, 1.5, 10),
+            'classif__leaf_size': _log_space(0, 1.5, 10),
         },
         'SVM': {
             'classif__C': np.linspace(0.2, 1., 8).tolist(),
@@ -155,7 +155,7 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
         },
         'GradBoost': {
             # 'clf__loss': ('deviance', 'exponential'), # only for 2 cls
-            'classif__n_estimators': log_space(0, 2, 25),
+            'classif__n_estimators': _log_space(0, 2, 25),
             'classif__max_depth': range(1, 7, 2),
             'classif__min_samples_split': [2, 3, 5, 7, 9],
             'classif__min_samples_leaf': range(1, 7, 2),
@@ -168,7 +168,7 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
             # 'classif__loss': ('deviance', 'exponential'), # only for 2 cls
         },
         'AdaBoost': {
-            'classif__n_estimators': log_space(0, 2, 20),
+            'classif__n_estimators': _log_space(0, 2, 20),
         }
     }
     if name_classif not in clf_params.keys():

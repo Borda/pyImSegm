@@ -90,7 +90,7 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
 
 def estim_model_classes_group(list_images, nb_classes, dict_features,
                               sp_size=30, sp_regul=0.2,
-                              scaler=True, pca_coef=None, proba_type='GMM',
+                              b_scaler=True, pca_coef=None, model_type='GMM',
                               nb_jobs=NB_THREADS):
     """ estimate a model from sequence of input images and return it as result
 
@@ -101,8 +101,8 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
                    and "1" nearly square slic
     :param {str: [str]} dict_features: list of features to be extracted
     :param float pca_coef: range (0, 1) or None
-    :param bool scaler: wheter use a scaler
-    :param str proba_type: model type
+    :param bool b_scaler: whether use a scaler
+    :param str model_type: model type
     :param int nb_jobs: number of jobs running in parallel
     :return:
     """
@@ -126,8 +126,8 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     features = np.concatenate(tuple(list_features), axis=0)
     features = np.nan_to_num(features)
 
-    model = seg_gc.estim_class_model(features, nb_classes, proba_type,
-                                     pca_coef, scaler)
+    model = seg_gc.estim_class_model(features, nb_classes, model_type,
+                                     pca_coef, b_scaler)
 
     return model, list_features
 
@@ -226,7 +226,7 @@ def compute_color2d_superpixels_features(image, dict_features,
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
            and "1" nearly square segments
     :param {str: [str]} dict_features: list of features to be extracted
-    :param bool fts_norm: weather nomalise features
+    :param bool fts_norm: weather normalise features
     :return [[int]], [[floats]]: superpixels and related of features
     """
     assert sp_regul > 0., 'slic. regularisation must be positive'

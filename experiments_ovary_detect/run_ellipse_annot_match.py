@@ -144,7 +144,6 @@ def main(params):
 
     :param {str: str} params:
     """
-    logging.info('running...')
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     df_info = pd.read_csv(params['path_infofile'], sep='\t', index_col=0)
@@ -168,10 +167,12 @@ def main(params):
     df_ellipses = pd.DataFrame(list_evals)
     df_ellipses.to_csv(path_csv)
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    logging.info('running...')
+
     params = arg_parse_params(DEFAULT_PARAMS)
     main(params)
+
+    logging.info('DONE')

@@ -6,7 +6,7 @@ Specify the segmentation and annotation folder and optionaly the image folder
     -a "data_images/drosophila_ovary_slice/annot_struct/*.png" \
     -s "results/experiment_segm-supervise_ovary/*.png" \
     -i "data_images/drosophila_ovary_slice/image/*.jpg" \
-    -o results/evaluation --visual
+    -o results/evaluation --drop_labels -1 --overlap 0.2 --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -33,7 +33,7 @@ from skimage.segmentation import relabel_sequential
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
-import imsegm.utils.drawing as seg_visu
+import imsegm.utils.drawing as tl_visu
 import imsegm.labeling as seg_lbs
 import imsegm.classification as seg_clf
 
@@ -43,7 +43,7 @@ NAME_CVS_PER_IMAGE = 'STATISTIC__%s___per-Image.csv'
 PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
-SUFFIX_VISUAL = '___visual'
+SUFFIX_VISUAL = '___STAT-visual'
 PATHS = {
     'annot': os.path.join(PATH_IMAGES, 'annot_struct', '*.png'),
     'segm': os.path.join(PATH_IMAGES, 'segm', '*.png'),
@@ -75,6 +75,8 @@ def aparse_params(dict_paths):
     parser.add_argument('--nb_jobs', type=int, required=False,
                         help='number of processes in parallel',
                         default=NB_THREADS)
+    parser.add_argument('--overlap', type=float, required=False,
+                        help='alpha for segmentation', default=0.2)
     parser.add_argument('--relabel', required=False, action='store_true',
                         help='relabel to find label relations', default=False)
     parser.add_argument('--visual', required=False, action='store_true',
@@ -82,7 +84,7 @@ def aparse_params(dict_paths):
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %s', repr(args))
     if not isinstance(args['path_image'], str) \
-            or args['path_image'].lower() != 'none':
+            or args['path_image'].lower() == 'none':
         args['path_image'] = None
     dict_paths = {k.split('_')[-1]:
                       os.path.join(tl_data.update_path(os.path.dirname(args[k])),
@@ -106,7 +108,7 @@ def fill_lut(lut, segm, offset=0):
     return lut
 
 
-def export_visual(n_annot_seg_img, path_out):
+def export_visual(n_annot_seg_img, path_out, segm_alpha=1.):
     """ given visualisation of segmented image and annotation
 
     :param {str: ...} df_row:
@@ -125,8 +127,13 @@ def export_visual(n_annot_seg_img, path_out):
         annot, lut, _ = relabel_sequential(annot)
         lut = fill_lut(lut, segm, offset=0)
         segm = lut[segm.astype(int)]
-    fig = seg_visu.figure_overlap_annot_segm_image(annot, segm, img,
-                                                   drop_labels=[-1])
+
+    # normalise alpha in range (0, 1)
+    segm_alpha = tl_visu.norm_aplha(segm_alpha)
+
+    fig = tl_visu.figure_overlap_annot_segm_image(annot, segm, img,
+                                                  drop_labels=[-1],
+                                                  segm_alpha=segm_alpha)
     logging.debug('>> exporting -> %s', name)
     fig.savefig(os.path.join(path_out, '%s.png' % name))
     plt.close(fig)
@@ -142,14 +149,13 @@ def wrapper_relabel_segm(annot_segm):
 
 
 def main(dict_paths, visual=True, drop_labels=None, relabel=True,
-         nb_jobs=NB_THREADS):
+         segm_alpha=1., nb_jobs=NB_THREADS):
     """ main evaluation
 
     :param {str: str} dict_paths:
     :param int nb_jobs: number of thred running in parallel
     :param bool relabel: whether relabel segmentation as sequential
     """
-    logging.info('running...')
     if not os.path.isdir(dict_paths['output']):
         assert os.path.isdir(os.path.dirname(dict_paths['output'])), \
             'missing folder: %s' % dict_paths['output']
@@ -212,18 +218,22 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True,
             os.mkdir(path_visu)
         # for idx, row in df_paths.iterrows():
         #     export_visual(row, path_visu)
-        _wrapper_visual = partial(export_visual, path_out=path_visu)
+        _wrapper_visual = partial(export_visual, path_out=path_visu,
+                                  segm_alpha=segm_alpha)
         it_values = zip(names, annots, segms, images)
         iterate = tl_expt.WrapExecuteSequence(_wrapper_visual, it_values,
                                               desc='visualisations',
                                               nb_jobs=nb_jobs)
         list(iterate)
 
-    logging.info('DONE')
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
+
     dict_paths, args = aparse_params(PATHS)
     main(dict_paths, nb_jobs=args['nb_jobs'], visual=args['visual'],
-         drop_labels=args['drop_labels'], relabel=args['relabel'])
+         drop_labels=args['drop_labels'], relabel=args['relabel'],
+         segm_alpha=args['overlap'])
+
+    logging.info('DONE')

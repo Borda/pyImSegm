@@ -810,6 +810,7 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='SEGMENT___',
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
+    logging.info('running...')
 
     params = arg_parse_params(SEGM_PARAMS)
 
