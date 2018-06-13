@@ -20,7 +20,7 @@ from sklearn import cluster
 import matplotlib
 if os.environ.get('DISPLAY', '') == '' \
         and matplotlib.rcParams['backend'] != 'agg':
-    logging.warning('No display found. Using non-interactive Agg backend.')
+    # logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import matplotlib.pylab as plt
