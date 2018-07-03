@@ -946,7 +946,7 @@ def draw_graphcut_weighted_edges(segments, list_centers, edges, edge_weights,
 
 def draw_rg2sp_results(ax, seg, slic, dict_rg2sp_debug, iter_index=-1):
     ax.set_title('Iteration #%i with E=%.0f' %
-                 (iter_index, round(dict_rg2sp_debug['energy'][iter_index])))
+                 (iter_index, round(dict_rg2sp_debug['criteria'][iter_index])))
     ax.imshow(dict_rg2sp_debug['labels'][iter_index][slic], cmap=plt.cm.jet)
     ax.contour(seg, levels=np.unique(seg), colors='#bfbfbf')
     for centre, shift in zip(dict_rg2sp_debug['centres'][iter_index],
@@ -980,7 +980,7 @@ def figure_rg2sp_debug_complete(seg, slic, dict_rg2sp_debug, iter_index=-1,
     ...     'centres': [np.array([np.random.randint(0, 100, 80),
     ...                           np.random.randint(0, 150, 80)]).T] * 15,
     ...     'shifts': np.random.random((15, 3)),
-    ...     'energy': np.random.random(15),
+    ...     'criteria': np.random.random(15),
     ... }
     >>> fig = figure_rg2sp_debug_complete(seg, slic, dict_debug)
     >>> isinstance(fig, matplotlib.figure.Figure)
@@ -994,8 +994,8 @@ def figure_rg2sp_debug_complete(seg, slic, dict_rg2sp_debug, iter_index=-1,
 
     draw_rg2sp_results(axarr[0, 0], seg, slic, dict_rg2sp_debug, iter_index)
 
-    axarr[0, 1].plot(dict_rg2sp_debug['energy'])
-    axarr[0, 1].plot(iter_index, dict_rg2sp_debug['energy'][iter_index], 'og')
+    axarr[0, 1].plot(dict_rg2sp_debug['criteria'])
+    axarr[0, 1].plot(iter_index, dict_rg2sp_debug['criteria'][iter_index], 'og')
     axarr[0, 1].set_ylabel('Energy')
     axarr[0, 1].set_xlabel('iteration')
     axarr[0, 1].grid()

@@ -955,20 +955,19 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
     return lut_shape_cost, np.array(centres), np.array(shifts), volumes
 
 
-def compute_data_costs_points(slic, slic_labels, centres, labels, prob_fg_labels):
+def compute_data_costs_points(slic, slic_prob_fg, centres, labels):
     """ compute Look up Table ro date term costs
 
     :param nadarray slic: superpixel segmentation
-    :param [int] slic_labels: label for each superpixel
-    :param [[int, int]] centres: actual centre postion
+    :param [float] slic_prob_fg: weight for particular pixel belongs to FG
+    :param [[int, int]] centres: actual centre position
     :param [int] labels: labels for points to be assigned to an object
-    :param [float] prob_fg_labels: weight for particular label belongs to FG
     :return:
     """
     data_proba = np.empty((len(labels), len(centres) + 1))
-    data_proba[:, 0] = 1. - prob_fg_labels[slic_labels]
+    data_proba[:, 0] = 1. - slic_prob_fg
     for i, centre in enumerate(centres):
-        data_proba[:, i + 1] = prob_fg_labels[slic_labels]
+        data_proba[:, i + 1] = slic_prob_fg
         vertex = slic[centre[0], centre[1]]
         labels[vertex] = i + 1
     lut_data_cost = - np.log(data_proba)
@@ -1063,22 +1062,40 @@ def get_neighboring_candidates(slic_neighbours, labels, object_idx,
     return neighbours
 
 
-def compute_energy(labels, lut_data_cost, lut_shape_cost, slic_weights, edges,
-                   coef_shape, coef_pairwise, prob_label_trans):
+def compute_rg_crit(labels, lut_data_cost, lut_shape_cost, slic_weights, edges,
+                    coef_shape, coef_pairwise, prob_label_trans):
     all_range = np.arange(len(labels))
-    energy = np.sum(slic_weights * (lut_data_cost[all_range, labels] +
-                                    coef_shape * lut_shape_cost[all_range, labels]))
+    crit = np.sum(slic_weights * (lut_data_cost[all_range, labels] +
+                                  coef_shape * lut_shape_cost[all_range, labels]))
     if coef_pairwise > 0:
         pairwise_costs = compute_pairwise_penalty(edges, labels,
                                       prob_label_trans[0], prob_label_trans[1])
         pairwise_costs[np.isinf(pairwise_costs)] = GC_REPLACE_INF
-        energy += coef_pairwise * np.sum(pairwise_costs)
-    return energy
+        crit += coef_pairwise * np.sum(pairwise_costs)
+    return crit
 
 
-def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
-                                     shape_type='cdf', prob_fg_labels=(.1, .9),
-                                     coef_shape=1, coef_pairwise=1,
+def compute_segm_prob_fg(slic, segm, labels_prob):
+    """ compute probability being forground from input segmentation
+
+    :param ndarray slic:
+    :param ndarray segm:
+    :param [float] labels_prob:
+    :return:
+
+    >>> slic = np.array([[0, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2, 2, 3, 3, 3, 3]])
+    >>> segm = np.array([0, 1, 1, 0])[slic]
+    >>> compute_segm_prob_fg(slic, segm, [0.3, 0.8])
+    array([ 0.3,  0.8,  0.8,  0.3])
+    """
+    label_hist = seg_lb.histogram_regions_labels_norm(slic, segm)
+    slic_labels = np.argmax(label_hist, axis=1)
+    slic_prob_fg = np.array(labels_prob)[slic_labels]
+    return slic_prob_fg
+
+
+def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
+                                     shape_type='cdf', coef_shape=1, coef_pairwise=1,
                                      prob_label_trans=(.1, .01),
                                      allow_obj_swap=True, greedy_tol=1e-3,
                                      dict_thresholds=RG2SP_THRESHOLDS,
@@ -1086,12 +1103,11 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
     """ Region growing method with given shape prior on pre-segmented images
     it uses the Greedy strategy and set some stopping criterion
 
-    :param ndarray segm: initial structure segmentation
     :param ndarray slic: superpixel segmentation
+    :param [float] slic_prob_fg: weight for particular superpixel belongs to FG
     :param [(int, int)] centres: list of initial centres
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: identification of used shape model
-    :param [float] prob_fg_labels: weight for particular label belongs to FG
     :param float coef_shape: weight for shape prior
     :param float coef_pairwise: setting for pairwise cost
     :param (float, float) prob_label_trans:
@@ -1101,6 +1117,7 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
     :param {str: ...} dict_thresholds: set some threshold updating shape prior
     :return:
 
+    >>> np.random.seed(0)
     >>> h, w, step = 15, 20, 2
     >>> segm = np.zeros((h, w), dtype=int)
     >>> segm[3:12, 5:17] = 1
@@ -1131,14 +1148,13 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
     ...          [1.] * 3 + [0.9, 0.8, 0.7, 0.3, 0.2, 0.2, 0.1],
     ...          [1.] * 3 + [1.0, 0.7, 0.6, 0.5, 0.3, 0.1, 0.1],
     ...          [1.] * 3 + [0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]]
-    >>> labels_prob = [0.1, 0.9]
     >>> dict_debug = {}
-    >>> labels = region_growing_shape_slic_greedy(segm, slic, centres,
-    ...                      (None, chist), prob_fg_labels=labels_prob,
-    ...                      coef_pairwise=0, dict_debug_history=dict_debug)
-    >>> np.round(dict_debug['energy'], 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [396.7, 324.6, 306.7, 288.8, 271.9, 237.7, 204.1, 187.9, 172.8, 158.5,
-    138.7, 122.0, 106.2, 81.1, 81.1]
+    >>> slic_prob_fg = compute_segm_prob_fg(slic, segm, [0.1, 0.9])
+    >>> labels = region_growing_shape_slic_greedy(slic, slic_prob_fg, centres,
+    ...                                           (None, chist), coef_pairwise=0,
+    ...                                           dict_debug_history=dict_debug)
+    >>> np.round(dict_debug['criteria']).astype(int)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    array([397, 325, 307, 289, 272, 238, 204, 188, 173, ..., 81,  81])
     >>> labels[slic]
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1155,12 +1171,11 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
-    >>> labels = region_growing_shape_slic_greedy(segm, slic, centres,
-    ...                      (None, chist), prob_fg_labels=labels_prob,
-    ...                      coef_pairwise=1, dict_debug_history=dict_debug)
-    >>> np.round(dict_debug['energy'], 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [405.9, 352.2, 334.3, 316.5, 299.5, 282.7, 270.0, 254.0, 237.7, 226.0,
-    209.5, 193.6, 171.9, 152.0, 122.5, 122.5]
+    >>> labels = region_growing_shape_slic_greedy(slic, slic_prob_fg, centres,
+    ...                                           (None, chist), coef_pairwise=1,
+    ...                                           dict_debug_history=dict_debug)
+    >>> np.round(dict_debug['criteria']).astype(int)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    array([406, 352, 334, 316, 300, 283, 270, 254, 238, 226, 210, ..., 123, 123])
     >>> labels[slic]
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1180,12 +1195,13 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
     >>> segm = np.ones((h, w), dtype=int)
     >>> chist = np.zeros((16, 9))
     >>> chist[:, :5] = 1.
-    >>> labels = region_growing_shape_slic_greedy(segm, slic, [(6.5, 9)],
-    ...                      (None, chist), prob_fg_labels=labels_prob,
-    ...                      coef_shape=10, coef_pairwise=1,
-    ...                      dict_debug_history=dict_debug)
-    >>> np.round(dict_debug['energy'], 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [7506.5, 7119.7, 6714.5, 6327.8, 5719.1, 5719.1]
+    >>> slic_prob_fg = compute_segm_prob_fg(slic, segm, [0.1, 0.9])
+    >>> labels = region_growing_shape_slic_greedy(slic, slic_prob_fg, [(6.5, 9)],
+    ...                                           (None, chist), coef_shape=10,
+    ...                                           coef_pairwise=1,
+    ...                                           dict_debug_history=dict_debug)
+    >>> np.round(dict_debug['criteria']).astype(int)  # doctest: +NORMALIZE_WHITESPACE
+    array([7506, 7120, 6715, 6328, 5719, 5719])
     >>> labels[slic]
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1202,48 +1218,48 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+
     """
-    assert segm.shape == slic.shape, 'dims of segm %s and slic %s not match' \
-                                     % (repr(segm.shape),  repr(slic.shape))
+    assert len(slic_prob_fg) >= np.max(slic), 'dims of probs %s and slic %s not match' \
+                                              % (len(slic_prob_fg), np.max(slic))
     slic_points = seg_spx.superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
-    label_hist = seg_lb.histogram_regions_labels_norm(slic, segm)
-    slic_labels = np.argmax(label_hist, axis=1)
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
     _, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
     slic_neighbours = seg_spx.get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
-    prob_fg_labels = np.array(prob_fg_labels)
 
-    lut_data_cost, labels = compute_data_costs_points(slic, slic_labels,
-                                                      init_centres, labels,
-                                                      prob_fg_labels)
-
+    lut_data_cost, labels = compute_data_costs_points(slic, slic_prob_fg,
+                                                      init_centres, labels)
+    # create matrix for cost where in layers are individual objects
     lut_shape_cost = np.empty((len(labels), len(init_centres) + 1))
-    lut_shape_cost[:, 0] = - np.log(1 - prob_fg_labels[slic_labels])
+    # set the background
+    lut_shape_cost[:, 0] = - np.log(1 - slic_prob_fg)
+    # create other empty variables
     centres = np.ones(np.asarray(init_centres).shape) * np.Inf
     shifts = np.zeros(len(init_centres))
     volumes = [1] * len(shifts)
     list_swap_shift = [False]
+    # update variables
     lut_shape_cost, centres, shifts, volumes = update_shape_costs_points(
         lut_shape_cost, slic, slic_points, labels, init_centres, centres, shifts,
         volumes, shape_model, shape_type, None, False, dict_thresholds)
 
     if dict_debug_history is not None:
-        dict_debug_history.update({'energy': [], 'labels': [],
+        dict_debug_history.update({'criteria': [], 'labels': [],
                                    'centres': [], 'shifts': [],
                                    'lut_data_cost': lut_data_cost.copy(),
                                    'lut_shape_cost': []})
 
     for _ in range(nb_iter):
         labels = enforce_center_labels(slic, labels, centres)
-        energy = compute_energy(labels, lut_data_cost, lut_shape_cost,
-            slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
+        crit = compute_rg_crit(labels, lut_data_cost, lut_shape_cost,
+                                 slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
         if dict_debug_history is not None:
             dict_debug_history['labels'].append(labels.copy())
-            dict_debug_history['energy'].append(energy)
+            dict_debug_history['criteria'].append(crit)
             dict_debug_history['centres'].append(centres.copy())
             dict_debug_history['shifts'].append(shifts.tolist())
             dict_debug_history['lut_shape_cost'].append(lut_shape_cost.copy())
@@ -1261,17 +1277,17 @@ def region_growing_shape_slic_greedy(segm, slic, centres, shape_model,
             shifts, volumes, shape_model, shape_type, None, list_swap_shift[-1],
             dict_thresholds)
 
-        energy = compute_energy(labels, lut_data_cost, lut_shape_cost,
-            slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
+        energy = compute_rg_crit(labels, lut_data_cost, lut_shape_cost,
+                                 slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
 
         candidates_scores = []
         for idx, lb in zip(objs_idx, candidates):
             labels_new = labels.copy()
             labels_new[lb] = idx
-            energy_new = compute_energy(labels_new, lut_data_cost,
-                                        lut_shape_cost, slic_weights, edges,
-                                        coef_shape, coef_pairwise,
-                                        prob_label_trans)
+            energy_new = compute_rg_crit(labels_new, lut_data_cost,
+                                         lut_shape_cost, slic_weights, edges,
+                                         coef_shape, coef_pairwise,
+                                         prob_label_trans)
             energy_change = energy - energy_new
             candidates_scores.append((idx, lb, energy_change))
         candidates_scores = sorted(candidates_scores, key=lambda x: x[2],
@@ -1368,10 +1384,8 @@ def enforce_center_labels(slic, labels, centres):
     return labels
 
 
-def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
-                                       shape_type='cdf',
-                                       prob_fg_labels=(0.1, 0.9),
-                                       coef_shape=1, coef_pairwise=2,
+def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
+                                       shape_type='cdf', coef_shape=1, coef_pairwise=2,
                                        prob_label_trans=(0.1, 0.03),
                                        optim_global=True, allow_obj_swap=True,
                                        dict_thresholds=RG2SP_THRESHOLDS,
@@ -1379,12 +1393,11 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
     """ Region growing method with given shape prior on pre-segmented images
     it uses the GraphCut strategy on neigbouring superpixels
 
-    :param ndarray segm: initial structure segmentation
     :param ndarray slic: superpixel segmentation
+    :param [float] slic_prob_fg: weight for particular superpixel belongs to FG
     :param [(int, int)] centres: list of initial centres
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: identification of used shape model
-    :param [float] prob_fg_labels: weight for particular label belongs to FG
     :param float coef_shape: weight for shape prior
     :param float coef_pairwise: setting for pairwise cost
     :param (float, float) prob_label_trans:
@@ -1423,14 +1436,13 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
     ...          [1.] * 3 + [0.9, 0.8, 0.7, 0.3, 0.2, 0.2, 0.1],
     ...          [1.] * 3 + [1.0, 0.7, 0.6, 0.5, 0.3, 0.1, 0.1],
     ...          [1.] * 3 + [0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]]
-    >>> labels_prob = [0.1, 0.9]
     >>> dict_debug = {}
-    >>> labels = region_growing_shape_slic_graphcut(segm, slic, centres,
-    ...                      (None, chist), prob_fg_labels=labels_prob,
-    ...                      coef_pairwise=0,
-    ...                      dict_debug_history=dict_debug)
-    >>> np.round(dict_debug['energy'], 1).tolist()
-    [396.7, 324.6, 205.9, 110.6, 81.1, 81.1]
+    >>> slic_prob_fg = compute_segm_prob_fg(slic, segm, [0.1, 0.9])
+    >>> labels = region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres,
+    ...                                             (None, chist), coef_pairwise=0,
+    ...                                             dict_debug_history=dict_debug)
+    >>> np.round(dict_debug['criteria']).astype(int)
+    array([397, 325, 206, 111,  81,  81])
     >>> labels[slic]
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1447,12 +1459,11 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
-    >>> labels = region_growing_shape_slic_graphcut(segm, slic, centres,
-    ...                      (None, chist), prob_fg_labels=labels_prob,
-    ...                      coef_pairwise=2,
-    ...                      dict_debug_history=dict_debug)
-    >>> np.round(dict_debug['energy'], 1).tolist()
-    [415.2, 379.8, 288.8, 193.5, 164.0, 164.0]
+    >>> labels = region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres,
+    ...                                             (None, chist), coef_pairwise=2,
+    ...                                             dict_debug_history=dict_debug)
+    >>> np.round(dict_debug['criteria']).astype(int)
+    array([415, 380, 289, 193, 164, 164])
     >>> labels[slic]
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1473,12 +1484,13 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
     >>> chist = np.zeros((16, 9))
     >>> chist[:, :5] = 1.
     >>> dict_debug = {}
-    >>> labels = region_growing_shape_slic_graphcut(segm, slic, [(6.5, 9)],
-    ...                      (None, chist), prob_fg_labels=labels_prob,
-    ...                      coef_shape=10., coef_pairwise=1,
-    ...                      dict_debug_history=dict_debug)
-    >>> np.round(dict_debug['energy'], 1).tolist()
-    [7506.5, 7119.7, 6327.8, 5719.1, 5719.1]
+    >>> slic_prob_fg = compute_segm_prob_fg(slic, segm, [0.1, 0.9])
+    >>> labels = region_growing_shape_slic_graphcut(slic, slic_prob_fg, [(6.5, 9)],
+    ...                                             (None, chist), coef_shape=10.,
+    ...                                             coef_pairwise=1,
+    ...                                             dict_debug_history=dict_debug)
+    >>> np.round(dict_debug['criteria']).astype(int)
+    array([7506, 7120, 6328, 5719, 5719])
     >>> labels[slic]
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1496,26 +1508,23 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-    assert segm.shape == slic.shape, 'dims of segm %s and slic %s not match' \
-                                     % (repr(segm.shape), repr(slic.shape))
+    assert len(slic_prob_fg) >= np.max(slic), 'dims of probs %s and slic %s not match' \
+                                              % (len(slic_prob_fg), np.max(slic))
     slic_points = seg_spx.superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
-    label_hist = seg_lb.histogram_regions_labels_norm(slic, segm)
-    slic_labels = np.argmax(label_hist, axis=1)
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
     _, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
     slic_neighbours = seg_spx.get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
-    prob_fg_labels = np.array(prob_fg_labels)
     labels_history = [labels.copy()]
 
-    lut_data_cost, labels = compute_data_costs_points(slic, slic_labels, init_centres,
-                                                      labels, prob_fg_labels)
+    lut_data_cost, labels = compute_data_costs_points(slic, slic_prob_fg,
+                                                      init_centres, labels)
 
     lut_shape_cost = np.empty((len(labels), len(init_centres) + 1))
-    lut_shape_cost[:, 0] = - np.log(1 - prob_fg_labels[slic_labels])
+    lut_shape_cost[:, 0] = - np.log(1 - slic_prob_fg)
     centres = np.ones(np.asarray(init_centres).shape) * np.Inf
     shifts = np.zeros(len(init_centres))
     volumes = [1] * len(shifts)
@@ -1525,18 +1534,18 @@ def region_growing_shape_slic_graphcut(segm, slic, centres, shape_model,
         volumes, shape_model, shape_type, None, False, dict_thresholds)
 
     if dict_debug_history is not None:
-        dict_debug_history.update({'energy': [], 'labels': [],
+        dict_debug_history.update({'criteria': [], 'labels': [],
                                    'centres': [], 'shifts': [],
                                    'lut_data_cost': lut_data_cost.copy(),
                                    'lut_shape_cost': []})
 
     for _ in range(nb_iter):
         labels = enforce_center_labels(slic, labels, centres)
-        energy = compute_energy(labels, lut_data_cost, lut_shape_cost,
-            slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
+        crit = compute_rg_crit(labels, lut_data_cost, lut_shape_cost,
+                               slic_weights, edges, coef_shape, coef_pairwise, prob_label_trans)
         if dict_debug_history is not None:
             dict_debug_history['labels'].append(labels.copy())
-            dict_debug_history['energy'].append(energy)
+            dict_debug_history['criteria'].append(crit)
             dict_debug_history['centres'].append(centres.copy())
             dict_debug_history['shifts'].append(shifts.tolist())
             dict_debug_history['lut_shape_cost'].append(lut_shape_cost.copy())
