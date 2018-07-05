@@ -54,7 +54,7 @@ def estim_gmm_params(features, prob):
 
 
 def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
-                      scaler=True, max_iter=99):
+                      use_scaler=True, max_iter=99):
     """ create pipeline (scaler, PCA, model) over several options how
     to cluster samples and fit it on data
 
@@ -80,7 +80,7 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     >>> mm.predict_proba(fts).shape
     (100, 2)
     >>> mm = estim_class_model(fts, 2, estim_model='kmeans_quantiles',
-    ...                         scaler=False, max_iter=3)
+    ...                         use_scaler=False, max_iter=3)
     >>> mm.predict_proba(fts).shape
     (100, 2)
     >>> mm = estim_class_model(fts, 2, estim_model='BGM', max_iter=3)
@@ -91,8 +91,8 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     (100, 2)
     """
     components = []
-    if scaler:
-        components += [('scaler', preprocessing.StandardScaler())]
+    if use_scaler:
+        components += [('use_scaler', preprocessing.StandardScaler())]
     if pca_coef is not None:
         components += [('reduce_dim', decomposition.PCA(pca_coef))]
 
