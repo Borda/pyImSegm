@@ -108,14 +108,13 @@ def fill_lut(lut, segm, offset=0):
     return lut
 
 
-def export_visual(n_annot_seg_img, path_out, segm_alpha=1.):
+def export_visual(name, annot, segm, img, path_out, drop_labels, segm_alpha=1.):
     """ given visualisation of segmented image and annotation
 
     :param {str: ...} df_row:
     :param str path_out: path to the visualisation directory
     :param [int] drop_labels: whether skip some labels
     """
-    name, annot, segm, img = n_annot_seg_img
     # relabel for simpler visualisations of class differences
     if np.sum(annot < 0) > 0:
         annot[annot < 0] = -1
@@ -132,20 +131,39 @@ def export_visual(n_annot_seg_img, path_out, segm_alpha=1.):
     segm_alpha = tl_visu.norm_aplha(segm_alpha)
 
     fig = tl_visu.figure_overlap_annot_segm_image(annot, segm, img,
-                                                  drop_labels=[-1],
+                                                  drop_labels=drop_labels,
                                                   segm_alpha=segm_alpha)
     logging.debug('>> exporting -> %s', name)
     fig.savefig(os.path.join(path_out, '%s.png' % name))
     plt.close(fig)
 
 
-def wrapper_relabel_segm(annot_segm):
-    annot, segm = annot_segm
-    try:
-        segm = seg_lbs.relabel_max_overlap_unique(annot, segm)
-    except Exception:
-        logging.error(traceback.format_exc())
-    return segm
+def stat_single_set(idx_row, drop_labels=None, relabel=False, path_visu='',
+                    segm_alpha=1.):
+    idx, row = idx_row
+    path_annot = row['path_1']
+    path_segm = row['path_2']
+    path_img = row['path_3'] if 'path_3' in row else None
+
+    annot, _ = tl_data.load_image(path_annot)
+    segm, name = tl_data.load_image(path_segm)
+
+    if drop_labels is not None:
+        annot = np.array(annot, dtype=float)
+        for lb in drop_labels:
+            annot[annot == lb] = np.nan
+    annot = np.nan_to_num(annot + 1).astype(int) - 1
+
+    dc_stat = seg_clf.compute_classif_stat_segm_annot((annot, segm, name),
+                                                      drop_labels=[-1],
+                                                      relabel=relabel)
+
+    if os.path.isdir(path_visu):
+        img, _ = tl_data.load_image(path_img)
+        export_visual(name, annot, segm, img, path_visu, drop_labels=[-1],
+                      segm_alpha=segm_alpha)
+
+    return dc_stat
 
 
 def main(dict_paths, visual=True, drop_labels=None, relabel=True,
@@ -167,37 +185,30 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True,
         list_dirs.append(dict_paths['image'])
     df_paths = tl_data.find_files_match_names_across_dirs(list_dirs)
     path_csv = os.path.join(dict_paths['output'], NAME_CVS_PER_IMAGE % name)
+    logging.info('found %i pairs', len(df_paths))
     df_paths.to_csv(path_csv)
 
     assert len(df_paths) > 0, 'nothing to compare'
 
-    annots, _ = tl_data.load_images_list(df_paths['path_1'].values.tolist())
-    segms, names = tl_data.load_images_list(df_paths['path_2'].values.tolist())
-    logging.info('loaded %i annots and %i segms', len(annots), len(segms))
-
-    if drop_labels is not None:
-        annots = [np.array(annot, dtype=float) for annot in annots]
-        for lb in drop_labels:
-            for i, annot in enumerate(annots):
-                annots[i][annot == lb] = np.nan
-    annots = [np.nan_to_num(annot + 1).astype(int) - 1 for annot in annots]
-    segms = [seg.astype(int) for seg in segms]
-
-    if relabel:
-        logging.info('relabel annotations and segmentations')
-        if drop_labels is None:
-            annots = [relabel_sequential(annot)[0] for annot in annots]
-        iterate = tl_expt.WrapExecuteSequence(wrapper_relabel_segm,
-                                              zip(annots, segms),
-                                              nb_jobs=nb_jobs, ordered=True,
-                                              desc='relabeling')
-        segms = list(iterate)
+    name_seg_dir = os.path.basename(os.path.dirname(dict_paths['segm']))
+    path_visu = os.path.join(dict_paths['output'], name_seg_dir + SUFFIX_VISUAL)
+    if visual and not os.path.isdir(path_visu):
+        os.mkdir(path_visu)
+    elif not visual:
+        path_visu = ''
 
     logging.info('compute statistic per image')
+    _wrapper_stat = partial(stat_single_set, drop_labels=drop_labels,
+                            relabel=relabel, path_visu=path_visu,
+                            segm_alpha=segm_alpha)
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_stat, df_paths.iterrows(),
+                                          desc='compute statistic',
+                                          nb_jobs=nb_jobs)
+    list_stats = list(iterate)
+    df_stat = pd.DataFrame(list_stats)
+
     path_csv = os.path.join(dict_paths['output'], NAME_CVS_PER_IMAGE % name)
     logging.debug('export to "%s"', path_csv)
-    df_stat = seg_clf.compute_stat_per_image(segms, annots, names, nb_jobs,
-                                             drop_labels=[-1])
     df_stat.to_csv(path_csv)
 
     logging.info('summarise statistic')
@@ -207,24 +218,6 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True,
     df_desc = df_desc.append(pd.Series(df_stat.median(), name='median'))
     logging.info(df_desc.T[['count', 'mean', 'std', 'median']])
     df_desc.to_csv(path_csv)
-
-    if visual:
-        images = [None] * len(annots)
-        if 'path_3' in df_paths:
-            images, _ = tl_data.load_images_list(df_paths['path_3'].values)
-        path_visu = os.path.join(dict_paths['output'],
-                                 '%s%s' % (name, SUFFIX_VISUAL))
-        if not os.path.isdir(path_visu):
-            os.mkdir(path_visu)
-        # for idx, row in df_paths.iterrows():
-        #     export_visual(row, path_visu)
-        _wrapper_visual = partial(export_visual, path_out=path_visu,
-                                  segm_alpha=segm_alpha)
-        it_values = zip(names, annots, segms, images)
-        iterate = tl_expt.WrapExecuteSequence(_wrapper_visual, it_values,
-                                              desc='visualisations',
-                                              nb_jobs=nb_jobs)
-        list(iterate)
 
 
 if __name__ == '__main__':

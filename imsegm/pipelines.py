@@ -29,7 +29,8 @@ NB_THREADS = max(1, int(mproc.cpu_count() * 0.6))
 
 def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
                                               sp_size=30, sp_regul=0.2,
-                                              pca_coef=None, estim_model='GMM',
+                                              pca_coef=None, use_scaler=True,
+                                              estim_model='GMM',
                                               gc_regul=1., gc_edge_type='model',
                                               debug_visual=None):
     """ complete pipe-line for segmentation using superpixels, extracting features
@@ -71,7 +72,8 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
         debug_visual['slic_mean'] = sk_color.label2rgb(slic, image,
                                                           kind='avg')
 
-    model = seg_gc.estim_class_model(features, nb_classes, estim_model, pca_coef)
+    model = seg_gc.estim_class_model(features, nb_classes, estim_model,
+                                     pca_coef, use_scaler)
     proba = model.predict_proba(features)
     logging.debug('list of probabilities: %s', repr(proba.shape))
 
@@ -109,7 +111,7 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     list_slic, list_features = list(), list()
     _wrapper_compute = partial(compute_color2d_superpixels_features,
                                sp_size=sp_size, sp_regul=sp_regul,
-                               dict_features=dict_features, fts_norm=False)
+                               dict_features=dict_features)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_images,
                                           desc='compute SLIC & features',
                                           nb_jobs=nb_jobs)
@@ -184,16 +186,14 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     logging.info('PIPELINE Superpixels-Features-Model-GraphCut')
     slic, features = compute_color2d_superpixels_features(image, dict_features,
                                                           sp_size=sp_size,
-                                                          sp_regul=sp_regul,
-                                                          fts_norm=False)
+                                                          sp_regul=sp_regul)
 
     if debug_visual is not None:
         if image.ndim == 2:  # duplicate channels to be like RGB
             image = np.rollaxis(np.tile(image, (3, 1, 1)), 0, 3)
         debug_visual['image'] = image
         debug_visual['slic'] = slic
-        debug_visual['slic_mean'] = sk_color.label2rgb(slic, image,
-                                                          kind='avg')
+        debug_visual['slic_mean'] = sk_color.label2rgb(slic, image, kind='avg')
 
     proba = model_pipeline.predict_proba(features)
     logging.debug('list of probabilities: %s', repr(proba.shape))
@@ -205,20 +205,18 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
 
     segm_soft = proba[slic]
 
-    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
-                                                    features,
+    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image, features,
                                                     gc_regul, gc_edge_type,
                                                     debug_visual=debug_visual)
-    segm = graph_labels[slic]
     # relabel according classif classes
     if hasattr(model_pipeline, 'classes_'):
-        segm = model_pipeline.classes_[segm]
+        graph_labels = model_pipeline.classes_[graph_labels]
+    segm = graph_labels[slic]
     return segm, segm_soft
 
 
 def compute_color2d_superpixels_features(image, dict_features,
-                                         sp_size=30, sp_regul=0.2,
-                                         fts_norm=True):
+                                         sp_size=30, sp_regul=0.2):
     """ segment image into superpixels and estimate features per superpixel
 
     :param ndarray image: input RGB image
@@ -226,7 +224,6 @@ def compute_color2d_superpixels_features(image, dict_features,
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
            and "1" nearly square segments
     :param {str: [str]} dict_features: list of features to be extracted
-    :param bool fts_norm: weather normalise features
     :return [[int]], [[floats]]: superpixels and related of features
     """
     assert sp_regul > 0., 'slic. regularisation must be positive'
@@ -241,10 +238,10 @@ def compute_color2d_superpixels_features(image, dict_features,
     logging.debug('list of features RAW: %s', repr(features.shape))
     features[np.isnan(features)] = 0
 
-    if fts_norm:
-        logging.debug('norm all features.')
-        features, _ = seg_fts.norm_features(features)
-        logging.debug('list of features NORM: %s', repr(features.shape))
+    # if fts_norm:
+    #     logging.debug('norm all features.')
+    #     features, _ = seg_fts.norm_features(features)
+    #     logging.debug('list of features NORM: %s', repr(features.shape))
     return slic, features
 
 
@@ -259,8 +256,7 @@ def wrapper_compute_color2d_slic_features_labels(img_annot,
         % (repr(img.shape), repr(annot.shape))
     slic, features = compute_color2d_superpixels_features(img, dict_features,
                                                           sp_size=sp_size,
-                                                          sp_regul=sp_regul,
-                                                          fts_norm=False)
+                                                          sp_regul=sp_regul)
     neg_label = np.max(annot) + 1 if np.sum(annot < 0) > 0 else None
     if neg_label is not None:
         annot[annot < 0] = neg_label
