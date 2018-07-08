@@ -1723,6 +1723,8 @@ def interpolate_ray_dist(ray_dists, order='spline'):
     :param str order: degree of interpolation
     :return [float]:
 
+    >>> interpolate_ray_dist([-1] * 5)
+    array([-1, -1, -1, -1, -1])
     >>> vals = np.sin(np.linspace(0, 2 * np.pi, 20)) * 10
     >>> np.round(vals).astype(int).tolist()
     [0, 3, 6, 8, 10, 10, 9, 7, 5, 2, -2, -5, -7, -9, -10, -10, -8, -6, -3, 0]
@@ -1742,10 +1744,13 @@ def interpolate_ray_dist(ray_dists, order='spline'):
     ray_dists = np.array(ray_dists)
     missing = ray_dists == -1
     x_train = x_space[ray_dists != -1]
+    y_train = ray_dists[ray_dists != -1]
+    if len(y_train) == 0:
+        return ray_dists
+    # set 3x range from -N to 2N
     x_train_ext = np.hstack((x_train - len(x_space),
                              x_train,
                              x_train + len(x_space)))
-    y_train = ray_dists[ray_dists != -1]
     y_train_ext = np.array(y_train.tolist() * 3)
 
     if isinstance(order, int):

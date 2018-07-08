@@ -20,7 +20,8 @@ import imsegm.descriptors as seg_fts
 import imsegm.superpixels as seg_spx
 
 GC_REPLACE_INF = 1e5
-MIN_SHAPE_PROB = 1e-2
+MIN_SHAPE_PROB = 0.01
+MAX_UNARY_PROB = 1 - 0.01
 RG2SP_THRESHOLDS = {
     'centre': 30,
     'shift': 15,
@@ -105,6 +106,10 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
             for v in near.ravel():
                 unary_cost[v, i + 1] = 0
             edges[mask] = 0
+
+    # remove too small unary terms
+    min_unary = -np.log(MAX_UNARY_PROB)
+    unary_cost[unary_cost < min_unary] = min_unary
 
     # compute edge weight as difference in prob
     if edge_type == 'model':
@@ -970,7 +975,8 @@ def compute_data_costs_points(slic, slic_prob_fg, centres, labels):
         data_proba[:, i + 1] = slic_prob_fg
         vertex = slic[centre[0], centre[1]]
         labels[vertex] = i + 1
-    lut_data_cost = - np.log(data_proba)
+    # use an offset to avoid 0 in logarithm
+    lut_data_cost = -np.log(data_proba + 1e-9)
     lut_data_cost[np.isinf(lut_data_cost)] = GC_REPLACE_INF
     return lut_data_cost, labels
 
@@ -1111,7 +1117,8 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
     :param float coef_data: weight for data prior
     :param float coef_shape: weight for shape prior
     :param float coef_pairwise: setting for pairwise cost
-    :param (float, float) prob_label_trans:
+    :param prob_label_trans: probability transition between background (first)
+        and objects and among objects (second)
     :param bool allow_obj_swap: allow swapping foreground object labels
     :param float greedy_tol: stoping criterion - energy change between inters
     :param int nb_iter: maximal number of iterations
@@ -1331,7 +1338,8 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
         object (class) with superpixel as first index
     :param float coef_data: weight for data priors
     :param float coef_shape: weight for shape priors
-    :param prob_label_trans:
+    :param prob_label_trans: probability transition between background (first)
+        and objects and among objects (second)
     :return:
     """
     assert np.max(candidates) < len(slic_points), \
@@ -1360,6 +1368,10 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
             j = vertexes.index(n_idx)
             edges.append((i, j))
 
+    # remove too small unary terms
+    min_unary = -np.log(MAX_UNARY_PROB)
+    unary[unary < min_unary] = min_unary
+
     spatial_dist = seg_gc.compute_spatial_dist(slic_points[vertexes], edges,
                                                relative=True)
     edge_weights = np.ones(len(edges)) / spatial_dist
@@ -1370,6 +1382,8 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     pairwise[np.eye(unary.shape[-1], dtype=bool)] = 0
     pairwise *= coef_pairwise
 
+    # limit the maximal value
+    pairwise[pairwise > seg_gc.MAX_PAIRWISE_COST] = seg_gc.MAX_PAIRWISE_COST
     return vertexes, np.array(edges), edge_weights, unary, pairwise
 
 
@@ -1405,7 +1419,8 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
     :param float coef_data: weight for data prior
     :param float coef_shape: weight for shape prior
     :param float coef_pairwise: setting for pairwise cost
-    :param (float, float) prob_label_trans:
+    :param prob_label_trans: probability transition between background (first)
+        and objects and among objects (second)
     :param bool optim_global: optimise the GC as global or per object
     :param bool allow_obj_swap: allow swapping foreground object labels
     :param int nb_iter: maximal number of iterations
@@ -1529,7 +1544,8 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
                                                       init_centres, labels)
 
     lut_shape_cost = np.empty((len(labels), len(init_centres) + 1))
-    lut_shape_cost[:, 0] = - np.log(1 - slic_prob_fg)
+    # use an offset to avoid 0 in logarithm
+    lut_shape_cost[:, 0] = - np.log(1 - slic_prob_fg + 1e-9)
     centres = np.ones(np.asarray(init_centres).shape) * np.Inf
     shifts = np.zeros(len(init_centres))
     volumes = [1] * len(shifts)
