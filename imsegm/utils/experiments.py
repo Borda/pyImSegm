@@ -32,12 +32,17 @@ class Experiment(object):
     """
 
     >>> import shutil
-    >>> params = {'path_out': '.', 'name': 'My-Sample'}
+    >>> params = {'path_out': './my_experiments', 'name': 'My-Sample'}
+    >>> expt = Experiment(params)
+    Traceback (most recent call last):
+    ...
+    Exception: given folder "./my_experiments" does not exist!
+    >>> os.mkdir(params['path_out'])
     >>> expt = Experiment(params, time_stamp=False)
     >>> expt.run()
     >>> params = expt.params.copy()
     >>> del expt
-    >>> shutil.rmtree(params['path_exp'], ignore_errors=True)
+    >>> shutil.rmtree(params['path_out'], ignore_errors=True)
     """
 
     def __init__(self, dict_params, time_stamp=True):
@@ -108,9 +113,9 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     """ create the experiment folder and iterate while there is no available
 
     :param {str: any} params:
-    :param str dir_name:
-    :param bool stamp_unique:
-    :param bool skip_load:
+    :param str dir_name: folder name
+    :param bool stamp_unique: use unique timestamp
+    :param bool skip_load: skip loading folder params
     :return {str: ...}:
 
     >>> import shutil
@@ -118,6 +123,9 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     >>> p = create_experiment_folder(p, 'my_test', False, skip_load=True)
     >>> 'computer' in p
     True
+    >>> p['path_exp']
+    './my_test_EXAMPLE'
+    >>> p = create_experiment_folder(p, 'my_test', False, skip_load=False)
     >>> p['path_exp']
     './my_test_EXAMPLE'
     >>> shutil.rmtree(p['path_exp'], ignore_errors=True)

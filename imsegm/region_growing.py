@@ -56,10 +56,10 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
     ...                  [5] * 3 + [6] * 3 + [7] * 3 + [8] * 3 + [9] * 3])
     >>> segm = np.array([[0] * 15, [1] * 12 + [0] * 3])
     >>> object_segmentation_graphcut_slic(slic, segm, [(1, 7)],
-    ...                              gc_regul=0., edge_coef=1.)
+    ...                              gc_regul=0., edge_coef=1., coef_shape=1.)
     array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0], dtype=int32)
     >>> object_segmentation_graphcut_slic(slic, segm, [(1, 7)],
-    ...                              gc_regul=1., edge_coef=1.)
+    ...                              gc_regul=1., edge_coef=1., debug_visual={})
     array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0], dtype=int32)
     """
     assert np.min(labels_fg_prob) < 1, 'non label can ce strictly 1'
@@ -167,14 +167,16 @@ def object_segmentation_graphcut_pixels(segm, centres,
     ...                 [0] * 6 + [1] * 4, [0] * 5 + [1] * 5,
     ...                 [0] * 10])
     >>> centres = [(1, 2), (4, 8)]
-    >>> object_segmentation_graphcut_pixels(segm, centres, gc_regul=0.)
+    >>> object_segmentation_graphcut_pixels(segm, centres, gc_regul=0.,
+    ...                                     coef_shape=0.5)
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [2, 2, 1, 2, 2, 0, 0, 0, 0, 0],
            [2, 2, 2, 2, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 2, 2, 2, 2],
            [0, 0, 0, 0, 0, 2, 2, 2, 2, 2],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=int32)
-    >>> object_segmentation_graphcut_pixels(segm, centres, gc_regul=.5)
+    >>> object_segmentation_graphcut_pixels(segm, centres, gc_regul=.5,
+    ...                                     seed_size=1)
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
            [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
@@ -519,6 +521,7 @@ def transform_rays_model_cdf_kmeans(list_rays, nb_components=None):
     [[1.0, 1.0, 1.0, 1.0, 0.9, 0.8, 0.7, 0.7, 0.6, 0.4, 0.2, 0.0, 0.0],
      [1.0, 1.0, 1.0, 1.0, 0.9, 0.9, 0.8, 0.7, 0.5, 0.3, 0.2, 0.1, 0.0],
      [1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.8, 0.7, 0.5, 0.4, 0.2, 0.1, 0.0]]
+    >>> mm, cdist = transform_rays_model_cdf_kmeans(list_rays, nb_components=2)
     """
     rays = np.array(list_rays)
     if nb_components is None:

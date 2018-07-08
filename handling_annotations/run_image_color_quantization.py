@@ -70,7 +70,7 @@ def see_images_color_info(path_images, px_thr=THRESHOLD_INVALID_PIXELS):
         return {}
     paths_img = sorted(glob.glob(path_images))
     logging.debug('found %i images', len(paths_img))
-    dict_colors = seg_annot.dir_images_frequent_colors(paths_img, px_thr)
+    dict_colors = seg_annot.group_images_frequent_colors(paths_img, px_thr)
     return dict_colors
 
 
