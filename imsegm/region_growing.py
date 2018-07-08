@@ -240,7 +240,7 @@ def object_segmentation_graphcut_pixels(segm, centres,
 
 
 def compute_segm_object_shape(img_object, ray_step=5, interp_order=3,
-                              smooth_coef=0):
+                              smooth_coef=0, shift_method='phase'):
     """ assuming single object in image and compute gravity centre and for
     this point compute Ray featuresand optionaly:
     - interpolate missing values
@@ -250,6 +250,7 @@ def compute_segm_object_shape(img_object, ray_step=5, interp_order=3,
     :param int ray_step: select the angular step    for Ray features
     :param int interp_order: if None, no interpolation is performed
     :param float smooth_coef: smoothing the ray features
+    :param str shift_method: use method for estimate shift maxima (phase or max)
     :return [int], int:
 
     >>> img = np.zeros((100, 100))
@@ -266,12 +267,12 @@ def compute_segm_object_shape(img_object, ray_step=5, interp_order=3,
         ray_dist = seg_fts.interpolate_ray_dist(ray_dist, interp_order)
     if smooth_coef > 0:
         ray_dist = ndimage.filters.gaussian_filter1d(ray_dist, smooth_coef)
-    ray_dist, shift = seg_fts.shift_ray_features(ray_dist)
+    ray_dist, shift = seg_fts.shift_ray_features(ray_dist, shift_method)
     return ray_dist.tolist(), shift
 
 
 def compute_object_shapes(list_img_objects, ray_step=5, interp_order=3,
-                          smooth_coef=0):
+                          smooth_coef=0, shift_method='phase'):
     """ for all object in all images compute gravity center and Ray beatures
     (if object are not split already by different label is made here)
 
@@ -279,6 +280,7 @@ def compute_object_shapes(list_img_objects, ray_step=5, interp_order=3,
     :param int ray_step: select the angular step for Ray features
     :param int interp_order: if None, no interpolation is performed
     :param float smooth_coef: smoothing the ray features
+    :param str shift_method: use method for estimate shift maxima (phase or max)
     :return [[int]], [int]:
 
     >>> img1 = np.zeros((100, 100))
@@ -309,7 +311,8 @@ def compute_object_shapes(list_img_objects, ray_step=5, interp_order=3,
         for label in uq_labels[1:]:
             img_object = (img_objects == label)
             rays, shift = compute_segm_object_shape(img_object, ray_step,
-                                                    interp_order, smooth_coef)
+                                                    interp_order, smooth_coef,
+                                                    shift_method)
             list_rays.append(rays)
             list_shifts.append(shift)
 

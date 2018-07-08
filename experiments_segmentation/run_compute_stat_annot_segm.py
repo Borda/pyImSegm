@@ -15,7 +15,7 @@ import os
 import sys
 import logging
 import argparse
-import traceback
+# import traceback
 import multiprocessing as mproc
 from functools import partial
 
@@ -34,7 +34,6 @@ sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utils.data_io as tl_data
 import imsegm.utils.experiments as tl_expt
 import imsegm.utils.drawing as tl_visu
-import imsegm.labeling as seg_lbs
 import imsegm.classification as seg_clf
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
@@ -140,7 +139,7 @@ def export_visual(name, annot, segm, img, path_out, drop_labels, segm_alpha=1.):
 
 def stat_single_set(idx_row, drop_labels=None, relabel=False, path_visu='',
                     segm_alpha=1.):
-    idx, row = idx_row
+    _, row = idx_row
     path_annot = row['path_1']
     path_segm = row['path_2']
     path_img = row['path_3'] if 'path_3' in row else None

@@ -1592,10 +1592,11 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
     return np.array(ray_dist)
 
 
-def shift_ray_features(ray_dist):
+def shift_ray_features(ray_dist, method='phase'):
     """ shift Ray features ti the global maxim to be rotation invariant
 
-    :param [float] ray_dist:
+    :param [float] ray_dist: array of features
+    :param str _method: use method for estimate shift maxima (phase or max)
     :return [float]:
 
     >>> vec = np.array([43, 46, 44, 39, 28, 18, 12, 10,  9, 12, 22, 28])
@@ -1609,24 +1610,31 @@ def shift_ray_features(ray_dist):
     11.50...
     >>> np.array_equal(ray, ray2)
     True
+    >>> ray, shift = shift_ray_features(vec, method='max')
+    >>> shift   # doctest: +ELLIPSIS
+    30.0...
     """
     angle_step = 360 / len(ray_dist)
-    # max_loc = np.argmax(ray_dist)
-    # shift = float(max_loc * angle_step)
-    # use major phase from FFT, see following
+    if method == 'phase':
     # https://www.ritchievink.com/blog/2017/04/23/understanding-the-fourier-transform-by-example/
     # https://www.gaussianwaves.com/2015/11/interpreting-fft-results-obtaining-magnitude-and-phase-information/
-    ray_dist_ext = np.hstack([ray_dist] * 5)
-    spectrum = np.fft.fft(ray_dist_ext - np.mean(ray_dist_ext)) / float(len(ray_dist_ext))
-    # freq = np.fft.fftfreq(len(ray_dist_ext), angle_step)
-    magnitude = np.abs(spectrum)[:len(ray_dist_ext) // 2]
-    idx_max_mag = np.argmax(magnitude)
-    phase = np.angle(spectrum)[:len(ray_dist_ext) // 2]
-    shift = np.rad2deg(- phase[idx_max_mag])
-    shift = (360 + shift) if shift < 0 else shift
+        # use major phase from FFT, see following
+        ray_dist_ext = np.hstack([ray_dist] * 5)
+        spectrum = np.fft.fft(ray_dist_ext - np.mean(ray_dist_ext)) / float(
+            len(ray_dist_ext))
+        # freq = np.fft.fftfreq(len(ray_dist_ext), angle_step)
+        magnitude = np.abs(spectrum)[:len(ray_dist_ext) // 2]
+        idx_max_mag = np.argmax(magnitude)
+        phase = np.angle(spectrum)[:len(ray_dist_ext) // 2]
+        shift = np.rad2deg(- phase[idx_max_mag])
+        shift = (360 + shift) if shift < 0 else shift
+    else:
+        max_loc = np.argmax(ray_dist)
+        shift = float(max_loc * angle_step)
     # round the shift to dicreate angular steps
-    shift_disc = int(round(shift / angle_step))
-    ray_dist_shift = ray_dist[shift_disc:].tolist() + ray_dist[:shift_disc].tolist()
+    shift_discrete = int(round(shift / angle_step))
+    ray_dist_shift = ray_dist[shift_discrete:].tolist() \
+                     + ray_dist[:shift_discrete].tolist()
     return np.array(ray_dist_shift), shift
 
 
