@@ -38,7 +38,7 @@ from functools import partial
 import matplotlib
 if os.environ.get('DISPLAY', '') == '' \
         and matplotlib.rcParams['backend'] != 'agg':
-    logging.warning('No display found. Using non-interactive Agg backend.')
+    # logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import numpy as np
@@ -111,8 +111,8 @@ SEGM_PARAMS = {
     'tab-proba_ellipse': [0.01, 0.95, 0.95, 0.85],
     'tab-proba_graphcut':  [0.01, 0.6, 0.99, 0.75],
     'tab-proba_RG2SP':  [0.01, 0.6, 0.95, 0.75],
-    'path_single-model': os.path.join(PATH_DATA, 'RG2SP_single-model.pkl'),
-    'path_multi-models': os.path.join(PATH_DATA, 'RG2SP_mixture-model.pkl'),
+    'path_single-model': os.path.join(PATH_DATA, 'RG2SP_eggs_single-model.pkl'),
+    'path_multi-models': os.path.join(PATH_DATA, 'RG2SP_eggs_mixture-model.pkl'),
     'gc-pixel_regul': 3.,
     'gc-slic_regul': 2.,
     'RG2SP-shape': 5.,
@@ -536,9 +536,10 @@ def segment_rg2sp_greedy(slic, seg, centers, labels_fg_prob, path_model,
         shape_model = pickle.load(open(path_model, 'rb'))
     dict_debug = dict() if os.path.isdir(debug_export) else None
 
+    slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, [0.1, 0.9])
     labels_greedy = seg_rg.region_growing_shape_slic_greedy(
-        seg, slic, centers, (shape_model['mix_model'], shape_model['cdfs']),
-        shape_model['name'], labels_fg_prob, coef_shape, coef_pairwise,
+        slic, slic_prob_fg, centers, (shape_model['mix_model'], shape_model['cdfs']),
+        shape_model['name'], coef_shape, coef_pairwise,
         prob_label_trans, greedy_tol=1e-1, allow_obj_swap=allow_obj_swap,
         dict_thresholds=dict_thresholds, nb_iter=1000,
         dict_debug_history=dict_debug)
@@ -565,10 +566,11 @@ def segment_rg2sp_graphcut(slic, seg, centers, labels_fg_prob, path_model,
         shape_model = pickle.load(open(path_model, 'rb'))
     dict_debug = dict() if os.path.isdir(debug_export) else None
 
+    slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, labels_fg_prob)
     labels_gc = seg_rg.region_growing_shape_slic_graphcut(
-        seg, slic, centers, (shape_model['mix_model'], shape_model['cdfs']),
-        shape_model['name'], labels_fg_prob, coef_shape, coef_pairwise,
-        prob_label_trans, optim_global=True, allow_obj_swap=allow_obj_swap,
+        slic, slic_prob_fg, centers, (shape_model['mix_model'], shape_model['cdfs']),
+        shape_model['name'], coef_shape, coef_pairwise, prob_label_trans,
+        optim_global=True, allow_obj_swap=allow_obj_swap,
         dict_thresholds=dict_thresholds, nb_iter=250,
         dict_debug_history=dict_debug)
 

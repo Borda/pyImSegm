@@ -28,11 +28,11 @@ PATH_IMAGES = os.path.join(tl_data.update_path('data_images'), 'drosophila_ovary
 PATH_ANNOT = os.path.join(PATH_IMAGES, 'annot_eggs', '*.png')
 RAY_STEP = 10
 # names of default files for models
-NAME_CSV_RAY_ALL = 'egg_ray_shapes.csv'
-NAME_PKL_MODEL_SINGLE = 'RG2SP_single-model.pkl'
-NAME_PKL_MODEL_MIXTURE = 'RG2SP_mixture-model.pkl'
-NAME_NPZ_MODEL_SINGLE = 'RG2SP_single-model.npz'
-NAME_NPZ_MODEL_MIXTURE = 'RG2SP_mixture-model.npz'
+NAME_CSV_RAY_ALL = 'eggs_ray-shapes.csv'
+NAME_PKL_MODEL_SINGLE = 'RG2SP_eggs_single-model.pkl'
+NAME_PKL_MODEL_MIXTURE = 'RG2SP_eggs_mixture-model.pkl'
+NAME_NPZ_MODEL_SINGLE = 'RG2SP_eggs_single-model.npz'
+NAME_NPZ_MODEL_MIXTURE = 'RG2SP_eggs_mixture-model.npz'
 
 
 def arg_parse_params():

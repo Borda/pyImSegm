@@ -861,20 +861,31 @@ def load_images_list(path_imgs, im_range=255):
     """
     list_images, list_names = [], []
     for path_im in path_imgs:
-        path_im = os.path.abspath(os.path.expanduser(path_im))
-        if path_im is None or not os.path.exists(path_im):
-            logging.debug('particular image is missing "%s"', path_im)
+        im, name = load_image(path_im, im_range)
+        if im is None:
             continue
-        logging.debug('loading image "{}"'.format(path_im))
-        if 'tif' in os.path.splitext(path_im)[1]:
-            img = load_image_tiff_volume(path_im, im_range)
-            im = img[..., 0]
-        else:
-            im, _ = load_image_2d(path_im)
-        # logging.debug('image dims: {}'.format(im.shape))
         list_images.append(im)
-        list_names.append(os.path.splitext(os.path.basename(path_im))[0])
+        list_names.append(name)
     return list_images, list_names
+
+
+def load_image(path_im, im_range=255):
+    if path_im is None:
+        logging.debug('particular image not set')
+        return None, ''
+    path_im = update_path(path_im)
+    im_name = os.path.splitext(os.path.basename(path_im))[0]
+    if not os.path.exists(path_im):
+        logging.debug('particular image is missing "%s"', path_im)
+        return None, im_name
+    logging.debug('loading image "{}"'.format(path_im))
+    if 'tif' in os.path.splitext(path_im)[1]:
+        vol = load_image_tiff_volume(path_im, im_range)
+        img = vol[..., 0]
+    else:
+        img, _ = load_image_2d(path_im)
+    # logging.debug('image dims: {}'.format(im.shape))
+    return img, im_name
 
 
 # def load_list_names(path_list):

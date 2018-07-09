@@ -28,7 +28,7 @@ from scipy import ndimage
 import matplotlib
 if os.environ.get('DISPLAY', '') == '' \
         and matplotlib.rcParams['backend'] != 'agg':
-    logging.warning('No display found. Using non-interactive Agg backend.')
+    # logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
@@ -63,8 +63,6 @@ DEFAULT_PARAMS.update({
                                  '*.csv'),
     'path_infofile': os.path.join(run_train.PATH_IMAGES,
                                   'info_ovary_images.txt'),
-    'path_expt': os.path.join(DEFAULT_PARAMS['path_output'],
-                              run_detect.FOLDER_EXPERIMENT % DEFAULT_PARAMS['name']),
 })
 
 NAME_CSV_TRIPLES = run_train.NAME_CSV_TRIPLES
@@ -243,6 +241,8 @@ def main(params):
 
     :param {str: ...} params:
     """
+    params['path_expt'] = os.path.join(params['path_output'],
+                                       run_detect.FOLDER_EXPERIMENT % params['name'])
     tl_expt.set_experiment_logger(params['path_expt'])
     # tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))

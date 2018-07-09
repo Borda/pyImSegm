@@ -138,10 +138,11 @@ class TestRegionGrowing(unittest.TestCase):
         img, seg, slic, centers, annot = load_inputs(name)
 
         dict_debug = {}
+        slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, LABELS_FG_PROB)
         labels_greedy = seg_rg.region_growing_shape_slic_greedy(
-            seg, slic, centers, (model, list_mean_cdf), 'set_cdfs',
-            LABELS_FG_PROB, coef_shape=5., coef_pairwise=15.,
-            prob_label_trans=[0.1, 0.03], greedy_tol=3e-1, allow_obj_swap=True,
+            slic, slic_prob_fg, centers, (model, list_mean_cdf), 'set_cdfs',
+            coef_shape=5., coef_pairwise=15., prob_label_trans=[0.1, 0.03],
+            greedy_tol=3e-1, allow_obj_swap=True,
             dict_thresholds=DEFAULT_RG2SP_THRESHOLDS, nb_iter=250,
             dict_debug_history=dict_debug)
 
@@ -149,7 +150,7 @@ class TestRegionGrowing(unittest.TestCase):
         logging.info('debug: %s', repr(dict_debug.keys()))
 
         fig_size = (FIG_SIZE * np.array(img.shape[:2]) / np.max(img.shape))
-        for i in np.linspace(0, len(dict_debug['energy']) - 1, 5):
+        for i in np.linspace(0, len(dict_debug['criteria']) - 1, 5):
             fig, ax = plt.subplots(figsize=fig_size[::-1])
             tl_visu.draw_rg2sp_results(ax, seg, slic, dict_debug, int(i))
             fig_name = 'RG2Sp_greedy_%s_debug-%03d.pdf' % (name, i)
@@ -182,19 +183,19 @@ class TestRegionGrowing(unittest.TestCase):
         centers[:, [0, 1]] = centers[:, [1, 0]]
 
         slic = seg_spx.segment_slic_img2d(img, sp_size=25, rltv_compact=0.3)
+        slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, LABELS_FG_PROB)
 
         dict_debug = {}
         labels_gc = seg_rg.region_growing_shape_slic_graphcut(
-            seg, slic, centers, (model, list_mean_cdf), 'set_cdfs',
-            LABELS_FG_PROB, coef_shape=5., coef_pairwise=15.,
-            prob_label_trans=[0.1, 0.03], optim_global=False, nb_iter=65,
-            allow_obj_swap=False, dict_thresholds=DEFAULT_RG2SP_THRESHOLDS,
-            dict_debug_history=dict_debug)
+            slic, slic_prob_fg, centers, (model, list_mean_cdf), 'set_cdfs',
+            coef_shape=5., coef_pairwise=15., prob_label_trans=[0.1, 0.03],
+            optim_global=False, nb_iter=65, allow_obj_swap=False,
+            dict_thresholds=DEFAULT_RG2SP_THRESHOLDS, dict_debug_history=dict_debug)
 
         segm_obj = labels_gc[slic]
         logging.info('debug: %s', repr(dict_debug.keys()))
 
-        for i in np.linspace(0, len(dict_debug['energy']) - 1, 5):
+        for i in np.linspace(0, len(dict_debug['criteria']) - 1, 5):
             fig = tl_visu.figure_rg2sp_debug_complete(seg, slic, dict_debug,
                                                       int(i), max_size=5)
             fig_name = 'RG2Sp_graph-cut_%s_debug-%03d.pdf' % (name, i)

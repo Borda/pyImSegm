@@ -20,7 +20,7 @@ from sklearn import cluster
 import matplotlib
 if os.environ.get('DISPLAY', '') == '' \
         and matplotlib.rcParams['backend'] != 'agg':
-    logging.warning('No display found. Using non-interactive Agg backend.')
+    # logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import matplotlib.pylab as plt
@@ -50,8 +50,6 @@ CLUSTER_PARAMS = {
 DEFAULT_PARAMS = run_train.CENTER_PARAMS
 DEFAULT_PARAMS.update(CLUSTER_PARAMS)
 DEFAULT_PARAMS.update({
-    'path_expt': os.path.join(DEFAULT_PARAMS['path_output'],
-                              FOLDER_EXPERIMENT % DEFAULT_PARAMS['name']),
     'path_images': os.path.join(run_train.PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(run_train.PATH_IMAGES, 'segm', '*.png'),
     'path_centers': os.path.join(DEFAULT_PARAMS['path_output'],
@@ -194,6 +192,8 @@ def main(params):
 
     :param {str: any} params:
     """
+    params['path_expt'] = os.path.join(params['path_output'],
+                                       FOLDER_EXPERIMENT % params['name'])
     with open(os.path.join(params['path_expt'],
                            'config_clustering.json'), 'w') as fp:
         json.dump(params, fp)

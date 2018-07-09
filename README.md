@@ -143,7 +143,7 @@ We introduce some useful tools for work with image annotation and segmentation.
         -imgs "./data_images/drosophila_ovary_slice/segm/*.png" \
         --label 4
     ```
-* **Replace labels:** change labels in input segmentation into another set of lables in 1:1 schema.
+* **Replace labels:** change labels in input segmentation into another set of labels in 1:1 schema.
     ```bash
     python handling_annotations/run_segm_annot_relabel.py \
         -out ./results/relabel_center_levels \
@@ -232,7 +232,7 @@ In general, the input is a formatted list (CSV file) of input images and annotat
         -centers "./data_images/drosophila_ovary_slice/center_levels/*.png" \
         -out ./results -n ovary
     ```
-1. Having trained classifier we perfom center prediction composed from two steps: i. center candidate clustering and candidate clustering.
+1. Having trained classifier we perform center prediction composed from two steps: i) center candidate clustering and ii) candidate clustering.
     ```bash
     python experiments_ovary_centres/run_center_prediction.py -list none \
         -segs "./data_images/drosophila_ovary_slice/segm/*.png" \
@@ -246,7 +246,11 @@ In general, the input is a formatted list (CSV file) of input images and annotat
     ```
 1. This is just cut out clustering in case you want to use different parameters.
     ```bash
-    python experiments_ovary_centres/run_center_clustering.py
+    python experiments_ovary_centres/run_center_clustering.py \
+        -segs "./data_images/drosophila_ovary_slice/segm/*.png" \
+        -imgs "./data_images/drosophila_ovary_slice/image/*.jpg" \
+        -centers "./results/detect-centers-train_ovary/candidates/*.csv" \
+        -out ./results
     ```
 1. Matching the ellipses to the user annotation.
     ```bash
@@ -262,9 +266,11 @@ In general, the input is a formatted list (CSV file) of input images and annotat
         -imgs "~/Medical-drosophila/RESULTS/0_input_images_png/*.png" \
         -out ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages
     ```
-1. Rotate (swap) extrated eggs according the larger mount of mass.
+1. Rotate (swap) extracted eggs according the larger mount of mass.
     ```bash
-    python experiments_ovary_detect/run_egg_swap_orientation.py
+    python experiments_ovary_detect/run_egg_swap_orientation.py \
+        -imgs "~/Medical-drosophila/RESULTS/atlas_datasets/ovary_images/stage_3/*.png" \
+        -out ~/Medical-drosophila/RESULTS/atlas_datasets/ovary_images/stage_3
     ```
 
 ![ellipse fitting](figures/insitu7544_ellipses.jpg)
@@ -317,7 +323,7 @@ python setup.py install
         -img "./data_images/drosophila_ovary_slice/segm/*.png" \
         -out ./results/cut_images --padding 50
     ```
-1. Finally, performing visualisation of segmentation results toghter with expert annotation.
+1. Finally, performing visualisation of segmentation results together with expert annotation.
     ```bash
     python experiments_ovary_detect/run_export_user-annot-segm.py
     ```

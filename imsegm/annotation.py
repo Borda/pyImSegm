@@ -191,13 +191,22 @@ def image_frequent_colors(img, ratio_treshold=1e-3):
     return dict_clrs
 
 
-def dir_images_frequent_colors(paths_img, ratio_treshold=1e-3):
+def group_images_frequent_colors(paths_img, ratio_treshold=1e-3):
     """ look  all images and estimate most frequent colours
 
     :param paths_img: [np.array<h, w, 3>]
     :param ratio_treshold: float, percentage of nb clr pixels to be assumed
         as important
     :return:
+
+    >>> from skimage import data
+    >>> path_img = './sample-image.png'
+    >>> tl_data.io_imsave(path_img, data.astronaut())
+    >>> d_clrs = group_images_frequent_colors([path_img], ratio_treshold=3e-4)
+    >>> sorted([d_clrs[c] for c in d_clrs], reverse=True)  # doctest: +NORMALIZE_WHITESPACE
+    [27969, 1345, 1237, 822, 450, 324, 313, 244, 229, 213, 163, 160, 158, 157,
+     150, 137, 120, 119, 117, 114, 98, 92, 92, 91, 81]
+    >>> os.remove(path_img)
     """
     logging.debug('passing %i images', len(paths_img))
     dict_colors = dict()

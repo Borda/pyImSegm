@@ -47,7 +47,7 @@ DEFAULT_PARAMS = run_train.CENTER_PARAMS
 DEFAULT_PARAMS.update(run_clust.CLUSTER_PARAMS)
 DEFAULT_PARAMS['path_centers'] = os.path.join(DEFAULT_PARAMS['path_output'],
                                               run_train.FOLDER_EXPERIMENT % DEFAULT_PARAMS['name'],
-                                      'classifier_RandForest.pkl')
+                                              'classifier_RandForest.pkl')
 
 
 def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',

@@ -19,8 +19,10 @@ import imsegm.descriptors as seg_fts
 DEFAULT_GC_ITERATIONS = 25
 COEF_INT_CONVERSION = 1e6
 DEBUG_NB_SHOW_SAMPLES = 15
-MIN_UNARY_PROB = 1e-2
-MAX_PAIRWISE_COST = 1e3
+MIN_UNARY_PROB = 0.01
+MAX_PAIRWISE_COST = 1e5
+# max is this value and min is inverse (1 / val)
+MIN_MAX_EDGE_WEIGHT = 1e3
 
 
 def estim_gmm_params(features, prob):
@@ -54,7 +56,7 @@ def estim_gmm_params(features, prob):
 
 
 def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
-                      scaler=True, max_iter=99):
+                      use_scaler=True, max_iter=99):
     """ create pipeline (scaler, PCA, model) over several options how
     to cluster samples and fit it on data
 
@@ -62,8 +64,8 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     :param int nb_classes: number of expected classes
     :param str proba_type: tyre of used model
     :param float pca_coef: range (0, 1) or None
-    :param bool scaler: wheter use a scaler
-    :param str init_type: initialsi of
+    :param bool use_scaler: whether use a scaler
+    :param str estim_model: used model
     :return:
 
     >>> np.random.seed(0)
@@ -80,7 +82,7 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     >>> mm.predict_proba(fts).shape
     (100, 2)
     >>> mm = estim_class_model(fts, 2, estim_model='kmeans_quantiles',
-    ...                         scaler=False, max_iter=3)
+    ...                         use_scaler=False, max_iter=3)
     >>> mm.predict_proba(fts).shape
     (100, 2)
     >>> mm = estim_class_model(fts, 2, estim_model='BGM', max_iter=3)
@@ -91,8 +93,8 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
     (100, 2)
     """
     components = []
-    if scaler:
-        components += [('scaler', preprocessing.StandardScaler())]
+    if use_scaler:
+        components += [('std_scaler', preprocessing.StandardScaler())]
     if pca_coef is not None:
         components += [('reduce_dim', decomposition.PCA(pca_coef))]
 
@@ -509,7 +511,7 @@ def create_pairwise_matrix(gc_regul, nb_classes):
     return pairwise
 
 
-def compute_unary_cost(proba, min_proba=MIN_UNARY_PROB):
+def compute_unary_cost(proba, min_prob=MIN_UNARY_PROB):
     """ compute the GC unary cost with some threshold on minimal values
 
     :param ndarray proba:
@@ -521,7 +523,9 @@ def compute_unary_cost(proba, min_proba=MIN_UNARY_PROB):
     """
     proba = proba.copy()
     # constrain that each class should have at least 1.%
-    proba[proba < min_proba] = min_proba
+    max_prob = 1 - min_prob
+    proba[proba < min_prob] = min_prob
+    proba[proba > max_prob] = max_prob
     # unary_cost = np.array(1. / proba , dtype=np.float64)
     unary_cost = np.abs(np.array(-np.log(proba), dtype=np.float64))
     return unary_cost
@@ -594,7 +598,7 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
     >>> edges, weights = compute_edge_weights(segments, image=img,
     ...                                        edge_type='color')
     >>> np.round(weights, 3).tolist()
-    [0.06, 0.002, 0.0, 0.0, 0.0, 0.009, 0.0, 0.019, 0.044]
+    [0.06, 0.002, 0.001, 0.001, 0.001, 0.009, 0.001, 0.019, 0.044]
     >>> edges, weights = compute_edge_weights(segments, features=features,
     ...                                        edge_type='features')
     >>> np.round(weights, 3).tolist()
@@ -602,7 +606,7 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
     >>> edges, weights = compute_edge_weights(segments, proba=proba,
     ...                                        edge_type='model')
     >>> np.round(weights, 3).tolist()
-    [0.0, 0.028, 1.122, 0.038, 0.117, 0.688, 0.487, 1.152, 0.282]
+    [0.001, 0.028, 1.122, 0.038, 0.117, 0.688, 0.487, 1.152, 0.282]
     """
     logging.debug('extraction segment connectivity...')
     _, edges = get_vertexes_edges(segments)
@@ -642,6 +646,12 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
         centres = seg_spx.superpixel_centers(segments)
         spatial = compute_spatial_dist(centres, edges, relative=True)
         edge_weights /= spatial
+
+    # set the threshold for min edge weight
+    min_weight = 1. / MIN_MAX_EDGE_WEIGHT
+    max_weight = MIN_MAX_EDGE_WEIGHT
+    edge_weights[edge_weights < min_weight] = min_weight
+    edge_weights[edge_weights > max_weight] = max_weight
     return edges, edge_weights
 
 
@@ -658,28 +668,29 @@ def segment_graph_cut_general(segments, proba, image=None, features=None,
     :return [int]: labelling by resulting classes
 
     >>> np.random.seed(0)
-    >>> segments = np.array([[0] * 3 + [1] * 3 + [2] * 3 + [3] * 3 + [4] * 3,
-    ...                      [5] * 3 + [6] * 3 + [7] * 3 + [8] * 3 + [9] * 3])
-    >>> proba = np.array([[0] * 6 + [1] * 4, [1] * 6 + [0] * 4], dtype=float).T
-    >>> proba += np.random.random(proba.shape) / 2.
+    >>> segments = np.array([[0] * 3 + [2] * 3 + [4] * 3 + [6] * 3 + [8] * 3,
+    ...                      [1] * 3 + [3] * 3 + [5] * 3 + [7] * 3 + [9] * 3])
+    >>> proba = np.array([[0.1] * 6 + [0.9] * 4,
+    ...                   [0.9] * 6 + [0.1] * 4], dtype=float).T
+    >>> proba += (0.5 - np.random.random(proba.shape)) * 0.2
     >>> compute_unary_cost(proba)
-    array([[ 1.29314378,  0.30571452],
-           [ 1.19937775,  0.24093757],
-           [ 1.55198349,  0.27986187],
-           [ 1.51962643,  0.36872263],
-           [ 0.73016106,  0.17539828],
-           [ 0.9266883 ,  0.23463524],
-           [ 0.24999756,  0.77046392],
-           [ 0.03490181,  3.13350924],
-           [ 0.01005844,  0.87632529],
-           [ 0.32864049,  0.83239528]])
+    array([[ 2.40531242,  0.15436155],
+           [ 2.53266106,  0.11538463],
+           [ 2.1604864 ,  0.13831863],
+           [ 2.18495711,  0.19644636],
+           [ 4.60517019,  0.0797884 ],
+           [ 3.17833405,  0.11180231],
+           [ 0.12059702,  4.20769207],
+           [ 0.0143091 ,  1.70059894],
+           [ 0.01005034,  3.39692559],
+           [ 0.16916609,  3.64975219]])
     >>> segment_graph_cut_general(segments, proba, gc_regul=0., edge_type='')
     array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=int32)
     >>> labels = segment_graph_cut_general(segments, proba, gc_regul=1.,
     ...                                    edge_type='spatial')
     >>> labels[segments]
-    array([[1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=int32)
+    array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+           [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0]], dtype=int32)
     >>> slic = np.array([[0] * 4 + [1] * 6 + [2] * 4,
     ...                  [3] * 5 + [4] * 4 + [5] * 5])
     >>> proba = np.array([[1] * 3 + [0] * 3, [0] * 3 + [1] * 3], dtype=float).T
@@ -706,13 +717,17 @@ def segment_graph_cut_general(segments, proba, image=None, features=None,
     pairwise_cost = compute_pairwise_cost(gc_regul, proba.shape)
     logging.debug('graph pairwise coefs: \n%s', repr(pairwise_cost))
 
-    labels = np.argmax(proba, axis=1)
-    # run GraphCut
-    logging.debug('perform GraphCut')
-    graph_labels = cut_general_graph(edges, edge_weights, unary_cost,
-                                     pairwise_cost, algorithm='expansion',
-                                     # down_weight_factor=np.abs(unary_cost).max()
-                                     init_labels=labels, n_iter=9999)
+    if gc_regul <= 0:
+        logging.debug('gc_regul=%f so we use just argmax()', gc_regul)
+        graph_labels = np.argmin(unary_cost, axis=-1).astype(np.int32)
+    else:
+        # run GraphCut
+        logging.debug('perform GraphCut')
+        graph_labels = cut_general_graph(edges, edge_weights, unary_cost,
+                                         pairwise_cost, algorithm='expansion',
+                                         # down_weight_factor=np.abs(unary_cost).max(),
+                                         # init_labels=np.argmax(proba, axis=1),
+                                         n_iter=-1)
 
     insert_gc_debug_images(debug_visual, segments, graph_labels,
                            compute_unary_cost(proba), edges, edge_weights)
