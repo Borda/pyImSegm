@@ -20,6 +20,7 @@ jobs:
 
         # TESTING
         - run: coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
+        - run: python setup.py check -m -s
 
         # ANNOTATION section
         - run: python handling_annotations/run_image_color_quantization.py -imgs "./data_images/drosophila_ovary_slice/segm_rgb/*.png"

@@ -45,6 +45,7 @@ before_script:
 script:
   # - pytest imsegm -v --doctest-modules
   - nosetests imsegm -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
+  - python setup.py check -m -s
   - python setup.py install
 
 after_success:
