@@ -12,7 +12,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join('..', '..'))) # Add path to root
+sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 import imsegm.utils.data_samples as d_spl
 import imsegm.utils.data_io as tl_data
 import imsegm.superpixels as seg_spx

@@ -145,6 +145,7 @@ def get_image_path(name_img, path_base=PATH_IMAGES):
     """ merge default image path and sample image
 
     :param str name_img:
+    :param str path_base:
     :return str:
 
     >>> p = get_image_path(IMAGE_LENNA)

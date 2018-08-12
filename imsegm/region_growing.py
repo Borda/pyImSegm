@@ -213,7 +213,7 @@ def object_segmentation_graphcut_pixels(segm, centres,
             cum = 1. - cdf + 1e-9
             shape[:, :, i + 1] = cum[dist.astype(int)]
 
-    unary =  - np.log(proba) - coef_shape * np.log(shape)
+    unary = - np.log(proba) - coef_shape * np.log(shape)
     for i, pos in enumerate(centres):
         if seed_size > 0:
             mask = np.zeros(segm.shape, dtype=bool)
@@ -422,7 +422,7 @@ def transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_components=5,
     # stds = mm.covariances_  # for covariance_type='diag'
     # diff_means = np.max(mm.means_, axis=0) - np.min(mm.means_, axis=0)
     for mean, covar in zip(mm.means_, mm.covariances_):
-        std = np.sqrt(covar + 1) * 2  + slic_size
+        std = np.sqrt(covar + 1) * 2 + slic_size
         mean = ndimage.gaussian_filter1d(mean, 1)
         std = ndimage.gaussian_filter1d(std, 1)
         max_dist = np.max(mean + 2 * std)
@@ -594,6 +594,7 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre,
     :param (int, int) point: single points
     :param (int, int) centre: center of model
     :param [[float]] cum_distribution: cumulative histogram
+    :param float angle_shift:
     :return float:
 
     >>> chist = [[1.0, 1.0, 0.8, 0.7, 0.6, 0.5, 0.3, 0.0, 0.0],
@@ -813,7 +814,7 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
         if cdist_init_2 > dict_thresholds['centre_init'] ** 2:
             centre_new = init_centres[i] + \
                          (dict_thresholds['centre_init'] / np.sqrt(cdist_init_2)) \
-                          * (np.array(centre_new) - np.array(init_centres[i]))
+                         * (np.array(centre_new) - np.array(init_centres[i]))
 
         cdist_act_2 = np.sum((np.array(centre_new) - np.array(centre)) ** 2)
         if cdist_act_2 <= dict_thresholds['centre'] ** 2 \
@@ -1081,7 +1082,8 @@ def compute_rg_crit(labels, lut_data_cost, lut_shape_cost, slic_weights, edges,
                                   coef_shape * lut_shape_cost[all_range, labels]))
     if coef_pairwise > 0:
         pairwise_costs = compute_pairwise_penalty(edges, labels,
-                                      prob_label_trans[0], prob_label_trans[1])
+                                                  prob_label_trans[0],
+                                                  prob_label_trans[1])
         pairwise_costs[np.isinf(pairwise_costs)] = GC_REPLACE_INF
         crit += coef_pairwise * np.sum(pairwise_costs)
     return crit
@@ -1334,6 +1336,7 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     construct graph and set potentials and hard connect BG and FG in unary
 
     :param [int] candidates: list of candidates, neighbours of actual objects
+    :param [(int, int)] slic_points:
     :param [[int]] slic_neighbours: list of neighboring superpixel for each one
     :param [float] slic_weights: weight for each superpixel
     :param [int] labels: labels for each superpixel
@@ -1344,6 +1347,7 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
         object (class) with superpixel as first index
     :param float coef_data: weight for data priors
     :param float coef_shape: weight for shape priors
+    :param float coef_pairwise: CG pairwise coeficient
     :param prob_label_trans: probability transition between background (first)
         and objects and among objects (second)
     :return:
@@ -1584,7 +1588,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
             candidates, labels_gc = [], labels.copy()
             for i in range(len(centres)):
                 candidates += get_neighboring_candidates(slic_neighbours, labels,
-                                                        i + 1, allow_obj_swap)
+                                                         i + 1, allow_obj_swap)
 
             lut_shape_cost, centres, shifts, volumes = update_shape_costs_points(
                 lut_shape_cost, slic, slic_points, labels, init_centres, centres,
@@ -1603,7 +1607,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
 
         else:
             for i in range(len(centres)):
-                candidates = get_neighboring_candidates(slic_neighbours,labels,
+                candidates = get_neighboring_candidates(slic_neighbours, labels,
                                                         i + 1, allow_obj_swap)
 
                 lut_shape_cost, centres, shifts, volumes = update_shape_costs_points(

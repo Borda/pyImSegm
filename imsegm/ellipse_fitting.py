@@ -160,6 +160,10 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
 
         where `success` indicates whether the model estimation succeeded
         (`True` or `None` for success, `False` for failure).
+    points_all: list
+    weights: list
+    labels: list
+    table_prob: list
     min_samples : int float
         The minimum number of points points to fit a model to.
     residual_threshold : float

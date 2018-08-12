@@ -62,10 +62,10 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
 
     :param ndarray features:
     :param int nb_classes: number of expected classes
-    :param str proba_type: tyre of used model
     :param float pca_coef: range (0, 1) or None
     :param bool use_scaler: whether use a scaler
     :param str estim_model: used model
+    :param int max_iter:
     :return:
 
     >>> np.random.seed(0)
@@ -216,6 +216,7 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
 
     :param [[float]] features: list of features per segment
     :param int nb_classes: number of classes
+    :param int init: initialisation
     :return [[float]]: probabilities that each feature belongs to each class
 
     >>> np.random.seed(0)
@@ -248,6 +249,8 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++',
 
     :param [[float]] features: list of features per segment
     :param int nb_classes:, number of classes
+    :param str init_type: initialization
+    :param int max_iter: maximal number of iterations
     :return [[float]]: probabilities that each feature belongs to each class
 
     >>> np.random.seed(0)
@@ -515,7 +518,7 @@ def compute_unary_cost(proba, min_prob=MIN_UNARY_PROB):
     """ compute the GC unary cost with some threshold on minimal values
 
     :param ndarray proba:
-    :param float min_proba:
+    :param float min_prob:
     :return ndarray:
 
     >>> compute_unary_cost(np.random.random((50, 2))).shape
@@ -662,7 +665,10 @@ def segment_graph_cut_general(segments, proba, image=None, features=None,
 
     :param ndarray features: features sor each instance
     :param ndarray segments: segmentation mapping each pixel into a class
+    :param ndarray image: image
     :param ndarray proba: probabilities that each feature belongs to each class
+    :param str edge_type:
+    :param str edge_cost:
     :param gc_regul: regularisation for GrphCut
     :param {} debug_visual:
     :return [int]: labelling by resulting classes
@@ -784,6 +790,7 @@ def compute_pairwise_cost_from_transitions(trans, min_prob=1e-9):
     """ compute pairwise cost from segments-label transitions
 
     :param ndarray trans:
+    :param float min_prob: minimal probability
     :return ndarray:
 
     >>> trans = np.array([[ 25.,   5.,  0.],

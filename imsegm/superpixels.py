@@ -119,10 +119,10 @@ def make_graph_segment_connect_edges(vertices, all_edges):
     :return:
     """
     # SEE: http://peekaboo-vision.blogspot.cz/2011/08/region-connectivity-graphs-in-python.html
-    all_edges = all_edges[all_edges[:, 0] != all_edges[:, 1],:]
+    all_edges = all_edges[all_edges[:, 0] != all_edges[:, 1], :]
     all_edges = np.sort(all_edges, axis=1)
     nb_vertices = len(vertices)
-    edge_hash = all_edges[:,0] + nb_vertices * all_edges[:, 1]
+    edge_hash = all_edges[:, 0] + nb_vertices * all_edges[:, 1]
     # find unique connections
     edges = np.unique(edge_hash)
     # undo hashing
@@ -215,7 +215,7 @@ def superpixel_centers(segments):
     [[1.0, 0.5, 2.5], [1.0, 0.0, 8.0], [1.0, 1.0, 8.0]]
     """
     logging.debug('compute centers for %d superpixels', segments.max())
-    centers = [list() for i in range(np.max(segments) + 1)]
+    centers = [list() for _ in range(np.max(segments) + 1)]
 
     if segments.ndim <= 2:
         # regionprops works for labels from 1

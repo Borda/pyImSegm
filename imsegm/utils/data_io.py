@@ -73,9 +73,10 @@ def convert_img_color_to_rgb(image, clr_space):
 def update_path(path_file, lim_depth=5, absolute=True):
     """ bubble in the folder tree up intil it found desired file 
     otherwise return original one
-    
+
     :param str path_file: path to the input file / folder
     :param int lim_depth: maximal depth for going up
+    :param str absolute: format absolute path
     :return str: path to output file / folder
 
     >>> path = 'sample_file.test'
@@ -221,9 +222,10 @@ def save_landmarks_txt(path_file, landmarks):
 
 def save_landmarks_csv(path_file, landmarks, dtype=float):
     """ save the landmarks into a given file of CSV type
-    
+
     :param str path_file: fName is name of the input file(whole path)
     :param [[int, int ]] landmarks: array of landmarks of size nb_landmarks x 2
+    :param type dtype: data type
     :return str: path to output file
     """
     assert os.path.exists(os.path.dirname(path_file)), \
@@ -321,9 +323,10 @@ def image_open(path_img):
 
 
 def io_imsave(path_img, img):
-    """ jsut a wrapper to suppers debug messages from the PIL function
+    """ just a wrapper to suppers debug messages from the PIL function
 
     :param str path_img:
+    :param ndarray img: image
     """
     log_level = logging.getLogger().getEffectiveLevel()
     logging.getLogger().setLevel(logging.INFO)
@@ -592,7 +595,7 @@ def convert_nifti_2_img(path_img_in, path_img_out):
 
     nim = nibabel.load(path_img_in)
 
-    if len(nim.get_data().shape) > 2: # colour
+    if len(nim.get_data().shape) > 2:  # colour
         img = np.swapaxes(np.swapaxes(nim.get_data(), 0, 3), 1, 4)
         dims = img.shape
         img = img.reshape([dims[0], dims[1], dims[3]])
@@ -1001,7 +1004,8 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
 def get_image2d_boundary_color(image, size=1):
     """ extract background color as median along image boundaries
 
-    :param image:
+    :param ndarray image:
+    :param float size:
     :return:
 
     >>> img = np.zeros((5, 15), dtype=int)

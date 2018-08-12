@@ -47,7 +47,7 @@ def i32(data):
 
 
 def get_hex(data, n=16):
-    return '|'.join(['%02x'%(ord(data[i])) for i in range(n)])
+    return '|'.join(['%02x' % (ord(data[i])) for i in range(n)])
 
 
 def read_struct(data, t):
@@ -76,14 +76,14 @@ def read_struct(data, t):
         # ! 4 extra bytes escaped
         low, high = struct.unpack('<hh', next_data[:4])
         size = (high << 16) + low
-        if size>0:
-            s = struct.unpack('s', next_data[4:4+size])
-            next_data = next_data[4+4+size:]
+        if size > 0:
+            s = struct.unpack('s', next_data[4:4 + size])
+            next_data = next_data[4 + 4 + size:]
         else:
-            s=''
-            next_data = next_data[4+4:]
+            s = ''
+            next_data = next_data[4 + 4:]
         return [s, next_data]
-    raise ValueError('unknown type:%s'%type)
+    raise ValueError('unknown type:%s' % type)
 
 
 ZviImageTuple = namedtuple(
@@ -110,7 +110,7 @@ def read_image_container_content(stream):
     [m_PluginCLSID, next_data] = read_struct(next_data, 'I4')
     [others, next_data] = read_struct(next_data, 'I4')
     [layers, next_data] = read_struct(next_data, 'I4')
-    [scaling, next_data] = read_struct(next_data, 'I2')
+    [scaling, _] = read_struct(next_data, 'I2')
 
     zvi_image = ZviImageTuple(version, filename, width, height, depth,
                               pixel_format, count, valid_bits_per_pixel,
@@ -154,7 +154,7 @@ def read_item_storage_content(stream):
     [valid_bits_per_pixel, next_data] = read_struct(next_data, 'I4')
     [others, next_data] = read_struct(next_data, 'BLOB')
     [layers, next_data] = read_struct(next_data, 'BLOB')
-    [scaling, next_data] = read_struct(next_data, 'BLOB')
+    [scaling, _] = read_struct(next_data, 'BLOB')
     # offset is image size + header size(28)
     offset = width*height * PIXEL_FORMAT[pixel_format][0] + 28
     # parse the actual image data
@@ -207,7 +207,7 @@ def get_dir(file_name, ole=None):
         ole = OleFileIO_PL.OleFileIO(file_name)
     for s in ole.listdir():
         stream = ole.openstream(s)
-        dirs.append('%10d %s'%(len(stream.read()), s))
+        dirs.append('%10d %s' % (len(stream.read()), s))
     return dirs
 
 

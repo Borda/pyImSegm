@@ -209,6 +209,7 @@ def cython_img2d_color_std(im, seg, means=None):
 
     :param ndarray im: input RGB image
     :param ndarray seg: segmentation og the image
+    :param ndarray means: precomputed feature means
     :return: np.array<nb_lbs, 3> matrix features per segment
 
     >>> image = np.zeros((2, 10, 3))
@@ -278,6 +279,7 @@ def numpy_img2d_color_std(im, seg, means=None):
 
     :param ndarray im: input RGB image
     :param ndarray seg: segmentation og the image
+    :param ndarray means: precomputed feature means
     :return: np.array<nb_lbs, 3> matrix features per segment
 
     >>> image = np.zeros((2, 10, 3))
@@ -459,6 +461,7 @@ def cython_img3d_gray_std(im, seg, mean=None):
 
     :param ndarray im: input RGB image
     :param ndarray seg: segmentation og the image
+    :param ndarray mean: precomputed feature means
     :return:np.array<nb_lbs, 1> vector of mean colour per segment
 
     >>> image = np.zeros((2, 3, 8))
@@ -522,6 +525,7 @@ def numpy_img3d_gray_std(im, seg, means=None):
 
     :param ndarray im: input RGB image
     :param ndarray seg: segmentation og the image
+    :param ndarray means: precomputed feature means
     :return: np.array<nb_lbs, 3> matrix features per segment
 
     >>> image = np.zeros((2, 3, 8))
@@ -632,8 +636,9 @@ def compute_image3d_gray_statistic(image, segm,
     """ compute complete descriptors / statistic on gray (3D) images
 
     :param ndarray image:
-    :param ndarray segm:
+    :param ndarray segm: segmentation
     :param list_feature_flags:
+    :param str ch_name: channel name
     :return np.ndarray<nb_samples, nb_features>, [str]:
 
     >>> image = np.zeros((2, 3, 8))
@@ -725,8 +730,9 @@ def compute_image2d_color_statistic(image, segm,
     """ compute complete descriptors / statistic on color (2D) images
 
     :param ndarray image:
-    :param ndarray segm:
+    :param ndarray segm: segmentation
     :param list_feature_flags:
+    :param str color_name: channel name
     :return np.ndarray<nb_samples, nb_features>, [str]:
 
     >>> image = np.zeros((2, 10, 3))
@@ -1263,7 +1269,7 @@ def extend_segm_by_struct_elem(segm, struc_elem):
         % (repr(segm.shape), repr(struc_elem.shape))
 
     shape_new = np.array(segm.shape[:struc_elem.ndim]) \
-                 + np.array(struc_elem.shape)
+                + np.array(struc_elem.shape)
     begin = (np.array(struc_elem.shape) / 2).astype(int)
     if segm.ndim == struc_elem.ndim:
         segm_extend = np.full(shape_new, fill_value=np.NaN)
@@ -1423,7 +1429,7 @@ def compute_label_hist_proba(segm, position, struc_elem):
         'initial dim of segm %s should match element %s' \
         % (repr(segm_select.shape), repr(struc_elem))
     segm_mask = np.rollaxis(segm_select, -1, 0) \
-                 * np.tile(struc_elem, (segm_select.shape[-1], 1, 1))
+                * np.tile(struc_elem, (segm_select.shape[-1], 1, 1))
     hist = np.sum(segm_mask, axis=tuple(range(1, segm_mask.ndim)))
     return hist
 
@@ -1596,7 +1602,7 @@ def shift_ray_features(ray_dist, method='phase'):
     """ shift Ray features ti the global maxim to be rotation invariant
 
     :param [float] ray_dist: array of features
-    :param str _method: use method for estimate shift maxima (phase or max)
+    :param str method: use method for estimate shift maxima (phase or max)
     :return [float]:
 
     >>> vec = np.array([43, 46, 44, 39, 28, 18, 12, 10,  9, 12, 22, 28])

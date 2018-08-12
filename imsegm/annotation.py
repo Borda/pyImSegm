@@ -327,7 +327,9 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     """ load all info and group position info according name if stack
 
     :param str path_txt:
+    :param [int] stages:
     :param [str] pos_columns:
+    :param {int: [int]} dict_slice_tol:
     :return: DF
 
     >>> path_txt = os.path.join(tl_data.update_path('data_images'),

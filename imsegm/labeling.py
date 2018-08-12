@@ -377,7 +377,7 @@ def mask_segm_labels(im_labeling, labels, mask_init=None):
 
 
 def sequence_labels_merge(labels_stack, dict_colors, labels_free, change_label=-1):
-    """ the input is time series of labeled images and output id labeled image
+    """ the input is time series of labeled images and output idx labeled image
     with labels that was constant for all the time
     the special case is using free labels which can be assumed as any labeled
 
@@ -510,6 +510,7 @@ def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
 
     :param ndarray seg_ref: np.array<height, width>
     :param ndarray seg_relabel: np.array<height, width>
+    :param bool keep_bg: keep the background
     :return ndarray: np.array<height, width>
 
     >>> atlas1 = np.zeros((7, 15), dtype=int)
@@ -572,7 +573,7 @@ def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
         lut[lb_est] = lb_ref
         overlap[lb_ref, :] = 0
         overlap[:, lb_est] = 0
-    # fill all not used by its equal id it is not used yet
+    # fill all not used by its equal idx it is not used yet
     for i, lb in enumerate(lut):
         if lb == -1 and i not in lut:
             lut[i] = i
@@ -684,7 +685,7 @@ def compute_boundary_distances(segm_ref, segm):
                                  range(segm_ref.shape[0]))
     segr_boundary = sk_segm.find_boundaries(segm_ref, mode='thick')
     points = np.array([grid_x[segr_boundary].ravel(),
-                            grid_y[segr_boundary].ravel()]).T
+                       grid_y[segr_boundary].ravel()]).T
     segm_boundary = sk_segm.find_boundaries(segm, mode='thick')
     segm_distance = ndimage.distance_transform_edt(~segm_boundary)
     dist = segm_distance[segr_boundary].ravel()
@@ -699,6 +700,7 @@ def assume_bg_on_boundary(segm, bg_label=0, boundary_size=1):
 
     :param ndarray segm:
     :param int bg_label:
+    :param float boundary_size:
     :return:
 
     >>> segm = np.zeros((6, 12), dtype=int)

@@ -98,9 +98,9 @@ def run_segm2d_gmm_gc(img2d, dir_name, dict_params, types_edge=('model', 'const'
                 debug_visual=dict_imgs, **dict_params)
 
             show_segm_debugs_2d(dict_imgs, path_dir,
-                        'fig_regul-%.2f_edge-%s_debug.png' % (regul, edge))
+                                'fig_regul-%.2f_edge-%s_debug.png' % (regul, edge))
             show_segm_results_2d(img2d, seg, path_dir,
-                        'fig_regul-%.2f_edge-%s.png' % (regul, edge))
+                                 'fig_regul-%.2f_edge-%s.png' % (regul, edge))
             dict_imgs = None
 
 
