@@ -7,20 +7,29 @@ jobs:
       steps: &steps
         - checkout
         # INSTALLATION
-        - run: sudo apt-get update
-        - run: sudo apt-get install tk-dev pkg-config python-dev python-tk
-        - run: sudo pip install --upgrade pip setuptools
-        - run: sudo pip install nose coverage pytest pytest-cov
-        - run: pip install -r requirements.txt --user
+        - run:
+            name: Install Packages
+            command: |
+              sudo apt-get update
+              sudo apt-get install tk-dev pkg-config python-dev python-tk
+              sudo pip install --upgrade pip setuptools
+              sudo pip install nose coverage pytest pytest-cov
+              pip install -r requirements.txt --user
 
         # BUILDING
-        - run: mkdir libs && mkdir output && mkdir results && mkdir test-reports
-        - run: gcc --version ; python --version ; pip --version ; pwd ; ls -l
-        - run: python setup.py build_ext --inplace
+        - run:
+            name: Building project
+            command: |
+              mkdir libs && mkdir output && mkdir results && mkdir test-reports
+              gcc --version ; python --version ; pip --version ; pwd ; ls -l
+              python setup.py build_ext --inplace
 
         # TESTING
-        - run: coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
-        - run: python setup.py check -m -s
+        - run:
+            name: Testing
+            command: |
+              coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
+              python setup.py check -m -s
 
         # ANNOTATION section
         - run: python handling_annotations/run_image_color_quantization.py -imgs "./data_images/drosophila_ovary_slice/segm_rgb/*.png"
@@ -57,8 +66,11 @@ jobs:
         - run: python experiments_ovary_detect/run_egg_swap_orientation.py
 
         # PASSING
-        - run: python setup.py install --user
-        - run: coverage report && coverage xml -o test-reports/coverage.xml
+        - run:
+            name: Finalise
+            command: |
+              python setup.py install --user
+              coverage report && coverage xml -o test-reports/coverage.xml
 
         - store_test_results:
             path: test-reports
