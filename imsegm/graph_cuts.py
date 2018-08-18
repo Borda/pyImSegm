@@ -12,7 +12,7 @@ from skimage import filters
 from sklearn import metrics, preprocessing
 from sklearn import pipeline, cluster, mixture, decomposition
 
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.drawing as tl_visu
 import imsegm.superpixels as seg_spx
 import imsegm.descriptors as seg_fts
 

@@ -10,7 +10,7 @@ import numpy as np
 from scipy import ndimage
 import skimage.segmentation as sk_segm
 
-import imsegm.utils.data_io as tl_data
+import imsegm.utilities.data_io as tl_data
 
 
 def contour_binary_map(seg, label=1, include_boundary=False):

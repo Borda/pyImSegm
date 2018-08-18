@@ -19,7 +19,7 @@ from skimage import morphology
 # from numba.decorators import jit
 # from numba import int32, int64, float32
 
-import imsegm.utils.data_io as tl_data
+import imsegm.utilities.data_io as tl_data
 try:
     import imsegm.features_cython as fts_cython
     # logging.debug('try to load Cython implementation')  # CRASH logger

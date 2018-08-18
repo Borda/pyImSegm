@@ -15,7 +15,7 @@ from PIL import Image
 from scipy import interpolate
 
 # sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_data
+import imsegm.utilities.data_io as tl_data
 
 COLUMNS_POSITION = ('ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y')
 SLICE_NAME_GROUPING = 'stack_path'

@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
-import imsegm.utils.data_io as tl_data
+import imsegm.utilities.data_io as tl_data
 import imsegm.region_growing as tl_rg
 
 PATH_DATA = tl_data.update_path('data_images', absolute=True)

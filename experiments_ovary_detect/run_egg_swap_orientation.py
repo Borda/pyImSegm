@@ -19,8 +19,8 @@ from functools import partial
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.experiments as tl_expt
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.experiments as tl_expt
 import run_ellipse_annot_match as r_match
 
 IMAGE_CHANNEL = 0  # image channel for mass extraction

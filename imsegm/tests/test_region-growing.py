@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import adjusted_rand_score
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
 import imsegm.superpixels as seg_spx
 import imsegm.region_growing as seg_rg
 

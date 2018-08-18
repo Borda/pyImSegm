@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 from scipy.misc import imresize
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utils.data_samples as d_spl
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.data_samples as d_spl
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
 import imsegm.pipelines as pipelines
 import imsegm.descriptors as seg_fts
 

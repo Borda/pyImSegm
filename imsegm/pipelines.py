@@ -12,7 +12,7 @@ import numpy as np
 import skimage.color as sk_color
 # from sklearn import mixture
 
-import imsegm.utils.experiments as tl_expt
+import imsegm.utilities.experiments as tl_expt
 import imsegm.graph_cuts as seg_gc
 import imsegm.superpixels as seg_sp
 import imsegm.descriptors as seg_fts

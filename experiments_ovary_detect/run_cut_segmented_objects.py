@@ -19,8 +19,8 @@ from functools import partial
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.experiments as tl_expt
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.experiments as tl_expt
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
