@@ -30,7 +30,7 @@ class TestLabels(unittest.TestCase):
         seg = self.segm
         logging.debug('matrix seg_pipe \n%s', repr(seg))
         labs = list(np.unique(seg))
-        path_dir = os.path.join(PATH_OUTPUT, 'test_labels')
+        path_dir = os.path.join(PATH_OUTPUT, 'temp_labels')
         if not os.path.exists(path_dir):
             os.mkdir(path_dir)
         for l in labs:

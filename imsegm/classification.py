@@ -127,6 +127,8 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
     >>> dict_classif = create_classifiers()
     >>> all(len(create_clf_param_search_grid(k)) > 0 for k in dict_classif)
     True
+    >>> create_clf_param_search_grid('none')
+    {}
     """
     def _log_space(b, e, n):
         return np.unique(np.logspace(b, e, n).astype(int)).tolist()
@@ -181,7 +183,7 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
 def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
     """ create parameter distribution for random search
 
-    :param name_classif: str, key name of classif
+    :param name_classif: str, key name of classifier
     :return: {str: ...}
 
     >>> create_clf_param_search_distrib()  # doctest: +ELLIPSIS
@@ -189,6 +191,8 @@ def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
     >>> dict_classif = create_classifiers()
     >>> all(len(create_clf_param_search_distrib(k)) > 0 for k in dict_classif)
     True
+    >>> create_clf_param_search_distrib('none')
+    {}
     """
     clf_params = {
         'RandForest': {
@@ -482,9 +486,14 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     4        0.106441   4.022076   4.022076  0.965971
     5        0.092639   0.022651   0.022651  1.016170
     >>> features[:, 2] = 1
-    >>> indices, df_scoring = feature_scoring_selection(features, labels)
+    >>> path_out = 'test_fts-select'
+    >>> os.mkdir(path_out)
+    >>> indices, df_scoring = feature_scoring_selection(features, labels,
+    ...                                                 path_out=path_out)
     >>> indices
     array([1, 0, 3, 4, 2])
+    >>> import shutil
+    >>> shutil.rmtree(path_out, ignore_errors=True)
     """
     logging.info('Feature selection for %s', repr(names))
     logging.debug('Features: %s and labels: %s',
@@ -572,16 +581,17 @@ def load_classifier(path_classif):
 
     :param str path_classif: path to the exported classifier
     :return {str: ...}:
+
+    >>> load_classifier('none.abc')
     """
-    assert os.path.exists(path_classif), 'missing: "%s"' % path_classif
-    logging.info('import classif from "%s"', path_classif)
+    logging.info('import classifier from "%s"', path_classif)
     if not os.path.exists(path_classif):
-        logging.debug('classif does not exist')
+        logging.debug('classifier does not exist')
         return None
     with open(path_classif, 'rb') as f:
         dict_clf = pickle.load(f)
     # dict_clf['name'] = classif_name
-    logging.debug('load classif: %s', repr(dict_clf.keys()))
+    logging.debug('load classifier: %s', repr(dict_clf.keys()))
     return dict_clf
 
 
@@ -849,8 +859,10 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     0.94444444444444442
     >>> labels[-50:] -= 1
     >>> data[-50:, :] -= 1
+    >>> path_out = 'temp_eval-cv-roc'
+    >>> os.mkdir(path_out)
     >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif,
-    ...                                         data, labels, cv, nb_thr=5)
+    ...                           data, labels, cv, nb_thr=5, path_out=path_out)
     >>> fp_tp
          FP   TP
     0  0.00  0.0
@@ -860,6 +872,8 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     4  1.00  1.0
     >>> auc
     0.875
+    >>> import shutil
+    >>> shutil.rmtree(path_out, ignore_errors=True)
     """
     mean_tpr = 0.0
     mean_fpr = np.linspace(0, 1, nb_thr)
@@ -1304,6 +1318,8 @@ def compute_metric_tpfp_tpfn(annot, segm, label_positive=None):
     1.0
     >>> compute_metric_tpfp_tpfn(annot, np.ones((50, 75)))
     nan
+    >>> compute_metric_tpfp_tpfn(annot, np.zeros((50, 75)))
+    0.0
     """
     tp, _, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
     if tp == np.nan:

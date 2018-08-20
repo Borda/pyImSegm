@@ -341,12 +341,12 @@ def load_image_2d(path_img):
     :return str, ndarray: image name, image as matrix
 
     PNG image
-    >>> img_name = 'testing_image'
+    >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(20, 20, 3))
     >>> path_img = export_image(os.path.join('.', img_name), img,
     ...                         stretch_range=False)
     >>> path_img
-    './testing_image.png'
+    './testing-image.png'
     >>> os.path.exists(path_img)
     True
     >>> img_new, _ = load_image_2d(path_img)
@@ -363,12 +363,12 @@ def load_image_2d(path_img):
     >>> os.remove(path_img)
 
     TIFF image
-    >>> img_name = 'testing_image'
+    >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(5, 20, 20))
     >>> path_img = export_image(os.path.join('.', img_name), img,
     ...                         stretch_range=False)
     >>> path_img
-    './testing_image.tiff'
+    './testing-image.tiff'
     >>> os.path.exists(path_img)
     True
     >>> img_new, _ = load_image_2d(path_img)
@@ -505,11 +505,11 @@ def convert_img_2_nifti_gray(path_img_in, path_out):
 
     >>> np.random.seed(0)
     >>> img = np.random.random((150, 125))
-    >>> p_in = './test_sample_image.png'
+    >>> p_in = './temp_sample-image.png'
     >>> io.imsave(p_in, img)
     >>> p_out = convert_img_2_nifti_gray(p_in, '.')
     >>> p_out
-    'test_sample_image.nii'
+    'temp_sample-image.nii'
     >>> os.remove(p_out)
     >>> os.remove(p_in)
     """
@@ -540,11 +540,11 @@ def convert_img_2_nifti_rgb(path_img_in, path_out):
     :return str: path to output image
 
     >>> np.random.seed(0)
-    >>> p_in = './test_sample_image.png'
+    >>> p_in = './temp_sample-image.png'
     >>> io.imsave(p_in, np.random.random((150, 125, 3)))
     >>> p_nifty = convert_img_2_nifti_rgb(p_in, '.')
     >>> p_nifty
-    'test_sample_image.nii'
+    'temp_sample-image.nii'
     >>> os.remove(p_nifty)
     >>> os.remove(p_in)
     """
@@ -577,14 +577,14 @@ def convert_nifti_2_img(path_img_in, path_img_out):
     :return str: path to output image
 
     >>> np.random.seed(0)
-    >>> p_in = './test_sample_image.png'
+    >>> p_in = './temp_sample-image.png'
     >>> io.imsave(p_in, np.random.random((150, 125, 3)))
     >>> p_nifty = convert_img_2_nifti_rgb(p_in, '.')
     >>> p_nifty
-    'test_sample_image.nii'
-    >>> p_img = convert_nifti_2_img(p_nifty, './test_sample_image.jpg')
+    'temp_sample-image.nii'
+    >>> p_img = convert_nifti_2_img(p_nifty, './temp_sample-image.jpg')
     >>> p_img
-    './test_sample_image.jpg'
+    './temp_sample-image.jpg'
     >>> os.remove(p_nifty)
     >>> os.remove(p_img)
     >>> os.remove(p_in)
@@ -845,21 +845,21 @@ def load_images_list(path_imgs, im_range=255):
     :return [ndarray], [str]:
 
     >>> np.random.seed(0)
-    >>> path_in = './test_sample_image.png'
+    >>> path_in = './temp_sample-image.png'
     >>> io.imsave(path_in, np.random.random((150, 125, 3)))
-    >>> l_imgs, l_names = load_images_list([path_in, './test_sample.img'])
+    >>> l_imgs, l_names = load_images_list([path_in, './temp_sample.img'])
     >>> l_names
-    ['test_sample_image']
+    ['temp_sample-image']
     >>> [img.shape for img in l_imgs]
     [(150, 125, 3)]
     >>> [img.dtype for img in l_imgs]
     [dtype('uint8')]
     >>> os.remove(path_in)
-    >>> path_in = './test_sample_image.tif'
+    >>> path_in = './temp_sample-image.tif'
     >>> io.imsave(path_in, np.random.random((150, 125, 3)))
-    >>> l_imgs, l_names = load_images_list([path_in, './test_sample.img'])
+    >>> l_imgs, l_names = load_images_list([path_in, './temp_sample.img'])
     >>> l_names
-    ['test_sample_image']
+    ['temp_sample-image']
     >>> os.remove(path_in)
     """
     list_images, list_names = [], []

@@ -49,7 +49,7 @@ class TestSuperpixels(unittest.TestCase):
         fig, axarr = plt.subplots(ncols=2)
         axarr[0].imshow(self.img)
         axarr[1].imshow(slic, cmap=plt.cm.jet)
-        fig.savefig(os.path.join(PATH_OUTPUT, 'test_superpixels.png'))
+        fig.savefig(os.path.join(PATH_OUTPUT, 'temp_superpixels.png'))
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             plt.show()
         plt.close(fig)
