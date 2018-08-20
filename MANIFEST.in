@@ -1,7 +1,7 @@
 # Manifest syntax https://docs.python.org/2/distutils/sourcedist.html
 graft wheelhouse
 
-recursive-exclude __pycache__ build  *.pyc *.pyo *.orig
+recursive-exclude __pycache__ *.pyc *.pyo *.orig
 
 # Include the README
 include *.md
@@ -12,8 +12,17 @@ include LICENSE
 # Include the Requirements
 include requirements.txt
 
+# Include package
+recursive-include imsegm *.py *.pyx
+
+# Include setup
+include setup.*
+
 # Exclude build configs
 exclude *.yml
+
+# Exclude tests
+exclude test*.py
 
 # Include the experiments
 recursive-include experiments_* *.py *.json
@@ -38,10 +47,10 @@ include data_images/others/lena.png
 prune .git
 prune libs
 prune venv
-prune tests
-prune test*
+prune build
 prune docs
 prune data_images
+prune tests
 prune notebooks
 prune ij_macros
 prune output
