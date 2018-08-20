@@ -107,7 +107,7 @@ def run_segm2d_gmm_gc(img2d, dir_name, dict_params, types_edge=('model', 'const'
 class TestPipelinesGMM(unittest.TestCase):
 
     img_obj = d_spl.load_sample_image(d_spl.IMAGE_OBJECTS)
-    img_star = d_spl.load_sample_image(d_spl.IMAGE_STAR_2)
+    img_star = d_spl.load_sample_image(d_spl.IMAGE_STAR)
     img_islet = d_spl.load_sample_image(d_spl.IMAGE_LANGER_ISLET)
     img_histo = d_spl.load_sample_image(d_spl.IMAGE_HISTOL_FLAGSHIP)
     img_disc = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_DISC)

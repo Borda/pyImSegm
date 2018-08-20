@@ -1,3 +1,48 @@
-include README.md
+# Manifest syntax https://docs.python.org/2/distutils/sourcedist.html
+graft wheelhouse
+
+recursive-exclude __pycache__ build  *.pyc *.pyo *.orig
+
+# Include the README
+include *.md
+
+# Include the license file
 include LICENSE
+
+# Include the Requirements
 include requirements.txt
+
+# Exclude build configs
+exclude *.yml
+
+# Include the experiments
+recursive-include experiments_* *.py *.json
+recursive-include handling_annotations *.py
+
+# Include the figures
+recursive-include figures *.gif *.jpg *.png
+
+# Include the sample images
+include data_images/others/lena.png
+    data_images/synthetic/reference.jpg
+    data_images/synthetic/texture_rgb_3cls.jpg
+    data_images/others/sea_starfish-2.jpg
+    data_images/histology_CIMA/29-041-Izd2-w35-CD31-3-les1.jpg
+    data_images/histology_Flagship/Case001_Cytokeratin.jpg
+    data_images/drosophila_disc/image/img_6.jpg
+    data_images/drosophila_disc/annot/img_6.png
+    data_images/drosophila_ovary_slice/image/insitu7545.jpg
+    data_images/drosophila_ovary_slice/annot_struct/insitu7545.png
+    data_images/langerhans_islets/image/gtExoIsl_21.jpg
+
+prune .git
+prune libs
+prune venv
+prune tests
+prune test*
+prune docs
+prune data_images
+prune notebooks
+prune ij_macros
+prune output
+prune results
