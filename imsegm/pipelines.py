@@ -12,7 +12,7 @@ import numpy as np
 import skimage.color as sk_color
 # from sklearn import mixture
 
-import imsegm.utils.experiments as tl_expt
+import imsegm.utilities.experiments as tl_expt
 import imsegm.graph_cuts as seg_gc
 import imsegm.superpixels as seg_sp
 import imsegm.descriptors as seg_fts
@@ -46,6 +46,7 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
     :param str estim_model: estimating model
     :param float gc_regul: GC regularisation
     :param str gc_edge_type: graphCut edge type
+    :param bool use_scaler: using scaler block in pipeline
     :param debug_visual: {str: ...}
     :return [[int]]: segmentation matrix maping each pixel into a class
 
@@ -69,8 +70,7 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
             image = np.rollaxis(np.tile(image, (3, 1, 1)), 0, 3)
         debug_visual['image'] = image
         debug_visual['slic'] = slic
-        debug_visual['slic_mean'] = sk_color.label2rgb(slic, image,
-                                                          kind='avg')
+        debug_visual['slic_mean'] = sk_color.label2rgb(slic, image, kind='avg')
 
     model = seg_gc.estim_class_model(features, nb_classes, estim_model,
                                      pca_coef, use_scaler)

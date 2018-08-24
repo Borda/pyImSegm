@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import adjusted_rand_score
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
 import imsegm.ellipse_fitting as seg_fit
 
 # set some default paths
@@ -59,7 +59,8 @@ class TestEllipseFitting(unittest.TestCase):
                                            points_all, weights, labels,
                                            table_prob, min_samples=0.6,
                                            residual_threshold=15, max_trials=50)
-            if model is None: continue
+            if model is None:
+                continue
             ellipses.append(model.params)
             crit = model.criterion(points_all, weights, labels, table_prob)
             crits.append(np.round(crit))

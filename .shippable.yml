@@ -52,6 +52,7 @@ script:
 
   # - nosetests -v --with-xunit --xunit-file=$CI_REPORTS/nosetests.xml
   - nosetests -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm --xunit-file=$CI_REPORTS/nosetests.xml
+  - python setup.py check -m -s
 
   # ANNOTATION section
   - python handling_annotations/run_image_color_quantization.py -imgs "./data_images/drosophila_ovary_slice/segm_rgb/*.png"

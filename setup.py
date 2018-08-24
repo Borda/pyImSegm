@@ -17,9 +17,8 @@ Release package
 
 Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
-import pip
-import logging
-import pkg_resources
+
+import os
 try:
     from setuptools import setup, Extension, find_packages  # , Command
     from setuptools.command.build_ext import build_ext
@@ -47,22 +46,14 @@ class BuildExt(build_ext):
 
 
 def _parse_requirements(file_path):
-    pip_ver = pkg_resources.get_distribution('pip').version
-    pip_version = list(map(int, pip_ver.split('.')[:2]))
-    if pip_version >= [6, 0]:
-        raw = pip.req.parse_requirements(file_path,
-                                         session=pip.download.PipSession())
-    else:
-        raw = pip.req.parse_requirements(file_path)
-    return [str(i.req) for i in raw]
+    with open(file_path) as fp:
+        reqs = [r.rstrip() for r in fp.readlines() if not r.startswith('#')]
+        return reqs
 
 
-# parse_requirements() returns generator of pip.req.InstallRequirement objects
-try:
-    install_reqs = _parse_requirements("requirements.txt")
-except Exception:
-    logging.warning('Fail load requirements file, so using default ones.')
-    install_reqs = ['Cython', 'numpy']
+HERE = os.path.abspath(os.path.dirname(__file__))
+setup_reqs = ['Cython', 'numpy']
+install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
 
 setup(
@@ -85,7 +76,7 @@ setup(
                                                  '-march=native', '-fopenmp'],
                            extra_link_args=['-fopenmp'],
                            )],
-    setup_requires=install_reqs,
+    setup_requires=setup_reqs,
     install_requires=install_reqs,
     # include_dirs = [np.get_include()],
     include_package_data=True,

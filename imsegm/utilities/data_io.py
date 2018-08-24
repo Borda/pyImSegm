@@ -18,7 +18,7 @@ from scipy import ndimage
 from skimage import exposure, io, color, measure
 import nibabel
 
-import imsegm.utils.read_zvi as read_zvi
+import imsegm.utilities.read_zvi as read_zvi
 
 COLUMNS_COORDS = ['X', 'Y']
 DEFAULT_PATTERN_SET_LIST_FILE = '*.txt'
@@ -73,9 +73,10 @@ def convert_img_color_to_rgb(image, clr_space):
 def update_path(path_file, lim_depth=5, absolute=True):
     """ bubble in the folder tree up intil it found desired file 
     otherwise return original one
-    
+
     :param str path_file: path to the input file / folder
     :param int lim_depth: maximal depth for going up
+    :param str absolute: format absolute path
     :return str: path to output file / folder
 
     >>> path = 'sample_file.test'
@@ -221,9 +222,10 @@ def save_landmarks_txt(path_file, landmarks):
 
 def save_landmarks_csv(path_file, landmarks, dtype=float):
     """ save the landmarks into a given file of CSV type
-    
+
     :param str path_file: fName is name of the input file(whole path)
     :param [[int, int ]] landmarks: array of landmarks of size nb_landmarks x 2
+    :param type dtype: data type
     :return str: path to output file
     """
     assert os.path.exists(os.path.dirname(path_file)), \
@@ -321,9 +323,10 @@ def image_open(path_img):
 
 
 def io_imsave(path_img, img):
-    """ jsut a wrapper to suppers debug messages from the PIL function
+    """ just a wrapper to suppers debug messages from the PIL function
 
     :param str path_img:
+    :param ndarray img: image
     """
     log_level = logging.getLogger().getEffectiveLevel()
     logging.getLogger().setLevel(logging.INFO)
@@ -338,12 +341,12 @@ def load_image_2d(path_img):
     :return str, ndarray: image name, image as matrix
 
     PNG image
-    >>> img_name = 'testing_image'
+    >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(20, 20, 3))
     >>> path_img = export_image(os.path.join('.', img_name), img,
     ...                         stretch_range=False)
     >>> path_img
-    './testing_image.png'
+    './testing-image.png'
     >>> os.path.exists(path_img)
     True
     >>> img_new, _ = load_image_2d(path_img)
@@ -360,12 +363,12 @@ def load_image_2d(path_img):
     >>> os.remove(path_img)
 
     TIFF image
-    >>> img_name = 'testing_image'
+    >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(5, 20, 20))
     >>> path_img = export_image(os.path.join('.', img_name), img,
     ...                         stretch_range=False)
     >>> path_img
-    './testing_image.tiff'
+    './testing-image.tiff'
     >>> os.path.exists(path_img)
     True
     >>> img_new, _ = load_image_2d(path_img)
@@ -502,11 +505,11 @@ def convert_img_2_nifti_gray(path_img_in, path_out):
 
     >>> np.random.seed(0)
     >>> img = np.random.random((150, 125))
-    >>> p_in = './test_sample_image.png'
+    >>> p_in = './temp_sample-image.png'
     >>> io.imsave(p_in, img)
     >>> p_out = convert_img_2_nifti_gray(p_in, '.')
     >>> p_out
-    'test_sample_image.nii'
+    'temp_sample-image.nii'
     >>> os.remove(p_out)
     >>> os.remove(p_in)
     """
@@ -537,11 +540,11 @@ def convert_img_2_nifti_rgb(path_img_in, path_out):
     :return str: path to output image
 
     >>> np.random.seed(0)
-    >>> p_in = './test_sample_image.png'
+    >>> p_in = './temp_sample-image.png'
     >>> io.imsave(p_in, np.random.random((150, 125, 3)))
     >>> p_nifty = convert_img_2_nifti_rgb(p_in, '.')
     >>> p_nifty
-    'test_sample_image.nii'
+    'temp_sample-image.nii'
     >>> os.remove(p_nifty)
     >>> os.remove(p_in)
     """
@@ -574,14 +577,14 @@ def convert_nifti_2_img(path_img_in, path_img_out):
     :return str: path to output image
 
     >>> np.random.seed(0)
-    >>> p_in = './test_sample_image.png'
+    >>> p_in = './temp_sample-image.png'
     >>> io.imsave(p_in, np.random.random((150, 125, 3)))
     >>> p_nifty = convert_img_2_nifti_rgb(p_in, '.')
     >>> p_nifty
-    'test_sample_image.nii'
-    >>> p_img = convert_nifti_2_img(p_nifty, './test_sample_image.jpg')
+    'temp_sample-image.nii'
+    >>> p_img = convert_nifti_2_img(p_nifty, './temp_sample-image.jpg')
     >>> p_img
-    './test_sample_image.jpg'
+    './temp_sample-image.jpg'
     >>> os.remove(p_nifty)
     >>> os.remove(p_img)
     >>> os.remove(p_in)
@@ -592,7 +595,7 @@ def convert_nifti_2_img(path_img_in, path_img_out):
 
     nim = nibabel.load(path_img_in)
 
-    if len(nim.get_data().shape) > 2: # colour
+    if len(nim.get_data().shape) > 2:  # colour
         img = np.swapaxes(np.swapaxes(nim.get_data(), 0, 3), 1, 4)
         dims = img.shape
         img = img.reshape([dims[0], dims[1], dims[3]])
@@ -842,21 +845,21 @@ def load_images_list(path_imgs, im_range=255):
     :return [ndarray], [str]:
 
     >>> np.random.seed(0)
-    >>> path_in = './test_sample_image.png'
+    >>> path_in = './temp_sample-image.png'
     >>> io.imsave(path_in, np.random.random((150, 125, 3)))
-    >>> l_imgs, l_names = load_images_list([path_in, './test_sample.img'])
+    >>> l_imgs, l_names = load_images_list([path_in, './temp_sample.img'])
     >>> l_names
-    ['test_sample_image']
+    ['temp_sample-image']
     >>> [img.shape for img in l_imgs]
     [(150, 125, 3)]
     >>> [img.dtype for img in l_imgs]
     [dtype('uint8')]
     >>> os.remove(path_in)
-    >>> path_in = './test_sample_image.tif'
+    >>> path_in = './temp_sample-image.tif'
     >>> io.imsave(path_in, np.random.random((150, 125, 3)))
-    >>> l_imgs, l_names = load_images_list([path_in, './test_sample.img'])
+    >>> l_imgs, l_names = load_images_list([path_in, './temp_sample.img'])
     >>> l_names
-    ['test_sample_image']
+    ['temp_sample-image']
     >>> os.remove(path_in)
     """
     list_images, list_names = [], []
@@ -1001,7 +1004,8 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
 def get_image2d_boundary_color(image, size=1):
     """ extract background color as median along image boundaries
 
-    :param image:
+    :param ndarray image:
+    :param float size:
     :return:
 
     >>> img = np.zeros((5, 15), dtype=int)

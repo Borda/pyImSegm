@@ -29,7 +29,7 @@ from sklearn import pipeline, linear_model, neural_network
 from sklearn import model_selection
 
 import imsegm.labeling as seg_lbs
-import imsegm.utils.experiments as tl_expt
+import imsegm.utilities.experiments as tl_expt
 
 # NAME_FILE_RESULTS = 'results.csv'
 TEMPLATE_NAME_CLF = 'classifier_{}.pkl'
@@ -100,7 +100,8 @@ def create_classifiers(nb_jobs=-1):
 def create_clf_pipeline(name_classif=DEFAULT_CLASSIF_NAME, pca_coef=0.95):
     """ create complete pipeline with all required steps
 
-    :param name_classif: str, key name of classif
+    :param float pca_coef: sklearn PCA -int/float/None
+    :param name_classif: str, key name of classif.
     :return: object
 
     >>> create_clf_pipeline()  # doctest: +ELLIPSIS
@@ -108,7 +109,7 @@ def create_clf_pipeline(name_classif=DEFAULT_CLASSIF_NAME, pca_coef=0.95):
     """
     # create the pipeline
     components = [('scaler', preprocessing.StandardScaler())]
-    if not pca_coef is None:
+    if pca_coef is not None:
         components += [('reduce_dim', decomposition.PCA(pca_coef))]
     components += [('classif', create_classifiers()[name_classif])]
     clf_pipeline = pipeline.Pipeline(components)
@@ -126,6 +127,8 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
     >>> dict_classif = create_classifiers()
     >>> all(len(create_clf_param_search_grid(k)) > 0 for k in dict_classif)
     True
+    >>> create_clf_param_search_grid('none')
+    {}
     """
     def _log_space(b, e, n):
         return np.unique(np.logspace(b, e, n).astype(int)).tolist()
@@ -180,7 +183,7 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
 def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
     """ create parameter distribution for random search
 
-    :param name_classif: str, key name of classif
+    :param name_classif: str, key name of classifier
     :return: {str: ...}
 
     >>> create_clf_param_search_distrib()  # doctest: +ELLIPSIS
@@ -188,6 +191,8 @@ def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
     >>> dict_classif = create_classifiers()
     >>> all(len(create_clf_param_search_distrib(k)) > 0 for k in dict_classif)
     True
+    >>> create_clf_param_search_distrib('none')
+    {}
     """
     clf_params = {
         'RandForest': {
@@ -275,6 +280,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
 
     :param [int] y_true:
     :param [int] y_pred:
+    :param str metric_averages:
     :return {str: float}:
 
     >>> np.random.seed(0)
@@ -346,7 +352,8 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
     """ compute classification statistic between annotation and segmentation
 
     :param (ndarray, ndarray, str) annot_segm_name:
-    :param bool relabel:
+    :param [int] drop_labels: labels to be ignored
+    :param bool relabel: whether relabel
     :return:
 
     >>> np.random.seed(0)
@@ -404,7 +411,9 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=1,
     :param [ndarray] segms:
     :param [ndarray] annots:
     :param [str] names:
-    :param int nb_jobs:
+    :param [int] drop_labels: labels to be ignored
+    :param bool relabel: whether relabel
+    :param int nb_jobs: running jobs in parallel
     :return DF:
 
 
@@ -477,9 +486,14 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     4        0.106441   4.022076   4.022076  0.965971
     5        0.092639   0.022651   0.022651  1.016170
     >>> features[:, 2] = 1
-    >>> indices, df_scoring = feature_scoring_selection(features, labels)
+    >>> path_out = 'test_fts-select'
+    >>> os.mkdir(path_out)
+    >>> indices, df_scoring = feature_scoring_selection(features, labels,
+    ...                                                 path_out=path_out)
     >>> indices
     array([1, 0, 3, 4, 2])
+    >>> import shutil
+    >>> shutil.rmtree(path_out, ignore_errors=True)
     """
     logging.info('Feature selection for %s', repr(names))
     logging.debug('Features: %s and labels: %s',
@@ -528,6 +542,7 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None,
     :param classif: sklearn classif.
     :param str clf_name: name of selected classifier
     :param [str] feature_names: list of string names
+    :param {} params: extra parameters
     :param [str] label_names: list of string names of label_names
     :return str:
 
@@ -566,16 +581,17 @@ def load_classifier(path_classif):
 
     :param str path_classif: path to the exported classifier
     :return {str: ...}:
+
+    >>> load_classifier('none.abc')
     """
-    assert os.path.exists(path_classif), 'missing: "%s"' % path_classif
-    logging.info('import classif from "%s"', path_classif)
+    logging.info('import classifier from "%s"', path_classif)
     if not os.path.exists(path_classif):
-        logging.debug('classif does not exist')
+        logging.debug('classifier does not exist')
         return None
     with open(path_classif, 'rb') as f:
         dict_clf = pickle.load(f)
     # dict_clf['name'] = classif_name
-    logging.debug('load classif: %s', repr(dict_clf.keys()))
+    logging.debug('load classifier: %s', repr(dict_clf.keys()))
     return dict_clf
 
 
@@ -587,13 +603,14 @@ def export_results_clf_search(path_out, clf_name, clf_search):
     :param object clf_search:
     """
     assert os.path.isdir(path_out), 'missing folder: %s' % repr(path_out)
-    fn_path_out = lambda s: os.path.join(path_out,
-                                         'classif_%s_%s.txt' % (clf_name, s))
 
-    with open(fn_path_out('search_params_scores'), 'w') as f:
+    def _fn_path_out(s):
+        return os.path.join(path_out, 'classif_%s_%s.txt' % (clf_name, s))
+
+    with open(_fn_path_out('search_params_scores'), 'w') as f:
         f.write('\n'.join([repr(gs) for gs in clf_search.grid_scores_]))
 
-    with open(fn_path_out('search_params_best'), 'w') as f:
+    with open(_fn_path_out('search_params_best'), 'w') as f:
         params = clf_search.best_params_
         rows = ['{:30s} {}'.format('"{}":'.format(k), params[k])
                 for k in params]
@@ -601,9 +618,10 @@ def export_results_clf_search(path_out, clf_name, clf_search):
 
 
 def relabel_sequential(labels, uq_lbs=None):
-    """ relabel sequantila vetor staring from 0
+    """ relabel sequential vector staring from 0
 
-    :param [] labels:
+    :param [int] labels: all labels
+    :param [int] uq_lbs: unique labels
     :return []:
 
     >>> relabel_sequential([0, 0, 0, 5, 5, 5, 0, 5])
@@ -633,6 +651,10 @@ def create_classif_train_export(clf_name, features, labels, cross_val=10,
     :param ndarray features: features in dimension nb_samples x nb_features
     :param [int] labels: annotation for samples
     :param cross_val:
+    :param str search_type: search type
+    :param str eval_metric: evaluation metric
+    :param {} params: extra parameters
+    :param float pca_coef: sklearn PCA - int/float/None
     :param int nb_search_iter: number of searcher for hyper-parameters
     :param str path_out: path to directory for exporting classifier
     :param {str: ...} dict params: dictionary of paramters
@@ -837,8 +859,10 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     0.94444444444444442
     >>> labels[-50:] -= 1
     >>> data[-50:, :] -= 1
+    >>> path_out = 'temp_eval-cv-roc'
+    >>> os.mkdir(path_out)
     >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif,
-    ...                                         data, labels, cv, nb_thr=5)
+    ...                           data, labels, cv, nb_thr=5, path_out=path_out)
     >>> fp_tp
          FP   TP
     0  0.00  0.0
@@ -848,6 +872,8 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     4  1.00  1.0
     >>> auc
     0.875
+    >>> import shutil
+    >>> shutil.rmtree(path_out, ignore_errors=True)
     """
     mean_tpr = 0.0
     mean_fpr = np.linspace(0, 1, nb_thr)
@@ -922,6 +948,9 @@ def create_classif_search(name_clf, clf_pipeline, nb_labels,
                           nb_jobs=NB_JOBS_CLASSIF_SEARCH):
     """ create sklearn search depending on spec. random or grid
 
+    :param int nb_labels: number of labels
+    :param str search_type: hyper-params search type
+    :param str eval_scoring: evaluation metric
     :param nb_iter: int, for random number of tries
     :param name_clf: str, name of classif.
     :param clf_pipeline: object
@@ -1111,7 +1140,7 @@ def balance_dataset_by_(features, labels, balance_type='random',
 
     :param ndarray features: features in dimension nb_samples x nb_features
     :param [int] labels: annotation for samples
-    :param str type: balance_type of balancing dataset
+    :param str balance_type: type of balancing dataset
     :param min_samples: int or None, if None take the smallest class
     :return:
 
@@ -1152,7 +1181,8 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
 
     :param {str: ndarray} imgs_features: dictionary of name and features
     :param {str: ndarray} imgs_labels: dictionary of name and labels
-    :param balance: bool, wether balance_type number of sampler per class
+    :param [int] drop_labels: labels to be ignored
+    :param bool balance_type: whether balance_type number of sampler per class
     :return:
 
     >>> np.random.seed(0)
@@ -1288,6 +1318,8 @@ def compute_metric_tpfp_tpfn(annot, segm, label_positive=None):
     1.0
     >>> compute_metric_tpfp_tpfn(annot, np.ones((50, 75)))
     nan
+    >>> compute_metric_tpfp_tpfn(annot, np.zeros((50, 75)))
+    0.0
     """
     tp, _, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
     if tp == np.nan:

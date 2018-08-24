@@ -8,7 +8,7 @@ import os
 import logging
 
 import matplotlib
-if os.environ.get('DISPLAY','') == '' \
+if os.environ.get('DISPLAY', '') == '' \
         and matplotlib.rcParams['backend'] != 'agg':
     # logging.warning('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -240,7 +240,7 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
     :param ndarray img: image
     :param ndarray seg: segmentation
     :param int subfig_size: max image size
-    :param fool mid_image_color: used color image as bacround in middele
+    :param fool mid_image_gray: used color image as bacround in middele
     :param float mid_labels_alpha: alpha for middle segmentation overlap
     :return Figure:
 
@@ -286,10 +286,12 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9,
                                     drop_labels=None, segm_alpha=0.2):
     """ figure showing overlap annotation - segmentation - image
 
-    :param ndarray annot:
-    :param ndarray segm:
-    :param ndarray img:
+    :param ndarray annot: user annotation
+    :param ndarray segm: segmentation
+    :param ndarray img: original image
     :param int subfig_size:
+    :param float segm_alpha: use transparency
+    :param [int] drop_labels: labels to be ignored
     :return Figure:
 
     >>> img = np.random.random((100, 150, 3))
@@ -502,10 +504,11 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None,
                        points_reconst=None):
     """ visualise the segmentation with specific point and estimated ray dist.
 
-    :param segm:
-    :param points:
-    :param ray_dist_raw:
-    :param ray_dist:
+    :param ndarray segm:
+    :param [(float, float)] points:
+    :param [float] ray_dist_raw:
+    :param [float] ray_dist:
+    :param ndarray points_reconst:
     :return Figure:
 
     example, see unittests
@@ -886,6 +889,8 @@ def draw_graphcut_weighted_edges(segments, list_centers, edges, edge_weights,
                                  img_bg=None, img_alpha=0.5):
     """ visualise the edges on the overlapping a background image
 
+    :param float img_alpha: transparency
+    :param [(int, int)] list_centers:
     :param ndarray segments: np.array<h, w>
     :param ndarray edges: np.array<nb_edges, 2>
     :param ndarray edge_weights: np.array<nb_edges, 1>
@@ -1096,7 +1101,7 @@ def make_overlap_images_chess(imgs, chess_field=SIZE_CHESS_FIELD):
                 h_e = h_b + chess_field
             else:
                 h_e = max_size[1]
-            img[w_b:w_e, h_b:h_e]=imgs_w[idx][w_b:w_e, h_b:h_e]
+            img[w_b:w_e, h_b:h_e] = imgs_w[idx][w_b:w_e, h_b:h_e]
             idx = (idx+1) % len(imgs)
         idx_row = (idx_row+1) % len(imgs)
     return img

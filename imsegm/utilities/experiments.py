@@ -85,11 +85,8 @@ class Experiment(object):
         """ create the experiment folder and iterate while there is no available
         """
         # create results folder for experiments
-        if not os.path.exists(self.params.get('path_out')):
-            logging.error('no results folder: %s',
-                          repr(self.params.get('path_out')))
-            self.params['path_exp'] = ''
-            return
+        assert os.path.isdir(self.params.get('path_out')), \
+            'missing %s' % self.params.get('path_out')
         self.params = create_experiment_folder(self.params,
                                                self.__class__.__name__,
                                                stamp_unique=time_stamp)

@@ -15,7 +15,7 @@ from PIL import Image
 from scipy import interpolate
 
 # sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_data
+import imsegm.utilities.data_io as tl_data
 
 COLUMNS_POSITION = ('ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y')
 SLICE_NAME_GROUPING = 'stack_path'
@@ -327,7 +327,9 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     """ load all info and group position info according name if stack
 
     :param str path_txt:
+    :param [int] stages:
     :param [str] pos_columns:
+    :param {int: [int]} dict_slice_tol:
     :return: DF
 
     >>> path_txt = os.path.join(tl_data.update_path('data_images'),

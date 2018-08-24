@@ -15,9 +15,9 @@ from skimage import draw, transform
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utils.data_samples as d_spl
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.data_samples as d_spl
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
 import imsegm.descriptors as seg_fts
 import imsegm.superpixels as seg_spx
 
@@ -26,7 +26,7 @@ ANGULAR_STEP = 15
 # size of subfigure for visualise the Filter bank
 SUBPLOT_SIZE_FILTER_BANK = 3
 PATH_OUTPUT = tl_data.update_path('output', absolute=True)
-PATH_FIGURES_RAY = os.path.join(PATH_OUTPUT, 'test_ray_features')
+PATH_FIGURES_RAY = os.path.join(PATH_OUTPUT, 'temp_ray-features')
 # create the folder for visualisations
 if not os.path.exists(PATH_FIGURES_RAY):
     os.mkdir(PATH_FIGURES_RAY)
@@ -81,7 +81,7 @@ class TestFeatures(unittest.TestCase):
                 axarr[i, j].set_title(names[i][j])
                 axarr[i, j].imshow(f[j, :, :], cmap=plt.cm.gray)
         fig.tight_layout(pad=0.1, w_pad=0.1, h_pad=0.1)
-        p_fig = os.path.join(PATH_OUTPUT, 'test_filter_banks.png')
+        p_fig = os.path.join(PATH_OUTPUT, 'temp_filter-banks.png')
         fig.savefig(p_fig)
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             plt.show()
@@ -172,7 +172,7 @@ class TestFeatures(unittest.TestCase):
         features, names = seg_fts.compute_selected_features_color2d(
                                          img, slic, seg_fts.FEATURES_SET_ALL)
 
-        path_dir = os.path.join(PATH_OUTPUT, 'test_image_rgb2d_features')
+        path_dir = os.path.join(PATH_OUTPUT, 'temp_image-rgb2d-features')
         if not os.path.exists(path_dir):
             os.mkdir(path_dir)
 

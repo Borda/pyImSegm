@@ -14,8 +14,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utils.data_samples as d_spl
-import imsegm.utils.data_io as tl_data
+import imsegm.utilities.data_samples as d_spl
+import imsegm.utilities.data_io as tl_data
 import imsegm.labeling as seg_lb
 
 # set the output put directory
@@ -30,7 +30,7 @@ class TestLabels(unittest.TestCase):
         seg = self.segm
         logging.debug('matrix seg_pipe \n%s', repr(seg))
         labs = list(np.unique(seg))
-        path_dir = os.path.join(PATH_OUTPUT, 'test_labels')
+        path_dir = os.path.join(PATH_OUTPUT, 'temp_labels')
         if not os.path.exists(path_dir):
             os.mkdir(path_dir)
         for l in labs:

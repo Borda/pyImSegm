@@ -13,8 +13,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utils.data_samples as d_spl
-import imsegm.utils.data_io as tl_data
+import imsegm.utilities.data_samples as d_spl
+import imsegm.utilities.data_io as tl_data
 import imsegm.superpixels as seg_spx
 
 # set default output path
@@ -49,7 +49,7 @@ class TestSuperpixels(unittest.TestCase):
         fig, axarr = plt.subplots(ncols=2)
         axarr[0].imshow(self.img)
         axarr[1].imshow(slic, cmap=plt.cm.jet)
-        fig.savefig(os.path.join(PATH_OUTPUT, 'test_superpixels.png'))
+        fig.savefig(os.path.join(PATH_OUTPUT, 'temp_superpixels.png'))
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             plt.show()
         plt.close(fig)

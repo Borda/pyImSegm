@@ -45,9 +45,9 @@ from skimage import segmentation
 from sklearn import metrics
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.experiments as tl_expt
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.experiments as tl_expt
+import imsegm.utilities.drawing as tl_visu
 import imsegm.pipelines as seg_pipe
 import imsegm.labeling as seg_lbs
 import imsegm.descriptors as seg_fts

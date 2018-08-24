@@ -10,7 +10,7 @@ from skimage import morphology
 
 from skimage.measure import fit as sk_fit
 # from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.drawing as tl_visu
 import imsegm.descriptors as seg_fts
 import imsegm.superpixels as seg_spx
 
@@ -160,6 +160,10 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
 
         where `success` indicates whether the model estimation succeeded
         (`True` or `None` for success, `False` for failure).
+    points_all: list
+    weights: list
+    labels: list
+    table_prob: list
     min_samples : int float
         The minimum number of points points to fit a model to.
     residual_threshold : float

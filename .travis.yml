@@ -35,14 +35,16 @@ install:
 #  - cd $root
 
   - pip install -r requirements.txt
-  - pip install "nose>=1.3.7" coverage codecov "pytest>=3.0.5" codacy-coverage
+  - pip install nose coverage codecov pytest codacy-coverage check-manifest
 
 before_script:
   - mkdir output && mkdir results
   - gcc --version ; python --version ; pip --version ; pwd ; ls -l
-  - python setup.py build_ext --inplace
+  - check-manifest
+  - python setup.py check -m -s
 
 script:
+  - python setup.py build_ext --inplace
   # - pytest imsegm -v --doctest-modules
   - nosetests imsegm -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
   - python setup.py install

@@ -11,7 +11,7 @@ import logging
 # from PIL import Image
 import numpy as np
 
-import imsegm.utils.data_io as tl_data
+import imsegm.utilities.data_io as tl_data
 
 SAMPLE_SEG_SIZE_2D_SMALL = (20, 10)
 SAMPLE_SEG_SIZE_2D_NORM = (150, 100)
@@ -22,8 +22,7 @@ PATH_IMAGES = tl_data.update_path('data_images')
 IMAGE_LENNA = os.path.join('others', 'lena.png')
 IMAGE_OBJECTS = os.path.join('synthetic', 'reference.jpg')
 IMAGE_3CLS = os.path.join('synthetic', 'texture_rgb_3cls.jpg')
-IMAGE_STAR_1 = os.path.join('others', 'sea_starfish-1.jpg')
-IMAGE_STAR_2 = os.path.join('others', 'sea_starfish-2.jpg')
+IMAGE_STAR = os.path.join('others', 'sea_starfish-2.jpg')
 IMAGE_HISTOL_CIMA = \
     os.path.join('histology_CIMA', '29-041-Izd2-w35-CD31-3-les1.jpg')
 IMAGE_HISTOL_FLAGSHIP = \
@@ -42,8 +41,7 @@ IMAGE_LANGER_ISLET = \
     os.path.join('langerhans_islets', 'image', 'gtExoIsl_21.jpg')
 
 LIST_ALL_IMAGES = [
-    IMAGE_LENNA, IMAGE_3CLS, IMAGE_OBJECTS,
-    IMAGE_STAR_1, IMAGE_STAR_2,
+    IMAGE_LENNA, IMAGE_3CLS, IMAGE_OBJECTS, IMAGE_STAR,
     IMAGE_HISTOL_CIMA, IMAGE_HISTOL_FLAGSHIP, IMAGE_LANGER_ISLET,
     IMAGE_DROSOPHILA_DISC, ANNOT_DROSOPHILA_DISC,
     IMAGE_DROSOPHILA_OVARY_2D, ANNOT_DROSOPHILA_OVARY_2D,
@@ -145,6 +143,7 @@ def get_image_path(name_img, path_base=PATH_IMAGES):
     """ merge default image path and sample image
 
     :param str name_img:
+    :param str path_base:
     :return str:
 
     >>> p = get_image_path(IMAGE_LENNA)

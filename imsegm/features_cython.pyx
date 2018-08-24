@@ -37,15 +37,15 @@ def __cinit__():
 #                                                         dtype=np.int32)
 #         int w = seg.shape[0]
 #         int h = seg.shape[1]
-#         int x, y, i, id
+#         int x, y, i, idx
 #
 #     for x in range(w):
 #         for y in range(h):
-#             id = seg[x,y]
-#             count[id, 0] += 1
-#             features[id, 0] += img[x, y, 0]
-#             features[id, 1] += img[x, y, 1]
-#             features[id, 2] += img[x, y, 2]
+#             idx = seg[x,y]
+#             count[idx, 0] += 1
+#             features[idx, 0] += img[x, y, 0]
+#             features[idx, 1] += img[x, y, 1]
+#             features[idx, 2] += img[x, y, 2]
 #     # features = features / count
 #     for i in range(nbSegments):
 #         if count[i, 0] == 0:
@@ -83,7 +83,7 @@ def computeColorImage2dMean(float[:, :, :] img,
         double[:, :] features = np.zeros([nb_segments, 3], dtype=np.float64)
         int w = seg.shape[0]
         int h = seg.shape[1]
-        int z, x, y, i, id
+        int z, x, y, i
     # for z in prange(3, nogil=True):
     for z in range(3):
         for x in range(w):
@@ -102,12 +102,12 @@ def computeColorImage2dEnergy(float[:, :, :] img,
         float val
         int w = seg.shape[0]
         int h = seg.shape[1]
-        int z, x, y, i, id
+        int z, x, y, i
     for z in prange(3, nogil=True):
         for x in range(w):
             for y in range(h):
                 val = img[x, y, z]
-                features[seg[x,y], z] += val * val
+                features[seg[x, y], z] += val * val
     # features = features / count
     features = normColorFeatures(seg, features)
     return features
@@ -121,7 +121,7 @@ def computeColorImage2dVariance(float[:, :, :] img,
         double[:, :] features = np.zeros([nb_segments, 3], dtype=np.float64)
         int w = seg.shape[0]
         int h = seg.shape[1]
-        int z, x, y, i, id
+        int z, x, y, i
         float v
     for z in prange(3, nogil=True):
         for x in range(w):
@@ -142,13 +142,13 @@ def computeGrayImage3dMean(float[:, :, :] img,
         int d = seg.shape[0]
         int w = seg.shape[1]
         int h = seg.shape[2]
-        int z, x, y, i, id
+        int z, x, y, i, idx
     for z in prange(d, nogil=True):
         for x in range(w):
             for y in range(h):
-                id = seg[z, x, y]
-                count[id] += 1
-                features[id] += img[z, x, y]
+                idx = seg[z, x, y]
+                count[idx] += 1
+                features[idx] += img[z, x, y]
     for i in prange(nb_segments, nogil=True):
         if count[i] > 0:
             features[i] = features[i] / count[i]
@@ -165,13 +165,13 @@ def computeGrayImage3dEnergy(float[:, :, :] img,
         int d = seg.shape[0]
         int w = seg.shape[1]
         int h = seg.shape[2]
-        int z, x, y, i, id
+        int z, x, y, i, idx
     for z in prange(d, nogil=True):
         for x in range(w):
             for y in range(h):
-                id = seg[z, x, y]
-                count[id] += 1
-                features[id] += img[z, x, y] * img[z, x, y]
+                idx = seg[z, x, y]
+                count[idx] += 1
+                features[idx] += img[z, x, y] * img[z, x, y]
     for i in prange(nb_segments, nogil=True):
         if count[i] > 0:
             features[i] = features[i] / count[i]
@@ -189,15 +189,15 @@ def computeGrayImage3dVariance(float[:, :, :] img,
         int d = seg.shape[0]
         int w = seg.shape[1]
         int h = seg.shape[2]
-        int z, x, y, i, id
+        int z, x, y, i, idx
         float v
     for z in prange(d, nogil=True):
         for x in range(w):
             for y in range(h):
-                id = seg[z,x,y]
-                count[id] += 1
-                v = img[z, x, y] - mean[id]
-                features[id] += v * v
+                idx = seg[z,x,y]
+                count[idx] += 1
+                v = img[z, x, y] - mean[idx]
+                features[idx] += v * v
     for i in prange(nb_segments, nogil=True):
         if count[i] > 0:
             features[i] = features[i] / count[i]

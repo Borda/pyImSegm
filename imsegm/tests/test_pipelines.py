@@ -14,9 +14,9 @@ import matplotlib.pyplot as plt
 from scipy.misc import imresize
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utils.data_samples as d_spl
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.data_samples as d_spl
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
 import imsegm.pipelines as pipelines
 import imsegm.descriptors as seg_fts
 
@@ -28,7 +28,7 @@ DEFAULT_SEGM_PARAMS = {'nb_classes': 2,
 seg_fts.USE_CYTHON = False
 
 
-def show_segm_results_2d(img, seg, path_dir, fig_name='test_segm_.png'):
+def show_segm_results_2d(img, seg, path_dir, fig_name='temp-segm_.png'):
     """ show and expert segmentation results
 
     :param ndarray img: input image
@@ -45,7 +45,7 @@ def show_segm_results_2d(img, seg, path_dir, fig_name='test_segm_.png'):
     plt.close(fig)
 
 
-def show_segm_debugs_2d(dict_imgs, path_dir, fig_name='test_debug_.png'):
+def show_segm_debugs_2d(dict_imgs, path_dir, fig_name='temp-debug_.png'):
     """ show and expert partial segmettaion results
 
     :param {str: ...} dict_imgs:
@@ -98,16 +98,16 @@ def run_segm2d_gmm_gc(img2d, dir_name, dict_params, types_edge=('model', 'const'
                 debug_visual=dict_imgs, **dict_params)
 
             show_segm_debugs_2d(dict_imgs, path_dir,
-                        'fig_regul-%.2f_edge-%s_debug.png' % (regul, edge))
+                                'fig_regul-%.2f_edge-%s_debug.png' % (regul, edge))
             show_segm_results_2d(img2d, seg, path_dir,
-                        'fig_regul-%.2f_edge-%s.png' % (regul, edge))
+                                 'fig_regul-%.2f_edge-%s.png' % (regul, edge))
             dict_imgs = None
 
 
 class TestPipelinesGMM(unittest.TestCase):
 
     img_obj = d_spl.load_sample_image(d_spl.IMAGE_OBJECTS)
-    img_star = d_spl.load_sample_image(d_spl.IMAGE_STAR_2)
+    img_star = d_spl.load_sample_image(d_spl.IMAGE_STAR)
     img_islet = d_spl.load_sample_image(d_spl.IMAGE_LANGER_ISLET)
     img_histo = d_spl.load_sample_image(d_spl.IMAGE_HISTOL_FLAGSHIP)
     img_disc = d_spl.load_sample_image(d_spl.IMAGE_DROSOPHILA_DISC)
@@ -119,7 +119,7 @@ class TestPipelinesGMM(unittest.TestCase):
         logging.debug('dimension: {}'.format(img.shape))
 
         dict_imgs = dict()
-        path_dir = os.path.join(PATH_OUTPUT, 'test_segm_gmm_gc_objects')
+        path_dir = os.path.join(PATH_OUTPUT, 'temp_segm-gmm-gc-objects')
         if not os.path.isdir(path_dir):
             os.mkdir(path_dir)
         seg, _ = pipelines.pipe_color2d_slic_features_model_graphcut(
@@ -138,14 +138,14 @@ class TestPipelinesGMM(unittest.TestCase):
         params = copy.deepcopy(DEFAULT_SEGM_PARAMS)
         params.update(dict(nb_classes=3, sp_regul=0.2, sp_size=25,
                            dict_features={'color': ['mean', 'std']}))
-        run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_stars', dict_params=params)
+        run_segm2d_gmm_gc(img, 'temp_segm-gmm-gc-stars', dict_params=params)
 
     def test_segm_gmm_gc_langer(self):
         img = imresize(self.img_islet, (512, 512))
         params = copy.deepcopy(DEFAULT_SEGM_PARAMS)
         params.update(dict(sp_regul=0.15, sp_size=5))
 
-        run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_langer',
+        run_segm2d_gmm_gc(img, 'temp_segm-gmm-gc-langer',
                           types_edge=['model_lT'], list_regul=[0, 1],
                           dict_params=params)
 
@@ -153,7 +153,7 @@ class TestPipelinesGMM(unittest.TestCase):
         img = imresize(self.img_histo, (512, 512))
         params = copy.deepcopy(DEFAULT_SEGM_PARAMS)
         params.update(dict(sp_regul=0.15, sp_size=15, pca_coef=0.98))
-        run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_histology',
+        run_segm2d_gmm_gc(img, 'temp_segm-gmm-gc-histology',
                           types_edge=['model'], list_regul=[0, 1, 5],
                           dict_params=params)
 
@@ -161,7 +161,7 @@ class TestPipelinesGMM(unittest.TestCase):
         img = imresize(self.img_disc, (512, 512))
         params = copy.deepcopy(DEFAULT_SEGM_PARAMS)
         params.update(dict(sp_regul=0.2, sp_size=15, pca_coef=0.98))
-        run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_disc',
+        run_segm2d_gmm_gc(img, 'temp_segm-gmm-gc-disc',
                           types_edge=['model_l2'], list_regul=[0, 1, 5],
                           dict_params=params)
 
@@ -171,7 +171,7 @@ class TestPipelinesGMM(unittest.TestCase):
         params = copy.deepcopy(DEFAULT_SEGM_PARAMS)
         params.update(dict(nb_classes=4, pca_coef=0.95, sp_regul=0.3, sp_size=10,
                            dict_features=seg_fts.FEATURES_SET_TEXTURE_SHORT))
-        run_segm2d_gmm_gc(img, 'test_segm_gmm_gc_ovary_2d',
+        run_segm2d_gmm_gc(img, 'temp_segm-gmm-gc-ovary-2d',
                           list_regul=[0, 2, 10], dict_params=params)
 
     def test_segm_gmm_gc_ovary_3d(self):
@@ -192,7 +192,7 @@ class TestPipelinesClassif(unittest.TestCase):
         annot = imresize(self.annot, (256, 256), interp='nearest')
         img2 = imresize(self.img2, (256, 256))
 
-        path_dir = os.path.join(PATH_OUTPUT, 'test_segm_supervised_gc')
+        path_dir = os.path.join(PATH_OUTPUT, 'temp_segm-supervised_gc')
         if not os.path.exists(path_dir):
             os.mkdir(path_dir)
 

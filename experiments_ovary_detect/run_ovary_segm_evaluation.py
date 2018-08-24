@@ -32,9 +32,9 @@ from sklearn import metrics
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.experiments as tl_expt
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.experiments as tl_expt
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
 import imsegm.labeling as seg_lbs
 
 EXPORT_VUSIALISATION = False

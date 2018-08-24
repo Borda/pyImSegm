@@ -31,9 +31,9 @@ import matplotlib.pyplot as plt
 from skimage.segmentation import relabel_sequential
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utils.data_io as tl_data
-import imsegm.utils.experiments as tl_expt
-import imsegm.utils.drawing as tl_visu
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.experiments as tl_expt
+import imsegm.utilities.drawing as tl_visu
 import imsegm.classification as seg_clf
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
