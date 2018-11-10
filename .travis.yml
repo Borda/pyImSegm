@@ -28,11 +28,6 @@ before_install:
 
 install:
   - mkdir libs
-#  - root=$PWD
-#  - cd $root/libs && git clone https://github.com/Borda/pyGCO.git
-#  - cd $root/libs/pyGCO && pip install -r requirements.txt && python setup.py install
-#  - rm -r -f $root/libs/pyGCO
-#  - cd $root
 
   - pip install -r requirements.txt
   - pip install nose coverage codecov pytest codacy-coverage check-manifest

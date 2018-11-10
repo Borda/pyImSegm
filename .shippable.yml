@@ -37,10 +37,6 @@ before_install:
 install:
   - root=$PWD
   - mkdir libs
-#  - cd $root/libs && git clone https://github.com/Borda/pyGCO.git
-#  - cd $root/libs/pyGCO && pip install -r requirements.txt && python setup.py install
-#  - rm -r -f $root/libs/pyGCO
-#  - cd $root
 
   - pip install -r requirements.txt
   - pip install "nose>=1.3.7" coverage codecov "pytest>=3.0.5"

@@ -21,12 +21,15 @@ import pandas as pd
 from scipy import interp
 from scipy.stats import randint as sp_randint
 from scipy.stats import uniform as sp_random
-from sklearn import grid_search, metrics
 from sklearn import preprocessing, feature_selection, decomposition
-from sklearn import cluster
+from sklearn import cluster, metrics
 from sklearn import ensemble, neighbors, svm, tree
 from sklearn import pipeline, linear_model, neural_network
 from sklearn import model_selection
+try:  # due to some chnages in between versions
+    from sklearn.grid_search import GridSearchCV, RandomizedSearchCV, ParameterSampler, ParameterGrid
+except Exception:
+    from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, ParameterSampler, ParameterGrid
 
 import imsegm.labeling as seg_lbs
 import imsegm.utilities.experiments as tl_expt
@@ -607,14 +610,20 @@ def export_results_clf_search(path_out, clf_name, clf_search):
     def _fn_path_out(s):
         return os.path.join(path_out, 'classif_%s_%s.txt' % (clf_name, s))
 
-    with open(_fn_path_out('search_params_scores'), 'w') as f:
-        f.write('\n'.join([repr(gs) for gs in clf_search.grid_scores_]))
+    with open(_fn_path_out('search_params_scores'), 'w') as fp:
+        if hasattr(clf_search, 'grid_scores_'):  # for sklearn < 0.18
+            fp.write('\n'.join([repr(gs) for gs in clf_search.grid_scores_]))
+        elif hasattr(clf_search, 'cv_results_'):
+            fp.write('\n'.join(['"%s": %s' % (k, repr(clf_search.cv_results_[k]))
+                                for k in clf_search.cv_results_]))
+        else:
+            fp.write('no results')
 
-    with open(_fn_path_out('search_params_best'), 'w') as f:
+    with open(_fn_path_out('search_params_best'), 'w') as fp:
         params = clf_search.best_params_
         rows = ['{:30s} {}'.format('"{}":'.format(k), params[k])
                 for k in params]
-        f.write('\n'.join(rows))
+        fp.write('\n'.join(rows))
 
 
 def relabel_sequential(labels, uq_lbs=None):
@@ -754,8 +763,8 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     >>> data += 0.5 - np.random.random(data.shape)
     >>> data.shape
     (300, 6)
-    >>> from sklearn.cross_validation import StratifiedKFold
-    >>> cv = StratifiedKFold(labels, n_folds=5, random_state=0)
+    >>> from sklearn.model_selection import StratifiedKFold
+    >>> cv = StratifiedKFold(n_splits=5, random_state=0)
     >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
     >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
     ...                               data, labels, cv)
@@ -766,7 +775,7 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     3       1.0       1.0              1.0           1.0
     4       1.0       1.0              1.0           1.0
     >>> labels[labels == 1] = 2
-    >>> cv = StratifiedKFold(labels, n_folds=3, random_state=0)
+    >>> cv = StratifiedKFold(n_splits=3, random_state=0)
     >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
     ...                               data, labels, cv, path_out='.')
        f1_macro  accuracy  precision_macro  recall_macro
@@ -838,8 +847,8 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     >>> data += np.random.random(data.shape)
     >>> data.shape
     (300, 6)
-    >>> from sklearn.cross_validation import StratifiedKFold
-    >>> cv = StratifiedKFold(labels, n_folds=5, random_state=0)
+    >>> from sklearn.model_selection import StratifiedKFold
+    >>> cv = StratifiedKFold(n_splits=5, random_state=0)
     >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
     >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif,
     ...                                         data, labels, cv, nb_thr=10)
@@ -884,6 +893,9 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     for lb in unique_labels:
         labels_bin[:, lb] = (labels == lb)
 
+    # since version change the CV is not iterable by default
+    if not hasattr(cross_val, '__iter__'):
+        cross_val = cross_val.split(features, labels)
     count = 0
     for train, test in cross_val:
         features_train = np.copy(features[train], order='C')
@@ -930,14 +942,16 @@ def search_params_cut_down_max_nb_iter(clf_parameters, nb_iter):
     :param nb_iter: int, nb of random tryes
     :return: int
     """
-    param_list = grid_search.ParameterSampler(clf_parameters, n_iter=nb_iter)
-    param_grid = grid_search.ParameterGrid(param_list.param_distributions)
-    try:  # this works only in case the set of params is finite, otherwise crash
-        if len(param_grid) < nb_iter:
-            nb_iter = len(param_grid.param_grid)
-            logging.debug('nb iter: -> %i', nb_iter)
-    except Exception:
-        logging.debug('something went wrong in cutting down nb iter')
+    counts = []
+    for k in clf_parameters:
+        vals = clf_parameters[k]
+        if hasattr(vals, '__iter__'):
+            counts.append(len(vals))
+        else:
+            return nb_iter
+    count = np.product(counts)
+    if count < nb_iter:
+        nb_iter < count
     return nb_iter
 
 
@@ -964,14 +978,14 @@ def create_classif_search(name_clf, clf_pipeline, nb_labels,
     if search_type == 'grid':
         clf_parameters = create_clf_param_search_grid(name_clf)
         logging.info('init Grid search...')
-        clf_search = grid_search.GridSearchCV(
+        clf_search = GridSearchCV(
             clf_pipeline, clf_parameters, scoring=scoring, cv=cross_val,
             n_jobs=nb_jobs, verbose=1, refit=True)
     else:
         clf_parameters = create_clf_param_search_distrib(name_clf)
         nb_iter = search_params_cut_down_max_nb_iter(clf_parameters, nb_iter)
         logging.info('init Randomized search...')
-        clf_search = grid_search.RandomizedSearchCV(
+        clf_search = RandomizedSearchCV(
             clf_pipeline, clf_parameters, scoring=scoring, cv=cross_val,
             n_jobs=nb_jobs, n_iter=nb_iter, verbose=1, refit=True)
     return clf_search
