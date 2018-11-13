@@ -15,7 +15,6 @@ import os
 import sys
 import logging
 import argparse
-# import traceback
 import multiprocessing as mproc
 from functools import partial
 

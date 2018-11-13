@@ -16,7 +16,6 @@ import os
 import sys
 import time
 import logging
-import traceback
 import gc
 # import multiprocessing as mproc
 from functools import partial
@@ -180,7 +179,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
                                                    mask_eggs, img, segm,
                                                    path_visu, col_prefix)
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.exception('load_center_evaluate')
         dict_stat = dict_row
     return dict_stat
 

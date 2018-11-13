@@ -17,7 +17,6 @@ import sys
 import glob
 import logging
 import argparse
-import traceback
 import multiprocessing as mproc
 from functools import partial
 
@@ -128,7 +127,7 @@ def perform_visu_overlap(path_img, paths, segm_alpha=MIDDLE_ALPHA_OVERLAP):
     try:
         visualise_overlap(path_img, path_seg, path_out, segm_alpha=segm_alpha)
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.exception('visualise_overlap')
         return False
     return True
 

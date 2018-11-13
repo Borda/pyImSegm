@@ -27,7 +27,6 @@ import pickle
 import argparse
 import logging
 import time, gc
-import traceback
 import multiprocessing as mproc
 from functools import partial
 
@@ -329,7 +328,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
         path_npz = os.path.join(path_out, idx_name + '.npz')
         np.savez_compressed(path_npz, segm_soft)
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.exception('pipe_color2d_slic_features_model_graphcut(...)')
         segm = np.zeros(img.shape[:2])
 
     boundary_size = int(params['slic_size'] * 3)
@@ -375,7 +374,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
         path_npz = os.path.join(path_out, idx_name + '.npz')
         np.savez_compressed(path_npz, segm_soft)
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.exception('segment_color2d_slic_features_model_graphcut(...)')
         segm = np.zeros(img.shape[:2])
 
     boundary_size = int(np.sqrt(np.prod(segm.shape)) * 0.01)

@@ -16,7 +16,6 @@ Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 
 import os
 import sys
-import traceback
 import logging
 import argparse
 import multiprocessing as mproc
@@ -197,8 +196,7 @@ def export_figure(idx_row, df_slices_info, path_out):
         fig.savefig(os.path.join(path_out, img_name + '.png'))
         plt.close(fig)
     except Exception:
-        logging.error('failed for: %s', img_name)
-        logging.error(traceback.format_exc())
+        logging.exception('failed for: %s', img_name)
 
 
 def main(params):

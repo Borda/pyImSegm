@@ -10,7 +10,6 @@ import pickle
 import logging
 import random
 import collections
-import traceback
 import itertools
 from functools import partial
 
@@ -326,7 +325,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
         for l, _ in enumerate(p):
             logging.debug(EVAL_STR.format(l, p[l], r[l], f[l], s[l]))
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.exception('metrics.precision_recall_fscore_support')
 
     dict_metrics = {
         'ARS': metrics.adjusted_rand_score(y_true, y_pred),
@@ -344,7 +343,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
                                                           average=avg)
             res = dict(zip(['{}_{}'.format(n, avg) for n in names], mtr))
         except Exception:
-            logging.error(traceback.format_exc())
+            logging.exception('metrics.precision_recall_fscore_support')
             res = dict(zip(['{}_{}'.format(n, avg) for n in names], [-1] * 4))
         dict_metrics.update(res)
     return dict_metrics
@@ -805,7 +804,7 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
                          scoring, np.mean(scores), repr(scores))
             df_scoring[scoring] = scores
         except Exception:
-            logging.error(traceback.format_exc())
+            logging.exception('model_selection.cross_val_score')
 
     if path_out is not None:
         assert os.path.exists(path_out), 'missing: "%s"' % path_out
