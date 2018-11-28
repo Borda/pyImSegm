@@ -895,13 +895,11 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     # since version change the CV is not iterable by default
     if not hasattr(cross_val, '__iter__'):
         cross_val = cross_val.split(features, labels)
-    count = 0
+    count = 0.
     for train, test in cross_val:
-        features_train = np.copy(features[train], order='C')
-        labels_train = np.copy(labels[train], order='C')
-        features_test = np.copy(features[test], order='C')
-        classif.fit(features_train, labels_train)
-        proba = classif.predict_proba(features_test)
+        classif.fit(np.copy(features[train], order='C'),
+                    np.copy(labels[train], order='C'))
+        proba = classif.predict_proba(np.copy(features[test], order='C'))
         # Compute ROC curve and area the curve
         for i, lb in enumerate(unique_labels):
             fpr, tpr, _ = metrics.roc_curve(labels_bin[test, lb], proba[:, i])
@@ -909,23 +907,19 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
             tpr = [0.] + tpr.tolist() + [1.]
             mean_tpr += interp(mean_fpr, fpr, tpr)
             mean_tpr[0] = 0.0
-            count += 1.
+            count += 1
         # roc_auc = metrics.auc(fpr, tpr)
 
     mean_tpr /= count
     mean_tpr[-1] = 1.0
     # mean_auc = metrics.auc(mean_fpr, mean_tpr)
-    df_roc = pd.DataFrame(np.array([mean_fpr, mean_tpr]).T,
-                          columns=['FP', 'TP'])
-
+    df_roc = pd.DataFrame(np.array([mean_fpr, mean_tpr]).T, columns=['FP', 'TP'])
     auc = metrics.auc(mean_fpr, mean_tpr)
 
     if path_out is not None:
         assert os.path.exists(path_out), 'missing: "%s"' % path_out
         name_csv = NAME_CSV_CLASSIF_CV_ROC.format(clf_name, 'mean')
-        path_csv = os.path.join(path_out, name_csv)
-        df_roc.to_csv(path_csv)
-
+        df_roc.to_csv(os.path.join(path_out, name_csv))
         name_txt = NAME_TXT_CLASSIF_CV_AUC.format(clf_name, 'mean')
         with open(os.path.join(path_out, name_txt), 'w') as fp:
             fp.write(str(auc))
