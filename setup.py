@@ -58,8 +58,8 @@ install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
 setup(
     name='ImSegm',
-    version='0.1.2',
-    url='https://borda.github.com/pyImSegm',
+    version='0.1.3',
+    url='https://borda.github.io/pyImSegm',
 
     author='Jiri Borovec',
     author_email='jiri.borovec@fel.cvut.cz',
@@ -81,7 +81,7 @@ setup(
     # include_dirs = [np.get_include()],
     include_package_data=True,
 
-    long_description="""Image segmentation package contains several useful features:
+    long_description="""Image segmentation package contains:
  * supervised and unsupervised segmentation on superpixels using GraphCut,
  * detection object centres and cluster candidates,
  * region growing on superpixel level with a shape prior.""",
@@ -95,7 +95,6 @@ setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering :: Image Segmentation",
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],

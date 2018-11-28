@@ -31,7 +31,6 @@ import sys
 import logging
 import glob
 import time
-import traceback
 import gc
 import multiprocessing as mproc
 from functools import partial
@@ -759,7 +758,7 @@ def try_segment_image(img_idx_path, params, classif, path_out, path_visu,
                              path_out, path_visu,
                              show_debug_imgs=show_debug_imgs)
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.exception('segment_image')
         return '', None, None
 
 

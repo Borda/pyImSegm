@@ -31,7 +31,6 @@ import json
 import argparse
 import logging
 import pickle
-import traceback
 import multiprocessing as mproc
 from functools import partial
 
@@ -761,8 +760,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
             centers = tl_data.swap_coord_x_y(centers)
             tl_data.save_landmarks_csv(path_centre, centers)
         except Exception:
-            logging.error('segment fail for "%s" via %s with \n %s',
-                          name, method, traceback.format_exc())
+            logging.exception('segment fail for "%s" via %s', name, method)
 
     return name
 

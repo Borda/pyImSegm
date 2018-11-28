@@ -10,7 +10,6 @@ import copy
 import time
 import types
 import logging
-import traceback
 import multiprocessing as mproc
 # from functools import partial
 
@@ -296,7 +295,7 @@ def create_subfolders(path_out, list_folders):
                 os.mkdir(path_dir)
                 count += 1
             except Exception:
-                logging.error(traceback.format_exc())
+                logging.exception('mkdir: %s', path_dir)
     return count
 
 

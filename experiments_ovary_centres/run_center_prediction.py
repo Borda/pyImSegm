@@ -16,7 +16,6 @@ import os
 import sys
 import time, gc
 import logging
-import traceback
 # import multiprocessing as mproc
 from functools import partial
 
@@ -87,7 +86,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
         dict_center = run_clust.cluster_points_draw_export(dict_center, params,
                                                            path_output)
     except Exception:
-        logging.error(traceback.format_exc())
+        logging.exception('load_compute_detect_centers')
     gc.collect()
     time.sleep(1)
     return dict_center
