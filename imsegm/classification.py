@@ -934,6 +934,12 @@ def search_params_cut_down_max_nb_iter(clf_parameters, nb_iter):
     :param clf_parameters: {str: ...}
     :param nb_iter: int, nb of random tryes
     :return: int
+
+    >>> clf_params = create_clf_param_search_grid(DEFAULT_CLASSIF_NAME)
+    >>> search_params_cut_down_max_nb_iter(clf_params, 100)
+    100
+    >>> search_params_cut_down_max_nb_iter(clf_params, 1e6)
+    1450
     """
     counts = []
     for k in clf_parameters:
@@ -944,7 +950,7 @@ def search_params_cut_down_max_nb_iter(clf_parameters, nb_iter):
             return nb_iter
     count = np.product(counts)
     if count < nb_iter:
-        nb_iter < count
+        nb_iter = count
     return nb_iter
 
 
