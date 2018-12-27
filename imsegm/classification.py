@@ -1390,32 +1390,40 @@ class HoldOut:
 
     Example
     -------
-    >>> ho = HoldOut(10, 7)
+    >>> ho = HoldOut(10, 7, rand_seed=None)
     >>> len(ho)
     1
     >>> list(ho)
     [([0, 1, 2, 3, 4, 5, 6], [7, 8, 9])]
+    >>> ho = HoldOut(10, 7, rand_seed=0)
+    >>> list(ho)
+    [([2, 8, 4, 9, 1, 6, 7], [3, 0, 5])]
     """
-    def __init__(self, nb, hold_idx, random_state=0):
+    def __init__(self, nb_samples, hold_out, rand_seed=0):
         """
 
-        :param int nb: total number of samples
-        :param int hold_idx: index where the test starts
-        :param obj random_state: Seed for the random number generator.
+        :param int nb_samples: total number of samples
+        :param int hold_out: index where the test starts
+        :param obj rand_seed: Seed for the random number generator.
         """
-        self.total = nb
-        self.hold_idx = hold_idx
-        self.random_state = random_state
-        assert self.total > self.hold_idx, \
-            'total %i should be higher than hold Idx %i' % (self.total, self.hold_idx)
+        assert nb_samples > hold_out, \
+            'total %i should be higher than hold Idx %i' % (nb_samples, hold_out)
+
+        self._total = nb_samples
+        self.hold_out = hold_out
+        self._indexes = list(range(nb_samples))
+
+        if rand_seed is not None and rand_seed is not False:
+            np.random.seed(rand_seed)
+            np.random.shuffle(self._indexes)
 
     def __iter__(self):
         """ iterate the folds
 
         :return ([int], [int]):
         """
-        ind_train = list(range(self.hold_idx))
-        ind_test = list(range(self.hold_idx, self.total))
+        ind_train = self._indexes[:self.hold_out]
+        ind_test = self._indexes[self.hold_out:]
         yield ind_train, ind_test
 
     def __len__(self):
@@ -1444,22 +1452,29 @@ class CrossValidatePOut:
     >>> len(cv)
     2
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
-    [([3, 4, 5], [0, 1, 2]), \
+    [([3, 4, 5], [0, 1, 2]),
      ([0, 1, 2], [3, 4, 5])]
 
     Example 2
     ---------
     >>> cv = CrossValidatePOut(7, 3, rand_seed=0)
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
-    [([3, 0, 5, 4], [6, 2, 1]), \
-     ([6, 2, 1, 4], [3, 0, 5]), \
+    [([3, 0, 5, 4], [6, 2, 1]),
+     ([6, 2, 1, 4], [3, 0, 5]),
      ([6, 2, 1, 3, 0, 5], [4])]
-
-
     >>> len(list(cv))
     3
     >>> cv.indexes
     [6, 2, 1, 3, 0, 5, 4]
+
+    Example 3
+    ---------
+    >>> cv = CrossValidatePOut(7, 5, rand_seed=0)
+    >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
+    [([6, 2], [1, 3, 0, 5, 4]),
+     ([1, 3], [6, 2, 0, 5, 4]),
+     ([0, 5], [6, 2, 1, 3, 4]),
+     ([4], [6, 2, 1, 3, 0, 5])]
     """
 
     def __init__(self, nb_samples, nb_hold_out, rand_seed=None):
@@ -1470,13 +1485,21 @@ class CrossValidatePOut:
         :param obj rand_seed: int or None
         """
         assert nb_samples > nb_hold_out, \
-            'number of holdout has to be smaller then total size'
-        self.nb_samples = nb_samples
-        self.nb_hold_out = nb_hold_out
+            'number of holdout has to be smaller then _total size'
+        self._nb_samples = nb_samples
+        self._nb_hold_out = nb_hold_out
 
-        self.indexes = list(range(self.nb_samples))
+        self._revert = False  # sets the sizes
+        if self._nb_hold_out > (self._nb_samples / 2.):
+            logging.debug('WARNING: you are running in reverse mode, '
+                          'while using all training examples '
+                          'there are much more yield test cases.')
+            self._nb_hold_out = self._nb_samples - self._nb_hold_out
+            self._revert = True
 
-        if rand_seed is not False:
+        self.indexes = list(range(self._nb_samples))
+
+        if rand_seed is not None and rand_seed is not False:
             np.random.seed(rand_seed)
             np.random.shuffle(self.indexes)
         logging.debug('sets ordering: %s', repr(self.indexes))
@@ -1488,9 +1511,11 @@ class CrossValidatePOut:
 
         :return ([int], [int]):
         """
-        for i in range(0, self.nb_samples, self.nb_hold_out):
-            inds_test = self.indexes[i:i + self.nb_hold_out]
+        for i in range(0, self._nb_samples, self._nb_hold_out):
+            inds_test = self.indexes[i:i + self._nb_hold_out]
             inds_train = [i for i in self.indexes if i not in inds_test]
+            if self._revert:
+                inds_train, inds_test = inds_test, inds_train
             yield inds_train, inds_test
 
     def __len__(self):
@@ -1498,7 +1523,7 @@ class CrossValidatePOut:
 
         :return int:
         """
-        return int(np.ceil(self.nb_samples / float(self.nb_hold_out)))
+        return int(np.ceil(self._nb_samples / float(self._nb_hold_out)))
 
 
 class CrossValidatePSetsOut:
@@ -1519,7 +1544,7 @@ class CrossValidatePSetsOut:
     >>> len(cv)
     2
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
-    [([5, 6, 7, 8, 9], [0, 1, 2, 3, 4]), \
+    [([5, 6, 7, 8, 9], [0, 1, 2, 3, 4]),
      ([0, 1, 2, 3, 4], [5, 6, 7, 8, 9])]
 
     Example 2
@@ -1528,13 +1553,21 @@ class CrossValidatePSetsOut:
     >>> cv.set_indexes
     [[0, 1], [2, 3], [4], [5, 6], [7]]
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
-    [([2, 3, 5, 6, 7], [4, 0, 1]), \
-     ([4, 0, 1, 7], [2, 3, 5, 6]), \
+    [([2, 3, 5, 6, 7], [4, 0, 1]),
+     ([4, 0, 1, 7], [2, 3, 5, 6]),
      ([4, 0, 1, 2, 3, 5, 6], [7])]
     >>> len(cv)
     3
     >>> cv.sets_order
     [2, 0, 1, 3, 4]
+
+    Example 3
+    ---------
+    >>> cv = CrossValidatePSetsOut([2, 2, 1, 2, 1, 1], 4, rand_seed=0)
+    >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
+    [([8, 4], [2, 3, 5, 6, 0, 1, 7]),
+     ([2, 3, 5, 6], [8, 4, 0, 1, 7]),
+     ([0, 1, 7], [8, 4, 2, 3, 5, 6])]
     """
 
     def __init__(self, set_sizes, nb_hold_out, rand_seed=None):
@@ -1545,24 +1578,32 @@ class CrossValidatePSetsOut:
         :param obj rand_seed: int or None
         """
         assert len(set_sizes) > nb_hold_out, \
-            'nb of hold out (%i) has to be smaller then total size %i' \
+            'nb of hold out (%i) has to be smaller then _total size %i' \
             % (nb_hold_out, len(set_sizes))
-        self.set_sizes = list(set_sizes)
-        self.total = np.sum(self.set_sizes)
-        self.nb_hold_out = nb_hold_out
+        self._set_sizes = list(set_sizes)
+        self._total = np.sum(self._set_sizes)
+        self._nb_hold_out = nb_hold_out
+
+        self._revert = False  # sets the sizes
+        if self._nb_hold_out > (len(self._set_sizes) / 2.):
+            logging.debug('WARNING: you are running in reverse mode, '
+                          'while using all training examples '
+                          'there are much more yield test cases.')
+            self._nb_hold_out = len(self._set_sizes) - self._nb_hold_out
+            self._revert = True
 
         self.set_indexes = []
-        for i, size in enumerate(self.set_sizes):
-            start = int(np.sum(self.set_sizes[:i]))
+        for i, size in enumerate(self._set_sizes):
+            start = int(np.sum(self._set_sizes[:i]))
             inds = range(start, start + size)
             self.set_indexes.append(list(inds))
 
-        assert np.sum(len(i) for i in self.set_indexes) == self.total, \
-            'all indexes should sum to total count %i' % self.total
+        assert np.sum(len(i) for i in self.set_indexes) == self._total, \
+            'all indexes should sum to _total count %i' % self._total
 
-        self.sets_order = list(range(len(self.set_sizes)))
+        self.sets_order = list(range(len(self._set_sizes)))
 
-        if rand_seed is not False:
+        if rand_seed is not None and rand_seed is not False:
             np.random.seed(rand_seed)
             np.random.shuffle(self.sets_order)
         logging.debug('sets ordering: %s', repr(self.sets_order))
@@ -1574,12 +1615,14 @@ class CrossValidatePSetsOut:
 
         :return ([int], [int]):
         """
-        for i in range(0, len(self.set_sizes), self.nb_hold_out):
-            test = self.sets_order[i:i + self.nb_hold_out]
+        for i in range(0, len(self._set_sizes), self._nb_hold_out):
+            test = self.sets_order[i:i + self._nb_hold_out]
             inds_train = list(itertools.chain.from_iterable(
                 self.set_indexes[i] for i in self.sets_order if i not in test))
             inds_test = list(itertools.chain.from_iterable(
                 self.set_indexes[i] for i in self.sets_order if i in test))
+            if self._revert:
+                inds_train, inds_test = inds_test, inds_train
             yield inds_train, inds_test
 
     def __len__(self):
@@ -1587,7 +1630,7 @@ class CrossValidatePSetsOut:
 
         :return int:
         """
-        nb = len(self.set_sizes) / float(self.nb_hold_out)
+        nb = len(self._set_sizes) / float(self._nb_hold_out)
         return int(np.ceil(nb))
 
 
