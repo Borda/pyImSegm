@@ -401,7 +401,7 @@ def split_segm_background_foreground(seg, sel_bg=STRUC_ELEM_BG,
     """ smoothing segmentation with morphological operation
 
     :param ndarray seg: input segmentation
-    :param int sel_bg: smoothing background with morphological operation
+    :param int|float sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
     :return:
 

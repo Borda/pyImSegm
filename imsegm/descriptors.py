@@ -1734,7 +1734,7 @@ def interpolate_ray_dist(ray_dists, order='spline'):
     """ interpolate ray distances
 
     :param [float] ray_dists:
-    :param str order: degree of interpolation
+    :param str|int order: degree of interpolation
     :return [float]:
 
     >>> interpolate_ray_dist([-1] * 5)
@@ -1799,7 +1799,7 @@ def interpolate_ray_dist(ray_dists, order='spline'):
 def reconstruct_ray_features_2d(position, ray_features, shift=0):
     """ reconstruct ray features for 2D image
 
-    :param (int, int) position:
+    :param (int, int)|(float, float) position:
     :param [float] ray_features:
     :param float shift:
     :return [[float, float]]:
