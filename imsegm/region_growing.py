@@ -809,17 +809,15 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
             shifts[i] = shift
 
         # shift it to the edge of max init distance
-        cdist_init_2 = np.sum((np.array(centre_new)
-                               - np.array(init_centres[i])) ** 2)
+        cdist_init_2 = np.sum((np.array(centre_new) - np.array(init_centres[i])) ** 2)
         if cdist_init_2 > dict_thresholds['centre_init'] ** 2:
-            centre_new = init_centres[i] + \
-                         (dict_thresholds['centre_init'] / np.sqrt(cdist_init_2)) \
-                         * (np.array(centre_new) - np.array(init_centres[i]))
+            diff = np.asarray(centre_new) - np.asarray(init_centres[i])
+            thr = dict_thresholds['centre_init'] / np.sqrt(cdist_init_2)
+            centre_new = init_centres[i] + thr * diff
 
         cdist_act_2 = np.sum((np.array(centre_new) - np.array(centre)) ** 2)
-        if cdist_act_2 <= dict_thresholds['centre'] ** 2 \
-                and np.abs(shift - shifts[i]) <= dict_thresholds['shift'] \
-                and not swap_shift:
+        if cdist_act_2 <= dict_thresholds['centre'] ** 2 and \
+                np.abs(shift - shifts[i]) <= dict_thresholds['shift'] and not swap_shift:
             continue
         if cdist_act_2 > dict_thresholds['centre'] ** 2:
             centres[i] = centre_new.tolist()
@@ -828,8 +826,8 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
 
         shape_proba = np.zeros(len(points))
         for j in selected_idx:
-            shape_proba[j] = compute_shape_prior_table_cdf(
-                                points[j], cdf, centres[i], shifts[i])
+            shape_proba[j] = compute_shape_prior_table_cdf(points[j], cdf,
+                                                           centres[i], shifts[i])
 
         lut_shape_cost[:, i + 1] = - np.log(shape_proba + MIN_SHAPE_PROB)
 
@@ -837,10 +835,10 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     return lut_shape_cost, np.array(centres), np.array(shifts), volumes
 
 
-def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
-                         points, labels, init_centres, centres, shifts,
-                         volumes, shape_model_cdfs, selected_idx=None,
-                         swap_shift=False, dict_thresholds=RG2SP_THRESHOLDS):
+def compute_update_shape_costs_points_close_mean_cdf(
+        lut_shape_cost, slic, points, labels, init_centres, centres, shifts,
+        volumes, shape_model_cdfs, selected_idx=None, swap_shift=False,
+        dict_thresholds=RG2SP_THRESHOLDS):
     """ update the shape prior for given segmentation (new centre is computed),
     set of points and cumulative histogram representing the shape model
 
@@ -926,12 +924,12 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
             else np.abs(volume - volumes[i]) / float(volumes[i])
 
         # shift it to the edge of max init distance
-        cdist_init_2 = np.sum((np.array(centre_new)
-                               - np.array(init_centres[i])) ** 2)
+        cdist_init_2 = np.sum((np.array(centre_new) - np.array(init_centres[i])) ** 2)
         if cdist_init_2 > dict_thresholds['centre_init'] ** 2:
-            centre_new = init_centres[i] + \
-                         (dict_thresholds['centre_init'] / np.sqrt(cdist_init_2)) \
-                         * (np.array(centre_new) - np.array(init_centres[i]))
+
+            diff = np.asarray(centre_new) - np.asarray(init_centres[i])
+            thr = dict_thresholds['centre_init'] / np.sqrt(cdist_init_2)
+            centre_new = init_centres[i] + thr * diff
 
         cdist_act_2 = np.sum((np.array(centre_new) - np.array(centre)) ** 2)
         if cdist_act_2 <= dict_thresholds['centre'] ** 2 \
@@ -959,8 +957,8 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
 
         shape_proba = np.zeros(len(points))
         for j in selected_idx:
-            shape_proba[j] = compute_shape_prior_table_cdf(
-                                points[j], cdist, centres[i], shifts[i])
+            shape_proba[j] = compute_shape_prior_table_cdf(points[j], cdist,
+                                                           centres[i], shifts[i])
         lut_shape_cost[:, i + 1] = - np.log(shape_proba + MIN_SHAPE_PROB)
 
     lut_shape_cost[np.isinf(lut_shape_cost)] = GC_REPLACE_INF
@@ -1078,8 +1076,9 @@ def get_neighboring_candidates(slic_neighbours, labels, object_idx,
 def compute_rg_crit(labels, lut_data_cost, lut_shape_cost, slic_weights, edges,
                     coef_data, coef_shape, coef_pairwise, prob_label_trans):
     all_range = np.arange(len(labels))
-    crit = np.sum(slic_weights * (coef_data * lut_data_cost[all_range, labels] +
-                                  coef_shape * lut_shape_cost[all_range, labels]))
+    crit_data = coef_data * lut_data_cost[all_range, labels]
+    crit_shape = coef_shape * lut_shape_cost[all_range, labels]
+    crit = np.sum(slic_weights * (crit_data + crit_shape))
     if coef_pairwise > 0:
         pairwise_costs = compute_pairwise_penalty(edges, labels,
                                                   prob_label_trans[0],
@@ -1364,8 +1363,8 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     for i, idx in enumerate(candidates):
         near_idx = slic_neighbours[idx]
         near_labels = labels[near_idx]
-        unary[i, :] = slic_weights[idx] * (coef_data * lut_data_cost[idx] +
-                                           coef_shape * lut_shape_cost[idx])
+        cost = coef_data * lut_data_cost[idx] + coef_shape * lut_shape_cost[idx]
+        unary[i, :] = slic_weights[idx] * cost
         for lb in range(unary.shape[-1]):
             if lb not in near_labels:
                 unary[i, lb] = GC_REPLACE_INF
@@ -1597,8 +1596,9 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
 
             gc_vestexes, gc_edges, edge_weights, unary, pairwise = \
                 prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
-                    slic_weights, labels, len(centres), lut_data_cost,
-                    lut_shape_cost, coef_data, coef_shape, coef_pairwise, prob_label_trans)
+                                           slic_weights, labels, len(centres),
+                                           lut_data_cost, lut_shape_cost, coef_data,
+                                           coef_shape, coef_pairwise, prob_label_trans)
             # run GraphCut
             if len(gc_edges) > 0:
                 graph_labels = cut_general_graph(np.array(gc_edges), edge_weights,
@@ -1617,8 +1617,9 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
 
                 gc_vestexes, gc_edges, edge_weights, unary, pairwise = \
                     prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
-                        slic_weights, labels, len(centres), lut_data_cost,
-                        lut_shape_cost, coef_data, coef_shape, coef_pairwise, prob_label_trans)
+                                               slic_weights, labels, len(centres),
+                                               lut_data_cost, lut_shape_cost, coef_data,
+                                               coef_shape, coef_pairwise, prob_label_trans)
                 # run GraphCut
                 graph_labels = cut_general_graph(np.array(gc_edges), edge_weights,
                                                  unary, pairwise, n_iter=999)

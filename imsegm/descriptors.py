@@ -751,7 +751,8 @@ def compute_image2d_color_statistic(image, segm,
     >>> features.shape
     (2, 15)
     >>> np.round(features, 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [[0.6, 1.2, 0.4, 0.5, 1.5, 0.8, 0.6, 3.6, 0.8, 1.0, 0.0, 0.0, 0.2, 0.6, 0.4],     [0.2, 1.2, 1.6, 0.4, 1.5, 0.8, 0.2, 3.6, 3.2, 0.0, 0.0, 2.0, -0.2, -0.6, -0.6]]
+    [[0.6, 1.2, 0.4, 0.5, 1.5, 0.8, 0.6, 3.6, 0.8, 1.0, 0.0, 0.0, 0.2, 0.6, 0.4],
+     [0.2, 1.2, 1.6, 0.4, 1.5, 0.8, 0.2, 3.6, 3.2, 0.0, 0.0, 2.0, -0.2, -0.6, -0.6]]
     """
     _check_color_image(image)
     _check_color_image_segm(image, segm)
@@ -946,8 +947,7 @@ def image_subtract_gauss_smooth(img, sigma):
         return img
     img_smooth = np.zeros(img.shape)
     for i in range(img.shape[0]):
-        img_smooth[i, :, :] = gaussian_filter(
-                                            img[i, :, :].astype(float), sigma)
+        img_smooth[i, :, :] = gaussian_filter(img[i, :, :].astype(float), sigma)
     img = (img - img_smooth)
     return img
 
@@ -1268,8 +1268,7 @@ def extend_segm_by_struct_elem(segm, struc_elem):
         'segment %s should be larger than element %s' \
         % (repr(segm.shape), repr(struc_elem.shape))
 
-    shape_new = np.array(segm.shape[:struc_elem.ndim]) \
-                + np.array(struc_elem.shape)
+    shape_new = np.array(segm.shape[:struc_elem.ndim]) + np.array(struc_elem.shape)
     begin = (np.array(struc_elem.shape) / 2).astype(int)
     if segm.ndim == struc_elem.ndim:
         segm_extend = np.full(shape_new, fill_value=np.NaN)
@@ -1428,8 +1427,8 @@ def compute_label_hist_proba(segm, position, struc_elem):
     assert segm_select.shape[:-1] == struc_elem.shape, \
         'initial dim of segm %s should match element %s' \
         % (repr(segm_select.shape), repr(struc_elem))
-    segm_mask = np.rollaxis(segm_select, -1, 0) \
-                * np.tile(struc_elem, (segm_select.shape[-1], 1, 1))
+    tile_struc_elem = np.tile(struc_elem, (segm_select.shape[-1], 1, 1))
+    segm_mask = np.rollaxis(segm_select, -1, 0) * tile_struc_elem
     hist = np.sum(segm_mask, axis=tuple(range(1, segm_mask.ndim)))
     return hist
 
@@ -1570,8 +1569,7 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
     label_position = seg_binary[int(position[0]), int(position[1])]
     if bool(label_position) and edge == 'up':
         return ray_dist * 0
-    rect_diag = int(np.sqrt(seg_binary.shape[0] ** 2 +
-                            seg_binary.shape[1] ** 2))
+    rect_diag = int(np.sqrt(seg_binary.shape[0] ** 2 + seg_binary.shape[1] ** 2))
 
     for i, ang in enumerate(angles):
         pos = np.array(position, dtype=float)
@@ -1587,8 +1585,8 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
             actual = seg_binary[int(pos[0]), int(pos[1])]
             if (edge == 'up' and actual) \
                     or (edge == 'down' and last and not actual):
-                ray_dist[i] = np.sqrt((pos[0] - position[0]) ** 2
-                                      + (pos[1] - position[1]) ** 2)
+                diff = np.asarray(pos) - np.asarray(position)
+                ray_dist[i] = np.sqrt(np.sum(diff ** 2))
                 break
             last = actual
 
@@ -1621,9 +1619,9 @@ def shift_ray_features(ray_dist, method='phase'):
     30.0...
     """
     angle_step = 360 / len(ray_dist)
+    # https://www.ritchievink.com/blog/2017/04/23/understanding-the-fourier-transform-by-example
+    # https://www.gaussianwaves.com/2015/11/interpreting-fft-results-obtaining-magnitude-and-phase-information
     if method == 'phase':
-    # https://www.ritchievink.com/blog/2017/04/23/understanding-the-fourier-transform-by-example/
-    # https://www.gaussianwaves.com/2015/11/interpreting-fft-results-obtaining-magnitude-and-phase-information/
         # use major phase from FFT, see following
         ray_dist_ext = np.hstack([ray_dist] * 5)
         spectrum = np.fft.fft(ray_dist_ext - np.mean(ray_dist_ext)) / float(
@@ -1639,8 +1637,7 @@ def shift_ray_features(ray_dist, method='phase'):
         shift = float(max_loc * angle_step)
     # round the shift to dicreate angular steps
     shift_discrete = int(round(shift / angle_step))
-    ray_dist_shift = ray_dist[shift_discrete:].tolist() \
-                     + ray_dist[:shift_discrete].tolist()
+    ray_dist_shift = ray_dist[shift_discrete:].tolist() + ray_dist[:shift_discrete].tolist()
     return np.array(ray_dist_shift), shift
 
 

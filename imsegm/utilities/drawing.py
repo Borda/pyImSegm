@@ -79,11 +79,10 @@ def _ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
     # allow just rotation with in range +/- 180 degree
     orientation %= np.pi
 
+    sin_alpha, cos_alpha = np.sin(orientation), np.cos(orientation)
     # compute rotated radii by given rotation
-    r_radius_rot = abs(r_radius * np.cos(orientation)) \
-                   + c_radius * np.sin(orientation)
-    c_radius_rot = r_radius * np.sin(orientation) \
-                   + abs(c_radius * np.cos(orientation))
+    r_radius_rot = abs(r_radius * cos_alpha) + c_radius * sin_alpha
+    c_radius_rot = r_radius * sin_alpha + abs(c_radius * cos_alpha)
     # The upper_left and lower_right corners of the smallest rectangle
     # containing the ellipse.
     radii_rot = np.array([r_radius_rot, c_radius_rot])
@@ -102,11 +101,10 @@ def _ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
                             0:int(bounding_shape[1])]
     r_org, c_org = shifted_center
     r_rad, c_rad = radii
-    sin_alpha, cos_alpha = np.sin(orientation), np.cos(orientation)
     r, c = (r_lim - r_org), (c_lim - c_org)
-    distances = ((r * cos_alpha + c * sin_alpha) / r_rad) ** 2 \
-                + ((r * sin_alpha - c * cos_alpha) / c_rad) ** 2
-    rr, cc = np.nonzero(distances <= 1)
+    dist_1 = ((r * cos_alpha + c * sin_alpha) / r_rad) ** 2
+    dist_2 = ((r * sin_alpha - c * cos_alpha) / c_rad) ** 2
+    rr, cc = np.nonzero((dist_1 + dist_2) <= 1)
 
     rr.flags.writeable = True
     cc.flags.writeable = True
@@ -212,8 +210,8 @@ def norm_aplha(alpha):
 def figure_image_adjustment(fig, img_size):
     """ adjust figure as nice image without axis
 
-    :param fig:
-    :param (int, int) img_size: 
+    :param fig: Figure
+    :param (int, int) img_size: image size
     :return:
 
     >>> fig = figure_image_adjustment(plt.figure(), (150, 200))
@@ -670,8 +668,7 @@ def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
         # probab = distance / np.max(distance)
         # mask = probab >= threshold_dist
 
-        m_overlap = np.sum(np.logical_and(mask > 0, mask_eggs > 0)) \
-                       / float(np.sum(mask))
+        m_overlap = np.sum(np.logical_and(mask > 0, mask_eggs > 0)) / float(np.sum(mask))
         if m_overlap > threshold_overlap:
             logging.debug('skip egg drawing while it overlap by %f', m_overlap)
             continue
@@ -785,9 +782,9 @@ def merge_object_masks(list_masks, thr_overlap=0.7):
             union = np.sum(np.logical_or(mask == j, list_masks[i] == 1))
             overlap_ratios.append(float(overlap) / float(union))
         if any(r > thr_overlap for r in overlap_ratios):
-             logging.debug('skip egg drawing while it overlap by %s',
-                           repr(overlap_ratios))
-             continue
+            logging.debug('skip egg drawing while it overlap by %s',
+                          repr(overlap_ratios))
+            continue
         mask[list_masks[i] == 1] = np.max(mask) + 1
 
     return mask
@@ -941,8 +938,7 @@ def draw_graphcut_weighted_edges(segments, list_centers, edges, edge_weights,
         # using anti-aliasing
         rr, cc, val = draw.line_aa(y1, x1, y2, x2)  # , shape=img.shape[:2]
         color_w = np.tile(val, (3, 1)).T
-        img[rr, cc, :] = color_w * clrs(edge_ratio[i])[:3] + \
-                         (1 - color_w) * img[rr, cc, :]
+        img[rr, cc, :] = color_w * clrs(edge_ratio[i])[:3] + (1 - color_w) * img[rr, cc, :]
 
         circle = draw.circle(y1, x1, radius=2, shape=img.shape[:2])
         img[circle] = 1., 1., 0.
@@ -1102,8 +1098,8 @@ def make_overlap_images_chess(imgs, chess_field=SIZE_CHESS_FIELD):
             else:
                 h_e = max_size[1]
             img[w_b:w_e, h_b:h_e] = imgs_w[idx][w_b:w_e, h_b:h_e]
-            idx = (idx+1) % len(imgs)
-        idx_row = (idx_row+1) % len(imgs)
+            idx = (idx + 1) % len(imgs)
+        idx_row = (idx_row + 1) % len(imgs)
     return img
 
 

@@ -81,7 +81,7 @@ def sample_segment_vertical_3d(seg_size=SAMPLE_SEG_SIZE_3D_SMALL,
                                nb_labels=SAMPLE_SEG_NB_CLASSES, levels=2):
     """ create sample regular 3D segmentation
 
-    :param (int, int) seg_size:
+    :param (int, int)|(int, int, int) seg_size:
     :param int nb_labels:
     :param int levels:
     :return ndarray:

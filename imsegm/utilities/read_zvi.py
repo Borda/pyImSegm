@@ -70,8 +70,8 @@ def read_struct(data, t):
         return [r, next_data[4:]]
     if t is 'BLOB':
         size = i32(next_data[:4])
-        r = next_data[4:4+size]
-        return [r, next_data[4+size:]]
+        r = next_data[4:4 + size]
+        return [r, next_data[4 + size:]]
     if t is 'BSTR':
         # ! 4 extra bytes escaped
         low, high = struct.unpack('<hh', next_data[:4])
@@ -156,7 +156,7 @@ def read_item_storage_content(stream):
     [layers, next_data] = read_struct(next_data, 'BLOB')
     [scaling, _] = read_struct(next_data, 'BLOB')
     # offset is image size + header size(28)
-    offset = width*height * PIXEL_FORMAT[pixel_format][0] + 28
+    offset = width * height * PIXEL_FORMAT[pixel_format][0] + 28
     # parse the actual image data
     image = parse_image(data[-offset:])
     # group results into one single structure (namedtuple)

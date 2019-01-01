@@ -41,7 +41,7 @@ def compute_prior_map(cdist, size=(500, 800), step=5):
     centre = np.array(size) / 2
     for i in np.arange(prior_map.shape[0], step=step):
         for j in np.arange(prior_map.shape[1], step=step):
-            prior_map[i:i+step, j:j+step] = \
+            prior_map[i:i + step, j:j + step] = \
                 seg_rg.compute_shape_prior_table_cdf([i, j], cdist, centre,
                                                      angle_shift=0)
     return prior_map

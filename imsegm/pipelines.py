@@ -85,7 +85,9 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
     segm_soft = proba[slic]
 
     graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
-            features, gc_regul, gc_edge_type, debug_visual=debug_visual)
+                                                    features, gc_regul,
+                                                    gc_edge_type,
+                                                    debug_visual=debug_visual)
     segm = graph_labels[slic]
     return segm, segm_soft
 
@@ -306,7 +308,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
                                sp_size=sp_size, sp_regul=sp_regul,
                                dict_features=dict_features,
                                label_purity=label_purity)
-    list_imgs_annot = zip(list_images,  list_annots)
+    list_imgs_annot = zip(list_images, list_annots)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_imgs_annot,
                                           desc='compute SLIC & features & labels',
                                           nb_jobs=nb_jobs)

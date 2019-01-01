@@ -232,7 +232,7 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     gmm = mixture.GaussianMixture(n_components=nb_classes,
                                   covariance_type='full', max_iter=99)
     if init == 'kmeans':
-    # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+        # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
         kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++',
                                 n_jobs=-1)
         y = kmeans.fit_predict(features)

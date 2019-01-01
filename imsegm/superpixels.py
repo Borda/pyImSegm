@@ -27,8 +27,8 @@ def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1, slico=False):
     :param float rltv_compact: relative regularisation in range (0, 1)
         where 0 is for free form and 1 for nearly rectangular superpixels
     :param bool slico: whether use parameter free version ASLIC/SLICO
-    :return ndarray:
-    
+    :return ndarray: segmentation
+
     >>> np.random.seed(0)
     >>> img = np.random.random((100, 150, 3))
     >>> slic = segment_slic_img2d(img, 20, 0.2)

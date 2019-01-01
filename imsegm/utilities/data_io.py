@@ -71,12 +71,12 @@ def convert_img_color_to_rgb(image, clr_space):
 
 
 def update_path(path_file, lim_depth=5, absolute=True):
-    """ bubble in the folder tree up intil it found desired file 
+    """ bubble in the folder tree up until it found desired file
     otherwise return original one
 
     :param str path_file: path to the input file / folder
     :param int lim_depth: maximal depth for going up
-    :param str absolute: format absolute path
+    :param bool absolute: format absolute path
     :return str: path to output file / folder
 
     >>> path = 'sample_file.test'
@@ -120,7 +120,7 @@ def swap_coord_x_y(points):
 
 def load_landmarks_txt(path_file):
     """ load the landmarks from a given file of TXT type and return array
-    
+
     :param str path_file: name of the input file(whole path)
     :return ndarray: array of landmarks of size <nbLandmarks> x 2
 
@@ -138,7 +138,7 @@ def load_landmarks_txt(path_file):
     # load input file
     with open(path_file, 'r') as f:
         lines = f.readlines()
-        
+
     landmarks = list()
     for line in lines[2:]:
         # logging.debug(line)
@@ -154,7 +154,7 @@ def load_landmarks_txt(path_file):
 
 def load_landmarks_csv(path_file):
     """ load the landmarks from a given file of TXT type and return array
-    
+
     :param str path_file: name of the input file(whole path)
     :return ndarray: array of landmarks of size <nbLandmarks> x 2
 
@@ -202,7 +202,7 @@ def load_landmarks_csv(path_file):
 
 def save_landmarks_txt(path_file, landmarks):
     """ save the landmarks into a given file of TXT type
-    
+
     :param str path_file: name of the input file(whole path)
     :param landmarks: array of landmarks of size nb_landmarks x 2
     :return str: path to output file
@@ -465,7 +465,7 @@ def export_image(path_img, img, stretch_range=True):
 
 def load_params_from_txt(path_file):
     """ parse the parameter file which was coded by repr function
-    
+
     :param str path_file: path to file with parameters
     :return {str: ...}:
 

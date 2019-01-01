@@ -209,7 +209,7 @@ def append_final_stat(out_dir, y_true, y_pred, time_sec,
     """
     # y_true, y_pred = np.array(y_true), np.array(y_pred)
     logging.debug('export compare labeling sizes {} with {} [px]'.format(
-                    y_true.shape, y_pred.shape))
+                  y_true.shape, y_pred.shape))
     res = metrics.classification_report(y_true, y_pred, digits=4)
     logging.info('FINAL results: \n {}'.format(res))
 

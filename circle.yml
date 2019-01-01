@@ -29,6 +29,7 @@ jobs:
             name: Testing
             command: |
               coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
+              flake8 imsegm --ignore=E402,W605,E731 --max-line-length=100
               python setup.py check -m -s
 
         # ANNOTATION section

@@ -44,9 +44,9 @@ def contour_binary_map(seg, label=1, include_boundary=False):
     for i in range(1, w - 1):
         for j in range(1, h - 1):
             # just for 4-connected
-            if seg[i, j] == label \
-                    and (seg[i - 1, j] != label or seg[i, j - 1] != label
-                         or seg[i + 1, j] != label or seg[i, j + 1] != label):
+            neighbour = any(seg[i + a, j + b] != label
+                            for a, b in [(-1, 0), (0, -1), (1, 0), (0, 1)])
+            if seg[i, j] == label and neighbour:
                 res[i, j] = 1
     if include_boundary:
         for i in range(0, w):
@@ -85,9 +85,9 @@ def contour_coords(seg, label=1, include_boundary=False):
     for i in range(1, w - 1):
         for j in range(1, h - 1):
             # just for 4-connected
-            if seg[i, j] == label \
-                    and (seg[i-1, j] != label or seg[i, j-1] != label
-                         or seg[i + 1, j] != label or seg[i, j + 1] != label):
+            neighbour = any(seg[i + a, j + b] != label
+                            for a, b in [(-1, 0), (0, -1), (1, 0), (0, 1)])
+            if seg[i, j] == label and neighbour:
                 res.append([i, j])
     if include_boundary:
         for i in range(0, w):
@@ -731,4 +731,3 @@ def assume_bg_on_boundary(segm, bg_label=0, boundary_size=1):
         lut[bg_label] = boundary_lb
         segm = np.array(lut)[segm]
     return segm
-
