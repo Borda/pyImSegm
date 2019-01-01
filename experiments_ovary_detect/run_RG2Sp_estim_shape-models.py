@@ -19,7 +19,7 @@ import argparse
 import numpy as np
 import pandas as pd
 
-sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
+sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utilities.data_io as tl_data
 import imsegm.region_growing as tl_rg
 
@@ -60,8 +60,8 @@ def arg_parse_params():
 
 def main(path_annot, path_out, nb_comp=5):
     list_paths = sorted(glob.glob(path_annot))
-    print ('nb images:', len(list_paths), 'SAMPLES:',
-           [os.path.basename(p) for p in list_paths[:5]])
+    logging.info('nb images: %i SAMPLES: %s', len(list_paths),
+                 repr([os.path.basename(p) for p in list_paths[:5]]))
     list_segms = []
     for path_seg in list_paths:
         seg = tl_data.io_imread(path_seg)

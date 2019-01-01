@@ -128,7 +128,7 @@ def filter_table(df_info, path_pattern):
     :return DF: filterd dataframe
     """
     list_name = [os.path.splitext(os.path.basename(p))[0]
-                     for p in glob.glob(path_pattern) if os.path.isfile(p)]
+                 for p in glob.glob(path_pattern) if os.path.isfile(p)]
     logging.info('loaded item in table %i and found %i in dir'
                  % (len(df_info), len(list_name)))
 

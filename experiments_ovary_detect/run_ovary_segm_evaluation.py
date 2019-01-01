@@ -21,9 +21,8 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
-    # logging.warning('No display found. Using non-interactive Agg backend.')
+if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
+    print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import numpy as np
@@ -120,8 +119,8 @@ def compute_metrics(row):
         segm_obj = (segm == lb)
         # label_hist = seg_lb.histogram_regions_labels_counts(segm, annot_obj)
         # segm_obj = np.argmax(label_hist, axis=1)[segm]
-        jaccoby = np.sum(np.logical_and(annot_obj, segm_obj)) \
-                  / float(np.sum(np.logical_or(annot_obj, segm_obj)))
+        sum_or = np.sum(np.logical_or(annot_obj, segm_obj))
+        jaccoby = np.sum(np.logical_and(annot_obj, segm_obj)) / float(sum_or)
         list_jacob.append(jaccoby)
     if len(list_jacob) == 0:
         list_jacob.append(0)
@@ -262,13 +261,13 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
     logging.info(tl_expt.string_dict(dict_paths, desc='PATHS'))
 
     list_results = sorted(glob.glob(os.path.join(dict_paths['results'], '*')))
-    list_results = sorted([p for p in list_results
-                            if os.path.isdir(p)
-                             and '___' not in os.path.basename(p)
-                             and os.path.basename(p) not in SKIP_DIRS])
+    _if_path = lambda p: all(os.path.isdir(p),
+                             '___' not in os.path.basename(p),
+                             os.path.basename(p) not in SKIP_DIRS)
+    list_results = sorted([p for p in list_results if _if_path(p)])
 
     tl_expt.create_subfolders(dict_paths['results'],
-                    [NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3])
+                              [NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3])
 
     df_all = pd.DataFrame()
     _wrapper_eval = partial(evaluate_folder, dict_paths=dict_paths,

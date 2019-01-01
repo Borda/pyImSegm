@@ -103,8 +103,7 @@ class TestRegionGrowing(unittest.TestCase):
         #                  'mix_model': model}, fp)
         self.assertTrue(os.path.exists(PATH_PKL_MODEL))
 
-        max_len = max([np.asarray(l_cdf).shape[1]
-                       for _, l_cdf in list_mean_cdf])
+        max_len = max([np.asarray(mc[1]).shape[1] for mc in list_mean_cdf])
 
         fig, axarr = plt.subplots(nrows=len(list_mean_cdf), ncols=2,
                                   figsize=(12, 3.5 * len(list_mean_cdf)))

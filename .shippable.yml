@@ -39,7 +39,7 @@ install:
   - mkdir libs
 
   - pip install -r requirements.txt
-  - pip install "nose>=1.3.7" coverage codecov "pytest>=3.0.5"
+  - pip install "nose>=1.3.7" coverage codecov "pytest>=3.0.5" flake8
 
 script:
   - mkdir mkdir output && mkdir results
@@ -49,6 +49,9 @@ script:
   # - nosetests -v --with-xunit --xunit-file=$CI_REPORTS/nosetests.xml
   - nosetests -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm --xunit-file=$CI_REPORTS/nosetests.xml
   - python setup.py check -m -s
+  - flake8 imsegm --ignore=E402,W605,E731 --max-line-length=100
+  - flake8 handling_annotations --ignore=E402,W605,E731 --max-line-length=100
+  - flake8 experiments_* --ignore=E402,W605,E731 --max-line-length=100
 
   # ANNOTATION section
   - python handling_annotations/run_image_color_quantization.py -imgs "./data_images/drosophila_ovary_slice/segm_rgb/*.png"

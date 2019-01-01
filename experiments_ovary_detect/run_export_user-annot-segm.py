@@ -23,9 +23,8 @@ from functools import partial
 
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
-    # logging.warning('No display found. Using non-interactive Agg backend.')
+if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
+    print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import numpy as np
@@ -183,7 +182,7 @@ def export_figure(idx_row, df_slices_info, path_out):
             return
 
         img = tl_data.io_imread(row['path_image'])
-        segm =tl_data.io_imread(row['path_segm'])
+        segm = tl_data.io_imread(row['path_segm'])
         df = pd.read_csv(os.path.join(row['path_centers']), index_col=0)
         centres = df[['X', 'Y']].values
 

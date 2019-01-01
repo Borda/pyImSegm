@@ -26,8 +26,7 @@ try:
     USE_CYTHON = True
 except Exception:
     # NOTE: in some cases following warning may crash all message logging
-    # logging.basicConfig(level=logging.INFO)
-    logging.warning('descriptors: using pure python libraries')
+    print('descriptors: using pure python libraries')
     USE_CYTHON = False
 
 NAMES_FEATURE_FLAGS = ('mean', 'std', 'energy', 'median', 'meanGrad')
@@ -977,7 +976,7 @@ def compute_texture_desc_lm_img3d_val(img, seg, list_feature_flags,
         response = compute_img_filter_response3d(img, battery)
         # cut too large values
         response[response > MAX_SIGNAL_RESPONSE] = MAX_SIGNAL_RESPONSE
-        # norm responces
+        # norm responses
         l_n = np.sqrt(np.sum(np.power(response, 2)))
         if l_n == 0 or abs(l_n) == np.Inf:
             response = np.zeros(response.shape)
@@ -991,7 +990,7 @@ def compute_texture_desc_lm_img3d_val(img, seg, list_feature_flags,
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    names = ['tLM_%s' % n for n in names]
+    names = ['tLM_%s' % name for name in names]
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
@@ -1060,7 +1059,7 @@ def compute_texture_desc_lm_img2d_clr(img, seg, list_feature_flags,
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    names = ['tLM_%s' % ns for ns in names]
+    names = ['tLM_%s' % name for name in names]
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names

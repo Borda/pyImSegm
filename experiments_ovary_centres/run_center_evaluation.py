@@ -25,9 +25,8 @@ import numpy as np
 from scipy import ndimage
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
-    # logging.warning('No display found. Using non-interactive Agg backend.')
+if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
+    print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
@@ -124,9 +123,9 @@ def compute_statistic_eggs_centres(dict_case, points, labels, mask_eggs,
 
     # visualise missing eggs from annotation
     if os.path.isdir(path_out) and img is not None and segm is not None:
-        run_train.export_show_image_points_labels(path_out, dict_case['image'],
-                  img, segm, centers, labels_eggs, None, mask_eggs, '_stat_eggs',
-                  dict_label_marker=tl_visu.DICT_LABEL_MARKER_FN_FP)
+        run_train.export_show_image_points_labels(
+            path_out, dict_case['image'], img, segm, centers, labels_eggs, None,
+            mask_eggs, '_stat_eggs', dict_label_marker=tl_visu.DICT_LABEL_MARKER_FN_FP)
     return dict_case
 
 
@@ -146,7 +145,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
     dict_row = dict(row)
     dict_row['image'] = os.path.splitext(os.path.basename(dict_row['path_image']))[0]
 
-    if not idx in df_annot.index:
+    if idx not in df_annot.index:
         logging.debug('particular image/slice "%s" does not contain eggs '
                       'of selected stage %s', idx, col_prefix)
         return dict_row
@@ -172,8 +171,8 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
             plt.close(fig)
 
         if VISUAL_SEGM_CENTRES:
-            run_clust.export_draw_image_centers_clusters(path_visu,
-                                                name, img, centres, segm=segm)
+            run_clust.export_draw_image_centers_clusters(path_visu, name, img,
+                                                         centres, segm=segm)
         labels = np.array([1] * len(centres))
         dict_stat = compute_statistic_eggs_centres(dict_row, centres, labels,
                                                    mask_eggs, img, segm,

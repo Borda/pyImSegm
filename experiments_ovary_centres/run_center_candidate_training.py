@@ -36,8 +36,7 @@ import numpy as np
 from scipy import spatial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
+if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
@@ -378,7 +377,7 @@ def compute_points_features(segm, points, params):
     # segmentation histogram
     if 'fts_hist_diams' in params and params['fts_hist_diams'] is not None:
         features_hist, names_hist = seg_fts.compute_label_histograms_positions(
-                            segm, points, diameters=params['fts_hist_diams'])
+            segm, points, diameters=params['fts_hist_diams'])
         features = np.hstack((features, features_hist))
         feature_names += names_hist
 
@@ -386,8 +385,8 @@ def compute_points_features(segm, points, params):
     # Ray features
     if 'fts_ray_step' in params and params['fts_ray_step'] is not None:
         list_features_ray = []
-        perform_closer = params.get('fts_ray_closer', False) \
-                         and len(params['fts_ray_types']) > 1
+        perform_closer = all((params.get('fts_ray_closer', False),
+                              len(params['fts_ray_types']) > 1))
         shifting = not perform_closer
         for ray_edge, ray_border in params['fts_ray_types']:
             features_ray, _, names_ray = seg_fts.compute_ray_features_positions(
@@ -472,7 +471,7 @@ def dataset_load_images_segms_compute_features(params, df_paths,
     dict_slics, dict_points, dict_features = dict(), dict(), dict()
     logging.info('estimate candidate points and compute features')
     gene_name_img_seg = ((name, dict_imgs[name], dict_segms[name])
-                          for name in dict_imgs)
+                         for name in dict_imgs)
     _wrapper_pnt_features = partial(wrapper_estim_points_compute_features,
                                     params=params)
     feature_names = None
@@ -498,8 +497,8 @@ def dataset_load_images_segms_compute_features(params, df_paths,
 
         tqdm_bar.update()
 
-    return dict_imgs, dict_segms, dict_slics, dict_points, dict_center, \
-           dict_features, dict_labels, feature_names
+    return (dict_imgs, dict_segms, dict_slics, dict_points, dict_center,
+            dict_features, dict_labels, feature_names)
 
 
 def export_dataset_visual(path_output, dict_imgs, dict_segms, dict_slics,
@@ -601,7 +600,8 @@ def detect_center_candidates(name, image, segm, centers_gt, slic, points,
                     'path_points': path_csv}
     if centers_gt is not None:
         dict_centers = compute_statistic_centers(dict_centers, image, segm,
-                                                 centers_gt, slic, points, labels, params, path_visu)
+                                                 centers_gt, slic, points, labels,
+                                                 params, path_visu)
     return dict_centers
 
 
@@ -630,8 +630,8 @@ def load_dump_data(path_dump_data):
     dict_labels = dict(npz_file['dict_labels'].tolist())
     dict_centers = dict(npz_file['dict_centers'].tolist())
     feature_names = npz_file['feature_names'].tolist()
-    return dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, \
-           dict_features, dict_labels, feature_names
+    return (dict_imgs, dict_segms, dict_slics, dict_points, dict_centers,
+            dict_features, dict_labels, feature_names)
 
 
 def save_dump_data(path_dump_data, imgs, segms, slics, points, centers,
@@ -719,16 +719,15 @@ def main_train(params):
 
     path_dump_data = os.path.join(params['path_expt'], NAME_DUMP_TRAIN_DATA)
     if not os.path.isfile(path_dump_data) or FORCE_RECOMP_DATA:
-        dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, \
-        dict_features, dict_labels, feature_names = \
-            dataset_load_images_segms_compute_features(params, df_paths,
-                                                       params['nb_jobs'])
+        (dict_imgs, dict_segms, dict_slics, dict_points, dict_centers,
+         dict_features, dict_labels, feature_names) = \
+            dataset_load_images_segms_compute_features(params, df_paths, params['nb_jobs'])
         assert len(dict_imgs) > 0, 'missing images'
         save_dump_data(path_dump_data, dict_imgs, dict_segms, dict_slics, dict_points,
                        dict_centers, dict_features, dict_labels, feature_names)
     else:
-        dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, dict_features, \
-        dict_labels, feature_names = load_dump_data(path_dump_data)
+        (dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, dict_features,
+         dict_labels, feature_names) = load_dump_data(path_dump_data)
 
     if is_drawing(params['path_expt']) and EXPORT_TRAINING_DATA:
         export_dataset_visual(params['path_expt'], dict_imgs, dict_segms, dict_slics,
@@ -759,7 +758,7 @@ def main_train(params):
     seg_clf.eval_classif_cross_val_roc(params['classif'], classif, features, labels,
                                        cross_val=cv, path_out=params['path_expt'])
 
-    if RUN_LEAVE_ONE_OUT :
+    if RUN_LEAVE_ONE_OUT:
         experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
                        dict_points, dict_features, feature_names)
 

@@ -44,7 +44,7 @@ import gtk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg
 
-sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
+sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.drawing as tl_visu
 
@@ -87,7 +87,8 @@ def arg_parse_params():
                         help='path to file with complete info', default=None)
     params = vars(parser.parse_args())
     for k in (k for k in params if 'path' in k):
-        if params[k] is None: continue
+        if params[k] is None:
+            continue
         params[k] = os.path.abspath(os.path.expanduser(params[k]))
         p = os.path.dirname(params[k]) if '*' in params[k] else params[k]
         assert os.path.exists(p), 'missing: %s' % p
@@ -145,8 +146,8 @@ def set_false_negative(df_points, mask_eggs):
         if sum(labels) == 0:
             pos = ndimage.measurements.center_of_mass(mask)
             df_points = df_points.append(
-                            {'X': pos[1], 'Y': pos[0], 'label': 1, 'change': 1},
-                            ignore_index=True)
+                {'X': pos[1], 'Y': pos[0], 'label': 1, 'change': 1},
+                ignore_index=True)
     return df_points
 
 
@@ -266,7 +267,7 @@ def add_point_correction(x, y, changing=1, limit_dist=DICT_LIMIT_CORRECT):
     else:
         # add new point
         df_center_labeled = df_center_labeled.append(
-            {'X': x, 'Y': y,  'label': 1, 'change': 1}, ignore_index=True)
+            {'X': x, 'Y': y, 'label': 1, 'change': 1}, ignore_index=True)
 
     canvas_update_image_centers()
 

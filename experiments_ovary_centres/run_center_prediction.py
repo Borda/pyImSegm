@@ -14,14 +14,15 @@ Copyright (C) 2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 
 import os
 import sys
-import time, gc
+import time
+import gc
 import logging
 # import multiprocessing as mproc
 from functools import partial
 
 import pandas as pd
 
-sys.path += [os.path.abspath('.'), os.path.abspath('..')] # Add path to root
+sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utilities.experiments as tl_expt
 import imsegm.utilities.data_io as tl_data
 import imsegm.classification as seg_clf
@@ -74,8 +75,8 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
                                                               path_show_in,
                                                               params['dict_relabel'])
         t_start = time.time()
-        _, slic, points, features, feature_names = \
-                run_train.estim_points_compute_features(name, img, segm, params)
+        _, slic, points, features, feature_names =\
+            run_train.estim_points_compute_features(name, img, segm, params)
         dict_detect = run_train.detect_center_candidates(name, img, segm, None,
                                                          slic, points, features,
                                                          feature_names, params,
@@ -117,11 +118,11 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs,
     else:
         logging.info('estimating own triples')
         df_paths = run_train.find_match_images_segms_centers(
-                                        path_imgs, path_segs, path_centers)
+            path_imgs, path_segs, path_centers)
         df_paths['image'] = df_paths['path_image'].apply(
             lambda x: os.path.splitext(os.path.basename(x))[0])
         df_paths.set_index('image', inplace=True)
-    for col in (c  for c in df_paths.columns if c.startswith('path_')):
+    for col in (c for c in df_paths.columns if c.startswith('path_')):
         df_paths[col] = df_paths[col].apply(tl_data.update_path)
     df_paths.to_csv(path_csv_out)
     return df_paths

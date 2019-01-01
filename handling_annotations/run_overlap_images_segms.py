@@ -21,8 +21,7 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY','') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
+if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
@@ -98,7 +97,7 @@ def visualise_overlap(path_img, path_seg, path_out,
     if b_img_contour:
         path_im_visu = os.path.splitext(path_out)[0] + '_contour.png'
         img_contour = segmentation.mark_boundaries(img[:, :, :3], seg,
-                                       color=COLOR_CONTOUR, mode='subpixel')
+                                                   color=COLOR_CONTOUR, mode='subpixel')
         plt.imsave(path_im_visu, img_contour)
     # else:  # for colour images of disc
     #     mask = (np.sum(img, axis=2) == 0)
