@@ -75,10 +75,7 @@ script:
   - python experiments_ovary_centres/run_center_evaluation.py
 
   # download MorphSnake
-  - cd $root/libs && git clone https://github.com/Borda/morph-snakes.git
-  - cd $root/libs/morph-snakes && pip install -r requirements.txt
-  - cd $root/libs/morph-snakes && python setup.py install
-  - cd $root
+  - pip install git+https://github.com/Borda/morph-snakes.git
   # REGION GROWING section
   - rm -r -f results && mkdir results
   - python experiments_ovary_detect/run_RG2Sp_estim_shape-models.py

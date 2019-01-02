@@ -261,9 +261,9 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
     logging.info(tl_expt.string_dict(dict_paths, desc='PATHS'))
 
     list_results = sorted(glob.glob(os.path.join(dict_paths['results'], '*')))
-    _if_path = lambda p: all(os.path.isdir(p),
-                             '___' not in os.path.basename(p),
-                             os.path.basename(p) not in SKIP_DIRS)
+    _if_path = lambda p: all((os.path.isdir(p),
+                              '___' not in os.path.basename(p),
+                              os.path.basename(p) not in SKIP_DIRS))
     list_results = sorted([p for p in list_results if _if_path(p)])
 
     tl_expt.create_subfolders(dict_paths['results'],

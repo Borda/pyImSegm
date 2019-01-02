@@ -2,10 +2,7 @@
 Run experiments with several segmentation techniques for instance segmentation
 
 Require installation of Morph. Snakes - https://github.com/Borda/morph-snakes
->> cd libs
->> git clone https://github.com/Borda/morph-snakes.git
->> pip install -r requirements.txt
->> python setup.py install
+>> pip install --user git+https://github.com/Borda/morph-snakes.git
 
 SAMPLE run:
 >> python run_ovary_egg-segmentation.py \

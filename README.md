@@ -281,11 +281,7 @@ In case you do not have estimated object centers, you can use [plugins](ij_macro
 
 **Note:** install multi-snake package which is used in multi-method segmentation experiment.
 ```bash
-cd libs 
-git clone https://github.com/Borda/morph-snakes.git
-cd morph-snakes 
-pip install -r requirements.txt
-python setup.py install
+pip install --user git+https://github.com/Borda/morph-snakes.git
 ```
 
 **Experiment sequence is following:**

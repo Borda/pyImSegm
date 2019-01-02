@@ -14,6 +14,7 @@ jobs:
               sudo apt-get install tk-dev pkg-config python-dev python-tk
               sudo pip install --upgrade pip setuptools
               sudo pip install nose coverage pytest pytest-cov flake8
+              sudo pip install -U backports.functools_lru_cache  # required for matplotlib @py2
               pip install -r requirements.txt --user
 
         # BUILDING
@@ -69,16 +70,11 @@ jobs:
               python experiments_ovary_centres/run_center_clustering.py
               python experiments_ovary_centres/run_center_evaluation.py
 
-        # download MorphSnake
-        - run:
-            name: MorphSnake
-            command: |
-              cd libs && git clone https://github.com/Borda/morph-snakes.git
-              cd libs/morph-snakes && pip install --user -r requirements.txt && python setup.py install --user
         # REGION GROWING section
         - run:
             name: Region Growing
             command: |
+              pip install --user git+https://github.com/Borda/morph-snakes.git
               python experiments_ovary_detect/run_RG2Sp_estim_shape-models.py
               python experiments_ovary_detect/run_ovary_egg-segmentation.py -m ellipse_moments ellipse_ransac_mmt ellipse_ransac_crit GC_pixels-large GC_pixels-shape GC_slic-small GC_slic-shape rg2sp_greedy-single rg2sp_GC-mixture watershed_morph
               python experiments_ovary_detect/run_ovary_segm_evaluation.py --visual
