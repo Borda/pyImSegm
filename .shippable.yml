@@ -11,6 +11,7 @@ build:
   ci:
     - echo $CI_REPORTS && mkdir -p $CI_REPORTS
     - echo $COVERAGE_REPORTS && mkdir -p $COVERAGE_REPORTS
+    - unset DISPLAY
 
 env:
   global:

@@ -16,6 +16,7 @@ jobs:
               sudo pip install nose coverage pytest pytest-cov flake8
               sudo pip install -U backports.functools_lru_cache  # required for matplotlib @py2
               pip install -r requirements.txt --user
+              unset DISPLAY
 
         # BUILDING
         - run:
@@ -31,14 +32,12 @@ jobs:
             command: |
               coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
               python setup.py check -m -s
-
         - run:
             name: Formating
             command: |
               flake8 imsegm --ignore=E402,W605,E731 --max-line-length=100
               flake8 handling_annotations --ignore=E402,W605,E731 --max-line-length=100
               flake8 experiments_* --ignore=E402,W605,E731 --max-line-length=100
-
 
         # ANNOTATION section
         - run:
