@@ -1294,13 +1294,11 @@ def compute_label_histograms_positions(segm, list_positions,
     :param int nb_labels:
     :return: ndarray<nb_samples, nb_features>, [str]
 
-
     >>> segm = np.zeros((10, 10), dtype=int)
     >>> segm[1:9, 2:8] = 1
     >>> segm[3:7, 4:6] = 2
     >>> points = [[3, 3], [4, 4], [2, 7], [6, 6]]
-    >>> hists, names = compute_label_histograms_positions(segm, points,
-    ...                                                   [1, 2, 4], 3)
+    >>> hists, names = compute_label_histograms_positions(segm, points, [1, 2, 4])
     >>> names  # doctest: +NORMALIZE_WHITESPACE
     ['hist-d_1-lb_0', 'hist-d_1-lb_1', 'hist-d_1-lb_2', \
      'hist-d_2-lb_0', 'hist-d_2-lb_1', 'hist-d_2-lb_2', \
@@ -1312,9 +1310,19 @@ def compute_label_histograms_positions(segm, list_positions,
            [ 0.  ,  0.8 ,  0.2 ,  0.62,  0.5 , -0.12,  0.19, -0.08,  0.  ],
            [ 0.2 ,  0.8 ,  0.  ,  0.5 ,  0.  ,  0.  ,  0.1 ,  0.03,  0.  ],
            [ 0.  ,  0.2 ,  0.8 ,  0.  ,  0.62,  0.38,  0.44,  0.28, -0.06]])
+    >>> segm = np.zeros((10, 10, 2), dtype=int)
+    >>> segm[3:7, 4:6, 1] = 1
+    >>> segm[:, :, 0] = 1 - segm[:, :, 0]
+    >>> points = [[3, 3], [4, 4], [2, 7], [6, 6]]
+    >>> hists, names = compute_label_histograms_positions(segm, points, [1, 2, 4])
+    >>> np.round(hists, 2)
+    array([[ 1.  ,  0.  ,  0.75,  0.  , -0.09,  0.  ],
+           [ 1.  ,  0.2 ,  1.  , -0.12,  0.11,  0.  ],
+           [ 1.  ,  0.  ,  0.5 ,  0.  ,  0.13,  0.  ],
+           [ 1.  ,  0.8 ,  1.  ,  0.38,  0.67, -0.06]])
     """
     pos_dim = np.asarray(list_positions).shape[1]
-    assert (segm.ndim - pos_dim) in (0, 1), \
+    assert (segm.ndim - pos_dim) in (0, 1),\
         'dimension %s and %s difference should be 0 or 1' \
         % (repr(segm.ndim), repr(pos_dim))
 

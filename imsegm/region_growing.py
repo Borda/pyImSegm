@@ -749,7 +749,7 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
                                                 volumes, shape_chist,
                                                 selected_idx=None,
                                                 swap_shift=False,
-                                                dict_thresholds=RG2SP_THRESHOLDS):
+                                                dict_thresholds=None):
     """ update the shape prior for given segmentation (new centre is computed),
     set of points and cumulative histogram representing the shape model
 
@@ -765,7 +765,7 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     :param [int] selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optima
-    :param {str: ...} dict_thresholds: set some threshold updating shape prior
+    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
 
     >>> cdf = np.zeros((8, 20))
@@ -775,8 +775,7 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     >>> labels = np.ones(len(points))
     >>> s_costs = np.zeros((len(points), 2))
     >>> s_costs, centres, shifts, _ = compute_update_shape_costs_points_table_cdf(
-    ...                             s_costs, points, labels, [(0, 0)],
-    ...                             [(np.Inf, np.Inf)], [0], [0], (None, cdf))
+    ...     s_costs, points, labels, [(0, 0)], [(np.Inf, np.Inf)], [0], [0], (None, cdf))
     >>> centres
     array([[10, 13]])
     >>> shifts
@@ -787,12 +786,20 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
            [ 0.   ,  0.184],
            [ 0.   ,  0.543],
            [ 0.   ,  0.374]])
+    >>> dict_thrs = RG2SP_THRESHOLDS
+    >>> dict_thrs['centre_init'] = 1
+    >>> _, centres, _, _ = compute_update_shape_costs_points_table_cdf(
+    ...     s_costs, points, labels, [(7, 18)], [(np.Inf, np.Inf)], [0], [0], (None, cdf),
+    ...     dict_thresholds=dict_thrs)
+    >>> np.round(centres, 1)
+    array([[  7.5,  17.1]])
     """
     assert len(points) == len(labels), \
-        'number of points (%i) and labels (%i) should match' \
-        % (len(points), len(labels))
+        'number of points (%i) and labels (%i) should match' % (len(points), len(labels))
     if selected_idx is None:
         selected_idx = list(range(len(points)))
+    if dict_thresholds is None:
+        dict_thresholds = RG2SP_THRESHOLDS
     _, cdf = shape_chist
     # segm_obj = labels[slic]
     for i, centre in enumerate(centres):

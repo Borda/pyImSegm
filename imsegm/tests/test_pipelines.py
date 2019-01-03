@@ -73,11 +73,8 @@ def run_segm2d_gmm_gc(img2d, dir_name, params, types_edge=('model', 'const'),
     :param [str] types_edge: list of performed edge types
     :param [float] list_regul: list of performed edge types
     :param {str: ...} params: segmentation parameters
-    :return:
     """
     path_dir = os.path.join(PATH_OUTPUT, dir_name)
-    if params is None:
-        params = DEFAULT_SEGM_PARAMS
     if not os.path.isdir(path_dir):
         os.mkdir(path_dir)
 
