@@ -20,7 +20,7 @@ coverage:
     # https://github.com/codecov/support/wiki/Patch-Status
     patch:
       default:
-        against: parent
+        against: auto
         target: 30% # specify the target "X%" coverage to hit
         threshold: 50% # allow this much decrease on patch
     changes: false

@@ -8,7 +8,7 @@
 env:
   global:
     - CODACY_PROJECT_TOKEN=ea6533a96dfb4b6a9b6b45fc134fabdf
-    - unset DISPLAY
+    - DISPLAY=""
 
 language: python
 

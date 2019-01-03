@@ -11,12 +11,12 @@ build:
   ci:
     - echo $CI_REPORTS && mkdir -p $CI_REPORTS
     - echo $COVERAGE_REPORTS && mkdir -p $COVERAGE_REPORTS
-    - unset DISPLAY
 
 env:
   global:
     - CI_REPORTS=shippable/testresults
     - COVERAGE_REPORTS=shippable/codecoverage
+    - DISPLAY=""
 
 language: python
 
