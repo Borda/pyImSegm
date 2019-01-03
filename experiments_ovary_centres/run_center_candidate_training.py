@@ -367,9 +367,9 @@ def estim_points_compute_features(name, img, segm, params):
 def compute_points_features(segm, points, params):
     """ for each point in segmentation compute relevant features according params
 
-    :param ndarray segm:
-    :param [(int, int)] points:
-    :param {str: any} params:
+    :param ndarray segm: segmentations
+    :param [(int, int)] points: positions in image
+    :param {str: any} params: parameters
     :return ([[float]], [str]): [[float] * nb_features] * nb_points, [str] * nb_features
     """
     features, feature_names = np.empty((len(points), 0)), list()
@@ -417,12 +417,12 @@ def wrapper_estim_points_compute_features(name_img_segm, params):
 
 
 def label_close_points(centers, points, params):
-    """ label points wether they are clo to center by distance to real center
-    or from annotation of close center reagions
+    """ label points whether they are close to center by distance to real center
+    or from annotation of close center regions
 
-    :param centers: np.array OR [(int, int)]
-    :param [(int, int)] points:
-    :param {str: any} params:
+    :param ndarray|[(int, int)] centers:
+    :param [(int, int)] points: positions in image
+    :param {str: any} params: parameters
     :return [int]:
     """
     if isinstance(centers, list):
