@@ -745,8 +745,8 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     """ load image and split channels
 
     :param str path_img: path to the image
-    :param float im_range: range to scale image values (1. or 255)
-    :param (int, int) quantiles: scale image values in certain quantile range
+    :param float|None im_range: range to scale image values (1. or 255)
+    :param (int, int) quantiles: scale image values in certain percentile range
     :return:
 
     >>> p_imgs = os.path.join(update_path('data_images'),

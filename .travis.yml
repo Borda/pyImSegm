@@ -43,7 +43,7 @@ script:
   - python setup.py build_ext --inplace
   # - pytest imsegm -v --doctest-modules
   - nosetests imsegm -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
-  - flake8 imsegm --ignore=E402,W605,E731 --max-line-length=100
+  - flake8 . --ignore=E402,E731 --max-line-length=100
   - python setup.py install
 
 after_success:

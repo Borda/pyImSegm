@@ -226,12 +226,12 @@ def get_idx_name(idx, path_img):
 
 def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
     """ by paths load images and segmentation and weather centers exist,
-    load them if the path out is given r\draw visualisation of inputs
+    load them if the path out is given redraw visualisation of inputs
 
-    :param (int, DF:row) idx_row:
+    :param (int, DF:row) idx_row: tuple of index and row
     :param str path_out: path to output directory
-    :param {} dict_relabel:
-    :return (str, ndarray, ndarray, [[int, int]]):
+    :param dict dict_relabel: look-up table for relabeling
+    :return(str, ndarray, ndarray, [[int, int]]): idx_name, img_rgb, segm, centers
     """
     idx, row_path = idx_row
     for k in ['path_image', 'path_segm', 'path_centers']:
