@@ -355,7 +355,7 @@ def main(params):
     actual_idx = 0
     paths_img_csv = load_paths_image_csv(params)
     logging.info('loaded %i pairs (image & centers)', len(paths_img_csv))
-    assert len(paths_img_csv) > 0, 'missing paths image - csv'
+    assert paths_img_csv, 'missing paths image - csv'
 
     if params['path_info'] is not None and os.path.isfile(params['path_info']):
         df_info_all = pd.read_csv(params['path_info'], sep='\t', index_col=0)

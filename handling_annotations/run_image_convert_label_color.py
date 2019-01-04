@@ -102,7 +102,7 @@ def perform_img_convert(path_img, path_out, dict_colors):
     img = tl_data.io.imread(path_img)
 
     if img.ndim == 2:
-        if len(dict_colors) == 0:
+        if not dict_colors:
             dict_colors = seg_annot.DICT_COLOURS
         img_new = convert_labels_2_colors(img, dict_colors, path_out)
     elif img.ndim == 3:

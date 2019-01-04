@@ -111,7 +111,7 @@ def swap_coord_x_y(points):
     [[2, 1], [4, 2], [6, 5]]
     """
     points = np.array(points)
-    if len(points) == 0:
+    if not points.size:
         return points.tolist()
     assert points.shape[1] == 2
     points_new = points[:, [1, 0]]
@@ -233,10 +233,11 @@ def save_landmarks_csv(path_file, landmarks, dtype=float):
     path_file = os.path.splitext(path_file)[0] + '.csv'
     logging.debug(' save_landmarks_csv: -> creating CSV file: %s' % path_file)
     # create the results file in CSV
-    if len(landmarks) == 0:
+    landmarks = np.array(landmarks, dtype=dtype)
+    if not landmarks.size:
         logging.warning('empty set of landmarks')
-        landmarks = np.zeros((0, 2))
-    df = pd.DataFrame(np.array(landmarks, dtype=dtype), columns=COLUMNS_COORDS)
+        landmarks = np.zeros((0, 2), dtype=dtype)
+    df = pd.DataFrame(landmarks, columns=COLUMNS_COORDS)
     df.to_csv(path_file)
     return path_file
 
@@ -710,7 +711,7 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
     else:  # true volume
         img_b1 = np.array(img[0::2])
         img_b2 = np.array(img[1::2])
-        if len(img_b2) == 0:
+        if not img_b2.size:
             # loading also 2d images with rgb bands
             assert img_b1.ndim == 4, 'image is not RGB'
             img_b2 = np.array([img_b1[0, :, :, 1]])
@@ -971,7 +972,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
 
     def _get_paths_names(path_pattern):
         paths_ = glob.glob(path_pattern)
-        if len(paths_) == 0:
+        if not paths_:
             return [None], [None]
         names_ = [_get_name(p, os.path.basename(path_pattern)) for p in paths_]
         return paths_, names_

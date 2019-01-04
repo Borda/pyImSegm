@@ -367,6 +367,6 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
             dict_slice['image'] = os.path.splitext(row['image_path'])[0]
             df_marked = df_marked.append(dict_slice, ignore_index=True)
         tqdm_bar.update()
-    if len(df_marked) > 0:
+    if not df_marked.empty:
         df_marked.set_index('image', inplace=True)
     return df_marked

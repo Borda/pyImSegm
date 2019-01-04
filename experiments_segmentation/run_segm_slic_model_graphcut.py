@@ -472,7 +472,7 @@ def load_path_images(params):
     elif 'path_predict_imgs' in params:
         logging.info('loading images from path: %s', params['path_predict_imgs'])
         paths_img = glob.glob(params['path_predict_imgs'])
-        if len(paths_img) == 0:
+        if not paths_img:
             logging.warning('no images found on given path...')
     else:
         logging.warning('no images to load!')

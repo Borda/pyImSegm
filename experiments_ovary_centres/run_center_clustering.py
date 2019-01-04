@@ -58,11 +58,11 @@ DEFAULT_PARAMS.update({
 
 
 def cluster_center_candidates(points, max_dist=100, min_samples=1):
-    """ cluster center candidates by given desity clustering
+    """ cluster center candidates by given density clustering
 
-    :param [[float]] points:
-    :param float max_dist:
-    :param int min_samples:
+    :param [[float]] points: points
+    :param float max_dist: maximal distance among points
+    :param int min_samples: minimal number od samples
     :return (ndarray, [int]):
     """
     points = np.array(points)

@@ -1318,7 +1318,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
         candidates_scores = sorted(candidates_scores, key=lambda x: x[2],
                                    reverse=True)
 
-        if len(candidates_scores) == 0 or candidates_scores[0][2] < 0:
+        if not candidates_scores or candidates_scores[0][2] < 0:
             # break
             # try the shaking again
             if any(list_swap_shift[-7:]):

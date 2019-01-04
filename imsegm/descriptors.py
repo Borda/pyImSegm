@@ -139,14 +139,14 @@ def _check_color_image(image):
 def _check_unrecognised_feature_group(dict_feature_flags):
     unknown = [k for k in dict_feature_flags
                if not k.startswith('color') and not k.startswith('tLM')]
-    if len(unknown) > 0:
+    if unknown:
         logging.warning('unrecognised following feature groups: %s',
                         repr(unknown))
 
 
 def _check_unrecognised_feature_names(list_feature_flags):
     unknown = [k for k in list_feature_flags if k not in NAMES_FEATURE_FLAGS]
-    if len(unknown) > 0:
+    if unknown:
         logging.warning('unrecognised following feature names: %s',
                         repr(unknown))
 
@@ -1096,7 +1096,7 @@ def compute_selected_features_gray3d(img, segments,
 
     """
     _check_gray_image_segm(img, segments)
-    assert len(dict_feature_flags) > 0, 'some features has to be selected'
+    assert dict_feature_flags, 'some features has to be selected'
 
     features, names = [], []
     # COLOR FEATURES
@@ -1109,7 +1109,7 @@ def compute_selected_features_gray3d(img, segments,
 
     # TEXTURE - LEWEN-MALIK
     k_text = [k for k in dict_feature_flags if k.startswith('tLM')]
-    if len(k_text) > 0:
+    if k_text:
         for k in k_text:
             bank_type = k.split('_')[-1] if '_' in k else 'normal'
             fts, ns = compute_texture_desc_lm_img3d_val(img, segments,
@@ -1119,7 +1119,7 @@ def compute_selected_features_gray3d(img, segments,
             names += ns
     _check_unrecognised_feature_group(dict_feature_flags)
 
-    if len(features) == 0:
+    if not features:
         logging.error('not supported features: %s', repr(dict_feature_flags))
     features = np.concatenate(tuple(features), axis=1)
     features = np.nan_to_num(features)
@@ -1208,7 +1208,7 @@ def compute_selected_features_color2d(img, segments,
     features, names = [], []
     # COLOR SPACES
     k_color = [k for k in dict_feature_flags if k.startswith('color')]
-    if len(k_color) > 0:
+    if k_color:
         for k in k_color:
             if '_' in k:
                 clr = k.split('_')[-1]
@@ -1223,7 +1223,7 @@ def compute_selected_features_color2d(img, segments,
             names += ns
     # TEXTURE - LEWEN-MALIK
     k_text = [k for k in dict_feature_flags if k.startswith('tLM')]
-    if len(k_text) > 0:
+    if k_text:
         for k in k_text:
             bank_type = k.split('_')[-1] if '_' in k else 'normal'
             fts, ns = compute_texture_desc_lm_img2d_clr(img, segments,
@@ -1237,7 +1237,7 @@ def compute_selected_features_color2d(img, segments,
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    if len(features) == 0:
+    if not features.size:
         logging.error('not supported features: %s', repr(dict_feature_flags))
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
@@ -1816,7 +1816,7 @@ def interpolate_ray_dist(ray_dists, order='spline'):
     missing = ray_dists == -1
     x_train = x_space[ray_dists != -1]
     y_train = ray_dists[ray_dists != -1]
-    if len(y_train) == 0:
+    if not np.asarray(y_train).size:
         return ray_dists
     # set 3x range from -N to 2N
     x_train_ext = np.hstack((x_train - len(x_space),

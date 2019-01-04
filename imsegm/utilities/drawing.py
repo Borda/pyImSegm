@@ -1106,9 +1106,9 @@ def draw_image_clusters_centers(ax, img, centres, points=None,
                                 labels_centre=None, segm=None):
     """ draw imageas bacround and clusters centers
 
-    :param ax:
-    :param ndarray img:
-    :param ndarray centres:
+    :param ax: figure axis
+    :param ndarray img: image
+    :param ndarray centres: points
     :param ndarray points: optional list of all points
     :param [int] labels_centre: optional list of labels for points
     :param ndarray segm: optional segmentation

@@ -205,7 +205,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
         logging.debug('loading slices_info from "%s"', path_csv)
         df_slices_info = pd.read_csv(path_csv, index_col=0)
 
-    if len(df_slices_info) == 0:
+    if df_slices_info.empty:
         return df_paths
 
     # df_paths = pd.merge(df_paths, df_slices_info, how='inner',
@@ -257,13 +257,13 @@ def main(params):
                                            params['path_infofile'],
                                            params['path_expt'],
                                            params['nb_jobs'])
-        if len(df_eval) > 0 and 'image' in df_eval.columns:
+        if not df_eval.empty and 'image' in df_eval.columns:
             df_eval.set_index('image', inplace=True)
         df_eval.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_STAT))
         gc.collect()
         time.sleep(1)
 
-    if len(df_eval) > 0:
+    if not df_eval.empty:
         df_stat = df_eval.describe().transpose()
         logging.info('STATISTIC: \n %s', repr(df_stat))
         df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STATISTIC))

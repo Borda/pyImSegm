@@ -186,7 +186,7 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True,
     logging.info('found %i pairs', len(df_paths))
     df_paths.to_csv(path_csv)
 
-    assert len(df_paths) > 0, 'nothing to compare'
+    assert not df_paths.empty, 'nothing to compare'
 
     name_seg_dir = os.path.basename(os.path.dirname(dict_paths['segm']))
     path_visu = os.path.join(dict_paths['output'], name_seg_dir + SUFFIX_VISUAL)
