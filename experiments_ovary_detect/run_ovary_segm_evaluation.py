@@ -21,9 +21,8 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
-    # logging.warning('No display found. Using non-interactive Agg backend.')
+if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
+    print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 import numpy as np
@@ -113,25 +112,25 @@ def compute_metrics(row):
     segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
     assert annot.shape == segm.shape, 'dimension do mot match %s - %s' % \
                                       (repr(annot.shape), repr(segm.shape))
-    list_jacob = []
+    jacobs = []
     segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=True)
     for lb in np.unique(annot)[1:]:
         annot_obj = (annot == lb)
         segm_obj = (segm == lb)
         # label_hist = seg_lb.histogram_regions_labels_counts(segm, annot_obj)
         # segm_obj = np.argmax(label_hist, axis=1)[segm]
-        jaccoby = np.sum(np.logical_and(annot_obj, segm_obj)) \
-                  / float(np.sum(np.logical_or(annot_obj, segm_obj)))
-        list_jacob.append(jaccoby)
-    if len(list_jacob) == 0:
-        list_jacob.append(0)
+        sum_or = np.sum(np.logical_or(annot_obj, segm_obj))
+        jaccoby = np.sum(np.logical_and(annot_obj, segm_obj)) / float(sum_or)
+        jacobs.append(jaccoby)
+    if not jacobs:
+        jacobs.append(0)
 
     # avg_weight = 'samples' if len(np.unique(annot)) > 2 else 'binary'
     y_true, y_pred = annot.ravel(), segm.ravel()
     dict_eval = {
         'name': os.path.basename(row['path_annot']),
         'ARS': metrics.adjusted_rand_score(y_true, y_pred),
-        'Jaccard': np.mean(list_jacob),
+        'Jaccard': np.mean(jacobs),
         'f1': metrics.f1_score(y_true, y_pred, average='micro'),
         'accuracy': metrics.accuracy_score(y_true, y_pred),
         'precision': metrics.precision_score(y_true, y_pred, average='micro'),
@@ -211,7 +210,7 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
                   os.path.join(path_dir, '*.png')]
     df_paths = tl_data.find_files_match_names_across_dirs(list_paths)
 
-    if len(df_paths) == 0:
+    if df_paths.empty:
         return {'method': name, 'count': 0}
 
     if dict_paths['annots'] is not None:
@@ -262,13 +261,13 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
     logging.info(tl_expt.string_dict(dict_paths, desc='PATHS'))
 
     list_results = sorted(glob.glob(os.path.join(dict_paths['results'], '*')))
-    list_results = sorted([p for p in list_results
-                            if os.path.isdir(p)
-                             and '___' not in os.path.basename(p)
-                             and os.path.basename(p) not in SKIP_DIRS])
+    _if_path = lambda p: all((os.path.isdir(p),
+                              '___' not in os.path.basename(p),
+                              os.path.basename(p) not in SKIP_DIRS))
+    list_results = sorted([p for p in list_results if _if_path(p)])
 
     tl_expt.create_subfolders(dict_paths['results'],
-                    [NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3])
+                              [NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3])
 
     df_all = pd.DataFrame()
     _wrapper_eval = partial(evaluate_folder, dict_paths=dict_paths,

@@ -8,6 +8,7 @@
 env:
   global:
     - CODACY_PROJECT_TOKEN=ea6533a96dfb4b6a9b6b45fc134fabdf
+    - DISPLAY=""
 
 language: python
 
@@ -30,7 +31,7 @@ install:
   - mkdir libs
 
   - pip install -r requirements.txt
-  - pip install nose coverage codecov pytest codacy-coverage check-manifest
+  - pip install nose coverage codecov pytest codacy-coverage check-manifest flake8
 
 before_script:
   - mkdir output && mkdir results
@@ -42,6 +43,7 @@ script:
   - python setup.py build_ext --inplace
   # - pytest imsegm -v --doctest-modules
   - nosetests imsegm -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
+  - flake8 . --ignore=E402,E731 --max-line-length=100
   - python setup.py install
 
 after_success:

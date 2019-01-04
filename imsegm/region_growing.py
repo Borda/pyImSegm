@@ -749,7 +749,7 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
                                                 volumes, shape_chist,
                                                 selected_idx=None,
                                                 swap_shift=False,
-                                                dict_thresholds=RG2SP_THRESHOLDS):
+                                                dict_thresholds=None):
     """ update the shape prior for given segmentation (new centre is computed),
     set of points and cumulative histogram representing the shape model
 
@@ -765,7 +765,7 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     :param [int] selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optima
-    :param {str: ...} dict_thresholds: set some threshold updating shape prior
+    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
 
     >>> cdf = np.zeros((8, 20))
@@ -775,8 +775,7 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     >>> labels = np.ones(len(points))
     >>> s_costs = np.zeros((len(points), 2))
     >>> s_costs, centres, shifts, _ = compute_update_shape_costs_points_table_cdf(
-    ...                             s_costs, points, labels, [(0, 0)],
-    ...                             [(np.Inf, np.Inf)], [0], [0], (None, cdf))
+    ...     s_costs, points, labels, [(0, 0)], [(np.Inf, np.Inf)], [0], [0], (None, cdf))
     >>> centres
     array([[10, 13]])
     >>> shifts
@@ -787,12 +786,19 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
            [ 0.   ,  0.184],
            [ 0.   ,  0.543],
            [ 0.   ,  0.374]])
+    >>> dict_thrs = RG2SP_THRESHOLDS
+    >>> dict_thrs['centre_init'] = 1
+    >>> _, centres, _, _ = compute_update_shape_costs_points_table_cdf(
+    ...     s_costs, points, labels, [(7, 18)], [(np.Inf, np.Inf)], [0], [0], (None, cdf),
+    ...     dict_thresholds=dict_thrs)
+    >>> np.round(centres, 1)
+    array([[  7.5,  17.1]])
     """
     assert len(points) == len(labels), \
-        'number of points (%i) and labels (%i) should match' \
-        % (len(points), len(labels))
+        'number of points (%i) and labels (%i) should match' % (len(points), len(labels))
     if selected_idx is None:
         selected_idx = list(range(len(points)))
+    thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     _, cdf = shape_chist
     # segm_obj = labels[slic]
     for i, centre in enumerate(centres):
@@ -809,27 +815,25 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
             shifts[i] = shift
 
         # shift it to the edge of max init distance
-        cdist_init_2 = np.sum((np.array(centre_new)
-                               - np.array(init_centres[i])) ** 2)
-        if cdist_init_2 > dict_thresholds['centre_init'] ** 2:
-            centre_new = init_centres[i] + \
-                         (dict_thresholds['centre_init'] / np.sqrt(cdist_init_2)) \
-                         * (np.array(centre_new) - np.array(init_centres[i]))
+        cdist_init_2 = np.sum((np.array(centre_new) - np.array(init_centres[i])) ** 2)
+        if cdist_init_2 > thresholds['centre_init'] ** 2:
+            diff = np.asarray(centre_new) - np.asarray(init_centres[i])
+            thr = thresholds['centre_init'] / np.sqrt(cdist_init_2)
+            centre_new = init_centres[i] + thr * diff
 
         cdist_act_2 = np.sum((np.array(centre_new) - np.array(centre)) ** 2)
-        if cdist_act_2 <= dict_thresholds['centre'] ** 2 \
-                and np.abs(shift - shifts[i]) <= dict_thresholds['shift'] \
-                and not swap_shift:
+        if cdist_act_2 <= thresholds['centre'] ** 2 and \
+                np.abs(shift - shifts[i]) <= thresholds['shift'] and not swap_shift:
             continue
-        if cdist_act_2 > dict_thresholds['centre'] ** 2:
+        if cdist_act_2 > thresholds['centre'] ** 2:
             centres[i] = centre_new.tolist()
-        if np.abs(shift - shifts[i]) > dict_thresholds['shift']:
+        if np.abs(shift - shifts[i]) > thresholds['shift']:
             shifts[i] = shift
 
         shape_proba = np.zeros(len(points))
         for j in selected_idx:
-            shape_proba[j] = compute_shape_prior_table_cdf(
-                                points[j], cdf, centres[i], shifts[i])
+            shape_proba[j] = compute_shape_prior_table_cdf(points[j], cdf,
+                                                           centres[i], shifts[i])
 
         lut_shape_cost[:, i + 1] = - np.log(shape_proba + MIN_SHAPE_PROB)
 
@@ -837,10 +841,10 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     return lut_shape_cost, np.array(centres), np.array(shifts), volumes
 
 
-def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
-                         points, labels, init_centres, centres, shifts,
-                         volumes, shape_model_cdfs, selected_idx=None,
-                         swap_shift=False, dict_thresholds=RG2SP_THRESHOLDS):
+def compute_update_shape_costs_points_close_mean_cdf(
+        lut_shape_cost, slic, points, labels, init_centres, centres, shifts,
+        volumes, shape_model_cdfs, selected_idx=None, swap_shift=False,
+        dict_thresholds=None):
     """ update the shape prior for given segmentation (new centre is computed),
     set of points and cumulative histogram representing the shape model
 
@@ -857,7 +861,7 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
     :param [int] selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optima
-    :param {str: ...} dict_thresholds: set some threshold updating shape prior
+    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
 
     >>> np.random.seed(0)
@@ -904,8 +908,8 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
     assert len(points) == len(labels), \
         'number of points (%i) and labels (%i) should match' \
         % (len(points), len(labels))
-    if selected_idx is None:
-        selected_idx = range(len(points))
+    selected_idx = range(len(points)) if selected_idx is None else selected_idx
+    thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     segm_obj = labels[slic]
     model, list_mean_cdf = shape_model_cdfs
     _, list_cdfs = zip(*list_mean_cdf)
@@ -926,24 +930,24 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
             else np.abs(volume - volumes[i]) / float(volumes[i])
 
         # shift it to the edge of max init distance
-        cdist_init_2 = np.sum((np.array(centre_new)
-                               - np.array(init_centres[i])) ** 2)
-        if cdist_init_2 > dict_thresholds['centre_init'] ** 2:
-            centre_new = init_centres[i] + \
-                         (dict_thresholds['centre_init'] / np.sqrt(cdist_init_2)) \
-                         * (np.array(centre_new) - np.array(init_centres[i]))
+        cdist_init_2 = np.sum((np.array(centre_new) - np.array(init_centres[i])) ** 2)
+        if cdist_init_2 > thresholds['centre_init'] ** 2:
+
+            diff = np.asarray(centre_new) - np.asarray(init_centres[i])
+            thr = thresholds['centre_init'] / np.sqrt(cdist_init_2)
+            centre_new = init_centres[i] + thr * diff
 
         cdist_act_2 = np.sum((np.array(centre_new) - np.array(centre)) ** 2)
-        if cdist_act_2 <= dict_thresholds['centre'] ** 2 \
-                and np.abs(shift - shifts[i]) <= dict_thresholds['shift'] \
-                and volume_diff <= dict_thresholds['volume'] \
+        if cdist_act_2 <= thresholds['centre'] ** 2 \
+                and np.abs(shift - shifts[i]) <= thresholds['shift'] \
+                and volume_diff <= thresholds['volume'] \
                 and not swap_shift:
             continue
-        if cdist_act_2 > dict_thresholds['centre'] ** 2:
+        if cdist_act_2 > thresholds['centre'] ** 2:
             centres[i] = centre_new.tolist()
-        if np.abs(shift - shifts[i]) > dict_thresholds['shift']:
+        if np.abs(shift - shifts[i]) > thresholds['shift']:
             shifts[i] = shift
-        if volume_diff > dict_thresholds['volume']:
+        if volume_diff > thresholds['volume']:
             volumes[i] = volume
 
         # select closest
@@ -959,8 +963,8 @@ def compute_update_shape_costs_points_close_mean_cdf(lut_shape_cost, slic,
 
         shape_proba = np.zeros(len(points))
         for j in selected_idx:
-            shape_proba[j] = compute_shape_prior_table_cdf(
-                                points[j], cdist, centres[i], shifts[i])
+            shape_proba[j] = compute_shape_prior_table_cdf(points[j], cdist,
+                                                           centres[i], shifts[i])
         lut_shape_cost[:, i + 1] = - np.log(shape_proba + MIN_SHAPE_PROB)
 
     lut_shape_cost[np.isinf(lut_shape_cost)] = GC_REPLACE_INF
@@ -991,7 +995,7 @@ def compute_data_costs_points(slic, slic_prob_fg, centres, labels):
 def update_shape_costs_points(lut_shape_cost, slic, points, labels, init_centres,
                               centres, shifts, volumes, shape_model, shape_type,
                               selected_idx=None, swap_shift=False,
-                              dict_thresholds=RG2SP_THRESHOLDS):
+                              dict_thresholds=None):
     """ update the shape prior for given segmentation (new centre is computed),
     set of points and shape model
 
@@ -1009,18 +1013,19 @@ def update_shape_costs_points(lut_shape_cost, slic, points, labels, init_centres
     :param [int] selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optima
-    :param {str: ...} dict_thresholds: set some threshold updating shape prior
+    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
     """
+    thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     if shape_type == 'cdf':
         return compute_update_shape_costs_points_table_cdf(
             lut_shape_cost, points, labels, init_centres, centres, shifts,
-            volumes, shape_model, selected_idx, swap_shift, dict_thresholds)
+            volumes, shape_model, selected_idx, swap_shift, thresholds)
     elif shape_type == 'set_cdfs':
         # select closest by distance and use cdf
         return compute_update_shape_costs_points_close_mean_cdf(
             lut_shape_cost, slic, points, labels, init_centres, centres, shifts,
-            volumes, shape_model, selected_idx, swap_shift, dict_thresholds)
+            volumes, shape_model, selected_idx, swap_shift, thresholds)
     else:
         raise NameError('Not supported type of shape model "%s"' % shape_type)
 
@@ -1078,8 +1083,9 @@ def get_neighboring_candidates(slic_neighbours, labels, object_idx,
 def compute_rg_crit(labels, lut_data_cost, lut_shape_cost, slic_weights, edges,
                     coef_data, coef_shape, coef_pairwise, prob_label_trans):
     all_range = np.arange(len(labels))
-    crit = np.sum(slic_weights * (coef_data * lut_data_cost[all_range, labels] +
-                                  coef_shape * lut_shape_cost[all_range, labels]))
+    crit_data = coef_data * lut_data_cost[all_range, labels]
+    crit_shape = coef_shape * lut_shape_cost[all_range, labels]
+    crit = np.sum(slic_weights * (crit_data + crit_shape))
     if coef_pairwise > 0:
         pairwise_costs = compute_pairwise_penalty(edges, labels,
                                                   prob_label_trans[0],
@@ -1112,8 +1118,8 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
                                      shape_type='cdf', coef_data=1., coef_shape=1,
                                      coef_pairwise=1, prob_label_trans=(.1, .01),
                                      allow_obj_swap=True, greedy_tol=1e-3,
-                                     dict_thresholds=RG2SP_THRESHOLDS,
-                                     nb_iter=999, dict_debug_history=None):
+                                     dict_thresholds=None, nb_iter=999,
+                                     dict_debug_history=None):
     """ Region growing method with given shape prior on pre-segmented images
     it uses the Greedy strategy and set some stopping criterion
 
@@ -1130,7 +1136,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
     :param bool allow_obj_swap: allow swapping foreground object labels
     :param float greedy_tol: stoping criterion - energy change between inters
     :param int nb_iter: maximal number of iterations
-    :param {str: ...} dict_thresholds: set some threshold updating shape prior
+    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
     :return:
 
     >>> np.random.seed(0)
@@ -1238,6 +1244,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
     """
     assert len(slic_prob_fg) >= np.max(slic), 'dims of probs %s and slic %s not match' \
                                               % (len(slic_prob_fg), np.max(slic))
+    thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     slic_points = seg_spx.superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
     slic_weights = np.bincount(slic.ravel())
@@ -1261,7 +1268,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
     # update variables
     lut_shape_cost, centres, shifts, volumes = update_shape_costs_points(
         lut_shape_cost, slic, slic_points, labels, init_centres, centres, shifts,
-        volumes, shape_model, shape_type, None, False, dict_thresholds)
+        volumes, shape_model, shape_type, None, False, thresholds)
 
     if dict_debug_history is not None:
         dict_debug_history.update({'criteria': [], 'labels': [],
@@ -1292,7 +1299,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
         lut_shape_cost, centres, shifts, volumes = update_shape_costs_points(
             lut_shape_cost, slic, slic_points, labels, init_centres, centres,
             shifts, volumes, shape_model, shape_type, None, list_swap_shift[-1],
-            dict_thresholds)
+            thresholds)
 
         crit = compute_rg_crit(labels, lut_data_cost, lut_shape_cost,
                                slic_weights, edges, coef_data, coef_shape,
@@ -1311,7 +1318,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
         candidates_scores = sorted(candidates_scores, key=lambda x: x[2],
                                    reverse=True)
 
-        if len(candidates_scores) == 0 or candidates_scores[0][2] < 0:
+        if not candidates_scores or candidates_scores[0][2] < 0:
             # break
             # try the shaking again
             if any(list_swap_shift[-7:]):
@@ -1364,8 +1371,8 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     for i, idx in enumerate(candidates):
         near_idx = slic_neighbours[idx]
         near_labels = labels[near_idx]
-        unary[i, :] = slic_weights[idx] * (coef_data * lut_data_cost[idx] +
-                                           coef_shape * lut_shape_cost[idx])
+        cost = coef_data * lut_data_cost[idx] + coef_shape * lut_shape_cost[idx]
+        unary[i, :] = slic_weights[idx] * cost
         for lb in range(unary.shape[-1]):
             if lb not in near_labels:
                 unary[i, lb] = GC_REPLACE_INF
@@ -1416,8 +1423,8 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
                                        shape_type='cdf', coef_data=1., coef_shape=1,
                                        coef_pairwise=2, prob_label_trans=(0.1, 0.03),
                                        optim_global=True, allow_obj_swap=True,
-                                       dict_thresholds=RG2SP_THRESHOLDS,
-                                       nb_iter=999, dict_debug_history=None):
+                                       dict_thresholds=None, nb_iter=999,
+                                       dict_debug_history=None):
     """ Region growing method with given shape prior on pre-segmented images
     it uses the GraphCut strategy on neigbouring superpixels
 
@@ -1434,7 +1441,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
     :param bool optim_global: optimise the GC as global or per object
     :param bool allow_obj_swap: allow swapping foreground object labels
     :param int nb_iter: maximal number of iterations
-    :param {str: ...} dict_thresholds: set some threshold updating shape prior
+    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
 
     >>> h, w, step = 15, 20, 2
     >>> segm = np.zeros((h, w), dtype=int)
@@ -1540,6 +1547,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
     """
     assert len(slic_prob_fg) >= np.max(slic), 'dims of probs %s and slic %s not match' \
                                               % (len(slic_prob_fg), np.max(slic))
+    thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     slic_points = seg_spx.superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
     slic_weights = np.bincount(slic.ravel())
@@ -1562,7 +1570,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
     list_swap_shift = [False]
     lut_shape_cost, centres, shifts, volumes = update_shape_costs_points(
         lut_shape_cost, slic, slic_points, labels, init_centres, centres, shifts,
-        volumes, shape_model, shape_type, None, False, dict_thresholds)
+        volumes, shape_model, shape_type, None, False, thresholds)
 
     if dict_debug_history is not None:
         dict_debug_history.update({'criteria': [], 'labels': [],
@@ -1593,12 +1601,13 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
             lut_shape_cost, centres, shifts, volumes = update_shape_costs_points(
                 lut_shape_cost, slic, slic_points, labels, init_centres, centres,
                 shifts, volumes, shape_model, shape_type, None, list_swap_shift[-1],
-                dict_thresholds)
+                thresholds)
 
             gc_vestexes, gc_edges, edge_weights, unary, pairwise = \
                 prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
-                    slic_weights, labels, len(centres), lut_data_cost,
-                    lut_shape_cost, coef_data, coef_shape, coef_pairwise, prob_label_trans)
+                                           slic_weights, labels, len(centres),
+                                           lut_data_cost, lut_shape_cost, coef_data,
+                                           coef_shape, coef_pairwise, prob_label_trans)
             # run GraphCut
             if len(gc_edges) > 0:
                 graph_labels = cut_general_graph(np.array(gc_edges), edge_weights,
@@ -1613,19 +1622,19 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
                 lut_shape_cost, centres, shifts, volumes = update_shape_costs_points(
                     lut_shape_cost, slic, slic_points, labels, init_centres, centres,
                     shifts, volumes, shape_model, shape_type, None, list_swap_shift[-1],
-                    dict_thresholds)
+                    thresholds)
 
                 gc_vestexes, gc_edges, edge_weights, unary, pairwise = \
                     prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
-                        slic_weights, labels, len(centres), lut_data_cost,
-                        lut_shape_cost, coef_data, coef_shape, coef_pairwise, prob_label_trans)
+                                               slic_weights, labels, len(centres),
+                                               lut_data_cost, lut_shape_cost, coef_data,
+                                               coef_shape, coef_pairwise, prob_label_trans)
                 # run GraphCut
                 graph_labels = cut_general_graph(np.array(gc_edges), edge_weights,
                                                  unary, pairwise, n_iter=999)
                 labels_gc[gc_vestexes] = graph_labels
 
         if np.array_equal(labels, labels_gc):  # and energy == energy_last
-            # break
             # try the shaking again
             existed = any(np.array_equal(labels_gc, labels_history[i])
                           for i in range(len(labels_history) - 1))

@@ -71,12 +71,12 @@ def convert_img_color_to_rgb(image, clr_space):
 
 
 def update_path(path_file, lim_depth=5, absolute=True):
-    """ bubble in the folder tree up intil it found desired file 
+    """ bubble in the folder tree up until it found desired file
     otherwise return original one
 
     :param str path_file: path to the input file / folder
     :param int lim_depth: maximal depth for going up
-    :param str absolute: format absolute path
+    :param bool absolute: format absolute path
     :return str: path to output file / folder
 
     >>> path = 'sample_file.test'
@@ -111,7 +111,7 @@ def swap_coord_x_y(points):
     [[2, 1], [4, 2], [6, 5]]
     """
     points = np.array(points)
-    if len(points) == 0:
+    if not points.size:
         return points.tolist()
     assert points.shape[1] == 2
     points_new = points[:, [1, 0]]
@@ -120,7 +120,7 @@ def swap_coord_x_y(points):
 
 def load_landmarks_txt(path_file):
     """ load the landmarks from a given file of TXT type and return array
-    
+
     :param str path_file: name of the input file(whole path)
     :return ndarray: array of landmarks of size <nbLandmarks> x 2
 
@@ -138,7 +138,7 @@ def load_landmarks_txt(path_file):
     # load input file
     with open(path_file, 'r') as f:
         lines = f.readlines()
-        
+
     landmarks = list()
     for line in lines[2:]:
         # logging.debug(line)
@@ -154,7 +154,7 @@ def load_landmarks_txt(path_file):
 
 def load_landmarks_csv(path_file):
     """ load the landmarks from a given file of TXT type and return array
-    
+
     :param str path_file: name of the input file(whole path)
     :return ndarray: array of landmarks of size <nbLandmarks> x 2
 
@@ -202,7 +202,7 @@ def load_landmarks_csv(path_file):
 
 def save_landmarks_txt(path_file, landmarks):
     """ save the landmarks into a given file of TXT type
-    
+
     :param str path_file: name of the input file(whole path)
     :param landmarks: array of landmarks of size nb_landmarks x 2
     :return str: path to output file
@@ -233,10 +233,11 @@ def save_landmarks_csv(path_file, landmarks, dtype=float):
     path_file = os.path.splitext(path_file)[0] + '.csv'
     logging.debug(' save_landmarks_csv: -> creating CSV file: %s' % path_file)
     # create the results file in CSV
-    if len(landmarks) == 0:
+    landmarks = np.array(landmarks, dtype=dtype)
+    if not landmarks.size:
         logging.warning('empty set of landmarks')
-        landmarks = np.zeros((0, 2))
-    df = pd.DataFrame(np.array(landmarks, dtype=dtype), columns=COLUMNS_COORDS)
+        landmarks = np.zeros((0, 2), dtype=dtype)
+    df = pd.DataFrame(landmarks, columns=COLUMNS_COORDS)
     df.to_csv(path_file)
     return path_file
 
@@ -465,7 +466,7 @@ def export_image(path_img, img, stretch_range=True):
 
 def load_params_from_txt(path_file):
     """ parse the parameter file which was coded by repr function
-    
+
     :param str path_file: path to file with parameters
     :return {str: ...}:
 
@@ -710,7 +711,7 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
     else:  # true volume
         img_b1 = np.array(img[0::2])
         img_b2 = np.array(img[1::2])
-        if len(img_b2) == 0:
+        if not img_b2.size:
             # loading also 2d images with rgb bands
             assert img_b1.ndim == 4, 'image is not RGB'
             img_b2 = np.array([img_b1[0, :, :, 1]])
@@ -745,8 +746,8 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     """ load image and split channels
 
     :param str path_img: path to the image
-    :param float im_range: range to scale image values (1. or 255)
-    :param (int, int) quantiles: scale image values in certain quantile range
+    :param float|None im_range: range to scale image values (1. or 255)
+    :param (int, int) quantiles: scale image values in certain percentile range
     :return:
 
     >>> p_imgs = os.path.join(update_path('data_images'),
@@ -971,7 +972,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
 
     def _get_paths_names(path_pattern):
         paths_ = glob.glob(path_pattern)
-        if len(paths_) == 0:
+        if not paths_:
             return [None], [None]
         names_ = [_get_name(p, os.path.basename(path_pattern)) for p in paths_]
         return paths_, names_

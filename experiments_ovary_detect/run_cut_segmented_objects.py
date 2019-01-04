@@ -57,10 +57,10 @@ def arg_parse_params(dict_paths):
                         help='number of processes in parallel')
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %s', repr(args))
-    dict_paths = {k.split('_')[-1]:
-                      os.path.join(tl_data.update_path(os.path.dirname(args[k])),
-                                   os.path.basename(args[k]))
-                  for k in args if k.startswith('path_')}
+
+    _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])),
+                                      os.path.basename(args[k]))
+    dict_paths = {k.split('_')[-1]: _fn_path(k) for k in args if k.startswith('path_')}
     for k in dict_paths:
         assert os.path.exists(os.path.dirname(dict_paths[k])), \
             'missing (%s) "%s"' % (k, os.path.dirname(dict_paths[k]))

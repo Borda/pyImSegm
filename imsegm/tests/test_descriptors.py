@@ -96,7 +96,7 @@ class TestFeatures(unittest.TestCase):
         points = [(200, 250), (150, 200), (250, 200), (250, 300)]
         for i, point in enumerate(points):
             ray_dist_raw = seg_fts.compute_ray_features_segm_2d(
-                                    seg, point, angle_step=ANGULAR_STEP)
+                seg, point, angle_step=ANGULAR_STEP)
             ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist, shift)
             p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
@@ -112,7 +112,7 @@ class TestFeatures(unittest.TestCase):
         points = [(200, 250), (150, 200), (250, 300)]
         for i, point in enumerate(points):
             ray_dist_raw = seg_fts.compute_ray_features_segm_2d(
-                                    seg, point, angle_step=ANGULAR_STEP)
+                seg, point, angle_step=ANGULAR_STEP)
             # ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist_raw)
             p_fig = export_ray_results(seg, point, points, ray_dist_raw, [],
@@ -127,7 +127,7 @@ class TestFeatures(unittest.TestCase):
 
         for i, point in enumerate(points):
             ray_dist_raw = seg_fts.compute_ray_features_segm_2d(
-                        seg, point, angle_step=ANGULAR_STEP, edge='down')
+                seg, point, angle_step=ANGULAR_STEP, edge='down')
             ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist, shift)
             p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
@@ -139,7 +139,7 @@ class TestFeatures(unittest.TestCase):
 
         for i, point in enumerate(points):
             ray_dist_raw = seg_fts.compute_ray_features_segm_2d(
-                        seg, point, angle_step=ANGULAR_STEP, edge='down')
+                seg, point, angle_step=ANGULAR_STEP, edge='down')
             ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist, shift)
             p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
@@ -156,7 +156,7 @@ class TestFeatures(unittest.TestCase):
         centres = [(150, 200), (200, 250), (250, 200), (120, 100)]
         for i, point in enumerate(centres):
             ray_dist_raw = seg_fts.compute_ray_features_segm_2d(
-                                    seg, point, angle_step=ANGULAR_STEP)
+                seg, point, angle_step=ANGULAR_STEP)
             ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = seg_fts.reconstruct_ray_features_2d(point, ray_dist, shift)
             p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
@@ -170,7 +170,7 @@ class TestFeatures(unittest.TestCase):
                                           rltv_compact=0.2)
 
         features, names = seg_fts.compute_selected_features_color2d(
-                                         img, slic, seg_fts.FEATURES_SET_ALL)
+            img, slic, seg_fts.FEATURES_SET_ALL)
 
         path_dir = os.path.join(PATH_OUTPUT, 'temp_image-rgb2d-features')
         if not os.path.exists(path_dir):

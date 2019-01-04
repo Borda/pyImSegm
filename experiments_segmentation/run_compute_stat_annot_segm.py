@@ -19,8 +19,7 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
+if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
@@ -84,9 +83,10 @@ def aparse_params(dict_paths):
     if not isinstance(args['path_image'], str) \
             or args['path_image'].lower() == 'none':
         args['path_image'] = None
-    dict_paths = {k.split('_')[-1]:
-                      os.path.join(tl_data.update_path(os.path.dirname(args[k])),
-                                   os.path.basename(args[k]))
+
+    _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])),
+                                      os.path.basename(args[k]))
+    dict_paths = {k.split('_')[-1]: _fn_path(k)
                   for k in args if k.startswith('path_') and args[k] is not None}
     for k in dict_paths:
         assert os.path.isdir(os.path.dirname(dict_paths[k])), \
@@ -186,7 +186,7 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True,
     logging.info('found %i pairs', len(df_paths))
     df_paths.to_csv(path_csv)
 
-    assert len(df_paths) > 0, 'nothing to compare'
+    assert not df_paths.empty, 'nothing to compare'
 
     name_seg_dir = os.path.basename(os.path.dirname(dict_paths['segm']))
     path_visu = os.path.join(dict_paths['output'], name_seg_dir + SUFFIX_VISUAL)

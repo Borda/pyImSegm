@@ -26,13 +26,14 @@ import glob
 import pickle
 import argparse
 import logging
-import time, gc
+import time
+import gc
 import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
 if os.environ.get('DISPLAY', '') == '':
-    # logging.warning('No display found. Using non-interactive Agg backend.')
+    print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 from PIL import Image
@@ -151,7 +152,8 @@ def arg_parse_params(params):
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %s', repr(args))
     for k in (k for k in args if 'path' in k):
-        if args[k] == '' or args[k] == 'none': continue
+        if args[k] == '' or args[k] == 'none':
+            continue
         args[k] = tl_data.update_path(args[k])
         p = os.path.dirname(args[k]) if k == 'path_predict_imgs' else args[k]
         assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
@@ -181,11 +183,11 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
         # if img.max() > 1:
         #     img = (img / 255.)
     elif img_type == '2d_rgb':
-        img,  _ = tl_data.load_image_2d(path_img)
+        img, _ = tl_data.load_image_2d(path_img)
         # if img.max() > 1:
         #     img = (img / 255.)
     elif img_type == '2d_segm':
-        img,  _ = tl_data.load_image_2d(path_img)
+        img, _ = tl_data.load_image_2d(path_img)
         if img.ndim == 3:
             img = img[:, :, 0]
         if ANNOT_RELABEL_SEQUENCE:
@@ -470,7 +472,7 @@ def load_path_images(params):
     elif 'path_predict_imgs' in params:
         logging.info('loading images from path: %s', params['path_predict_imgs'])
         paths_img = glob.glob(params['path_predict_imgs'])
-        if len(paths_img) == 0:
+        if not paths_img:
             logging.warning('no images found on given path...')
     else:
         logging.warning('no images to load!')
@@ -495,9 +497,10 @@ def main(params):
     logging.getLogger().setLevel(logging.DEBUG)
     show_visual = params.get('visual', False)
 
-    reload_dir_config = (os.path.isfile(params['path_config']) or FORCE_RELOAD)
+    reload_dir_config = os.path.isfile(params['path_config']) or FORCE_RELOAD
+    stamp_unique = params.get('unique', EACH_UNIQUE_EXPERIMENT)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
-                      stamp_unique=params.get('unique', EACH_UNIQUE_EXPERIMENT),
+                                              stamp_unique=stamp_unique,
                                               skip_load=reload_dir_config)
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))

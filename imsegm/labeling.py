@@ -13,6 +13,24 @@ import skimage.segmentation as sk_segm
 import imsegm.utilities.data_io as tl_data
 
 
+def neighbour_connect4(seg, label, pos):
+    """ check incoherent part of the segmentation
+
+    :param ndarray seg: segmentation
+    :param int label: selected label
+    :param (int, int) pos: position
+    :return:
+
+    >>> neighbour_connect4(np.eye(5), 1, (2, 2))
+    True
+    >>> neighbour_connect4(np.ones((5, 5)), 1, (3, 3))
+    False
+    """
+    neighbour = any(seg[pos[0] + a, pos[1] + b] != label
+                    for a, b in [(-1, 0), (0, -1), (1, 0), (0, 1)])
+    return neighbour
+
+
 def contour_binary_map(seg, label=1, include_boundary=False):
     """ get object boundaries
 
@@ -44,9 +62,7 @@ def contour_binary_map(seg, label=1, include_boundary=False):
     for i in range(1, w - 1):
         for j in range(1, h - 1):
             # just for 4-connected
-            if seg[i, j] == label \
-                    and (seg[i - 1, j] != label or seg[i, j - 1] != label
-                         or seg[i + 1, j] != label or seg[i, j + 1] != label):
+            if seg[i, j] == label and neighbour_connect4(seg, label, (i, j)):
                 res[i, j] = 1
     if include_boundary:
         for i in range(0, w):
@@ -85,9 +101,7 @@ def contour_coords(seg, label=1, include_boundary=False):
     for i in range(1, w - 1):
         for j in range(1, h - 1):
             # just for 4-connected
-            if seg[i, j] == label \
-                    and (seg[i-1, j] != label or seg[i, j-1] != label
-                         or seg[i + 1, j] != label or seg[i, j + 1] != label):
+            if seg[i, j] == label and neighbour_connect4(seg, label, (i, j)):
                 res.append([i, j])
     if include_boundary:
         for i in range(0, w):
@@ -731,4 +745,3 @@ def assume_bg_on_boundary(segm, bg_label=0, boundary_size=1):
         lut[bg_label] = boundary_lb
         segm = np.array(lut)[segm]
     return segm
-

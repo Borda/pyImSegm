@@ -18,8 +18,7 @@ import numpy as np
 from sklearn import cluster
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
+if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
@@ -59,11 +58,11 @@ DEFAULT_PARAMS.update({
 
 
 def cluster_center_candidates(points, max_dist=100, min_samples=1):
-    """ cluster center candidates by given desity clustering
+    """ cluster center candidates by given density clustering
 
-    :param [[float]] points:
-    :param float max_dist:
-    :param int min_samples:
+    :param [[float]] points: points
+    :param float max_dist: maximal distance among points
+    :param int min_samples: minimal number od samples
     :return (ndarray, [int]):
     """
     points = np.array(points)
@@ -99,7 +98,8 @@ def export_draw_image_centers_clusters(path_out, name, img, centres, points=None
     :param int max_fig_size:
     """
     # if the output dos nor exist, leave
-    if not os.path.isdir(path_out): return
+    if not os.path.isdir(path_out):
+        return
 
     size = None
     if img is not None:
@@ -138,9 +138,9 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
         logging.debug('no points to cluster for "%s"', name)
     points = tl_data.swap_coord_x_y(points)
 
-    centres, clust_labels = cluster_center_candidates(points,
-                                      max_dist=params['DBSCAN_max_dist'],
-                                      min_samples=params['DBSCAN_min_samples'])
+    centres, clust_labels = cluster_center_candidates(
+        points, max_dist=params['DBSCAN_max_dist'],
+        min_samples=params['DBSCAN_min_samples'])
     path_csv = os.path.join(path_out, FOLDER_CENTER, name + '.csv')
     tl_data.save_landmarks_csv(path_csv, tl_data.swap_coord_x_y(centres))
 

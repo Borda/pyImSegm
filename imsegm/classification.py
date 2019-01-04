@@ -27,9 +27,9 @@ from sklearn import ensemble, neighbors, svm, tree
 from sklearn import pipeline, linear_model, neural_network
 from sklearn import model_selection
 try:  # due to some chnages in between versions
-    from sklearn.grid_search import GridSearchCV, RandomizedSearchCV, ParameterSampler, ParameterGrid
+    from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 except Exception:
-    from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, ParameterSampler, ParameterGrid
+    from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 import imsegm.labeling as seg_lbs
 import imsegm.utilities.experiments as tl_expt
@@ -94,7 +94,7 @@ def create_classifiers(nb_jobs=-1):
                        tol=2e-3, max_iter=5000),
         'DecTree': tree.DecisionTreeClassifier(),
         # 'RBM': create_pipeline_neuron_net(),
-        'AdaBoost':   ensemble.AdaBoostClassifier(n_estimators=5),
+        'AdaBoost': ensemble.AdaBoostClassifier(n_estimators=5),
         # 'NuSVM-rbf': svm.NuSVC(kernel='rbf', probability=True),
     }
     return clfs
@@ -283,7 +283,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
 
     :param [int] y_true:
     :param [int] y_pred:
-    :param str metric_averages:
+    :param str|[str] metric_averages:
     :return {str: float}:
 
     >>> np.random.seed(0)
@@ -320,18 +320,18 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
         y_pred = relabel_sequential(y_pred, uq_labels)
 
     # http://scikit-learn.org/stable/modules/generated/sklearn.metrics.precision_recall_fscore_support.html
-    EVAL_STR = 'EVALUATION: {:<2} PRE: {:.3f} REC: {:.3f} F1: {:.3f} S: {:>6}'
+    eval_str = 'EVALUATION: {:<2} PRE: {:.3f} REC: {:.3f} F1: {:.3f} S: {:>6}'
     try:
         p, r, f, s = metrics.precision_recall_fscore_support(y_true, y_pred)
         for l, _ in enumerate(p):
-            logging.debug(EVAL_STR.format(l, p[l], r[l], f[l], s[l]))
+            logging.debug(eval_str.format(l, p[l], r[l], f[l], s[l]))
     except Exception:
         logging.exception('metrics.precision_recall_fscore_support')
 
     dict_metrics = {
         'ARS': metrics.adjusted_rand_score(y_true, y_pred),
         # 'F1':  metrics.f1_score(y_true, y_pred),
-        'accuracy':  metrics.accuracy_score(y_true, y_pred),
+        'accuracy': metrics.accuracy_score(y_true, y_pred),
         # 'precision':  metrics.precision_score(y_true, y_pred),
         'confusion': metrics.confusion_matrix(y_true, y_pred).tolist(),
         # 'report':    metrics.classification_report(labels, predicted),

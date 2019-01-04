@@ -2,10 +2,7 @@
 Run experiments with several segmentation techniques for instance segmentation
 
 Require installation of Morph. Snakes - https://github.com/Borda/morph-snakes
->> cd libs
->> git clone https://github.com/Borda/morph-snakes.git
->> pip install -r requirements.txt
->> python setup.py install
+>> pip install --user git+https://github.com/Borda/morph-snakes.git
 
 SAMPLE run:
 >> python run_ovary_egg-segmentation.py \
@@ -35,8 +32,7 @@ import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
-if os.environ.get('DISPLAY', '') == '' \
-        and matplotlib.rcParams['backend'] != 'agg':
+if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
@@ -93,6 +89,7 @@ RG2SP_THRESHOLDS = {  # thresholds for updating between iterations
     'volume': 0.05,
     'centre_init': 50
 }
+COLUMNS_ELLIPSE = ('xc', 'yc', 'a', 'b', 'theta')
 
 PATH_DATA = tl_data.update_path('data', absolute=True)
 PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
@@ -108,8 +105,8 @@ LIST_SAMPLE_METHODS = (
 SEGM_PARAMS = {
     # ovary labels: background, funicular cells, nurse cells, cytoplasm
     'tab-proba_ellipse': [0.01, 0.95, 0.95, 0.85],
-    'tab-proba_graphcut':  [0.01, 0.6, 0.99, 0.75],
-    'tab-proba_RG2SP':  [0.01, 0.6, 0.95, 0.75],
+    'tab-proba_graphcut': [0.01, 0.6, 0.99, 0.75],
+    'tab-proba_RG2SP': [0.01, 0.6, 0.95, 0.75],
     'path_single-model': os.path.join(PATH_DATA, 'RG2SP_eggs_single-model.pkl'),
     'path_multi-models': os.path.join(PATH_DATA, 'RG2SP_eggs_mixture-model.pkl'),
     'gc-pixel_regul': 3.,
@@ -164,7 +161,8 @@ def arg_parse_params(params):
         params.update(data)
         params.update(arg_params)
     for k in (k for k in arg_params if 'path' in k):
-        if arg_params[k] is None: continue
+        if arg_params[k] is None:
+            continue
         params[k] = tl_data.update_path(arg_params[k], absolute=True)
         assert os.path.exists(params[k]), 'missing: %s' % params[k]
     # load saved configuration
@@ -391,9 +389,7 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points,
             centres_new.append(centers[i])
             ell_params.append(ellipse.params)
 
-    dict_export = {'ellipses.csv':
-                       pd.DataFrame(ell_params,
-                                    columns=['xc', 'yc', 'a', 'b', 'theta'])}
+    dict_export = {'ellipses.csv': pd.DataFrame(ell_params, columns=COLUMNS_ELLIPSE)}
     return segm, np.array(centres_new), dict_export
 
 
@@ -429,9 +425,7 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
             centres_new.append(centers[i])
             ell_params.append(ransac_model.params)
 
-    dict_export = {'ellipses.csv':
-                       pd.DataFrame(ell_params,
-                                    columns=['xc', 'yc', 'a', 'b', 'theta'])}
+    dict_export = {'ellipses.csv': pd.DataFrame(ell_params, columns=COLUMNS_ELLIPSE)}
     return segm, np.array(centres_new), dict_export
 
 
@@ -474,9 +468,7 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
             centres_new.append(centers[i])
             ell_params.append(ransac_model.params)
 
-    dict_export = {'ellipses.csv':
-                       pd.DataFrame(ell_params,
-                                    columns=['xc', 'yc', 'a', 'b', 'theta'])}
+    dict_export = {'ellipses.csv': pd.DataFrame(ell_params, columns=COLUMNS_ELLIPSE)}
     return segm, np.array(centres_new), dict_export
 
 
@@ -495,8 +487,8 @@ def segment_graphcut_pixels(seg, centers, labels_fg_prob, gc_regul=1.,
     :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     segm_obj = seg_rg.object_segmentation_graphcut_pixels(
-                            seg, centers, labels_fg_prob, gc_regul, seed_size,
-                            coef_shape, shape_mean_std=shape_mean_std)
+        seg, centers, labels_fg_prob, gc_regul, seed_size, coef_shape,
+        shape_mean_std=shape_mean_std)
     return segm_obj, centers, None
 
 
@@ -517,9 +509,9 @@ def segment_graphcut_slic(slic, seg, centers, labels_fg_prob, gc_regul=1.,
     :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     gc_labels = seg_rg.object_segmentation_graphcut_slic(
-                    slic, seg, centers, labels_fg_prob, gc_regul, edge_weight,
-                    add_neighbours=multi_seed, coef_shape=coef_shape,
-                    shape_mean_std=shape_mean_std)
+        slic, seg, centers, labels_fg_prob, gc_regul, edge_weight,
+        add_neighbours=multi_seed, coef_shape=coef_shape,
+        shape_mean_std=shape_mean_std)
     segm_obj = np.array(gc_labels)[slic]
     return segm_obj, centers, None
 
@@ -639,13 +631,13 @@ def create_dict_segmentation(params, slic, segm, img, centers):
                                  params['tab-proba_ellipse'])),
 
         'ellipse_ransac_crit2': (segment_fit_ellipse_ransac_segm,
-                                (segm, centers,
-                                 ell_fit.prepare_boundary_points_ray_join,
-                                 params['tab-proba_ellipse'])),
+                                 (segm, centers,
+                                  ell_fit.prepare_boundary_points_ray_join,
+                                  params['tab-proba_ellipse'])),
         'ellipse_ransac_crit3': (segment_fit_ellipse_ransac_segm,
-                                (segm, centers,
-                                 ell_fit.prepare_boundary_points_ray_mean,
-                                 params['tab-proba_ellipse'])),
+                                 (segm, centers,
+                                  ell_fit.prepare_boundary_points_ray_mean,
+                                  params['tab-proba_ellipse'])),
 
         'GC_pixels-small': (segment_graphcut_pixels,
                             (segm, centers, tab_proba_gc, gc_regul_px, 10)),
@@ -670,7 +662,7 @@ def create_dict_segmentation(params, slic, segm, img, centers):
 
         # NOTE, this method takes to long for run in CI
         'morph-snakes_seg': (segment_morphsnakes,
-                            (seg_simple, centers, True, 3, [2, 1])),
+                             (seg_simple, centers, True, 3, [2, 1])),
         'morph-snakes_img': (segment_morphsnakes, (img, centers)),
     }
     if params['methods'] is not None:
@@ -703,7 +695,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     seg = load_image(row_path['path_segm'], 'segm')
     assert img_rgb.shape[:2] == seg.shape, \
         'image %s and segm %s do not match' \
-         % (repr(img_rgb.shape[:2]), repr(seg.shape))
+        % (repr(img_rgb.shape[:2]), repr(seg.shape))
     if not os.path.isfile(row_path['path_centers']):
         logging.warning('no center was detected for "%s"', name)
         return name
@@ -798,9 +790,10 @@ def main(params, debug_export=DEBUG_EXPORT):
     # create sub-folders if required
     tl_expt.create_subfolders(params['path_exp'], ['input', 'simple'])
     dict_segment = create_dict_segmentation(params, None, None, None, None)
-    tl_expt.create_subfolders(params['path_exp'], [n for n in dict_segment]
-                              + [n + DIR_CENTRE_POSIX for n in dict_segment]
-                              + [n + DIR_VISUAL_POSIX for n in dict_segment])
+    dirs_center = [n + DIR_CENTRE_POSIX for n in dict_segment]
+    dirs_visu = [n + DIR_VISUAL_POSIX for n in dict_segment]
+    tl_expt.create_subfolders(params['path_exp'],
+                              [n for n in dict_segment] + dirs_center + dirs_visu)
     if debug_export:
         list_dirs = [n + DIR_DEBUG_POSIX for n in dict_segment if 'rg2sp' in n]
         tl_expt.create_subfolders(params['path_exp'], list_dirs)

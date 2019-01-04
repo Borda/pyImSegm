@@ -119,9 +119,9 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         r_org, c_org, r_rad, c_rad, phi = self.params
         sin_phi, cos_phi = np.sin(phi), np.cos(phi)
         r, c = (r_pos - r_org), (c_pos - c_org)
-        distances = ((r * cos_phi + c * sin_phi) / r_rad) ** 2 \
-                    + ((r * sin_phi - c * cos_phi) / c_rad) ** 2
-        inside = (distances <= 1)
+        dist_1 = ((r * cos_phi + c * sin_phi) / r_rad) ** 2
+        dist_2 = ((r * sin_phi - c * cos_phi) / c_rad) ** 2
+        inside = ((dist_1 + dist_2) <= 1)
 
         # import matplotlib.pyplot as plt
         # plt.imshow(labels.reshape((10, 15)), interpolation='nearest')
@@ -130,8 +130,8 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         table_q = - np.log(table_prob)
         labels_in = labels[inside].astype(int)
 
-        residual = np.sum(weights[labels_in] *
-                          (table_q[0, labels_in] - table_q[1, labels_in]))
+        diff = table_q[0, labels_in] - table_q[1, labels_in]
+        residual = np.sum(weights[labels_in] * diff)
 
         return residual
 
@@ -337,7 +337,7 @@ def add_overlap_ellipse(segm, ellipse_params, label, thr_overlap=1.):
         # together = np.sum(np.logical_or(segm == lb, mask == 1))
         # ratio = float(overlap) / float(together)
         sizes = [s for s in [np.sum(segm == lb), np.sum(mask == 1)] if s > 0]
-        if len(sizes) == 0:
+        if not sizes:
             return segm
         ratio = float(overlap) / float(min(sizes))
         # if there is already ellipse with such size, return just the segment
@@ -597,9 +597,8 @@ def filter_boundary_points(segm, slic):
         # print e1, labels[e2], e2, labels[e1]
         neighbour_labels[e1, labels[e2]] += 1
         neighbour_labels[e2, labels[e1]] += 1
-    neighbour_labels = neighbour_labels \
-                       / np.tile(np.sum(neighbour_labels, axis=1),
-                                 (nb_labels, 1)).T
+    sums = np.tile(np.sum(neighbour_labels, axis=1), (nb_labels, 1)).T
+    neighbour_labels = neighbour_labels / sums
 
     # border point nex to foreground
     filter_bg = np.logical_and(labels == 0, neighbour_labels[:, 0] < 1)

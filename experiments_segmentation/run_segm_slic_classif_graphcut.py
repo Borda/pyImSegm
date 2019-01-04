@@ -37,7 +37,7 @@ from functools import partial
 
 import matplotlib
 if os.environ.get('DISPLAY', '') == '':
-    # logging.warning('No display found. Using non-interactive Agg backend.')
+    print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
 from PIL import Image
@@ -218,9 +218,8 @@ def load_image_annot_compute_features_labels(idx_row, params,
                    np.clip(slic_annot, 0, slic_annot.max()))
 
     features, feature_names = seg_fts.compute_selected_features_img2d(
-                                                img, slic,  params['features'])
-    return idx_name, img, annot, slic, features, labels, \
-           slic_label_hist, feature_names
+        img, slic, params['features'])
+    return idx_name, img, annot, slic, features, labels, slic_label_hist, feature_names
 
 
 def dataset_load_images_annot_compute_features(params,
@@ -257,8 +256,8 @@ def dataset_load_images_annot_compute_features(params,
         dict_label_hist[name] = label_hist
 
     # gc.collect(), time.sleep(1)
-    return dict_images, dict_annots, dict_slics, dict_features, dict_labels, \
-           dict_label_hist, feature_names
+    return (dict_images, dict_annots, dict_slics, dict_features, dict_labels,
+            dict_label_hist, feature_names)
 
 
 def load_dump_data(path_dump_data):
@@ -278,8 +277,8 @@ def load_dump_data(path_dump_data):
     dict_features = dict(npz_file['dict_features'].tolist())
     dict_labels = dict(npz_file['dict_labels'].tolist())
     feature_names = npz_file['feature_names'].tolist()
-    return dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, \
-           dict_label_hist, feature_names
+    return (dict_imgs, dict_annot, dict_slics, dict_features, dict_labels,
+            dict_label_hist, feature_names)
 
 
 def save_dump_data(path_dump_data, imgs, annot, slics, features, labels,
@@ -332,7 +331,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     gc_regul = params['gc_regul']
     if params['gc_use_trans']:
         label_penalty = seg_gc.compute_pairwise_cost_from_transitions(
-                                            params['label_transitions'])
+            params['label_transitions'])
         gc_regul = (gc_regul * label_penalty)
 
     segm_gc, segm_soft = seg_pipe.segment_color2d_slic_features_model_graphcut(
@@ -436,8 +435,8 @@ def retrain_lpo_segment_image(list_imgs_idx_path,
         % (len(list_imgs_idx_path), len(dict_features), len(dict_imgs))
 
     features, labels, _ = seg_clf.convert_set_features_labels_2_dataset(
-                    dict_features, dict_labels, balance_type=params['balance'],
-                    drop_labels=[-1, np.nan] + params.get('drop_labels', []))
+        dict_features, dict_labels, balance_type=params['balance'],
+        drop_labels=[-1, np.nan] + params.get('drop_labels', []))
     classif.fit(features, labels)
 
     dict_segm, dict_segm_gc = {}, {}
@@ -565,19 +564,19 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
         logging.debug('loaded PARAMETERS: %s', repr(params))
     else:
         classif, path_classif = seg_clf.create_classif_train_export(
-                    params['classif'], features, labels, cross_val=cv,
-                    params=params, feature_names=feature_names,
-                    pca_coef=params['pca_coef'],
-                    eval_metric=params.get('classif_metric', 'f1'),
-                    nb_search_iter=params.get('nb_classif_search', 1),
-                    nb_jobs=params['nb_jobs'],
-                    path_out=params['path_exp'])
+            params['classif'], features, labels, cross_val=cv, params=params,
+            feature_names=feature_names, pca_coef=params['pca_coef'],
+            eval_metric=params.get('classif_metric', 'f1'),
+            nb_search_iter=params.get('nb_classif_search', 1),
+            nb_jobs=params['nb_jobs'], path_out=params['path_exp'])
     params['path_classif'] = path_classif
     cv = seg_clf.CrossValidatePSetsOut(sizes, nb_hold_out=nb_holdout)
     seg_clf.eval_classif_cross_val_scores(params['classif'], classif,
-                   features, labels, cross_val=cv, path_out=params['path_exp'])
+                                          features, labels, cross_val=cv,
+                                          path_out=params['path_exp'])
     seg_clf.eval_classif_cross_val_roc(params['classif'], classif,
-                   features, labels, cross_val=cv, path_out=params['path_exp'])
+                                       features, labels, cross_val=cv,
+                                       path_out=params['path_exp'])
     return params, classif, path_classif
 
 
@@ -630,10 +629,10 @@ def main_train(params):
     logging.info('running TRAINING...')
     show_visual = params.get('visual', False)
 
-    reload_dir_config = (os.path.isfile(params.get('path_config', ''))
-                         or FORCE_RELOAD)
+    reload_dir_config = os.path.isfile(params.get('path_config', '')) or FORCE_RELOAD
+    stamp_unique = params.get('unique', EACH_UNIQUE_EXPERIMENT)
     params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
-                      stamp_unique=params.get('unique', EACH_UNIQUE_EXPERIMENT),
+                                              stamp_unique=stamp_unique,
                                               skip_load=reload_dir_config)
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
@@ -644,13 +643,12 @@ def main_train(params):
 
     path_dump = os.path.join(params['path_exp'], NAME_DUMP_TRAIN_DATA)
     if os.path.isfile(path_dump) and not FORCE_RECOMP_DATA:
-        dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, \
-        dict_label_hist, feature_names = load_dump_data(path_dump)
+        (dict_imgs, dict_annot, dict_slics, dict_features, dict_labels,
+         dict_label_hist, feature_names) = load_dump_data(path_dump)
     else:
-        dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, \
-        dict_label_hist, feature_names = \
-            dataset_load_images_annot_compute_features(params,
-                                                       show_visual)
+        (dict_imgs, dict_annot, dict_slics, dict_features, dict_labels,
+         dict_label_hist, feature_names) = \
+            dataset_load_images_annot_compute_features(params, show_visual)
         save_dump_data(path_dump, dict_imgs, dict_annot, dict_slics,
                        dict_features, dict_labels, dict_label_hist,
                        feature_names)
@@ -673,8 +671,9 @@ def main_train(params):
         logging.info('summary on edge-label transitions: \n %s',
                      repr(params['label_transitions']))
 
-    path_purity_visu = os.path.join(params['path_exp'], FOLDER_SLIC_ANNOT) \
-        if show_visual else None
+    path_purity_visu = None
+    if show_visual:
+        path_purity_visu = os.path.join(params['path_exp'], FOLDER_SLIC_ANNOT)
     dict_labels = filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
                                            params['label_purity'], dict_slics,
                                            drop_labels=params.get('drop_labels', None),
@@ -693,7 +692,7 @@ def main_train(params):
     nb_holdout = max(1, int(round(len(sizes) * nb_holdout)))  # minimum is 1
     nb_holdout = min(nb_holdout, int(len(sizes) / 2))  # max is half of the set
     params, classif, path_classif = load_train_classifier(params, features,
-                                                          labels,  feature_names,
+                                                          labels, feature_names,
                                                           sizes, nb_holdout)
 
     def _path_expt(n):

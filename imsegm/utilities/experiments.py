@@ -128,7 +128,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     """
     date = time.gmtime()
     name = params.get('name', 'EXAMPLE')
-    if isinstance(name, str) and len(name) > 0:
+    if isinstance(name, str) and name:
         dir_name = '{}_{}'.format(dir_name, name)
     # if self.params.get('date_time') is None:
     #     self.params.set('date_time', time.gmtime())
@@ -209,7 +209,7 @@ def append_final_stat(out_dir, y_true, y_pred, time_sec,
     """
     # y_true, y_pred = np.array(y_true), np.array(y_pred)
     logging.debug('export compare labeling sizes {} with {} [px]'.format(
-                    y_true.shape, y_pred.shape))
+                  y_true.shape, y_pred.shape))
     res = metrics.classification_report(y_true, y_pred, digits=4)
     logging.info('FINAL results: \n {}'.format(res))
 
@@ -264,7 +264,7 @@ def extend_list_params(list_params, name_param, list_options):
         for i, v in enumerate(list_options):
             p_new = p.copy()
             p_new.update({name_param: v})
-            if len(p_new['param_idx']) > 0:
+            if p_new['param_idx']:
                 p_new['param_idx'] += '_'
             p_new['param_idx'] += \
                 '%s-%i#%i' % (name_param, len(list_options), i + 1)

@@ -26,8 +26,7 @@ try:
     USE_CYTHON = True
 except Exception:
     # NOTE: in some cases following warning may crash all message logging
-    # logging.basicConfig(level=logging.INFO)
-    logging.warning('descriptors: using pure python libraries')
+    print('descriptors: using pure python libraries')
     USE_CYTHON = False
 
 NAMES_FEATURE_FLAGS = ('mean', 'std', 'energy', 'median', 'meanGrad')
@@ -140,14 +139,14 @@ def _check_color_image(image):
 def _check_unrecognised_feature_group(dict_feature_flags):
     unknown = [k for k in dict_feature_flags
                if not k.startswith('color') and not k.startswith('tLM')]
-    if len(unknown) > 0:
+    if unknown:
         logging.warning('unrecognised following feature groups: %s',
                         repr(unknown))
 
 
 def _check_unrecognised_feature_names(list_feature_flags):
     unknown = [k for k in list_feature_flags if k not in NAMES_FEATURE_FLAGS]
-    if len(unknown) > 0:
+    if unknown:
         logging.warning('unrecognised following feature names: %s',
                         repr(unknown))
 
@@ -751,7 +750,8 @@ def compute_image2d_color_statistic(image, segm,
     >>> features.shape
     (2, 15)
     >>> np.round(features, 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [[0.6, 1.2, 0.4, 0.5, 1.5, 0.8, 0.6, 3.6, 0.8, 1.0, 0.0, 0.0, 0.2, 0.6, 0.4],     [0.2, 1.2, 1.6, 0.4, 1.5, 0.8, 0.2, 3.6, 3.2, 0.0, 0.0, 2.0, -0.2, -0.6, -0.6]]
+    [[0.6, 1.2, 0.4, 0.5, 1.5, 0.8, 0.6, 3.6, 0.8, 1.0, 0.0, 0.0, 0.2, 0.6, 0.4],
+     [0.2, 1.2, 1.6, 0.4, 1.5, 0.8, 0.2, 3.6, 3.2, 0.0, 0.0, 2.0, -0.2, -0.6, -0.6]]
     """
     _check_color_image(image)
     _check_color_image_segm(image, segm)
@@ -946,8 +946,7 @@ def image_subtract_gauss_smooth(img, sigma):
         return img
     img_smooth = np.zeros(img.shape)
     for i in range(img.shape[0]):
-        img_smooth[i, :, :] = gaussian_filter(
-                                            img[i, :, :].astype(float), sigma)
+        img_smooth[i, :, :] = gaussian_filter(img[i, :, :].astype(float), sigma)
     img = (img - img_smooth)
     return img
 
@@ -977,7 +976,7 @@ def compute_texture_desc_lm_img3d_val(img, seg, list_feature_flags,
         response = compute_img_filter_response3d(img, battery)
         # cut too large values
         response[response > MAX_SIGNAL_RESPONSE] = MAX_SIGNAL_RESPONSE
-        # norm responces
+        # norm responses
         l_n = np.sqrt(np.sum(np.power(response, 2)))
         if l_n == 0 or abs(l_n) == np.Inf:
             response = np.zeros(response.shape)
@@ -991,7 +990,7 @@ def compute_texture_desc_lm_img3d_val(img, seg, list_feature_flags,
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    names = ['tLM_%s' % n for n in names]
+    names = ['tLM_%s' % name for name in names]
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
@@ -1060,7 +1059,7 @@ def compute_texture_desc_lm_img2d_clr(img, seg, list_feature_flags,
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    names = ['tLM_%s' % ns for ns in names]
+    names = ['tLM_%s' % name for name in names]
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
@@ -1097,7 +1096,7 @@ def compute_selected_features_gray3d(img, segments,
 
     """
     _check_gray_image_segm(img, segments)
-    assert len(dict_feature_flags) > 0, 'some features has to be selected'
+    assert dict_feature_flags, 'some features has to be selected'
 
     features, names = [], []
     # COLOR FEATURES
@@ -1110,7 +1109,7 @@ def compute_selected_features_gray3d(img, segments,
 
     # TEXTURE - LEWEN-MALIK
     k_text = [k for k in dict_feature_flags if k.startswith('tLM')]
-    if len(k_text) > 0:
+    if k_text:
         for k in k_text:
             bank_type = k.split('_')[-1] if '_' in k else 'normal'
             fts, ns = compute_texture_desc_lm_img3d_val(img, segments,
@@ -1120,7 +1119,7 @@ def compute_selected_features_gray3d(img, segments,
             names += ns
     _check_unrecognised_feature_group(dict_feature_flags)
 
-    if len(features) == 0:
+    if not features:
         logging.error('not supported features: %s', repr(dict_feature_flags))
     features = np.concatenate(tuple(features), axis=1)
     features = np.nan_to_num(features)
@@ -1209,7 +1208,7 @@ def compute_selected_features_color2d(img, segments,
     features, names = [], []
     # COLOR SPACES
     k_color = [k for k in dict_feature_flags if k.startswith('color')]
-    if len(k_color) > 0:
+    if k_color:
         for k in k_color:
             if '_' in k:
                 clr = k.split('_')[-1]
@@ -1224,7 +1223,7 @@ def compute_selected_features_color2d(img, segments,
             names += ns
     # TEXTURE - LEWEN-MALIK
     k_text = [k for k in dict_feature_flags if k.startswith('tLM')]
-    if len(k_text) > 0:
+    if k_text:
         for k in k_text:
             bank_type = k.split('_')[-1] if '_' in k else 'normal'
             fts, ns = compute_texture_desc_lm_img2d_clr(img, segments,
@@ -1238,7 +1237,7 @@ def compute_selected_features_color2d(img, segments,
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    if len(features) == 0:
+    if not features.size:
         logging.error('not supported features: %s', repr(dict_feature_flags))
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
@@ -1268,8 +1267,7 @@ def extend_segm_by_struct_elem(segm, struc_elem):
         'segment %s should be larger than element %s' \
         % (repr(segm.shape), repr(struc_elem.shape))
 
-    shape_new = np.array(segm.shape[:struc_elem.ndim]) \
-                + np.array(struc_elem.shape)
+    shape_new = np.array(segm.shape[:struc_elem.ndim]) + np.array(struc_elem.shape)
     begin = (np.array(struc_elem.shape) / 2).astype(int)
     if segm.ndim == struc_elem.ndim:
         segm_extend = np.full(shape_new, fill_value=np.NaN)
@@ -1291,18 +1289,16 @@ def compute_label_histograms_positions(segm, list_positions,
     of inter circle neighbouring around given points in the segmentation
 
     :param ndarray segm: np.array<height, width>
-    :param list_positions:  [(int, int)]
-    :param diameters: [int]
-    :param nb_labels: int
-    :return: np.array<nb_samples, nb_features>, [str]
-
+    :param  [(int, int)] list_positions:
+    :param [int] diameters:
+    :param int nb_labels:
+    :return: ndarray<nb_samples, nb_features>, [str]
 
     >>> segm = np.zeros((10, 10), dtype=int)
     >>> segm[1:9, 2:8] = 1
     >>> segm[3:7, 4:6] = 2
     >>> points = [[3, 3], [4, 4], [2, 7], [6, 6]]
-    >>> hists, names = compute_label_histograms_positions(segm, points,
-    ...                                                   [1, 2, 4], 3)
+    >>> hists, names = compute_label_histograms_positions(segm, points, [1, 2, 4])
     >>> names  # doctest: +NORMALIZE_WHITESPACE
     ['hist-d_1-lb_0', 'hist-d_1-lb_1', 'hist-d_1-lb_2', \
      'hist-d_2-lb_0', 'hist-d_2-lb_1', 'hist-d_2-lb_2', \
@@ -1310,13 +1306,23 @@ def compute_label_histograms_positions(segm, list_positions,
     >>> hists.shape
     (4, 9)
     >>> np.round(hists, 2)
-    array([[ 0.  ,  0.8 ,  0.2 ,  0.12,  0.62,  0.25,  0.42,  0.39,  0.14],
-           [ 0.  ,  0.2 ,  0.8 ,  0.  ,  0.62,  0.38,  0.22,  0.75,  0.03],
-           [ 0.2 ,  0.8 ,  0.  ,  0.5 ,  0.5 ,  0.  ,  0.31,  0.22,  0.14],
-           [ 0.  ,  0.8 ,  0.2 ,  0.12,  0.62,  0.25,  0.42,  0.39,  0.14]])
+    array([[ 0.2 ,  0.8 ,  0.  ,  0.88, -0.12,  0.  , -0.03, -0.06,  0.  ],
+           [ 0.  ,  0.8 ,  0.2 ,  0.62,  0.5 , -0.12,  0.19, -0.08,  0.  ],
+           [ 0.2 ,  0.8 ,  0.  ,  0.5 ,  0.  ,  0.  ,  0.1 ,  0.03,  0.  ],
+           [ 0.  ,  0.2 ,  0.8 ,  0.  ,  0.62,  0.38,  0.44,  0.28, -0.06]])
+    >>> segm = np.zeros((10, 10, 2), dtype=int)
+    >>> segm[3:7, 4:6, 1] = 1
+    >>> segm[:, :, 0] = 1 - segm[:, :, 0]
+    >>> points = [[3, 3], [4, 4], [2, 7], [6, 6]]
+    >>> hists, names = compute_label_histograms_positions(segm, points, [1, 2, 4])
+    >>> np.round(hists, 2)
+    array([[ 1.  ,  0.  ,  0.75,  0.  , -0.09,  0.  ],
+           [ 1.  ,  0.2 ,  1.  , -0.12,  0.11,  0.  ],
+           [ 1.  ,  0.  ,  0.5 ,  0.  ,  0.13,  0.  ],
+           [ 1.  ,  0.8 ,  1.  ,  0.38,  0.67, -0.06]])
     """
     pos_dim = np.asarray(list_positions).shape[1]
-    assert (segm.ndim - pos_dim) in (0, 1), \
+    assert (segm.ndim - pos_dim) in (0, 1),\
         'dimension %s and %s difference should be 0 or 1' \
         % (repr(segm.ndim), repr(pos_dim))
 
@@ -1335,26 +1341,26 @@ def compute_label_histograms_positions(segm, list_positions,
 
     pos_hists = list()
     logging.debug('compute circular histogram')
-    # for each postion compute features
+    # for each position compute features
     for pos in list_positions:
         hist_pos = list()
         hist_last = np.zeros(nb_labels)
-        sel_last = np.zeros(1)
+        sel_size_last = np.zeros(1)
         for segm_extend, sel in zip(list_segm_extend, list_struct_elems):
-            norm = np.sum(sel) - np.sum(sel_last)
-            assert norm > 0, 'norm or element should be positive'
             # hist_new = segm_convol[diam, :, pos[1], pos[0]]
             if segm_extend.ndim == len(pos):
-                hist = compute_label_hist_segm(segm_extend, pos,
-                                               sel, nb_labels)
+                hist, sel_size = compute_label_hist_segm(segm_extend, pos,
+                                                         sel, nb_labels)
             else:
-                hist = compute_label_hist_proba(segm_extend, pos, sel)
+                hist, sel_size = compute_label_hist_proba(segm_extend, pos, sel)
+            norm = sel_size - sel_size_last
+            assert norm > 0, 'norm or element should be positive'
             # logging.debug('diff: %s last: %s new: %s',
             # repr((hist - hist_last).tolist()), repr(hist_last.tolist()),
             # repr(hist.tolist()))
             hist_pos += ((hist - hist_last) / norm).tolist()
             hist_last = hist
-            sel_last = sel
+            sel_size_last = sel_size
         pos_hists.append(hist_pos)
 
     feature_names = ['hist-d_%i-lb_%i' % (d, lb)
@@ -1363,6 +1369,47 @@ def compute_label_histograms_positions(segm, list_positions,
     assert pos_hists.shape[1] == len(feature_names), \
         'histogram: %s and names %s' % (repr(pos_hists.shape), repr(feature_names))
     return np.array(pos_hists), feature_names
+
+
+def adjust_bounding_box_crop(image_size, bbox_size, position):
+    """ adjust the bounding box according image sizes and position
+
+    :param (int, int)|[int, int] image_size: image size
+    :param (int, int)|[int, int] bbox_size: size of the bounding box
+    :param (int, int)|[int, int] position: position in yhe image
+    :return (), (), (), (): im_begin, im_end, bb_begin, bb_end
+
+    >>> adjust_bounding_box_crop((50, 50), (7, 7), (20, 20))
+    ((17, 17), (24, 24), (0, 0), (7, 7))
+    >>> adjust_bounding_box_crop((50, 50), (15, 15), (20, 45))
+    ((13, 38), (28, 50), (0, 0), (15, 12))
+    >>> adjust_bounding_box_crop((50, 50), (15, 15), (5, 5))
+    ((0, 0), (13, 13), (2, 2), (15, 15))
+    >>> adjust_bounding_box_crop((50, 50), (80, 80), (20, 20))
+    ((0, 0), (50, 50), (20, 20), (70, 70))
+    """
+    assert len(image_size) == len(bbox_size), \
+        'incompatible sizes %s != %s' % (repr(image_size), repr(bbox_size))
+    im_size, pos = np.asarray(image_size), np.asarray(position)
+    bb_size = np.asarray(bbox_size)
+
+    im_begin = pos - np.floor(bb_size / 2.).astype(int)
+    im_begin[im_begin < 0] = 0
+    im_end = pos + np.ceil(bb_size / 2.).astype(int)
+    im_end = [im_size[i] if end > im_size[i] else end
+              for i, end in enumerate(im_end)]
+
+    bb_begin, bb_end = np.zeros(len(im_size), dtype=int), bb_size
+    for i, bb in enumerate(bb_size):
+        if im_begin[i] == 0:
+            bb_begin[i] = (np.floor(bb / 2.) - pos[i]).astype(int)
+        if im_end[i] == im_size[i]:
+            bb_end[i] = (np.floor(bb / 2.) + (im_size[i] - pos[i])).astype(int)
+
+    assert np.array_equal((im_end - im_begin), (bb_end - bb_begin)), \
+        'different sizes of image %s and bounding box %s mask' \
+        % (repr(im_end - im_begin), repr(bb_end - bb_begin))
+    return tuple(im_begin), tuple(im_end), tuple(bb_begin), tuple(bb_end)
 
 
 def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
@@ -1389,24 +1436,27 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
            [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> compute_label_hist_segm(segm, [6, 6], np.ones((3, 3)), 3)
-    array([ 3.,  6.,  0.])
+    (array([ 0.,  7.,  2.]), 9.0)
     >>> compute_label_hist_segm(segm, [4, 4], np.ones((5, 5)), 3)
-    array([  5.,  14.,   6.])
+    (array([  0.,  17.,   8.]), 25.0)
     """
     assert segm.ndim == len(position), \
-        'dim of position %s should match the segm %s dim' \
+        'dim of position %s should match the segmentation %s dim' \
         % (repr(position), repr(segm.shape))
     position = [int(p) for p in position]
-    # take selection around point with size of struc element
-    segm_select = segm[position[0]:position[0] + struc_elem.shape[0],
-                       position[1]:position[1] + struc_elem.shape[1]]
+    # take selection around point with size of struc. element
+    im_begin, im_end, bb_begin, bb_end = \
+        adjust_bounding_box_crop(segm.shape, struc_elem.shape, position)
+    segm_select = segm[im_begin[0]:im_end[0], im_begin[1]:im_end[1]]
+    struc_elem = struc_elem[bb_begin[0]:bb_end[0], bb_begin[1]:bb_end[1]]
     assert segm_select.shape == struc_elem.shape, \
         'segmentation %s and element %s should match' \
         % (repr(segm_select.shape), repr(struc_elem.shape))
     hist = np.zeros(nb_labels)
     for lb in range(nb_labels):
         hist[lb] = np.sum(np.logical_and(segm_select == lb, struc_elem == 1))
-    return hist
+    size = np.sum(struc_elem)
+    return hist, size
 
 
 def compute_label_hist_proba(segm, position, struc_elem):
@@ -1415,23 +1465,32 @@ def compute_label_hist_proba(segm, position, struc_elem):
 
     :param ndarray segm: np.array<height, width>
     :param position: (float, float)
-    :param ndarray struc_elem: np.array<h, w>
-    :return: [float]
+    :param ndarray struc_elem: np.array<height, width>
+    :return [float]:
+
+    >>> seg = np.zeros((50, 50, 2), dtype=float)
+    >>> seg[15:35, 20:40, 1] = 1
+    >>> seg[:, :, 0] = 1 - seg[:, :, 1]
+    >>> compute_label_hist_proba(seg, (15, 20), np.ones((12, 13), dtype=int))
+    (array([ 114.,   42.]), 156)
     """
     assert segm.ndim == (len(position) + 1), \
-        'segment. (%s) should have larger dim than position %i' \
+        'segment. (%s) should have larger (+1) dim than position %i' \
         % (repr(segm.shape), len(position))
-    position = map(int, position)
-    # take selection around point with size of struc element
-    segm_select = segm[position[0]:position[0] + struc_elem.shape[0],
-                       position[1]:position[1] + struc_elem.shape[1], :]
+    position = list(map(int, position))
+    # take selection around point with size of struc. element
+    im_begin, im_end, bb_begin, bb_end = adjust_bounding_box_crop(
+        segm.shape[:struc_elem.ndim], struc_elem.shape, position)
+    segm_select = segm[im_begin[0]:im_end[0], im_begin[1]:im_end[1], :]
+    struc_elem = struc_elem[bb_begin[0]:bb_end[0], bb_begin[1]:bb_end[1]]
     assert segm_select.shape[:-1] == struc_elem.shape, \
-        'initial dim of segm %s should match element %s' \
+        'initial dim of segmentation %s should match element %s' \
         % (repr(segm_select.shape), repr(struc_elem))
-    segm_mask = np.rollaxis(segm_select, -1, 0) \
-                * np.tile(struc_elem, (segm_select.shape[-1], 1, 1))
+    tile_struc_elem = np.tile(struc_elem, (segm_select.shape[-1], 1, 1))
+    segm_mask = np.rollaxis(segm_select, -1, 0) * tile_struc_elem
     hist = np.sum(segm_mask, axis=tuple(range(1, segm_mask.ndim)))
-    return hist
+    size = np.sum(struc_elem)
+    return hist, size
 
 
 # def compute_conv_segm_hist(segm, diameters, nb_labels):
@@ -1570,8 +1629,7 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
     label_position = seg_binary[int(position[0]), int(position[1])]
     if bool(label_position) and edge == 'up':
         return ray_dist * 0
-    rect_diag = int(np.sqrt(seg_binary.shape[0] ** 2 +
-                            seg_binary.shape[1] ** 2))
+    rect_diag = int(np.sqrt(seg_binary.shape[0] ** 2 + seg_binary.shape[1] ** 2))
 
     for i, ang in enumerate(angles):
         pos = np.array(position, dtype=float)
@@ -1587,8 +1645,8 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
             actual = seg_binary[int(pos[0]), int(pos[1])]
             if (edge == 'up' and actual) \
                     or (edge == 'down' and last and not actual):
-                ray_dist[i] = np.sqrt((pos[0] - position[0]) ** 2
-                                      + (pos[1] - position[1]) ** 2)
+                diff = np.asarray(pos) - np.asarray(position)
+                ray_dist[i] = np.sqrt(np.sum(diff ** 2))
                 break
             last = actual
 
@@ -1621,9 +1679,9 @@ def shift_ray_features(ray_dist, method='phase'):
     30.0...
     """
     angle_step = 360 / len(ray_dist)
+    # https://www.ritchievink.com/blog/2017/04/23/understanding-the-fourier-transform-by-example
+    # https://www.gaussianwaves.com/2015/11/interpreting-fft-results-obtaining-magnitude-and-phase-information
     if method == 'phase':
-    # https://www.ritchievink.com/blog/2017/04/23/understanding-the-fourier-transform-by-example/
-    # https://www.gaussianwaves.com/2015/11/interpreting-fft-results-obtaining-magnitude-and-phase-information/
         # use major phase from FFT, see following
         ray_dist_ext = np.hstack([ray_dist] * 5)
         spectrum = np.fft.fft(ray_dist_ext - np.mean(ray_dist_ext)) / float(
@@ -1639,8 +1697,7 @@ def shift_ray_features(ray_dist, method='phase'):
         shift = float(max_loc * angle_step)
     # round the shift to dicreate angular steps
     shift_discrete = int(round(shift / angle_step))
-    ray_dist_shift = ray_dist[shift_discrete:].tolist() \
-                     + ray_dist[:shift_discrete].tolist()
+    ray_dist_shift = ray_dist[shift_discrete:].tolist() + ray_dist[:shift_discrete].tolist()
     return np.array(ray_dist_shift), shift
 
 
@@ -1759,7 +1816,7 @@ def interpolate_ray_dist(ray_dists, order='spline'):
     missing = ray_dists == -1
     x_train = x_space[ray_dists != -1]
     y_train = ray_dists[ray_dists != -1]
-    if len(y_train) == 0:
+    if not np.asarray(y_train).size:
         return ray_dists
     # set 3x range from -N to 2N
     x_train_ext = np.hstack((x_train - len(x_space),

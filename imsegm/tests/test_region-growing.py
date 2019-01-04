@@ -41,7 +41,7 @@ def compute_prior_map(cdist, size=(500, 800), step=5):
     centre = np.array(size) / 2
     for i in np.arange(prior_map.shape[0], step=step):
         for j in np.arange(prior_map.shape[1], step=step):
-            prior_map[i:i+step, j:j+step] = \
+            prior_map[i:i + step, j:j + step] = \
                 seg_rg.compute_shape_prior_table_cdf([i, j], cdist, centre,
                                                      angle_shift=0)
     return prior_map
@@ -103,8 +103,7 @@ class TestRegionGrowing(unittest.TestCase):
         #                  'mix_model': model}, fp)
         self.assertTrue(os.path.exists(PATH_PKL_MODEL))
 
-        max_len = max([np.asarray(l_cdf).shape[1]
-                       for _, l_cdf in list_mean_cdf])
+        max_len = max([np.asarray(mc[1]).shape[1] for mc in list_mean_cdf])
 
         fig, axarr = plt.subplots(nrows=len(list_mean_cdf), ncols=2,
                                   figsize=(12, 3.5 * len(list_mean_cdf)))
