@@ -1396,15 +1396,15 @@ def adjust_bounding_box_crop(image_size, bbox_size, position):
     im_begin = pos - np.floor(bb_size / 2.).astype(int)
     im_begin[im_begin < 0] = 0
     im_end = pos + np.ceil(bb_size / 2.).astype(int)
-    im_end = [im_size[i] if e > im_size[i] else e
-              for i, e in enumerate(im_end)]
+    im_end = [im_size[i] if end > im_size[i] else end
+              for i, end in enumerate(im_end)]
 
     bb_begin, bb_end = np.zeros(len(im_size), dtype=int), bb_size
-    for i in range(len(bb_size)):
+    for i, bb in enumerate(bb_size):
         if im_begin[i] == 0:
-            bb_begin[i] = (np.floor(bb_size[i] / 2.) - pos[i]).astype(int)
+            bb_begin[i] = (np.floor(bb / 2.) - pos[i]).astype(int)
         if im_end[i] == im_size[i]:
-            bb_end[i] = (np.floor(bb_size[i] / 2.) + (im_size[i] - pos[i])).astype(int)
+            bb_end[i] = (np.floor(bb / 2.) + (im_size[i] - pos[i])).astype(int)
 
     assert np.array_equal((im_end - im_begin), (bb_end - bb_begin)), \
         'different sizes of image %s and bounding box %s mask' \

@@ -6,6 +6,7 @@
 [![Run Status](https://api.shippable.com/projects/5962ea48a125960700c197f8/badge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
 [![Coverage Badge](https://api.shippable.com/projects/5962ea48a125960700c197f8/coverageBadge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
 [![CircleCI](https://circleci.com/gh/Borda/pyImSegm.svg?style=svg&circle-token=a30180a28ae7e490c0c0829d1549fcec9a5c59d0)](https://circleci.com/gh/Borda/pyImSegm)
+[![CodeFactor](https://www.codefactor.io/repository/github/borda/pyimsegm/badge)](https://www.codefactor.io/repository/github/borda/pyimsegm)
 
 
 ## Superpixel segmentation with GraphCut regularisation
