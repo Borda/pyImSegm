@@ -91,7 +91,7 @@ def aparse_params(dict_paths):
     for k in dict_paths:
         assert os.path.isdir(os.path.dirname(dict_paths[k])), \
             'missing: (%s) "%s"' % (k, os.path.dirname(dict_paths[k]))
-    if args['drop_labels'] is None:
+    if not args['drop_labels']:
         args['drop_labels'] = []
     return dict_paths, args
 

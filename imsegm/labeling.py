@@ -275,6 +275,7 @@ def histogram_regions_labels_norm(slic, segm):
     matrix_hist[matrix_hist == 0] = 0
     return matrix_hist
 
+
 # DEPRECATED
 # def histogram_regions_labels(slic, seg_pipe):
 #     """  compute the histogram matrix for each region with given labels
@@ -297,7 +298,7 @@ def histogram_regions_labels_norm(slic, segm):
 def assign_label_by_threshold(dict_label_hist, thresh=0.75):
     """ assign label if the purity reach certain threshold
 
-    :param {int: [int]} dict_lb_hist: dictionary of label histogram
+    :param {int: [int]} dict_label_hist: dictionary of label histogram
     :param float thresh: threshold for region purity
     :return [int]: resulting LookUpTable
 
@@ -321,10 +322,10 @@ def assign_label_by_threshold(dict_label_hist, thresh=0.75):
     return lut
 
 
-def assign_label_by_max(dict_label_hist):
+def assign_label_by_max(label_hist):
     """ assign label according maximal label count in particular region
 
-    :param {int: [int]} dict_lb_hist: dictionary of label histogram
+    :param {int: [int]} label_hist: dictionary of label histogram
     :return [int]: resulting LookUpTable
 
     >>> slic = np.array([[0] * 4 + [1] * 3 + [2] * 3 + [3] * 3] * 4 +
@@ -335,9 +336,9 @@ def assign_label_by_max(dict_label_hist):
     >>> assign_label_by_max(lb_hist)
     array([0, 0, 0, 0, 0, 0, 1, 1])
     """
-    lut = np.zeros(max(dict_label_hist.keys()) + 1, dtype=int) - 1
-    for k in dict_label_hist:
-        v = dict_label_hist[k]
+    lut = np.zeros(max(label_hist.keys()) + 1, dtype=int) - 1
+    for k in label_hist:
+        v = label_hist[k]
         counts = np.bincount(v) / float(len(v))
         lut[k] = np.argmax(counts)
     return lut
@@ -347,7 +348,7 @@ def convert_segms_2_list(segms):
     """ convert segmentation to a list tha can be simpy user for standard
     evaluation (classification or clustering metrics)
 
-    :param [ndarray] segms: list of segmentations
+    :param [ndarray] segms: list of segmentation
     :return [int]:
 
     >>> seg_pipe = np.ones((2, 3), dtype=int)
@@ -358,7 +359,7 @@ def convert_segms_2_list(segms):
     return y
 
 
-def mask_segm_labels(im_labeling, labels, mask_init=None):
+def mask_segm_labels(img_labeling, labels, mask_init=None):
     """ with given labels image and list of desired labels it create mask finding
     all labels in the list (perform logical or on image with a list of labels)
 
@@ -382,11 +383,11 @@ def mask_segm_labels(im_labeling, labels, mask_init=None):
            [ True,  True,  True,  True,  True,  True]], dtype=bool)
     """
     if mask_init is None:
-        mask = np.full(im_labeling.shape, False, dtype=bool)
+        mask = np.full(img_labeling.shape, False, dtype=bool)
     else:
         mask = mask_init.copy()
     for l in labels:
-        mask = np.logical_or(mask, (im_labeling == l))
+        mask = np.logical_or(mask, (img_labeling == l))
     return mask
 
 
@@ -456,7 +457,7 @@ def merge_probab_labeling_2d(proba, dict_labels):
 
     :param ndarray proba: probabilities
     :param {int: [int]} dict_labels:
-    :return:
+    :return ndarray:
 
     >>> p = np.ones((5, 5))
     >>> proba = np.array([p * 0.3, p * 0.4, p * 0.2])
@@ -522,10 +523,10 @@ def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
     for each pattern (object), the relation among patterns is 1-1
     NOTE: it skips background class - 0
 
-    :param ndarray seg_ref: np.array<height, width>
-    :param ndarray seg_relabel: np.array<height, width>
+    :param ndarray seg_ref: reference segmentation
+    :param ndarray seg_relabel: segmentation for relabeling
     :param bool keep_bg: keep the background
-    :return ndarray: np.array<height, width>
+    :return ndarray: resulting segentation
 
     >>> atlas1 = np.zeros((7, 15), dtype=int)
     >>> atlas1[1:4, 5:10] = 1
@@ -612,10 +613,10 @@ def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
     composed from multiple patterns in relabel atlas, it merge them
     NOTE: it skips background class - 0
 
-    :param ndarray seg_ref: np.array<height, width>
-    :param ndarray seg_relabel: np.array<height, width>
+    :param ndarray seg_ref: reference segmentation
+    :param ndarray seg_relabel: segmentation for relabeling
     :param bool keep_bg: the label 0 holds
-    :return ndarray: np.array<height, width>
+    :return ndarray: resulting segentation
 
     >>> atlas1 = np.zeros((7, 15), dtype=int)
     >>> atlas1[1:4, 5:10] = 1
@@ -675,8 +676,8 @@ def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
 def compute_boundary_distances(segm_ref, segm):
     """ compute distances among boundaries of two segmentation
 
-    :param ndarray segm_ref:
-    :param ndarray segm:
+    :param ndarray segm_ref: reference segmentation
+    :param ndarray segm: input segmentation
     :return ndarray:
 
     >>> segm_ref = np.zeros((6, 10), dtype=int)
@@ -710,10 +711,10 @@ def compute_boundary_distances(segm_ref, segm):
 
 
 def assume_bg_on_boundary(segm, bg_label=0, boundary_size=1):
-    """ swap labels such that the bacround label will be mostly on image boundary
+    """ swap labels such that the background label will be mostly on image boundary
 
-    :param ndarray segm:
-    :param int bg_label:
+    :param ndarray segm: segmentation
+    :param int bg_label: background label
     :param float boundary_size:
     :return:
 

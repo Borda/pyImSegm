@@ -267,10 +267,10 @@ def get_slic_points_labels(segm, img=None, slic_size=20, slic_regul=0.1):
     :param float slic_regul: regularisation in range (0, 1)
     :return:
     """
-    if img is None:
+    if not img:
         img = segm / float(segm.max())
     slic = seg_spx.segment_slic_img2d(img, sp_size=slic_size,
-                                      rltv_compact=slic_regul)
+                                      relative_compact=slic_regul)
     slic_centers = np.array(seg_spx.superpixel_centers(slic)).astype(int)
     labels = segm[slic_centers[:, 0], slic_centers[:, 1]]
     return slic, slic_centers, labels
@@ -323,7 +323,7 @@ def add_overlap_ellipse(segm, ellipse_params, label, thr_overlap=1.):
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-    if ellipse_params is None:
+    if not ellipse_params:
         return segm
     mask = np.zeros(segm.shape)
     c1, c2, h, w, phi = ellipse_params
@@ -609,11 +609,12 @@ def filter_boundary_points(segm, slic):
     return points
 
 
-def prepare_boundary_points_close(seg, centers, sp_size=25, rltv_compact=0.3):
+def prepare_boundary_points_close(seg, centers, sp_size=25, relative_compact=0.3):
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
     :param [(int, int)] centers: list of centers
+    :param int sp_size: superpixel size
     :return [ndarray]:
 
     >>> seg = np.zeros((100, 200), dtype=int)
@@ -625,7 +626,7 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, rltv_compact=0.3):
     [59, 161], [54, 135], [67, 62], [64, 33], [84, 150], [91, 48], [92, 118]]]
     """
     slic = seg_spx.segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
-                                      rltv_compact=rltv_compact)
+                                      relative_compact=relative_compact)
     points_all = filter_boundary_points(seg, slic)
 
     dists = spatial.distance.cdist(points_all, centers, metric='euclidean')
@@ -666,7 +667,7 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, rltv_compact=0.3):
 #      [60, 50], [70, 60], [74, 71], [80, 81], [83, 93]]]
 #     """
 #     slic = seg_spx.segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
-#                                      rltv_compact=rltv_compact)
+#                                      relatv_compact=rltv_compact)
 #     points_all = filter_boundary_points(seg, slic)
 #
 #     dists = spatial.distance.cdist(points_all, centers, metric='euclidean')

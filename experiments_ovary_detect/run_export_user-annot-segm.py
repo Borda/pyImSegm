@@ -98,7 +98,7 @@ def figure_draw_img_centre_segm(fig, img, centres, segm,
     :param int subfig_size:
     :return obj:
     """
-    if fig is None:
+    if not fig:
         norm_size = np.array(img.shape[:2]) / float(np.max(img.shape))
         fig, ax = plt.subplots(figsize=(norm_size[::-1] * subfig_size))
         ax.imshow(img[:, :, 0], cmap=plt.cm.Greys_r)
@@ -131,7 +131,7 @@ def figure_draw_annot_csv(fig, img, row_slice, subfig_size=FIGURE_SIZE):
     :param int subfig_size:
     :return obj:
     """
-    if fig is None:
+    if not fig:
         norm_size = np.array(img.shape[:2]) / float(np.max(img.shape))
         fig, ax = plt.subplots(figsize=(norm_size[::-1] * subfig_size))
         ax.imshow(img[:, :, 0], cmap=plt.cm.Greys_r)

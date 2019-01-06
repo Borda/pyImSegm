@@ -62,7 +62,7 @@ def see_images_color_info(path_images, px_thr=THRESHOLD_INVALID_PIXELS):
     """ look to the folder on all images and estimate most frequent colours
 
     :param [str] path_images: list of images
-    :param px_th: float, percentage of nb clr pixels to be assumed as important
+    :param float px_th: percentage of nb clr pixels to be assumed as important
     :return {}:
     """
     if not os.path.isdir(os.path.dirname(path_images)):
@@ -102,26 +102,24 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     # plt.show()
 
 
-def quantize_folder_images(path_images, list_colors=None, method='color',
+def quantize_folder_images(path_images, colors=None, method='color',
                            px_threshold=THRESHOLD_INVALID_PIXELS, nb_jobs=1):
     """ perform single or multi thread image quantisation
 
-    :param str method:
-    :param float px_threshold:
     :param str path_images:, input directory and image pattern for loading
-    :param list_colors: [(int, int, int)], list of possible colours
+    :param colors: [(int, int, int)], list of possible colours
     :param str method: interpolation method
-    :param float px_threshold:
-    :param nb_jobs: int
+    :param float px_threshold: pixel threshold
+    :param int nb_jobs: number of jobs
     """
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
-    if list_colors is None:
+    if colors is None:
         dict_colors = see_images_color_info(path_images, px_thr=px_threshold)
-        list_colors = [c for c in dict_colors]
+        colors = [c for c in dict_colors]
 
     _wrapper_quantize_img = partial(perform_quantize_image,
-                                    method=method, list_colors=list_colors)
+                                    method=method, list_colors=colors)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_quantize_img, path_imgs,
                                           nb_jobs=nb_jobs,
                                           desc='quantize images')

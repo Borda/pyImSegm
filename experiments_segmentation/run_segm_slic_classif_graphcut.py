@@ -200,7 +200,7 @@ def load_image_annot_compute_features_labels(idx_row, params,
     # if img.ndim == 2:
     #     img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     slic = seg_spx.segment_slic_img2d(img, sp_size=params['slic_size'],
-                                      rltv_compact=params['slic_regul'])
+                                      relative_compact=params['slic_regul'])
     img = tl_data.convert_img_color_from_rgb(img, params.get('clr_space', 'rgb'))
     logging.debug('computed SLIC with %i labels', slic.max())
     if show_debug_imgs:
@@ -563,7 +563,7 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
                        if k.startswith('path_') or k.startswith('gc_')})
         logging.debug('loaded PARAMETERS: %s', repr(params))
     else:
-        classif, path_classif = seg_clf.create_classif_train_export(
+        classif, path_classif = seg_clf.create_classif_search_train_export(
             params['classif'], features, labels, cross_val=cv, params=params,
             feature_names=feature_names, pca_coef=params['pca_coef'],
             eval_metric=params.get('classif_metric', 'f1'),

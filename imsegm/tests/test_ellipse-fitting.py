@@ -59,7 +59,7 @@ class TestEllipseFitting(unittest.TestCase):
                                            points_all, weights, labels,
                                            table_prob, min_samples=0.6,
                                            residual_threshold=15, max_trials=50)
-            if model is None:
+            if not model:
                 continue
             ellipses.append(model.params)
             crit = model.criterion(points_all, weights, labels, table_prob)

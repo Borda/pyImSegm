@@ -524,7 +524,7 @@ def transform_rays_model_cdf_kmeans(list_rays, nb_components=None):
     >>> mm, cdist = transform_rays_model_cdf_kmeans(list_rays, nb_components=2)
     """
     rays = np.array(list_rays)
-    if nb_components is None:
+    if not nb_components:
         ms = cluster.MeanShift()
         ms.fit(rays)
         logging.debug('MeanShift found: %s', repr(np.bincount(ms.labels_)))
@@ -764,7 +764,8 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     :param shape_chist: represent the shape prior and histograms
     :param [int] selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
-        try to get out from local optima
+        try to get out from local optimal
+    :param {} dict_thresholds: configuration with thresholds
     :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
 
@@ -853,14 +854,15 @@ def compute_update_shape_costs_points_close_mean_cdf(
     :param [[int, int]] points: subsample space, points = superpixel centres
     :param [int] labels: labels for points to be assigned to an object
     :param [[int, int]] init_centres: initial centre position for compute
-        center shift during the iteretions
-    :param [[int, int]] centres: actual centre postion
+        center shift during the iterations
+    :param [[int, int]] centres: actual centre position
     :param [int] shifts: orientation for each region / object
     :param [int] volumes: size / volume for each region
     :param shape_model_cdfs: represent the shape prior and histograms
     :param [int] selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
-        try to get out from local optima
+        try to get out from local optimal
+    :param {} dict_thresholds: configuration with thresholds
     :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
 
@@ -1013,6 +1015,7 @@ def update_shape_costs_points(lut_shape_cost, slic, points, labels, init_centres
     :param [int] selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optima
+    :param {} dict_thresholds: configuration with thresholds
     :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
     :return [float], [int]:
     """
@@ -1119,7 +1122,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
                                      coef_pairwise=1, prob_label_trans=(.1, .01),
                                      allow_obj_swap=True, greedy_tol=1e-3,
                                      dict_thresholds=None, nb_iter=999,
-                                     dict_debug_history=None):
+                                     debug_history=None):
     """ Region growing method with given shape prior on pre-segmented images
     it uses the Greedy strategy and set some stopping criterion
 
@@ -1134,7 +1137,8 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
     :param prob_label_trans: probability transition between background (first)
         and objects and among objects (second)
     :param bool allow_obj_swap: allow swapping foreground object labels
-    :param float greedy_tol: stoping criterion - energy change between inters
+    :param float greedy_tol: stopping criterion - energy change between inters
+    :param {} dict_thresholds: configuration with thresholds
     :param int nb_iter: maximal number of iterations
     :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
     :return:
@@ -1174,7 +1178,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
     >>> slic_prob_fg = compute_segm_prob_fg(slic, segm, [0.1, 0.9])
     >>> labels = region_growing_shape_slic_greedy(slic, slic_prob_fg, centres,
     ...                                           (None, chist), coef_pairwise=0,
-    ...                                           dict_debug_history=dict_debug)
+    ...                                           debug_history=dict_debug)
     >>> np.round(dict_debug['criteria']).astype(int)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     array([397, 325, 307, 289, 272, 238, 204, 188, 173, ..., 81,  81])
     >>> labels[slic]
@@ -1195,7 +1199,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> labels = region_growing_shape_slic_greedy(slic, slic_prob_fg, centres,
     ...                                           (None, chist), coef_pairwise=1,
-    ...                                           dict_debug_history=dict_debug)
+    ...                                           debug_history=dict_debug)
     >>> np.round(dict_debug['criteria']).astype(int)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     array([406, 352, 334, 316, 300, 283, 270, 254, 238, 226, 210, ..., 123, 123])
     >>> labels[slic]
@@ -1221,7 +1225,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
     >>> labels = region_growing_shape_slic_greedy(slic, slic_prob_fg, [(6.5, 9)],
     ...                                           (None, chist), coef_shape=10,
     ...                                           coef_pairwise=1,
-    ...                                           dict_debug_history=dict_debug)
+    ...                                           debug_history=dict_debug)
     >>> np.round(dict_debug['criteria']).astype(int)  # doctest: +NORMALIZE_WHITESPACE
     array([7506, 7120, 6715, 6328, 5719, 5719])
     >>> labels[slic]
@@ -1270,23 +1274,23 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
         lut_shape_cost, slic, slic_points, labels, init_centres, centres, shifts,
         volumes, shape_model, shape_type, None, False, thresholds)
 
-    if dict_debug_history is not None:
-        dict_debug_history.update({'criteria': [], 'labels': [],
-                                   'centres': [], 'shifts': [],
-                                   'lut_data_cost': lut_data_cost.copy(),
-                                   'lut_shape_cost': []})
+    if debug_history is not None:
+        debug_history.update({'criteria': [], 'labels': [],
+                              'centres': [], 'shifts': [],
+                              'lut_data_cost': lut_data_cost.copy(),
+                              'lut_shape_cost': []})
 
     for _ in range(nb_iter):
         labels = enforce_center_labels(slic, labels, centres)
         crit = compute_rg_crit(labels, lut_data_cost, lut_shape_cost,
                                slic_weights, edges, coef_data, coef_shape,
                                coef_pairwise, prob_label_trans)
-        if dict_debug_history is not None:
-            dict_debug_history['labels'].append(labels.copy())
-            dict_debug_history['criteria'].append(crit)
-            dict_debug_history['centres'].append(centres.copy())
-            dict_debug_history['shifts'].append(shifts.tolist())
-            dict_debug_history['lut_shape_cost'].append(lut_shape_cost.copy())
+        if debug_history is not None:
+            debug_history['labels'].append(labels.copy())
+            debug_history['criteria'].append(crit)
+            debug_history['centres'].append(centres.copy())
+            debug_history['shifts'].append(shifts.tolist())
+            debug_history['lut_shape_cost'].append(lut_shape_cost.copy())
 
         # todo, do it as only update
         candidates, objs_idx = [], []
@@ -1424,7 +1428,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
                                        coef_pairwise=2, prob_label_trans=(0.1, 0.03),
                                        optim_global=True, allow_obj_swap=True,
                                        dict_thresholds=None, nb_iter=999,
-                                       dict_debug_history=None):
+                                       debug_history=None):
     """ Region growing method with given shape prior on pre-segmented images
     it uses the GraphCut strategy on neigbouring superpixels
 
@@ -1440,6 +1444,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
         and objects and among objects (second)
     :param bool optim_global: optimise the GC as global or per object
     :param bool allow_obj_swap: allow swapping foreground object labels
+    :param {} dict_thresholds: configuration with thresholds
     :param int nb_iter: maximal number of iterations
     :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
 
@@ -1477,7 +1482,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
     >>> slic_prob_fg = compute_segm_prob_fg(slic, segm, [0.1, 0.9])
     >>> labels = region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres,
     ...                                             (None, chist), coef_pairwise=0,
-    ...                                             dict_debug_history=dict_debug)
+    ...                                             debug_history=dict_debug)
     >>> np.round(dict_debug['criteria']).astype(int)
     array([397, 325, 206, 111,  81,  81])
     >>> labels[slic]
@@ -1498,7 +1503,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     >>> labels = region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres,
     ...                                             (None, chist), coef_pairwise=2,
-    ...                                             dict_debug_history=dict_debug)
+    ...                                             debug_history=dict_debug)
     >>> np.round(dict_debug['criteria']).astype(int)
     array([415, 380, 289, 193, 164, 164])
     >>> labels[slic]
@@ -1525,7 +1530,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
     >>> labels = region_growing_shape_slic_graphcut(slic, slic_prob_fg, [(6.5, 9)],
     ...                                             (None, chist), coef_shape=10.,
     ...                                             coef_pairwise=1,
-    ...                                             dict_debug_history=dict_debug)
+    ...                                             debug_history=dict_debug)
     >>> np.round(dict_debug['criteria']).astype(int)
     array([7506, 7120, 6328, 5719, 5719])
     >>> labels[slic]
@@ -1545,8 +1550,9 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-    assert len(slic_prob_fg) >= np.max(slic), 'dims of probs %s and slic %s not match' \
-                                              % (len(slic_prob_fg), np.max(slic))
+    assert len(slic_prob_fg) >= np.max(slic), \
+        'dims of probs %s and slic %s not match' \
+        % (len(slic_prob_fg), np.max(slic))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     slic_points = seg_spx.superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
@@ -1572,23 +1578,23 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
         lut_shape_cost, slic, slic_points, labels, init_centres, centres, shifts,
         volumes, shape_model, shape_type, None, False, thresholds)
 
-    if dict_debug_history is not None:
-        dict_debug_history.update({'criteria': [], 'labels': [],
-                                   'centres': [], 'shifts': [],
-                                   'lut_data_cost': lut_data_cost.copy(),
-                                   'lut_shape_cost': []})
+    if debug_history is not None:
+        debug_history.update({'criteria': [], 'labels': [],
+                              'centres': [], 'shifts': [],
+                              'lut_data_cost': lut_data_cost.copy(),
+                              'lut_shape_cost': []})
 
     for _ in range(nb_iter):
         labels = enforce_center_labels(slic, labels, centres)
         crit = compute_rg_crit(labels, lut_data_cost, lut_shape_cost,
                                slic_weights, edges, coef_data, coef_shape,
                                coef_pairwise, prob_label_trans)
-        if dict_debug_history is not None:
-            dict_debug_history['labels'].append(labels.copy())
-            dict_debug_history['criteria'].append(crit)
-            dict_debug_history['centres'].append(centres.copy())
-            dict_debug_history['shifts'].append(shifts.tolist())
-            dict_debug_history['lut_shape_cost'].append(lut_shape_cost.copy())
+        if debug_history is not None:
+            debug_history['labels'].append(labels.copy())
+            debug_history['criteria'].append(crit)
+            debug_history['centres'].append(centres.copy())
+            debug_history['shifts'].append(shifts.tolist())
+            debug_history['lut_shape_cost'].append(lut_shape_cost.copy())
 
         labels_gc = labels.copy()
 

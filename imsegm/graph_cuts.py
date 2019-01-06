@@ -468,7 +468,7 @@ def create_pairwise_matrix_specif(pos_weights, nb_classes=None):
            [ 1. ,  0. ,  0.5],
            [ 0.7,  0.5,  0. ]])
     """
-    if nb_classes is None:
+    if not nb_classes:
         nb_classes = np.max([list(c) for c, w in pos_weights]) + 1
     pairwise = (np.ones(nb_classes) - np.eye(nb_classes))
     for c, w in pos_weights:
@@ -764,7 +764,7 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
            [ 5.,  3.,  1.],
            [ 1.,  1.,  1.]])
     """
-    if nb_labels is None:
+    if not nb_labels:
         uq_img_labels = [np.unique(lbs).tolist()
                          for lbs in dict_labels.values()]
         uq_labels = np.unique(np.hstack(tuple(uq_img_labels)))

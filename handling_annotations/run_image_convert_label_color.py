@@ -128,9 +128,9 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_jobs=1):
     """ perform single or multi thread image quantisation
 
     :param [str] path_images: list of input images
-    :param path_out: output directory
-    :param path_json: path to json file
-    :param int nb_jobs: int
+    :param str path_out: output directory
+    :param str path_json: path to json file
+    :param int int nb_jobs:
     """
     assert os.path.isdir(os.path.dirname(path_images)), \
         'input folder does not exist'

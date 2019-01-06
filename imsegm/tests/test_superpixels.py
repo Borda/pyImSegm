@@ -37,7 +37,7 @@ class TestSuperpixels(unittest.TestCase):
         logging.debug('vertices: {} -> edges: {}'.format(vertices, edges))
 
     def test_general(self):
-        slic = seg_spx.segment_slic_img2d(self.img, sp_size=15, rltv_compact=0.2)
+        slic = seg_spx.segment_slic_img2d(self.img, sp_size=15, relative_compact=0.2)
 
         logging.debug(np.max(slic))
 

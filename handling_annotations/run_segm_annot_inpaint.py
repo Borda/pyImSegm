@@ -53,7 +53,7 @@ def parse_arg_params():
 def perform_img_inpaint(path_img, labels):
     """ perform the quantization together with loading and exporting
 
-    :param path_img: str
+    :param str path_img: image path
     """
     logging.debug('repaint labels %s for image: "%s"', repr(labels), path_img)
     img = np.array(tl_data.io.imread(path_img), dtype=np.float)

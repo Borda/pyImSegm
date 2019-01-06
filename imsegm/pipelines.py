@@ -102,7 +102,7 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     :param int nb_classes: number of classes
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
-                   and "1" nearly square slic
+        and "1" nearly square slic
     :param {str: [str]} dict_features: list of features to be extracted
     :param float pca_coef: range (0, 1) or None
     :param bool use_scaler: whether use a scaler
@@ -120,12 +120,6 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     for slic, features in iterate:
         list_slic.append(slic)
         list_features.append(features)
-
-    # for img in list_images:
-    #     slic, features = compute_color2d_superpixels_features(img, sp_size,
-    #                     sp_regul, dict_features, fts_norm=False)
-    #     list_slic.append(slic)
-    #     list_features.append(features)
 
     features = np.concatenate(tuple(list_features), axis=0)
     features = np.nan_to_num(features)
@@ -222,16 +216,16 @@ def compute_color2d_superpixels_features(image, dict_features,
     """ segment image into superpixels and estimate features per superpixel
 
     :param ndarray image: input RGB image
+    :param {str: [str]} dict_features: list of features to be extracted
     :param int sp_size: initial size of a superpixel(meaning edge length)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
            and "1" nearly square segments
-    :param {str: [str]} dict_features: list of features to be extracted
     :return [[int]], [[floats]]: superpixels and related of features
     """
     assert sp_regul > 0., 'slic. regularisation must be positive'
     logging.debug('run Superpixel clustering.')
     slic = seg_sp.segment_slic_img2d(image, sp_size=sp_size,
-                                     rltv_compact=sp_regul)
+                                     relative_compact=sp_regul)
     # plt.figure(), plt.imshow(slic)
 
     logging.debug('extract slic/superpixels features.')
@@ -287,7 +281,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
     :param [ndarray] list_annots:
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
-           and "1" nearly square segments
+        and "1" nearly square segments
     :param {str: [str]} dict_features: list of features to be extracted
     :param str clf_name: selet udsed classifier
     :param float label_purity: set the sample-labels purity for training
@@ -336,10 +330,9 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
     else:
         cv = 10
 
-    classif, _ = seg_clf.create_classif_train_export(clf_name, features, labels,
-                                                     pca_coef=pca_coef, cross_val=cv,
-                                                     nb_search_iter=nb_classif_search,
-                                                     nb_jobs=nb_jobs)
+    classif, _ = seg_clf.create_classif_search_train_export(
+        clf_name, features, labels, pca_coef=pca_coef, cross_val=cv,
+        nb_search_iter=nb_classif_search, nb_jobs=nb_jobs)
 
     return classif, list_slic, list_features, list_labels
 
@@ -369,7 +362,7 @@ def pipe_gray3d_slic_features_model_graphcut(image, nb_classes, dict_features,
     """
     logging.info('PIPELINE Superpixels-Features-GraphCut')
     slic = seg_sp.segment_slic_img3d_gray(image, sp_size=sp_size,
-                                          rltv_compact=sp_regul, space=spacing)
+                                          relative_compact=sp_regul, space=spacing)
     # plt.imshow(segments)
     logging.info('extract segments/superpixels features.')
     # f = features.computeColourMean(image, segments)

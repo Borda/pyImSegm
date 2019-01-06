@@ -132,7 +132,8 @@ def sample_color_image_rand_segment(im_size=SAMPLE_SEG_SIZE_2D_NORM,
     seg = np.random.random_integers(0, nb_classes - 1, im_size)
     for lb in range(int(nb_classes)):
         val_step = 255 / nb_classes
-        im = np.random.random_integers(val_step * lb, val_step * (lb + 1),
+        im = np.random.random_integers(int(val_step * lb),
+                                       int(val_step * (lb + 1)),
                                        im_size_rgb)
         img[seg == lb] = im[seg == lb]
     # img = Image.fromarray(np.array(im, dtype=np.uint8), 'RGB')

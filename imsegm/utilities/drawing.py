@@ -790,19 +790,19 @@ def merge_object_masks(list_masks, thr_overlap=0.7):
 
 
 def draw_image_segm_points(ax, img, points, labels=None, slic=None,
-                           clr_slic='w', dict_label_marker=DICT_LABEL_MARKER,
+                           color_slic='w', lut_label_marker=DICT_LABEL_MARKER,
                            seg_contour=None):
     """ on plane draw background image or segmentation, overlap with slic
-    contours, add contour of aditive segmentation like annot. for centers
+    contours, add contour of adative segmentation like annot. for centers
     plot point with specific property (shape and colour) according label
 
-    :param ax:
-    :param ndarray img:
+    :param ax: figure axis
+    :param ndarray img: image
     :param [(int, int)] points:
     :param [int] labels:
     :param ndarray slic:
-    :param str clr_slic:
-    :param {int: (str, str)} dict_label_marker:
+    :param str color_slic:
+    :param {int: (str, str)} lut_label_marker:
     :param seg_contour: np.array
 
     >>> img = np.random.randint(0, 256, (100, 100))
@@ -818,7 +818,7 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
         ax.imshow(img)
 
     if slic is not None:
-        ax.contour(slic, levels=np.unique(slic), alpha=0.5, colors=clr_slic,
+        ax.contour(slic, levels=np.unique(slic), alpha=0.5, colors=color_slic,
                    linewidths=0.5)
     # fig.gca().imshow(mark_boundaries(img, slic))
     if seg_contour is not None and isinstance(seg_contour, np.ndarray):
@@ -830,8 +830,8 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
         assert len(points) == len(labels), \
             'number of points (%i) and labels (%i) should match' \
             % (len(points), len(labels))
-        for lb in dict_label_marker:
-            marker, clr = dict_label_marker[lb]
+        for lb in lut_label_marker:
+            marker, clr = lut_label_marker[lb]
             ax.plot(points[(labels == lb), 1], points[(labels == lb), 0],
                     marker, color=clr)
     else:
@@ -840,14 +840,13 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
     ax.set_ylim([img.shape[0], 0])
 
 
-def figure_image_segm_centres(img, segm, centers=None,
-                              cmap_contour=plt.cm.Blues):
+def figure_image_segm_centres(img, segm, centers=None, cmap_contour=plt.cm.Blues):
     """ visualise the input image and segmentation in common frame
 
-    :param ndarray img: np.array
-    :param ndarray segm: np.array
-    :param [(int, int)] centers: or np.array
-    :param cmap_contour:
+    :param ndarray img: image
+    :param ndarray segm: segmentation
+    :param [(int, int)]|ndarray centers: or np.array
+    :param obj cmap_contour:
     :return Figure:
 
     >>> img = np.random.random((100, 150, 3))
@@ -881,16 +880,16 @@ def figure_image_segm_centres(img, segm, centers=None,
     return fig
 
 
-def draw_graphcut_weighted_edges(segments, list_centers, edges, edge_weights,
+def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights,
                                  img_bg=None, img_alpha=0.5):
     """ visualise the edges on the overlapping a background image
 
-    :param float img_alpha: transparency
-    :param [(int, int)] list_centers:
+    :param [(int, int)] centers: list of centers
     :param ndarray segments: np.array<h, w>
-    :param ndarray edges: np.array<nb_edges, 2>
-    :param ndarray edge_weights: np.array<nb_edges, 1>
-    :param ndarray img_bg: np.array<h, w, 3>
+    :param ndarray edges: list of edges of shape <nb_edges, 2>
+    :param ndarray edge_weights: weight per edge <nb_edges, 1>
+    :param ndarray img_bg: image background
+    :param float img_alpha: transparency
     :return ndarray: np.array<h, w, 3>
 
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3+ [3] * 3] * 4 +
@@ -928,8 +927,8 @@ def draw_graphcut_weighted_edges(segments, list_centers, edges, edge_weights,
         edge_ratio = np.zeros(edge_weights.shape)
     for i, edge in enumerate(edges):
         n1, n2 = edge
-        y1, x1 = map(int, list_centers[n1])
-        y2, x2 = map(int, list_centers[n2])
+        y1, x1 = map(int, centers[n1])
+        y2, x2 = map(int, centers[n2])
 
         # line = draw.line(y1, x1, y2, x2)  # , shape=img.shape[:2]
         # img[line] = clrs(edge_ratio[i])[:3]
@@ -960,15 +959,15 @@ def draw_rg2sp_results(ax, seg, slic, dict_rg2sp_debug, iter_index=-1):
     return ax
 
 
-def figure_rg2sp_debug_complete(seg, slic, dict_rg2sp_debug, iter_index=-1,
+def figure_rg2sp_debug_complete(seg, slic, debug_rg2sp, iter_index=-1,
                                 max_size=5):
-    """ draw figure with all debug (intermediate) segmenatation steps
+    """ draw figure with all debug (intermediate) segmentation steps
 
-    :param ndarray seg:
-    :param ndarray slic:
-    :param dict_rg2sp_debug:
-    :param int iter_index:
-    :param int max_size:
+    :param ndarray seg: segmentation
+    :param ndarray slic: superpixels
+    :param debug_rg2sp: dictionary with some debug parameters
+    :param int iter_index: iteration index
+    :param int max_size: max figure size
     :return Figure:
 
     >>> seg = np.random.randint(0, 4, (100, 150))
@@ -986,22 +985,22 @@ def figure_rg2sp_debug_complete(seg, slic, dict_rg2sp_debug, iter_index=-1,
     >>> isinstance(fig, matplotlib.figure.Figure)
     True
     """
-    nb_objects = dict_rg2sp_debug['lut_data_cost'].shape[1] - 1
+    nb_objects = debug_rg2sp['lut_data_cost'].shape[1] - 1
     nb_subfigs = max(3, nb_objects)
     norm_zise = np.array(seg.shape[:2]) / float(np.max(seg.shape))
     fig_size = np.array(norm_zise)[::-1] * np.array([nb_subfigs, 2]) * max_size
     fig, axarr = plt.subplots(2, nb_subfigs, figsize=fig_size)
 
-    draw_rg2sp_results(axarr[0, 0], seg, slic, dict_rg2sp_debug, iter_index)
+    draw_rg2sp_results(axarr[0, 0], seg, slic, debug_rg2sp, iter_index)
 
-    axarr[0, 1].plot(dict_rg2sp_debug['criteria'])
-    axarr[0, 1].plot(iter_index, dict_rg2sp_debug['criteria'][iter_index], 'og')
+    axarr[0, 1].plot(debug_rg2sp['criteria'])
+    axarr[0, 1].plot(iter_index, debug_rg2sp['criteria'][iter_index], 'og')
     axarr[0, 1].set_ylabel('Energy')
     axarr[0, 1].set_xlabel('iteration')
     axarr[0, 1].grid()
 
     axarr[0, 2].set_title('Data cost')
-    img_shape_cost = dict_rg2sp_debug['lut_shape_cost'][iter_index][:, 0][slic]
+    img_shape_cost = debug_rg2sp['lut_shape_cost'][iter_index][:, 0][slic]
     im = axarr[0, 2].imshow(img_shape_cost, cmap=plt.cm.jet)
     fig.colorbar(im, ax=axarr[0, 2])
 
@@ -1010,12 +1009,12 @@ def figure_rg2sp_debug_complete(seg, slic, dict_rg2sp_debug, iter_index=-1,
 
     for i in range(nb_objects):
         axarr[1, i].set_title('Shape cost for object #%i' % i)
-        lut = dict_rg2sp_debug['lut_shape_cost'][iter_index][:, i + 1]
+        lut = debug_rg2sp['lut_shape_cost'][iter_index][:, i + 1]
         im = axarr[1, i].imshow(lut[slic], cmap=plt.cm.bone)
         fig.colorbar(im, ax=axarr[1, i])
         axarr[1, i].contour(seg, levels=np.unique(seg), cmap=plt.cm.jet)
-        axarr[1, i].plot(dict_rg2sp_debug['centres'][iter_index][i, 1],
-                         dict_rg2sp_debug['centres'][iter_index][i, 0], 'or')
+        axarr[1, i].plot(debug_rg2sp['centres'][iter_index][i, 1],
+                         debug_rg2sp['centres'][iter_index][i, 0], 'or')
         axarr[0, i].axis('off')
 
     fig.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.96)
@@ -1023,10 +1022,10 @@ def figure_rg2sp_debug_complete(seg, slic, dict_rg2sp_debug, iter_index=-1,
     return fig
 
 
-def make_overlap_images_optical(imgs):
+def make_overlap_images_optical(images):
     """ overlap images and show them
 
-    :param [ndarray] imgs:
+    :param [ndarray] images:
     :return ndarray:
 
     >>> im1 = np.zeros((5, 8), dtype=float)
@@ -1040,25 +1039,25 @@ def make_overlap_images_optical(imgs):
     """
     logging.info(' make_overlap_images_optical: overlap images')
     # get max dimension of the images
-    max_size = np.max(np.vstack(tuple([im.shape for im in imgs])), 0)
+    max_size = np.max(np.vstack(tuple([im.shape for im in images])), 0)
     logging.debug('compute maximal image size: ' + repr(max_size))
     imgs_w = []
-    for im in imgs:
+    for im in images:
         imgs_w.append(np.zeros(max_size, dtype=im.dtype))
     # copy images to the maximal image
-    for i, im in enumerate(imgs):
+    for i, im in enumerate(images):
         imgs_w[i][:im.shape[0], :im.shape[1]] = im
     # put images as backgrounds
-    img = imgs_w[0] / len(imgs)
-    for i in range(1, len(imgs)):
-        img = img + imgs_w[i] / len(imgs)
+    img = imgs_w[0] / len(images)
+    for i in range(1, len(images)):
+        img = img + imgs_w[i] / len(images)
     return img
 
 
-def make_overlap_images_chess(imgs, chess_field=SIZE_CHESS_FIELD):
+def make_overlap_images_chess(images, chess_field=SIZE_CHESS_FIELD):
     """ overlap images and show them
 
-    :param ndarray imgs:
+    :param [ndarray] images:
     :param int chess_field:
     :return ndarray:
 
@@ -1073,15 +1072,15 @@ def make_overlap_images_chess(imgs, chess_field=SIZE_CHESS_FIELD):
     """
     logging.info(' make_overlap_images_chess: overlap images')
     # get max dimension of the images
-    max_size = np.max(np.vstack(tuple([im.shape for im in imgs])), 0)
+    max_size = np.max(np.vstack(tuple([im.shape for im in images])), 0)
     logging.debug('compute maximal image size: ' + repr(max_size))
     imgs_w = []
-    for im in imgs:
+    for im in images:
         imgs_w.append(np.zeros(max_size, dtype=im.dtype))
     # copy images to the maximal image
-    for i, im in enumerate(imgs):
+    for i, im in enumerate(images):
         imgs_w[i][:im.shape[0], :im.shape[1]] = im
-    img = np.zeros(max_size, dtype=imgs[0].dtype)
+    img = np.zeros(max_size, dtype=images[0].dtype)
     idx_row = 0
     for i in range(int(max_size[0] / chess_field)):
         idx = idx_row
@@ -1097,8 +1096,8 @@ def make_overlap_images_chess(imgs, chess_field=SIZE_CHESS_FIELD):
             else:
                 h_e = max_size[1]
             img[w_b:w_e, h_b:h_e] = imgs_w[idx][w_b:w_e, h_b:h_e]
-            idx = (idx + 1) % len(imgs)
-        idx_row = (idx_row + 1) % len(imgs)
+            idx = (idx + 1) % len(images)
+        idx_row = (idx_row + 1) % len(images)
     return img
 
 

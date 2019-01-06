@@ -237,12 +237,12 @@ def is_iterable(var):
     return any(isinstance(var, cls) for cls in [list, tuple, types.GeneratorType])
 
 
-def extend_list_params(list_params, name_param, list_options):
+def extend_list_params(params, name_param, options):
     """ extend the parameter list by all sub-datasets
 
-    :param [{str: ...}] list_params:
-    :param str name_param:
-    :param [] list_options:
+    :param [{str: ...}] params: list of parameters
+    :param str name_param: parameter name
+    :param [] options: lost of options
     :return [{str: ...}]:
 
     >>> import pandas as pd
@@ -256,27 +256,27 @@ def extend_list_params(list_params, name_param, list_options):
        a  b param_idx
     0  1  5     b-1#1
     """
-    if not is_iterable(list_options):
-        list_options = [list_options]
+    if not is_iterable(options):
+        options = [options]
     list_params_new = []
-    for p in list_params:
+    for p in params:
         p['param_idx'] = p.get('param_idx', '')
-        for i, v in enumerate(list_options):
+        for i, v in enumerate(options):
             p_new = p.copy()
             p_new.update({name_param: v})
             if p_new['param_idx']:
                 p_new['param_idx'] += '_'
             p_new['param_idx'] += \
-                '%s-%i#%i' % (name_param, len(list_options), i + 1)
+                '%s-%i#%i' % (name_param, len(options), i + 1)
             list_params_new.append(p_new)
     return list_params_new
 
 
-def create_subfolders(path_out, list_folders):
+def create_subfolders(path_out, folders):
     """ create subfolders in rood directory
 
     :param str path_out: root dictionary
-    :param [str] list_folders: list of subfolders
+    :param [str] folders: list of subfolders
     :return int:
 
     >>> import shutil
@@ -288,7 +288,7 @@ def create_subfolders(path_out, list_folders):
     >>> shutil.rmtree(dir_name, ignore_errors=True)
     """
     count = 0
-    for dir_name in list_folders:
+    for dir_name in folders:
         path_dir = os.path.join(path_out, dir_name)
         if not os.path.exists(path_dir):
             try:

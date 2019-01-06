@@ -55,7 +55,7 @@ def load_inputs(name):
                           index_col=0).values
     centers[:, [0, 1]] = centers[:, [1, 0]]
 
-    slic = seg_spx.segment_slic_img2d(img, sp_size=25, rltv_compact=0.3)
+    slic = seg_spx.segment_slic_img2d(img, sp_size=25, relative_compact=0.3)
     return img, seg, slic, centers, annot
 
 
@@ -143,7 +143,7 @@ class TestRegionGrowing(unittest.TestCase):
             coef_shape=5., coef_pairwise=15., prob_label_trans=[0.1, 0.03],
             greedy_tol=3e-1, allow_obj_swap=True,
             dict_thresholds=DEFAULT_RG2SP_THRESHOLDS, nb_iter=250,
-            dict_debug_history=dict_debug)
+            debug_history=dict_debug)
 
         segm_obj = labels_greedy[slic]
         logging.info('debug: %s', repr(dict_debug.keys()))
@@ -181,7 +181,7 @@ class TestRegionGrowing(unittest.TestCase):
                               index_col=0).values
         centers[:, [0, 1]] = centers[:, [1, 0]]
 
-        slic = seg_spx.segment_slic_img2d(img, sp_size=25, rltv_compact=0.3)
+        slic = seg_spx.segment_slic_img2d(img, sp_size=25, relative_compact=0.3)
         slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, LABELS_FG_PROB)
 
         dict_debug = {}
@@ -189,7 +189,7 @@ class TestRegionGrowing(unittest.TestCase):
             slic, slic_prob_fg, centers, (model, list_mean_cdf), 'set_cdfs',
             coef_shape=5., coef_pairwise=15., prob_label_trans=[0.1, 0.03],
             optim_global=False, nb_iter=65, allow_obj_swap=False,
-            dict_thresholds=DEFAULT_RG2SP_THRESHOLDS, dict_debug_history=dict_debug)
+            dict_thresholds=DEFAULT_RG2SP_THRESHOLDS, debug_history=dict_debug)
 
         segm_obj = labels_gc[slic]
         logging.info('debug: %s', repr(dict_debug.keys()))

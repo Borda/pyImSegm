@@ -19,12 +19,12 @@ from skimage import measure
 IMAGE_SPACING = (1, 1, 1)
 
 
-def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1, slico=False):
+def segment_slic_img2d(img, sp_size=50, relative_compact=0.1, slico=False):
     """ segmentation by SLIC superpixels using original SLIC implementation
 
     :param ndarray img: input color image
     :param int sp_size: superpixel initial size
-    :param float rltv_compact: relative regularisation in range (0, 1)
+    :param float relative_compact: relative regularisation in range (0, 1)
         where 0 is for free form and 1 for nearly rectangular superpixels
     :param bool slico: whether use parameter free version ASLIC/SLICO
     :return ndarray: segmentation
@@ -41,7 +41,7 @@ def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1, slico=False):
     """
     logging.debug('Init SLIC superpixels 2d RGB clustering with params'
                   ' size=%i and regul=%f for image dims %s',
-                  sp_size, rltv_compact, repr(img.shape))
+                  sp_size, relative_compact, repr(img.shape))
     nb_pixels = np.prod(img.shape[:2])
 
     if not isinstance(img, np.ndarray):
@@ -54,7 +54,7 @@ def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1, slico=False):
 
     # set native SLIC parameters
     slic_nb_spx = int(nb_pixels / (sp_size ** 2))
-    slic_compact = (sp_size * rltv_compact) ** 1.5
+    slic_compact = (sp_size * relative_compact) ** 1.5
     logging.debug('Starting SLIC with params NB=%i & compat=%f for image %s',
                   slic_nb_spx, slic_compact, repr(img.shape))
     # run SLIC segmentation
@@ -70,13 +70,13 @@ def segment_slic_img2d(img, sp_size=50, rltv_compact=0.1, slico=False):
     return np.array(slic_segments)
 
 
-def segment_slic_img3d_gray(im, sp_size=50, rltv_compact=0.1,
+def segment_slic_img3d_gray(im, sp_size=50, relative_compact=0.1,
                             space=IMAGE_SPACING):
     """ segmentation by SLIC superpixels using originla SLIC implementation
 
     :param ndarray im: input 3D grascale image
     :param int sp_size: superpixel initial size
-    :param float rltv_compact: relative regularisation in range (0, 1)
+    :param float relative_compact: relative regularisation in range (0, 1)
         where 0 is for free form and 1 for nearly rectangular superpixels
     :param (int, int, int) space: spacing in 3d image may not be equal
     :return ndarray:
@@ -89,13 +89,13 @@ def segment_slic_img3d_gray(im, sp_size=50, rltv_compact=0.1,
     """
     logging.debug('Init SLIC superpixels 3d Gray clustering with params'
                   ' size=%i and regul=%f for image dims %s',
-                  sp_size, rltv_compact, repr(im.shape))
+                  sp_size, relative_compact, repr(im.shape))
     nb_pixels = np.prod(im.shape)
     sp_size = np.prod(sp_size / np.asarray(space, dtype=np.float32) * min(space))
     # set native SLIC parameters
     slic_nb_sp = int(nb_pixels / sp_size)
-    # slic_compact = int((sp_size * rltv_compactness) ** 1.5)
-    slic_compact = int((sp_size * rltv_compact) ** 1.5)
+    # slic_compact = int((sp_size * relative_compact) ** 1.5)
+    slic_compact = int((sp_size * relative_compact) ** 1.5)
     logging.debug('Starting SLIC superpixels clustering with params NB=%i and '
                   'compat=%f and spacing=%s', slic_nb_sp, slic_compact, repr(space))
     # run SLIC segmentation
@@ -112,13 +112,13 @@ def segment_slic_img3d_gray(im, sp_size=50, rltv_compact=0.1,
 
 
 def make_graph_segment_connect_edges(vertices, all_edges):
-    """
+    """ make graph of connencted components
+    SEE: http://peekaboo-vision.blogspot.cz/2011/08/region-connectivity-graphs-in-python.html
 
-    :param vertices:
-    :param all_edges:
-    :return:
+    :param ndarray vertices:
+    :param ndarray all_edges:
+    :return (ndarray, ndarray):
     """
-    # SEE: http://peekaboo-vision.blogspot.cz/2011/08/region-connectivity-graphs-in-python.html
     all_edges = all_edges[all_edges[:, 0] != all_edges[:, 1], :]
     all_edges = np.sort(all_edges, axis=1)
     nb_vertices = len(vertices)

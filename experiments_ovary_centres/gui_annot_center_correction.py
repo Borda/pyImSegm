@@ -87,7 +87,7 @@ def arg_parse_params():
                         help='path to file with complete info', default=None)
     params = vars(parser.parse_args())
     for k in (k for k in params if 'path' in k):
-        if params[k] is None:
+        if not params[k]:
             continue
         params[k] = os.path.abspath(os.path.expanduser(params[k]))
         p = os.path.dirname(params[k]) if '*' in params[k] else params[k]
@@ -139,7 +139,7 @@ def set_false_positive(df_points, mask_eggs):
 
 
 def set_false_negative(df_points, mask_eggs):
-    points = df_points[['X', 'Y']].as_matrix().astype(int)
+    points = df_points[['X', 'Y']].values.astype(int)
     for lb in (lb for lb in np.unique(mask_eggs) if lb != 0):
         mask = (mask_eggs == lb)
         labels = mask[points[:, 1], points[:, 0]]
@@ -255,7 +255,7 @@ def add_point_correction(x, y, changing=1, limit_dist=DICT_LIMIT_CORRECT):
     :param int limit_dist:
     """
     global df_center_labeled
-    points = df_center_labeled[['X', 'Y']].as_matrix()
+    points = df_center_labeled[['X', 'Y']].values
     dists = spatial.distance.cdist(np.array(points), np.array([[x, y]]),
                                    metric='euclidean')
     if np.min(dists) < limit_dist:
@@ -281,7 +281,7 @@ def remove_point(x, y, limit_dist=DICT_LIMIT_REMOVE):
     :param int limit_dist:
     """
     global df_center_labeled
-    points = df_center_labeled[['X', 'Y']].as_matrix()
+    points = df_center_labeled[['X', 'Y']].values
     dists = spatial.distance.cdist(np.array(points), np.array([[x, y]]),
                                    metric='euclidean')
     if np.min(dists) < limit_dist:

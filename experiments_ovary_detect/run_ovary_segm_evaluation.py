@@ -226,7 +226,7 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
         for _, row in df_paths.iterrows():
             expert_visual(row, name, path_out=dict_paths['results'])
 
-    if dict_paths['annots'] is None:
+    if not dict_paths['annots']:
         logging.info('no Annotation given')
         return {'method': name, 'count': 0}
 

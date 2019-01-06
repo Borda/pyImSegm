@@ -65,7 +65,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
     _, row = idx_row
     dict_center = dict(row)
 
-    if classif is None:
+    if not classif:
         dict_classif = seg_clf.load_classifier(path_classif)
         classif = dict_classif['clf_pipeline']
 
@@ -131,7 +131,7 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs,
 def main(params):
     """ PIPELINE for new detections
 
-    :param {str: str} paths:
+    :param {str: str} params:
     """
     params = run_train.prepare_experiment_folder(params, FOLDER_EXPERIMENT)
 

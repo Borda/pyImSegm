@@ -38,35 +38,35 @@ DICT_CONVERT_COLOR_TO_RGB = {
 }
 
 
-def convert_img_color_from_rgb(image, clr_space):
+def convert_img_color_from_rgb(image, color_space):
     """ convert image colour space from RGB to xxx
 
     :param ndarray image: rgb image
-    :param  str clr_space:
+    :param  str color_space:
     :return ndarray: image
 
     >>> convert_img_color_from_rgb(np.ones((50, 75, 3)), 'hsv').shape
     (50, 75, 3)
     """
     if image.ndim == 3 and image.shape[-1] in (3, 4) \
-            and clr_space in DICT_CONVERT_COLOR_FROM_RGB:
-        image = DICT_CONVERT_COLOR_FROM_RGB[clr_space](image)
+            and color_space in DICT_CONVERT_COLOR_FROM_RGB:
+        image = DICT_CONVERT_COLOR_FROM_RGB[color_space](image)
     return image
 
 
-def convert_img_color_to_rgb(image, clr_space):
+def convert_img_color_to_rgb(image, color_space):
     """ convert image colour space to RGB to xxx
 
     :param ndarray image: rgb image
-    :param str clr_space:
+    :param str color_space:
     :return ndarray: image
 
     >>> convert_img_color_to_rgb(np.ones((50, 75, 3)), 'hsv').shape
     (50, 75, 3)
     """
     if image.ndim == 3 and image.shape[-1] == 3 \
-            and clr_space in DICT_CONVERT_COLOR_TO_RGB:
-        image = DICT_CONVERT_COLOR_TO_RGB[clr_space](image)
+            and color_space in DICT_CONVERT_COLOR_TO_RGB:
+        image = DICT_CONVERT_COLOR_TO_RGB[color_space](image)
     return image
 
 
@@ -170,7 +170,7 @@ def load_landmarks_csv(path_file):
     path_file = os.path.abspath(os.path.expanduser(path_file))
     assert os.path.exists(path_file), 'missing "%s"' % path_file
     df = pd.read_csv(path_file, index_col=0)
-    landmarks = df[COLUMNS_COORDS].as_matrix().tolist()
+    landmarks = df[COLUMNS_COORDS].values.tolist()
     logging.debug(' load_landmarks_csv (%i): \n%s', len(landmarks),
                   repr(np.asarray(landmarks).astype(int).tolist()))
     return landmarks
@@ -179,7 +179,7 @@ def load_landmarks_csv(path_file):
 # def load_landmarks_elastix(path_file):
 #     """ load the landmarks from a given file of TXT type and return array
 #
-#     :param: path_file: str, name of the input file(whole path)
+#     :param str path_file: name of the input file(whole path)
 #     :return: array of landmarks of size <nbLandmarks> x 2
 #     """
 #     path_file = os.path.abspath(os.path.expanduser(path_file))
@@ -497,10 +497,10 @@ def load_params_from_txt(path_file):
     return params
 
 
-def convert_img_2_nifti_gray(path_img_in, path_out):
+def convert_img_2_nifti_gray(path_img, path_out):
     """ converting standard image to Nifti format
 
-    :param str path_img_in: path to input image
+    :param str path_img: path to input image
     :param str path_out: path to output directory
     :return str: path to output image
 
@@ -514,14 +514,14 @@ def convert_img_2_nifti_gray(path_img_in, path_out):
     >>> os.remove(p_out)
     >>> os.remove(p_in)
     """
-    assert os.path.exists(path_img_in), 'missing input: %s' % path_img_in
+    assert os.path.exists(path_img), 'missing input: %s' % path_img
     assert os.path.exists(path_out), 'missing output: %s' % path_out
-    name_img_out = os.path.splitext(os.path.basename(path_img_in))[0] + '.nii'
+    name_img_out = os.path.splitext(os.path.basename(path_img))[0] + '.nii'
     path_img_out = os.path.join(os.path.dirname(path_out), name_img_out)
     logging.debug('Convert image to Nifti format "%s" ->  "%s"',
-                  path_img_in, path_img_out)
+                  path_img, path_img_out)
 
-    img = io_imread(path_img_in)
+    img = io_imread(path_img)
     img = color.rgb2gray(img)
 
     img = np.swapaxes(img, 1, 0)
@@ -533,10 +533,10 @@ def convert_img_2_nifti_gray(path_img_in, path_out):
     return path_img_out
 
 
-def convert_img_2_nifti_rgb(path_img_in, path_out):
+def convert_img_2_nifti_rgb(path_img, path_out):
     """ converting standard image to Nifti format
 
-    :param str path_img_in: path to input image
+    :param str path_img: path to input image
     :param str path_out: path to output directory
     :return str: path to output image
 
@@ -549,14 +549,14 @@ def convert_img_2_nifti_rgb(path_img_in, path_out):
     >>> os.remove(p_nifty)
     >>> os.remove(p_in)
     """
-    assert os.path.exists(path_img_in), 'missing input: %s' % path_img_in
+    assert os.path.exists(path_img), 'missing input: %s' % path_img
     assert os.path.exists(path_out), 'missing output: %s' % path_out
-    name_img_out = os.path.splitext(os.path.basename(path_img_in))[0] + '.nii'
+    name_img_out = os.path.splitext(os.path.basename(path_img))[0] + '.nii'
     path_img_out = os.path.join(os.path.dirname(path_out), name_img_out)
     logging.debug('Convert image to Nifti format "%s" ->  "%s"',
-                  path_img_in, path_img_out)
+                  path_img, path_img_out)
 
-    img = io_imread(path_img_in)
+    img = io_imread(path_img)
     dims = img.shape
 
     img = img.reshape([dims[0], dims[1], 1, dims[2], 1])
@@ -812,14 +812,14 @@ def scale_image_size(path_img, size, path_out=None):
 
 
 def load_complete_image_folder(path_dir, img_name_pattern='*.png',
-                               nb_sample=None, im_range=255, skip=()):
+                               nb_sample=None, im_range=255, skip=None):
     """ load complete image folder with specific name pattern
 
     :param str path_dir: loading dictionary
     :param str img_name_pattern: image name pattern
     :param int nb_sample: load just some subset of images
     :param im_range: range to scale image values (1. or 255)
-    :param [str] skip: skip some prticular images by name
+    :param [str]|None skip: skip some prticular images by name
     :return:
 
     >>> p_imgs = os.path.join(update_path('data_images'),
@@ -830,6 +830,7 @@ def load_complete_image_folder(path_dir, img_name_pattern='*.png',
     >>> l_names
     ['insitu4174', 'insitu4358', 'insitu7331', 'insitu7544', 'insitu7545']
     """
+    skip = [] if skip is None else skip
     path_imgs = glob.glob(os.path.join(path_dir, img_name_pattern))
     for s in skip:
         path_imgs = [p for p in path_imgs if s not in os.path.basename(p)]
@@ -874,7 +875,7 @@ def load_images_list(path_imgs, im_range=255):
 
 
 def load_image(path_im, im_range=255):
-    if path_im is None:
+    if not path_im:
         logging.debug('particular image not set')
         return None, ''
     path_im = update_path(path_im)
@@ -1050,7 +1051,7 @@ def add_padding(img_size, padding, min_row, min_col, max_row, max_col):
     :param int min_col: setting top left corner of bounding box
     :param int max_row: setting bottom right corner of bounding box
     :param int max_col: setting bottom right corner of bounding box
-    :return: int, int, int, int
+    :return (int, int, int, int):
 
     >>> add_padding((50, 50), 5, 15, 25, 35, 55)
     (10, 20, 40, 50)
@@ -1097,7 +1098,7 @@ def cut_object(img, mask, padding, use_mask=False, bg_color=None):
     bg_pixels = np.hstack([mask[0, :], mask[:, 0], mask[-1, :], mask[:, -1]])
     bg_mask = np.argmax(np.bincount(bg_pixels))
 
-    if bg_color is None:
+    if not bg_color:
         bg_color = get_image2d_boundary_color(img)
 
     rotate = np.rad2deg(prop.orientation)

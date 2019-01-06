@@ -32,7 +32,7 @@ class TestGraphCut(unittest.TestCase):
         img = self.img[:, :, 0]
         annot = self.annot.astype(int)
 
-        slic = seg_spx.segment_slic_img2d(img, sp_size=15, rltv_compact=0.2)
+        slic = seg_spx.segment_slic_img2d(img, sp_size=15, relative_compact=0.2)
         label_hist = seg_lb.histogram_regions_labels_norm(slic, annot)
         labels = np.argmax(label_hist, axis=1)
         trans = seg_gc.count_label_transitions_connected_segments({'a': slic},

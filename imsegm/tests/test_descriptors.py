@@ -167,7 +167,7 @@ class TestFeatures(unittest.TestCase):
         img = d_spl.load_sample_image(d_spl.IMAGE_LENNA)
         img = transform.resize(img, (128, 128))
         slic = seg_spx.segment_slic_img2d(img, sp_size=10,
-                                          rltv_compact=0.2)
+                                          relative_compact=0.2)
 
         features, names = seg_fts.compute_selected_features_color2d(
             img, slic, seg_fts.FEATURES_SET_ALL)

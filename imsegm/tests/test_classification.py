@@ -18,22 +18,22 @@ import imsegm.classification as seg_clf
 CLASSIFIER_NAMES = seg_clf.create_classifiers().keys()
 
 
-def generate_data(nb_samples=100, nb_classes=3, dim_fts=4):
+def generate_data(nb_samples=100, nb_classes=3, dim_features=4):
     """ generating separable features pace with specific number of classes,
     samples per class and feature dimension
 
-    :param nb_samples: int, number of samples per class
-    :param dim_fts: int, dimension of feature space
-    :param nb_classes: int, number of classes
-    :return: [int], np.array<nb_samples, dim_fts>
+    :param int nb_samples: number of samples per class
+    :param int dim_features: dimension of feature space
+    :param int nb_classes: number of classes
+    :return ([int], ndarray): [int], np.array<nb_samples, dim_fts>
     """
     labels = range(int(nb_classes))
     labels = list(labels) * nb_samples
     # noise around zero
-    noise = np.random.rand(len(labels), dim_fts) - 0.5
-    base_lbs = np.tile(labels, (dim_fts, 1)).T
+    noise = np.random.rand(len(labels), dim_features) - 0.5
+    base_lbs = np.tile(labels, (dim_features, 1)).T
     # step 10 to have difference in features and labeled areas
-    base_dim = np.tile(np.arange(dim_fts * 1e2, step=1e2), (len(labels), 1))
+    base_dim = np.tile(np.arange(dim_features * 1e2, step=1e2), (len(labels), 1))
     data = base_lbs + base_dim + noise
     assert len(labels) == data.shape[0]
     return data, labels
@@ -78,8 +78,8 @@ class TestClassification(unittest.TestCase):
         data_test, labels_test = generate_data()
         for n in CLASSIFIER_NAMES:
             logging.info('created classif.: %s', n)
-            clf, _ = seg_clf.create_classif_train_export(n, data_train,
-                                                         labels_train)
+            clf, _ = seg_clf.create_classif_search_train_export(n, data_train,
+                                                                labels_train)
             self.classif_eval(clf, data_train, labels_train,
                               data_test, labels_test)
 

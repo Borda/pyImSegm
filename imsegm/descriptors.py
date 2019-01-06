@@ -82,7 +82,7 @@ MAX_SIGNAL_RESPONSE = 1.e6
 #     """
 #     img = np.array(im)
 #     uniqueLbs = np.unique(seg[:])
-#     logging.info('Computing RGB means for {} segments'.format(uniqueLbs.max()))
+#     logging.info('Computing RGB means for %d segments', uniqueLbs.max())
 #     features = np.zeros([uniqueLbs.max()+1, 3])
 #     for l in uniqueLbs:
 #         features[l] = np.mean(img[ seg==l ])
@@ -151,10 +151,10 @@ def _check_unrecognised_feature_names(list_feature_flags):
                         repr(unknown))
 
 
-def cython_img2d_color_mean(im, seg):
+def cython_img2d_color_mean(img, seg):
     """ wrapper for fast implementation of colour features
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
@@ -169,18 +169,18 @@ def cython_img2d_color_mean(im, seg):
            [ 0.2,  1.2,  1.6]])
     """
     logging.debug('Cython: computing Colour means for image %s & segm %s with '
-                  '%i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_color_image_segm(im, seg)
+                  '%i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_color_image_segm(img, seg)
 
-    means = fts_cython.computeColorImage2dMean(np.array(im, dtype=np.float32),
+    means = fts_cython.computeColorImage2dMean(np.array(img, dtype=np.float32),
                                                np.array(seg, dtype=np.int32))
     return np.array(means)
 
 
-def cython_img2d_color_energy(im, seg):
+def cython_img2d_color_energy(img, seg):
     """  wrapper for fast implementation of colour features
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
@@ -195,18 +195,18 @@ def cython_img2d_color_energy(im, seg):
            [ 0.2,  3.6,  3.2]])
     """
     logging.debug('Cython: computing Colour energy for image %s & segm %s with'
-                  ' %i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_color_image_segm(im, seg)
+                  ' %i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_color_image_segm(img, seg)
 
-    energy = fts_cython.computeColorImage2dEnergy(np.array(im, dtype=np.float32),
+    energy = fts_cython.computeColorImage2dEnergy(np.array(img, dtype=np.float32),
                                                   np.array(seg, dtype=np.int32))
     return np.array(energy)
 
 
-def cython_img2d_color_std(im, seg, means=None):
+def cython_img2d_color_std(img, seg, means=None):
     """ wrapper for fast implementation of colour features
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :param ndarray means: precomputed feature means
     :return: np.array<nb_lbs, 3> matrix features per segment
@@ -222,22 +222,22 @@ def cython_img2d_color_std(im, seg, means=None):
            [ 0.40000001,  1.46969383,  0.80000001]])
     """
     logging.debug('Cython: computing Colour STD for image %s & segm %s with '
-                  '%i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_color_image_segm(im, seg)
+                  '%i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_color_image_segm(img, seg)
 
     if means is None:
-        means = cython_img2d_color_mean(im, seg)
-    var = fts_cython.computeColorImage2dVariance(np.array(im, dtype=np.float32),
+        means = cython_img2d_color_mean(img, seg)
+    var = fts_cython.computeColorImage2dVariance(np.array(img, dtype=np.float32),
                                                  np.array(seg, dtype=np.int32),
                                                  np.array(means, dtype=np.float32))
     std = np.sqrt(var)
     return std
 
 
-def numpy_img2d_color_mean(im, seg):
+def numpy_img2d_color_mean(img, seg):
     """ compute color means by numpy
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
@@ -252,8 +252,8 @@ def numpy_img2d_color_mean(im, seg):
            [ 0.2,  1.8,  1.6]])
     """
     logging.debug('computing Colour mean for image %s & segm %s with '
-                  '%i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_color_image_segm(im, seg)
+                  '%i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_color_image_segm(img, seg)
 
     nb_labels = np.max(seg) + 1
     means = np.zeros((nb_labels, 3))
@@ -261,9 +261,9 @@ def numpy_img2d_color_mean(im, seg):
     for i in range(seg.shape[0]):
         for j in range(seg.shape[1]):
             lb = seg[i, j]
-            means[lb, 0] += im[i, j, 0]
-            means[lb, 1] += im[i, j, 1]
-            means[lb, 2] += im[i, j, 2]
+            means[lb, 0] += img[i, j, 0]
+            means[lb, 1] += img[i, j, 1]
+            means[lb, 2] += img[i, j, 2]
             counts[lb] += 1
     # prevent dividing by 0
     counts[counts == 0] = -1
@@ -273,10 +273,10 @@ def numpy_img2d_color_mean(im, seg):
     return means
 
 
-def numpy_img2d_color_std(im, seg, means=None):
+def numpy_img2d_color_std(img, seg, means=None):
     """ compute color STD by numpy
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :param ndarray means: precomputed feature means
     :return: np.array<nb_lbs, 3> matrix features per segment
@@ -292,11 +292,11 @@ def numpy_img2d_color_std(im, seg, means=None):
            [ 0.4       ,  1.46969385,  0.8       ]])
     """
     logging.debug('computing Colour STD for image %s & segm %s with '
-                  '%i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_color_image_segm(im, seg)
+                  '%i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_color_image_segm(img, seg)
 
     if means is None:
-        means = numpy_img2d_color_mean(im, seg)
+        means = numpy_img2d_color_mean(img, seg)
 
     nb_labels = np.max(seg) + 1
     assert len(means) >= nb_labels, \
@@ -307,7 +307,7 @@ def numpy_img2d_color_std(im, seg, means=None):
     for i in range(seg.shape[0]):
         for j in range(seg.shape[1]):
             lb = seg[i, j]
-            variations[lb, :] += (im[i, j, :] - means[lb, :]) ** 2
+            variations[lb, :] += (img[i, j, :] - means[lb, :]) ** 2
             counts[lb] += 1
     # prevent dividing by 0
     counts[counts == 0] = -1
@@ -318,10 +318,10 @@ def numpy_img2d_color_std(im, seg, means=None):
     return stds
 
 
-def numpy_img2d_color_energy(im, seg):
+def numpy_img2d_color_energy(img, seg):
     """ compute color energy by numpy
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
@@ -336,8 +336,8 @@ def numpy_img2d_color_energy(im, seg):
            [ 0.2,  5.4,  3.2]])
     """
     logging.debug('computing Colour energy for image %s & segm %s with '
-                  '%i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_color_image_segm(im, seg)
+                  '%i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_color_image_segm(img, seg)
 
     nb_labels = np.max(seg) + 1
     energy = np.zeros((nb_labels, 3))
@@ -345,9 +345,9 @@ def numpy_img2d_color_energy(im, seg):
     for i in range(seg.shape[0]):
         for j in range(seg.shape[1]):
             lb = seg[i, j]
-            energy[lb, 0] += im[i, j, 0] ** 2
-            energy[lb, 1] += im[i, j, 1] ** 2
-            energy[lb, 2] += im[i, j, 2] ** 2
+            energy[lb, 0] += img[i, j, 0] ** 2
+            energy[lb, 1] += img[i, j, 1] ** 2
+            energy[lb, 2] += img[i, j, 2] ** 2
             counts[lb] += 1
     # prevent dividing by 0
     counts[counts == 0] = -1
@@ -357,10 +357,10 @@ def numpy_img2d_color_energy(im, seg):
     return energy
 
 
-def numpy_img2d_color_median(im, seg):
+def numpy_img2d_color_median(img, seg):
     """ compute color median by numpy
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
@@ -375,8 +375,8 @@ def numpy_img2d_color_median(im, seg):
            [ 0. ,  3. ,  2. ]])
     """
     logging.debug('computing Colour median for image %s & segm %s with '
-                  '%i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_color_image_segm(im, seg)
+                  '%i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_color_image_segm(img, seg)
 
     nb_labels = np.max(seg) + 1
     list_values = [([], [], []) for _ in range(nb_labels)]
@@ -384,9 +384,9 @@ def numpy_img2d_color_median(im, seg):
     for i in range(seg.shape[0]):
         for j in range(seg.shape[1]):
             lb = seg[i, j]
-            list_values[lb][0].append(im[i, j, 0])
-            list_values[lb][1].append(im[i, j, 1])
-            list_values[lb][2].append(im[i, j, 2])
+            list_values[lb][0].append(img[i, j, 0])
+            list_values[lb][1].append(img[i, j, 1])
+            list_values[lb][2].append(img[i, j, 2])
 
     medians = np.zeros((nb_labels, 3))
     for i in range(nb_labels):
@@ -396,13 +396,13 @@ def numpy_img2d_color_median(im, seg):
     return medians
 
 
-def cython_img3d_gray_mean(im, seg):
+def cython_img3d_gray_mean(img, seg):
     """ wrapper for fast implementation of colour features
 
     WARNING: the Z dimension is parallel and without sync,
     multiple equal labels across Z dim may lead to not mistakes in summing
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 1> vector of mean colour per segment
 
@@ -417,21 +417,21 @@ def cython_img3d_gray_mean(im, seg):
     array([ 0.5 ,  0.5 ,  0.75,  2.25])
     """
     logging.debug('Cython: computing Gray means for image %s and segm %s with '
-                  '%i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_gray_image_segm(im, seg)
+                  '%i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_gray_image_segm(img, seg)
 
-    means = fts_cython.computeGrayImage3dMean(np.array(im, dtype=np.float32),
+    means = fts_cython.computeGrayImage3dMean(np.array(img, dtype=np.float32),
                                               np.array(seg, dtype=np.int32))
     return np.array(means)
 
 
-def cython_img3d_gray_energy(im, seg):
+def cython_img3d_gray_energy(img, seg):
     """ wrapper for fast implementation of colour features
 
     WARNING: the Z dimension is parallel and without sync,
     multiple equal labels across Z dim may lead to not mistakes in summing
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return:np.array<nb_lbs, 1> vector of mean colour per segment
 
@@ -444,21 +444,21 @@ def cython_img3d_gray_energy(im, seg):
     array([ 0.5 ,  0.5 ,  2.25,  6.75])
     """
     logging.debug('Cython: computing Gray energy for image %s and segm %s with'
-                  ' %i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_gray_image_segm(im, seg)
+                  ' %i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_gray_image_segm(img, seg)
 
-    energy = fts_cython.computeGrayImage3dEnergy(np.array(im, dtype=np.float32),
+    energy = fts_cython.computeGrayImage3dEnergy(np.array(img, dtype=np.float32),
                                                  np.array(seg, dtype=np.int32))
     return np.array(energy)
 
 
-def cython_img3d_gray_std(im, seg, mean=None):
+def cython_img3d_gray_std(img, seg, mean=None):
     """ wrapper for fast implementation of colour features
 
     WARNING: the Z dimension is parallel and without sync,
     multiple equal labels across Z dim may lead to not mistakes in summing
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :param ndarray mean: precomputed feature means
     :return:np.array<nb_lbs, 1> vector of mean colour per segment
@@ -472,22 +472,22 @@ def cython_img3d_gray_std(im, seg, mean=None):
     array([ 0.5       ,  0.5       ,  1.29903811,  1.29903811])
     """
     logging.debug('Cython: computing Gray STD for image %s and segm %s with '
-                  '%i segments', repr(im.shape), repr(seg.shape), np.max(seg))
-    _check_gray_image_segm(im, seg)
+                  '%i segments', repr(img.shape), repr(seg.shape), np.max(seg))
+    _check_gray_image_segm(img, seg)
 
     if mean is None:
-        mean = cython_img3d_gray_mean(im, seg)
-    var = fts_cython.computeGrayImage3dVariance(np.array(im, dtype=np.float32),
+        mean = cython_img3d_gray_mean(img, seg)
+    var = fts_cython.computeGrayImage3dVariance(np.array(img, dtype=np.float32),
                                                 np.array(seg, dtype=np.int32),
                                                 np.array(mean, dtype=np.float32))
     std = np.sqrt(var)
     return std
 
 
-def numpy_img3d_gray_mean(im, seg):
+def numpy_img3d_gray_mean(img, seg):
     """ compute gray (3D) means by numpy
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
@@ -500,7 +500,7 @@ def numpy_img3d_gray_mean(im, seg):
     array([ 0.5 ,  0.5 ,  0.75,  2.25])
     """
     logging.debug('computing Gray mean for %i segments', np.max(seg))
-    _check_gray_image_segm(im, seg)
+    _check_gray_image_segm(img, seg)
 
     nb_labels = np.max(seg) + 1
     means = np.zeros(nb_labels)
@@ -509,7 +509,7 @@ def numpy_img3d_gray_mean(im, seg):
         for j in range(seg.shape[1]):
             for k in range(seg.shape[2]):
                 lb = seg[i, j, k]
-                means[lb] += im[i, j, k]
+                means[lb] += img[i, j, k]
                 counts[lb] += 1
     # just for not dividing by 0
     counts[counts == 0] = -1
@@ -519,10 +519,10 @@ def numpy_img3d_gray_mean(im, seg):
     return means
 
 
-def numpy_img3d_gray_std(im, seg, means=None):
+def numpy_img3d_gray_std(img, seg, means=None):
     """ compute gray (3D) STD by numpy
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :param ndarray means: precomputed feature means
     :return: np.array<nb_lbs, 3> matrix features per segment
@@ -536,10 +536,10 @@ def numpy_img3d_gray_std(im, seg, means=None):
     array([ 0.5       ,  0.5       ,  1.29903811,  1.29903811])
     """
     logging.debug('computing Gray mean for %i segments', np.max(seg))
-    _check_gray_image_segm(im, seg)
+    _check_gray_image_segm(img, seg)
 
     if means is None:
-        means = numpy_img3d_gray_mean(im, seg)
+        means = numpy_img3d_gray_mean(img, seg)
 
     nb_labels = np.max(seg) + 1
     assert len(means) >= nb_labels, \
@@ -551,7 +551,7 @@ def numpy_img3d_gray_std(im, seg, means=None):
         for j in range(seg.shape[1]):
             for k in range(seg.shape[2]):
                 lb = seg[i, j, k]
-                variances[lb] += (im[i, j, k] - means[lb]) ** 2
+                variances[lb] += (img[i, j, k] - means[lb]) ** 2
                 counts[lb] += 1
     # just for not dividing by 0
     counts[counts == 0] = -1
@@ -562,10 +562,10 @@ def numpy_img3d_gray_std(im, seg, means=None):
     return stds
 
 
-def numpy_img3d_gray_energy(im, seg):
+def numpy_img3d_gray_energy(img, seg):
     """ compute gray (3D) energy by numpy
 
-    :param im: input RGB image
+    :param img: input RGB image
     :param seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
@@ -578,7 +578,7 @@ def numpy_img3d_gray_energy(im, seg):
     array([ 0.5 ,  0.5 ,  2.25,  6.75])
     """
     logging.debug('computing Gray energy for %i segments', np.max(seg))
-    _check_gray_image_segm(im, seg)
+    _check_gray_image_segm(img, seg)
 
     nb_labels = np.max(seg) + 1
     energy = np.zeros(nb_labels)
@@ -587,7 +587,7 @@ def numpy_img3d_gray_energy(im, seg):
         for j in range(seg.shape[1]):
             for k in range(seg.shape[2]):
                 lb = seg[i, j, k]
-                energy[lb] += im[i, j, k] ** 2
+                energy[lb] += img[i, j, k] ** 2
                 counts[lb] += 1
     # just for not dividing by 0
     counts[counts == 0] = -1
@@ -597,10 +597,10 @@ def numpy_img3d_gray_energy(im, seg):
     return energy
 
 
-def numpy_img3d_gray_median(im, seg):
+def numpy_img3d_gray_median(img, seg):
     """ compute gray (3D) median by numpy
 
-    :param ndarray im: input RGB image
+    :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
@@ -613,7 +613,7 @@ def numpy_img3d_gray_median(im, seg):
     array([ 0.5,  0.5,  0. ,  3. ])
     """
     logging.debug('computing Gray median for %i segments', np.max(seg))
-    _check_gray_image_segm(im, seg)
+    _check_gray_image_segm(img, seg)
 
     nb_labels = np.max(seg) + 1
     list_values = [[] for _ in range(nb_labels)]
@@ -621,7 +621,7 @@ def numpy_img3d_gray_median(im, seg):
     for i in range(seg.shape[0]):
         for j in range(seg.shape[1]):
             for k in range(seg.shape[2]):
-                list_values[seg[i, j, k]].append(im[i, j, k])
+                list_values[seg[i, j, k]].append(img[i, j, k])
 
     medians = np.zeros(nb_labels)
     for i in range(nb_labels):
@@ -823,30 +823,30 @@ def norm_features(features, scaler=None):
     :param obj scaler:
     :return [[float]]:
     """
-    if scaler is None:
+    if not scaler:
         scaler = preprocessing.StandardScaler()
         scaler.fit(features)
     features = scaler.transform(features)
     return features, scaler
 
 
-def make_gaussian_filter1d(x, sigma, order=0):
+def make_gaussian_filter1d(vals, sigma, order=0):
     if order > 2:
         raise ValueError("Only orders up to 2 are supported")
     # compute unnormalized Gaussian response
-    response = np.exp(-x ** 2 / (2. * sigma ** 2))
+    response = np.exp(-vals ** 2 / (2. * sigma ** 2))
     if order == 1:
-        response = - response * x
+        response = - response * vals
     elif order == 2:
-        response = (response * (x ** 2 - sigma ** 2))
+        response = (response * (vals ** 2 - sigma ** 2))
     # normalize
     response /= np.abs(response).sum()
     return response
 
 
-def make_edge_filter2d(sig, phase, pts, sup):
-    gx = make_gaussian_filter1d(pts[0, :], sigma=3 * sig)
-    gy = make_gaussian_filter1d(pts[1, :], sigma=sig, order=phase)
+def make_edge_filter2d(sig, phase, points, sup):
+    gx = make_gaussian_filter1d(points[0, :], sigma=3 * sig)
+    gy = make_gaussian_filter1d(points[1, :], sigma=sig, order=phase)
     ft = (gx * gy).reshape(sup, sup)
     # normalize
     ft /= np.abs(ft).sum()
@@ -903,16 +903,16 @@ def create_filter_bank_lm_2d(radius=16, sigmas=DEFAULT_FILTERS_SIGMAS,
     return filters, names
 
 
-def compute_img_filter_response2d(im, filter_battery):
+def compute_img_filter_response2d(img, filter_battery):
     """ compute image filter response in 2D
 
-    :param [[float]] im:
-    :param [[[float]]] filter_battery:
-    :return[[float]] :
+    :param [[float]] img: image
+    :param [[[float]]] filter_battery: filters
+    :return [[float]]:
     """
     if filter_battery.ndim != 3:
         raise ValueError('wrong batery dim %s' % repr(filter_battery.shape))
-    responses = np.array([ndimage.convolve(im, fl) for fl in filter_battery])
+    responses = np.array([ndimage.convolve(img, fl) for fl in filter_battery])
     if filter_battery.shape[0] > 1:
         # usually for rotational edge detectors and we tae the maximal response
         response = np.max(responses, axis=0)
@@ -951,16 +951,15 @@ def image_subtract_gauss_smooth(img, sigma):
     return img
 
 
-def compute_texture_desc_lm_img3d_val(img, seg, list_feature_flags,
-                                      bank_type='normal'):
+def compute_texture_desc_lm_img3d_val(img, seg, feature_flags, bank_type='normal'):
     """ compute texture descriptors as mean / std / ...
     on Lewen-Malik filter bank response
 
-    :param [[[float]]] img: np.array
-    :param [[[int]]] seg:
-    :param [str] list_feature_flags:
+    :param [[[float]]] img: image
+    :param [[[int]]] seg: segmentation
+    :param [str] feature_flags: list of feature flags
     :param str bank_type: define used LM filter bank ['short', 'normal']
-    :return np.ndarray<nb_samples, nb_features>, [str]:
+    :return ndarray, [str]: np.ndarray<nb_samples, nb_features>, names
     """
     _check_gray_image_segm(img, seg)
 
@@ -983,7 +982,7 @@ def compute_texture_desc_lm_img3d_val(img, seg, list_feature_flags,
         else:
             response = (response * (np.log(1 + l_n) / 0.03)) / l_n
         fts, n = compute_image3d_gray_statistic(response, seg,
-                                                list_feature_flags, fl_name)
+                                                feature_flags, fl_name)
         features += [fts]
         names += n
     features = np.concatenate(tuple(features), axis=1)
@@ -996,13 +995,12 @@ def compute_texture_desc_lm_img3d_val(img, seg, list_feature_flags,
     return features, names
 
 
-def compute_texture_desc_lm_img2d_clr(img, seg, list_feature_flags,
-                                      bank_type='normal'):
+def compute_texture_desc_lm_img2d_clr(img, seg, feature_flags, bank_type='normal'):
     """ compute texture descriptors via Lewen-Malik filter response
 
-    :param ndarray img:
-    :param ndarray seg:
-    :param [str] list_feature_flags:
+    :param ndarray img: image
+    :param ndarray seg: segmentation
+    :param [str] feature_flags:
     :param str bank_type: define used LM filter bank ['short', 'normal']
     :return np.ndarray<nb_samples, nb_features>, [str]:
 
@@ -1052,7 +1050,7 @@ def compute_texture_desc_lm_img2d_clr(img, seg, list_feature_flags,
             response_roll = (response_roll * (np.log(1 + norm) / 0.03)) / norm
         response = np.rollaxis(response_roll, 0, 3)
         fts, ns = compute_image2d_color_statistic(response, seg,
-                                                  list_feature_flags, fl_name)
+                                                  feature_flags, fl_name)
         features += [fts]
         names += ns
     features = np.concatenate(tuple(features), axis=1)
@@ -1065,13 +1063,12 @@ def compute_texture_desc_lm_img2d_clr(img, seg, list_feature_flags,
     return features, names
 
 
-def compute_selected_features_gray3d(img, segments,
-                                     dict_feature_flags=FEATURES_SET_COLOR):
+def compute_selected_features_gray3d(img, segments, feature_flags=FEATURES_SET_COLOR):
     """ compute selected features on gray 3D image
 
-    :param ndarray img:
-    :param ndarray segments:
-    :param {str: [str]} dict_feature_flags:
+    :param ndarray img: image
+    :param ndarray segments: segmentation
+    :param {str: [str]} feature_flags: dictionary of feature flags
     :return np.ndarray<nb_samples, nb_features>, [str]:
 
     >>> np.random.seed(0)
@@ -1079,16 +1076,16 @@ def compute_selected_features_gray3d(img, segments,
     >>> slic = np.zeros((2, 10, 15), dtype=int)
     >>> slic[:, :, :7] += 1
     >>> slic[1, :, :] += 2
-    >>> fts, names = compute_selected_features_gray3d(img, slic,
-    ...                                   {'color': ['mean', 'std', 'median']})
+    >>> fts, names = compute_selected_features_gray3d(
+    ...     img, slic, {'color': ('mean', 'std', 'median')})
     >>> fts.shape
     (4, 3)
     >>> names  # doctest: +NORMALIZE_WHITESPACE
     ['gray_mean', 'gray_std', 'gray_median']
-    >>> _ = compute_selected_features_gray3d(img, slic,
-    ...                                  {'tLM': ['median', 'std', 'energy']})
-    >>> fts, names = compute_selected_features_gray3d(img, slic,
-    ...                                  {'tLM_short': ['mean', 'std', 'energy']})
+    >>> _ = compute_selected_features_gray3d(
+    ...     img, slic, {'tLM': ('median', 'std', 'energy')})
+    >>> fts, names = compute_selected_features_gray3d(
+    ...     img, slic, {'tLM_short': ('mean', 'std', 'energy')})
     >>> fts.shape
     (4, 45)
     >>> names  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -1096,31 +1093,31 @@ def compute_selected_features_gray3d(img, segments,
 
     """
     _check_gray_image_segm(img, segments)
-    assert dict_feature_flags, 'some features has to be selected'
+    assert feature_flags, 'some features has to be selected'
 
     features, names = [], []
     # COLOR FEATURES
-    if any(k.startswith('color') for k in dict_feature_flags):
-        flags = np.unique([dict_feature_flags[k]
-                           for k in dict_feature_flags if k.startswith('color')])
+    if any(k.startswith('color') for k in feature_flags):
+        flags = np.unique([feature_flags[k]
+                           for k in feature_flags if k.startswith('color')])
         fts, ns = compute_image3d_gray_statistic(img, segments, flags)
         features.append(fts)
         names += ns
 
     # TEXTURE - LEWEN-MALIK
-    k_text = [k for k in dict_feature_flags if k.startswith('tLM')]
+    k_text = [k for k in feature_flags if k.startswith('tLM')]
     if k_text:
         for k in k_text:
             bank_type = k.split('_')[-1] if '_' in k else 'normal'
             fts, ns = compute_texture_desc_lm_img3d_val(img, segments,
-                                                        dict_feature_flags[k],
+                                                        feature_flags[k],
                                                         bank_type)
             features.append(fts)
             names += ns
-    _check_unrecognised_feature_group(dict_feature_flags)
+    _check_unrecognised_feature_group(feature_flags)
 
     if not features:
-        logging.error('not supported features: %s', repr(dict_feature_flags))
+        logging.error('not supported features: %s', repr(feature_flags))
     features = np.concatenate(tuple(features), axis=1)
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
@@ -1130,13 +1127,12 @@ def compute_selected_features_gray3d(img, segments,
     return features, names
 
 
-def compute_selected_features_gray2d(img, segments,
-                                     dict_features_flags=FEATURES_SET_ALL):
+def compute_selected_features_gray2d(img, segments, features_flags=FEATURES_SET_ALL):
     """ compute selected features for gray image 2D
 
-    :param ndarray img:
-    :param ndarray segments:
-    :param dict_features_flags:
+    :param ndarray img: image
+    :param ndarray segments: segmentation
+    :param {str: [str]} feature_flags: dictionary of feature flags
     :return np.ndarray<nb_samples, nb_features>, [str]:
 
     >>> image = np.zeros((2, 10))
@@ -1144,15 +1140,15 @@ def compute_selected_features_gray2d(img, segments,
     >>> image[1, 3:7] = 3
     >>> segm = np.array([[0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
     ...                  [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]])
-    >>> features, names = compute_selected_features_gray2d(image, segm,
-    ...                              {'color': ['mean', 'std', 'median']})
+    >>> features, names = compute_selected_features_gray2d(
+    ...     image, segm, {'color': ('mean', 'std', 'median')})
     >>> np.round(features, 3)
     array([[ 0.9  ,  1.136,  0.5  ],
            [ 0.7  ,  1.187,  0.   ]])
-    >>> _ = compute_selected_features_gray2d(image, segm,
-    ...                                  {'tLM': ['mean', 'std', 'median']})
-    >>> features, names = compute_selected_features_gray2d(image, segm,
-    ...                                  {'tLM_short': ['mean', 'std', 'energy']})
+    >>> _ = compute_selected_features_gray2d(
+    ...     image, segm, {'tLM': ('mean', 'std', 'median')})
+    >>> features, names = compute_selected_features_gray2d(
+    ...     image, segm, {'tLM_short': ('mean', 'std', 'energy')})
     >>> features.shape
     (2, 45)
     >>> features, names = compute_selected_features_gray2d(image, segm)
@@ -1163,19 +1159,18 @@ def compute_selected_features_gray2d(img, segments,
 
     features, names = compute_selected_features_gray3d(img[np.newaxis, ...],
                                                        segments[np.newaxis, ...],
-                                                       dict_features_flags)
+                                                       features_flags)
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
 
 
-def compute_selected_features_color2d(img, segments,
-                                      dict_feature_flags=FEATURES_SET_ALL):
+def compute_selected_features_color2d(img, segments, feature_flags=FEATURES_SET_ALL):
     """ compute selected features color image 2D
 
-    :param ndarray img:
-    :param ndarray segments:
-    :param dict_feature_flags:
+    :param ndarray img: image
+    :param ndarray segments: segmentation
+    :param {str: [str]} feature_flags: dictionary of feature flags
     :return np.ndarray<nb_samples, nb_features>, [str]:
 
     >>> image = np.zeros((2, 10, 3))
@@ -1185,19 +1180,19 @@ def compute_selected_features_color2d(img, segments,
     >>> segm = np.array([[0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
     ...                  [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]])
     >>> features, names = compute_selected_features_color2d(image, segm,
-    ...                                   {'color': ['mean', 'std', 'median']})
+    ...                                   {'color': ('mean', 'std', 'median')})
     >>> np.round(features, 3)
     array([[ 0.6 ,  1.2 ,  0.4 ,  0.49,  1.47,  0.8 ,  1.  ,  0.  ,  0.  ],
            [ 0.2 ,  1.2 ,  1.6 ,  0.4 ,  1.47,  0.8 ,  0.  ,  0.  ,  2.  ]])
     >>> features, names = compute_selected_features_color2d(image, segm,
-    ...                                   {'color_hsv': ['mean', 'std']})
+    ...                                   {'color_hsv': ('mean', 'std')})
     >>> np.round(features, 3)
     array([[ 0.139,  0.533,  1.4  ,  0.176,  0.452,  1.356],
            [ 0.439,  0.733,  2.   ,  0.244,  0.389,  1.095]])
     >>> _ = compute_selected_features_color2d(image, segm,
-    ...                                   {'tLM': ['mean', 'std', 'energy']})
+    ...                                   {'tLM': ('mean', 'std', 'energy')})
     >>> features, names = compute_selected_features_color2d(image, segm,
-    ...                                   {'tLM_short': ['mean', 'energy']})
+    ...                                   {'tLM_short': ('mean', 'energy')})
     >>> features.shape
     (2, 90)
     >>> features, names = compute_selected_features_color2d(image, segm)
@@ -1207,7 +1202,7 @@ def compute_selected_features_color2d(img, segments,
     _check_color_image(img)
     features, names = [], []
     # COLOR SPACES
-    k_color = [k for k in dict_feature_flags if k.startswith('color')]
+    k_color = [k for k in feature_flags if k.startswith('color')]
     if k_color:
         for k in k_color:
             if '_' in k:
@@ -1217,41 +1212,45 @@ def compute_selected_features_color2d(img, segments,
                 clr = 'rgb'
                 img_color = img
             fts, ns = compute_image2d_color_statistic(img_color, segments,
-                                                      dict_feature_flags[k],
+                                                      feature_flags[k],
                                                       color_name=clr)
             features.append(fts)
             names += ns
     # TEXTURE - LEWEN-MALIK
-    k_text = [k for k in dict_feature_flags if k.startswith('tLM')]
+    k_text = [k for k in feature_flags if k.startswith('tLM')]
     if k_text:
         for k in k_text:
             bank_type = k.split('_')[-1] if '_' in k else 'normal'
             fts, ns = compute_texture_desc_lm_img2d_clr(img, segments,
-                                                        dict_feature_flags[k],
+                                                        feature_flags[k],
                                                         bank_type)
             features.append(fts)
             names += ns
 
-    _check_unrecognised_feature_group(dict_feature_flags)
+    _check_unrecognised_feature_group(feature_flags)
     features = np.concatenate(tuple(features), axis=1)
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
     if not features.size:
-        logging.error('not supported features: %s', repr(dict_feature_flags))
+        logging.error('not supported features: %s', repr(feature_flags))
     assert features.shape[1] == len(names), \
         'features: %s and names %s' % (repr(features.shape), repr(names))
     return features, names
 
 
-def compute_selected_features_img2d(image, segm,
-                                    dict_features_flags=FEATURES_SET_COLOR):
+def compute_selected_features_img2d(image, segm, features_flags=FEATURES_SET_COLOR):
+    """ compute features
+
+    :param ndarray img: image
+    :param ndarray segments: segmentation
+    :param {str: [str]} feature_flags: dictionary of feature flags
+    :return:
+    """
     if image.ndim == 3 and image.shape[2] == 3:
-        return compute_selected_features_color2d(image, segm,
-                                                 dict_features_flags)
+        return compute_selected_features_color2d(image, segm, features_flags)
     elif image.ndim == 2:
-        return compute_selected_features_gray2d(image, segm,
-                                                dict_features_flags)
+        return compute_selected_features_gray2d(image, segm, features_flags)
     else:
         logging.error('invalid image size - %s', repr(image.shape))
 
@@ -1259,9 +1258,9 @@ def compute_selected_features_img2d(image, segm,
 def extend_segm_by_struct_elem(segm, struc_elem):
     """ extend the image by size of the stuctur element
 
-    :param [[int]] segm:
-    :param [[int]] struc_elem:
-    :return [[int]]:
+    :param ndarray segm: segmentations
+    :param ndarray struc_elem:
+    :return ndarray:
     """
     assert segm.ndim >= struc_elem.ndim, \
         'segment %s should be larger than element %s' \
@@ -1282,17 +1281,17 @@ def extend_segm_by_struct_elem(segm, struc_elem):
     return segm_extend
 
 
-def compute_label_histograms_positions(segm, list_positions,
+def compute_label_histograms_positions(segm, positions,
                                        diameters=HIST_CIRCLE_DIAGONALS,
                                        nb_labels=None):
     """ compute the histogram features doe consecutive growing diameter
     of inter circle neighbouring around given points in the segmentation
 
     :param ndarray segm: np.array<height, width>
-    :param  [(int, int)] list_positions:
-    :param [int] diameters:
+    :param [(int, int)] positions: list of positions
+    :param [int] diameters: circular diameters
     :param int nb_labels:
-    :return: ndarray<nb_samples, nb_features>, [str]
+    :return (ndarray, [str]): ndarray<nb_samples, nb_features>, names
 
     >>> segm = np.zeros((10, 10), dtype=int)
     >>> segm[1:9, 2:8] = 1
@@ -1321,7 +1320,7 @@ def compute_label_histograms_positions(segm, list_positions,
            [ 1.  ,  0.  ,  0.5 ,  0.  ,  0.13,  0.  ],
            [ 1.  ,  0.8 ,  1.  ,  0.38,  0.67, -0.06]])
     """
-    pos_dim = np.asarray(list_positions).shape[1]
+    pos_dim = np.asarray(positions).shape[1]
     assert (segm.ndim - pos_dim) in (0, 1),\
         'dimension %s and %s difference should be 0 or 1' \
         % (repr(segm.ndim), repr(pos_dim))
@@ -1342,7 +1341,7 @@ def compute_label_histograms_positions(segm, list_positions,
     pos_hists = list()
     logging.debug('compute circular histogram')
     # for each position compute features
-    for pos in list_positions:
+    for pos in positions:
         hist_pos = list()
         hist_last = np.zeros(nb_labels)
         sel_size_last = np.zeros(1)
@@ -1355,9 +1354,6 @@ def compute_label_histograms_positions(segm, list_positions,
                 hist, sel_size = compute_label_hist_proba(segm_extend, pos, sel)
             norm = sel_size - sel_size_last
             assert norm > 0, 'norm or element should be positive'
-            # logging.debug('diff: %s last: %s new: %s',
-            # repr((hist - hist_last).tolist()), repr(hist_last.tolist()),
-            # repr(hist.tolist()))
             hist_pos += ((hist - hist_last) / norm).tolist()
             hist_last = hist
             sel_size_last = sel_size
@@ -1416,10 +1412,10 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
     """ compute histogram of labels for set of centric annulus
 
     :param ndarray segm: np.array<height, width>
-    :param position: (float, float)
-    :param struc_elem: np.array<h, w>
-    :param nb_labels: int, total number of labels in the segm.
-    :return: [float]
+    :param (float, float) position:
+    :param ndarray struc_elem: np.array<h, w>
+    :param int nb_labels: total number of labels in the segm.
+    :return [float]:
 
     >>> segm = np.zeros((10, 10), dtype=int)
     >>> segm[1:9, 2:8] = 1
@@ -1464,7 +1460,7 @@ def compute_label_hist_proba(segm, position, struc_elem):
     expecting that each label has own layer
 
     :param ndarray segm: np.array<height, width>
-    :param position: (float, float)
+    :param (float, float) position:
     :param ndarray struc_elem: np.array<height, width>
     :return [float]:
 
@@ -1707,10 +1703,10 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     """ compute ray features fo multiple points in the segmentation
     with given boundary labels and step angle
 
-    :param segm: np.array<height, width>
-    :param list_positions: [(int, int)]
-    :param angle_step: float
-    :param border_labels: [int] all labels to be set as boundaries
+    :param ndarray segm: np.array<height, width>
+    :param [(int, int)] list_positions:
+    :param float angle_step:
+    :param [int] border_labels: all labels to be set as boundaries
     :param int segm_open:
     :param float smooth_ray:
     :param bool shifting:
@@ -1825,8 +1821,8 @@ def interpolate_ray_dist(ray_dists, order='spline'):
     y_train_ext = np.array(y_train.tolist() * 3)
 
     if isinstance(order, int):
-        # model = pipeline.make_pipeline(preprocessing.PolynomialFeatures(order),
-        #                                linear_model.Ridge())
+        # model = pipeline.make_pipeline(
+        #     preprocessing.PolynomialFeatures(order), linear_model.Ridge())
         # model.fit(x_space[ray_dists != -1], ray_dists[ray_dists != -1])
         # ray_dists[ray_dists == -1] = model.predict(x_space[ray_dists == -1])
         z = np.polyfit(x_train, y_train, order)
@@ -1896,7 +1892,7 @@ def reduce_close_points(points, dist_thr):
     assumption, the points are in sequence geometrically ordered)
 
     :param [[float, float]] points:
-    :param float dist_thr:
+    :param float dist_thr: distance threshold
     :return [[float, float]]:
 
     >>> points = np.array([range(10), range(10)]).T

@@ -201,7 +201,7 @@ def find_match_images_segms_centers(path_pattern_imgs, path_pattern_segms,
     list_paths = [path_pattern_imgs, path_pattern_segms, path_pattern_center]
     df_paths = tl_data.find_files_match_names_across_dirs(list_paths)
 
-    if path_pattern_center is None:
+    if not path_pattern_center:
         df_paths.columns = ['path_image', 'path_segm']
         df_paths['path_centers'] = ''
     else:
@@ -330,10 +330,10 @@ def export_show_image_points_labels(path_out, img_name, img, seg, points,
     img = img / float(np.max(img)) if np.max(img) > 1 else img
     tl_visu.draw_image_segm_points(axarr[0], img, points, labels,
                                    seg_contour=seg_centers,
-                                   dict_label_marker=dict_label_marker)
+                                   lut_label_marker=dict_label_marker)
     tl_visu.draw_image_segm_points(axarr[1], seg, points, labels, slic,
                                    seg_contour=seg_centers,
-                                   dict_label_marker=dict_label_marker)
+                                   lut_label_marker=dict_label_marker)
     fig.tight_layout()
     fig.savefig(os.path.join(path_out, img_name + fig_suffix + '.png'),
                 bbox_inches='tight', pad_inches=0)
@@ -444,15 +444,13 @@ def wrapper_draw_export_slic_centers(args):
     return export_show_image_points_labels(*args)
 
 
-def dataset_load_images_segms_compute_features(params, df_paths,
-                                               nb_jobs=NB_THREADS):
+def dataset_load_images_segms_compute_features(params, df_paths, nb_jobs=NB_THREADS):
     """ create whole dataset composed from loading input data, computing features
-    and label points by label wether its positive or negative center candidate
+    and label points by label whether its positive or negative center candidate
 
-    :param {str: str} paths:
-    :param {str: any} params:
-    :param df_paths: DF
-    :param int nb_jobs:
+    :param {str: any} params: parameters
+    :param DF df_paths: DataFrame
+    :param int nb_jobs: parallel
     :return {str: ...}:
     """
     dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
@@ -746,7 +744,7 @@ def main_train(params):
     # feature norm & train classification
     nb_holdout = int(np.ceil(len(sizes) * CROSS_VAL_LEAVE_OUT_SEARCH))
     cv = seg_clf.CrossValidatePSetsOut(sizes, nb_holdout)
-    classif, params['path_classif'] = seg_clf.create_classif_train_export(
+    classif, params['path_classif'] = seg_clf.create_classif_search_train_export(
         params['classif'], features, labels, cross_val=cv, params=params,
         feature_names=feature_names, nb_search_iter=params['nb_classif_search'],
         pca_coef=params.get('pca_coef', None), nb_jobs=params['nb_jobs'],

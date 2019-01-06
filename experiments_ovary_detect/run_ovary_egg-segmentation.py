@@ -161,7 +161,7 @@ def arg_parse_params(params):
         params.update(data)
         params.update(arg_params)
     for k in (k for k in arg_params if 'path' in k):
-        if arg_params[k] is None:
+        if not arg_params[k]:
             continue
         params[k] = tl_data.update_path(arg_params[k], absolute=True)
         assert os.path.exists(params[k]), 'missing: %s' % params[k]
@@ -380,7 +380,7 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points,
         lb = i + 1
         ellipse = EllipseModel()
         ellipse.estimate(points)
-        if ellipse is None:
+        if not ellipse:
             continue
         logging.debug('ellipse params: %s', repr(ellipse.params))
         segm = ell_fit.add_overlap_ellipse(segm, ellipse.params, lb, thr_overlap)
@@ -415,7 +415,7 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
                                          min_samples=nb_min,
                                          residual_threshold=15,
                                          max_trials=250)
-        if ransac_model is None:
+        if not ransac_model:
             continue
         logging.debug('ellipse params: %s', repr(ransac_model.params))
         segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb,
@@ -458,7 +458,7 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
                                               min_samples=nb_inliers,
                                               residual_threshold=25,
                                               max_trials=250)
-        if ransac_model is None:
+        if not ransac_model:
             continue
         logging.debug('ellipse params: %s', repr(ransac_model.params))
         segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb,
@@ -533,7 +533,7 @@ def segment_rg2sp_greedy(slic, seg, centers, labels_fg_prob, path_model,
         shape_model['name'], coef_shape, coef_pairwise,
         prob_label_trans, greedy_tol=1e-1, allow_obj_swap=allow_obj_swap,
         dict_thresholds=dict_thresholds, nb_iter=1000,
-        dict_debug_history=dict_debug)
+        debug_history=dict_debug)
 
     if dict_debug is not None:
         nb_iter = len(dict_debug['energy'])
@@ -563,7 +563,7 @@ def segment_rg2sp_graphcut(slic, seg, centers, labels_fg_prob, path_model,
         shape_model['name'], coef_shape, coef_pairwise, prob_label_trans,
         optim_global=True, allow_obj_swap=allow_obj_swap,
         dict_thresholds=dict_thresholds, nb_iter=250,
-        dict_debug_history=dict_debug)
+        debug_history=dict_debug)
 
     if dict_debug is not None:
         nb_iter = len(dict_debug['energy'])
@@ -706,7 +706,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
         return name
     # img = seg / float(seg.max())
     slic = seg_spx.segment_slic_img2d(img_rgb, sp_size=params['slic_size'],
-                                      rltv_compact=params['slic_regul'])
+                                      relative_compact=params['slic_regul'])
 
     path_segm = os.path.join(params['path_exp'], 'input', name + '.png')
     export_draw_image_segm(path_segm, img_rgb, segm_obj=seg, centers=centers)
