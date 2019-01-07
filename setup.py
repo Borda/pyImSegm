@@ -67,7 +67,9 @@ setup(
     description='superpixel image segmentation: '
                 '(un)supervised, center detection, region growing',
 
-    packages=find_packages(),
+    packages=find_packages(exclude=['docs', 'notebooks',
+                                    'handling_annotations',
+                                    'experiments_*']),
     cmdclass={'build_ext': BuildExt},
     ext_modules=[Extension('imsegm.features_cython',
                            language='c++',
