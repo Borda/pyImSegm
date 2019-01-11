@@ -1455,6 +1455,8 @@ class CrossValidatePOut:
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([3, 4, 5], [0, 1, 2]),
      ([0, 1, 2], [3, 4, 5])]
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidatePOut(340, 0.41)]
+    [(201, 139), (201, 139), (201, 139)]
 
     Example 2
     ---------
@@ -1462,7 +1464,7 @@ class CrossValidatePOut:
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([3, 0, 5, 4], [6, 2, 1]),
      ([6, 2, 1, 4], [3, 0, 5]),
-     ([6, 2, 1, 3, 0, 5], [4])]
+     ([1, 3, 0, 5], [4, 6, 2])]
     >>> len(list(cv))
     3
     >>> cv.indexes
@@ -1475,20 +1477,24 @@ class CrossValidatePOut:
     [([6, 2], [1, 3, 0, 5, 4]),
      ([1, 3], [6, 2, 0, 5, 4]),
      ([0, 5], [6, 2, 1, 3, 4]),
-     ([4], [6, 2, 1, 3, 0, 5])]
+     ([4, 6], [2, 1, 3, 0, 5])]
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidatePOut(340, 0.55)]
+    [(153, 187), (153, 187), (153, 187)]
     """
 
     def __init__(self, nb_samples, nb_hold_out, rand_seed=None):
         """
 
         :param [int] nb_samples: list of sizes
-        :param int nb_hold_out: how much hold out
+        :param int|float nb_hold_out: how much hold out
         :param int|None rand_seed:
         """
         assert nb_samples > nb_hold_out, \
-            'number of holdout has to be smaller then _total size'
+            'number of holdout has to be smaller then total size'
+        assert nb_hold_out > 0, 'number of holdout has to be positive number'
         self._nb_samples = nb_samples
-        self._nb_hold_out = nb_hold_out
+        self._nb_hold_out = int(np.round(nb_samples * nb_hold_out)) \
+            if nb_hold_out < 1 else nb_hold_out
 
         self._revert = False  # sets the sizes
         if self._nb_hold_out > (self._nb_samples / 2.):
@@ -1501,8 +1507,11 @@ class CrossValidatePOut:
         self.indexes = list(range(self._nb_samples))
 
         if rand_seed is not None and rand_seed is not False:
+            self._shuffle = True
             np.random.seed(rand_seed)
             np.random.shuffle(self.indexes)
+        else:
+            self._shuffle = False
         logging.debug('sets ordering: %s', repr(self.indexes))
 
         self.iter = 0
@@ -1513,8 +1522,19 @@ class CrossValidatePOut:
         :return ([int], [int]):
         """
         for i in range(0, self._nb_samples, self._nb_hold_out):
-            inds_test = self.indexes[i:i + self._nb_hold_out]
-            inds_train = [i for i in self.indexes if i not in inds_test]
+            i_end = i + self._nb_hold_out
+            inds_test = self.indexes[i:i_end]
+            inds_train = self.indexes[:i] + self.indexes[i_end:]
+            # over flow the limited set
+            if i_end > self._nb_samples:
+                i_begin = i_end - self._nb_samples
+                inds_test += self.indexes[:i_begin]
+                inds_train = self.indexes[i_begin:i]
+                logging.warning('Your demand for last test fold overflow by %i, '
+                                'to keep the train-test ration we reuse part '
+                                'of the already tested samples from the %s beginning.',
+                                i_begin, 'shuffled' if self._shuffle else '')
+            # reverting the train -test split
             if self._revert:
                 inds_train, inds_test = inds_test, inds_train
             yield inds_train, inds_test
@@ -1547,6 +1567,8 @@ class CrossValidatePSetsOut:
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([5, 6, 7, 8, 9], [0, 1, 2, 3, 4]),
      ([0, 1, 2, 3, 4], [5, 6, 7, 8, 9])]
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidatePSetsOut([7] * 340, 0.41)]
+    [(1407, 973), (1407, 973), (1407, 973)]
 
     Example 2
     ---------
@@ -1556,7 +1578,7 @@ class CrossValidatePSetsOut:
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([2, 3, 5, 6, 7], [4, 0, 1]),
      ([4, 0, 1, 7], [2, 3, 5, 6]),
-     ([4, 0, 1, 2, 3, 5, 6], [7])]
+     ([0, 1, 2, 3, 5, 6], [7, 4])]
     >>> len(cv)
     3
     >>> cv.sets_order
@@ -1569,21 +1591,25 @@ class CrossValidatePSetsOut:
     [([8, 4], [2, 3, 5, 6, 0, 1, 7]),
      ([2, 3, 5, 6], [8, 4, 0, 1, 7]),
      ([0, 1, 7], [8, 4, 2, 3, 5, 6])]
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidatePSetsOut([7] * 340, 0.55)]
+    [(1071, 1309), (1071, 1309), (1071, 1309)]
     """
 
     def __init__(self, set_sizes, nb_hold_out, rand_seed=None):
         """
 
         :param [int] set_sizes: list of sizes
-        :param int nb_hold_out: how much hold out
+        :param int|float nb_hold_out: how much hold out
         :param int|None rand_seed:
         """
         assert len(set_sizes) > nb_hold_out, \
             'nb of hold out (%i) has to be smaller then _total size %i' \
             % (nb_hold_out, len(set_sizes))
+        assert nb_hold_out > 0, 'number of holdout has to be positive number'
         self._set_sizes = list(set_sizes)
         self._total = np.sum(self._set_sizes)
-        self._nb_hold_out = nb_hold_out
+        self._nb_hold_out = int(np.round(len(set_sizes) * nb_hold_out)) \
+            if nb_hold_out < 1 else nb_hold_out
 
         self._revert = False  # sets the sizes
         if self._nb_hold_out > (len(self._set_sizes) / 2.):
@@ -1605,11 +1631,23 @@ class CrossValidatePSetsOut:
         self.sets_order = list(range(len(self._set_sizes)))
 
         if rand_seed is not None and rand_seed is not False:
+            self._shuffle = True
             np.random.seed(rand_seed)
             np.random.shuffle(self.sets_order)
+        else:
+            self._shuffle = False
         logging.debug('sets ordering: %s', repr(self.sets_order))
 
         self.iter = 0
+
+    def __iter_indexes(self, sets):
+        """ return enrol indexes from sets
+
+        :param [int] sets: selection of indexes
+        :return [int]:
+        """
+        return list(itertools.chain.from_iterable(self.set_indexes[i]
+                                                  for i in sets))
 
     def __iter__(self):
         """ iterate the folds
@@ -1617,11 +1655,19 @@ class CrossValidatePSetsOut:
         :return ([int], [int]):
         """
         for i in range(0, len(self._set_sizes), self._nb_hold_out):
-            test = self.sets_order[i:i + self._nb_hold_out]
-            inds_train = list(itertools.chain.from_iterable(
-                self.set_indexes[i] for i in self.sets_order if i not in test))
-            inds_test = list(itertools.chain.from_iterable(
-                self.set_indexes[i] for i in self.sets_order if i in test))
+            i_end = i + self._nb_hold_out
+            test = self.sets_order[i:i_end]
+            train = self.sets_order[:i] + self.sets_order[i_end:]
+            if i_end > len(self._set_sizes):
+                i_begin = i_end - len(self._set_sizes)
+                test += self.sets_order[:i_begin]
+                train = self.sets_order[i_begin:i]
+                logging.warning('Your demand for last test fold overflow by %i, '
+                                'to keep the train-test ration we reuse part '
+                                'of the already tested samples from the %s beginning.',
+                                i_begin, 'shuffled' if self._shuffle else '')
+            inds_train = self.__iter_indexes(train)
+            inds_test = self.__iter_indexes(test)
             if self._revert:
                 inds_train, inds_test = inds_test, inds_train
             yield inds_train, inds_test
