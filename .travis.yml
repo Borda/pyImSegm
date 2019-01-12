@@ -45,6 +45,14 @@ script:
   - nosetests imsegm -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
   - flake8 . --ignore=E402,E731 --max-line-length=100
   - python setup.py install
+  # ANNOTATION section
+  - bash handling_annotations/test_annotations.sh
+  # SEGMENTATION section
+  - bash experiments_segmentation/test_segmentations.sh
+   # CENTER DETECT. section
+  - bash experiments_ovary_centres/test_ovary_cebters.sh
+  # REGION GROWING section
+  - bash experiments_ovary_detect/test_ovary_detect.sh
 
 after_success:
   - codecov  # public repository on Travis CI
