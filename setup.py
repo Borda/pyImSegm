@@ -58,7 +58,7 @@ install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
 setup(
     name='ImSegm',
-    version='0.1.3',
+    version='0.1.4',
     url='https://borda.github.io/pyImSegm',
 
     author='Jiri Borovec',
