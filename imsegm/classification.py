@@ -695,7 +695,7 @@ def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
      './classif_RandForest_search_params_scores.txt']
     >>> for p in files: os.remove(p)
     """
-    assert len(labels) > 0, 'some labels has to be given'
+    assert list(labels), 'some labels has to be given'
     features = np.nan_to_num(features)
     assert len(features) == len(labels), \
         'features (%i) and labels (%i) should have equal length' \
@@ -1626,9 +1626,8 @@ class CrossValidatePSetsOut(CrossValidatePOut):
         :param [int] sets: selection of indexes
         :return [int]:
         """
-        inds = itertools.chain.from_iterable(self.set_indexes[i]
-                                             for i in sets)
-        return list(inds)
+        inds = list(itertools.chain(*[self.set_indexes[i] for i in sets]))
+        return inds
 
     def __iter__(self):
         """ iterate the folds

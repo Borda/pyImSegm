@@ -71,7 +71,7 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
     labels_fg_prob = np.array(labels_fg_prob)
     labels_bg_prob = 1. - labels_fg_prob
 
-    assert len(centres) > 0, 'at least one center has to be given'
+    assert list(centres), 'at least one center has to be given'
     centres = [np.round(c).astype(int) for c in centres]
     slic_points = seg_spx.superpixel_centers(slic)
 
@@ -191,7 +191,7 @@ def object_segmentation_graphcut_pixels(segm, centres,
     labels_fg_prob = np.array(labels_fg_prob)
     labels_bg_prob = 1. - labels_fg_prob
 
-    assert len(centres) > 0, 'at least one center has to be given'
+    assert list(centres), 'at least one center has to be given'
     centres = [np.round(c).astype(int) for c in centres]
 
     proba = np.ones((height, width, len(centres) + 1))

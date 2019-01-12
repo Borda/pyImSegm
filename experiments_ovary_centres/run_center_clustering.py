@@ -66,7 +66,7 @@ def cluster_center_candidates(points, max_dist=100, min_samples=1):
     :return (ndarray, [int]):
     """
     points = np.array(points)
-    if len(points) == 0:
+    if not list(points):
         return points, []
     dbscan = cluster.DBSCAN(eps=max_dist, min_samples=min_samples)
     dbscan.fit(points)
@@ -134,7 +134,7 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
         'missing some required fields: %s' % repr(dict_row)
     name = os.path.splitext(os.path.basename(dict_row['path_points']))[0]
     points = tl_data.load_landmarks_csv(dict_row['path_points'])
-    if len(points) == 0:
+    if not list(points):
         logging.debug('no points to cluster for "%s"', name)
     points = tl_data.swap_coord_x_y(points)
 

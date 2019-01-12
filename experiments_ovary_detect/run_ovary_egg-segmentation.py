@@ -701,7 +701,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
         return name
     centers = tl_data.load_landmarks_csv(row_path['path_centers'])
     centers = tl_data.swap_coord_x_y(centers)
-    if len(centers) == 0:
+    if not list(centers):
         logging.warning('no center was detected for "%s"', name)
         return name
     # img = seg / float(seg.max())
