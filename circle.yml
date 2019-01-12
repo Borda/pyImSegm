@@ -35,16 +35,16 @@ jobs:
               flake8 . --ignore=E402,E731 --max-line-length=100
 
         # ANNOTATION section
-        - bash handling_annotations/test_annotations.sh
+        - run: bash handling_annotations/test_annotations.sh
 
         # SEGMENTATION section
-        - bash experiments_segmentation/test_segmentations.sh
+        - run: bash experiments_segmentation/test_segmentations.sh
 
         # CENTER DETECT. section
-        - bash experiments_ovary_centres/test_ovary_cebters.sh
+        - run: bash experiments_ovary_centres/test_ovary_cebters.sh
 
         # REGION GROWING section
-        - bash experiments_ovary_detect/test_ovary_detect.sh
+        - run: bash experiments_ovary_detect/test_ovary_detect.sh
 
         # PASSING
         - run:
