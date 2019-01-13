@@ -90,7 +90,7 @@ Moreover, we are using python [GraphCut wrapper](https://github.com/Borda/pyGCO)
 
 **Compilation**
 
-We have implemented cython version of some functions, especially computing descriptors, which require to compile them before using them
+We have implemented `cython` version of some functions, especially computing descriptors, which require to compile them before using them
 ```bash
 python setup.py build_ext --inplace
 ```
@@ -98,7 +98,11 @@ If loading of compiled descriptors in `cython` fails, it is automatically swappe
 
 **Installation**
 
-The package can be installed via pip from the folder
+The package can be installed via pip 
+```bash
+pip install git+https://github.com/Borda/pyImSegm.git
+```
+ or using `setuptools` from local folder 
 ```bash
 python setup.py install
 ```

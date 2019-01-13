@@ -509,7 +509,7 @@ def main(params):
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
 
     paths_img = load_path_images(params)
-    assert len(paths_img) > 0, 'missing images'
+    assert paths_img, 'missing images'
 
     def _path_expt(n):
         return os.path.join(params['path_exp'], n)

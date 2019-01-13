@@ -58,7 +58,7 @@ install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
 setup(
     name='ImSegm',
-    version='0.1.3',
+    version='0.1.4',
     url='https://borda.github.io/pyImSegm',
 
     author='Jiri Borovec',
@@ -67,7 +67,9 @@ setup(
     description='superpixel image segmentation: '
                 '(un)supervised, center detection, region growing',
 
-    packages=find_packages(),
+    packages=find_packages(exclude=['docs', 'notebooks',
+                                    'handling_annotations',
+                                    'experiments_*']),
     cmdclass={'build_ext': BuildExt},
     ext_modules=[Extension('imsegm.features_cython',
                            language='c++',

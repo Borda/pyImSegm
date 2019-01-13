@@ -21,8 +21,8 @@ include setup.*
 # Exclude build configs
 exclude *.yml
 
-# Exclude tests
-exclude test*.py
+# Exclude experiments
+exclude */*.sh
 
 # Include the experiments
 recursive-include experiments_* *.py *.json

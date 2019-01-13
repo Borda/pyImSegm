@@ -8,6 +8,7 @@ Framework for feature extraction
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import itertools
 import logging
 
 import numpy as np
@@ -630,15 +631,15 @@ def numpy_img3d_gray_median(img, seg):
 
 
 def compute_image3d_gray_statistic(image, segm,
-                                   list_feature_flags=NAMES_FEATURE_FLAGS,
+                                   feature_flags=NAMES_FEATURE_FLAGS,
                                    ch_name='gray'):
     """ compute complete descriptors / statistic on gray (3D) images
 
     :param ndarray image:
     :param ndarray segm: segmentation
-    :param list_feature_flags:
+    :param [str] feature_flags:
     :param str ch_name: channel name
-    :return np.ndarray<nb_samples, nb_features>, [str]:
+    :return (ndarray, [str]): np.ndarray<nb_samples, nb_features>
 
     >>> image = np.zeros((2, 3, 8))
     >>> image[0, :, 2:6] = 1
@@ -666,54 +667,42 @@ def compute_image3d_gray_statistic(image, segm,
     """
     _check_gray_image_segm(image, segm)
 
-    assert len(list_feature_flags) > 0, 'some features has to be selected'
+    assert list(feature_flags), 'some features has to be selected'
     image = np.nan_to_num(image)
-    features, names = [], []
+    features = []
     # nb_fts = image.shape[0]
     # ch_names = ['%s-ch%i' % (ch_name, i + 1) for i in range(nb_fts)]
 
+    _fn_mean = cython_img3d_gray_mean if USE_CYTHON else numpy_img3d_gray_mean
+    _fn_std = cython_img3d_gray_std if USE_CYTHON else numpy_img3d_gray_std
+    _fn_energy = cython_img3d_gray_energy if USE_CYTHON else numpy_img3d_gray_energy
+
     # MEAN
     mean = None
-    if 'mean' in list_feature_flags:
-        if USE_CYTHON:
-            mean = cython_img3d_gray_mean(image, segm)
-        else:
-            mean = numpy_img3d_gray_mean(image, segm)
+    if 'mean' in feature_flags:
+        mean = _fn_mean(image, segm)
         features.append(mean)
-        names += ['%s_mean' % ch_name]
     # Standard Deviation
-    if 'std' in list_feature_flags:
-        if USE_CYTHON:
-            std = cython_img3d_gray_std(image, segm, mean)
-        else:
-            std = numpy_img3d_gray_std(image, segm, mean)
-        features.append(std)
-        names += ['%s_std' % ch_name]
+    if 'std' in feature_flags:
+        features.append(_fn_std(image, segm, mean))
     # ENERGY
-    if 'energy' in list_feature_flags:
-        if USE_CYTHON:
-            energy = cython_img3d_gray_energy(image, segm)
-        else:
-            energy = numpy_img3d_gray_energy(image, segm)
-        features.append(energy)
-        names += ['%s_energy' % ch_name]
+    if 'energy' in feature_flags:
+        features.append(_fn_energy(image, segm))
     # MEDIAN
-    if 'median' in list_feature_flags:
-        median = numpy_img3d_gray_median(image, segm)
-        features.append(median)
-        names += ['%s_median' % ch_name]
+    if 'median' in feature_flags:
+        features.append(numpy_img3d_gray_median(image, segm))
     # mean Gradient
-    if 'meanGrad' in list_feature_flags:
+    if 'meanGrad' in feature_flags:
         grad_matrix = np.zeros_like(image)
         for i in range(image.shape[0]):
             grad_matrix[i, :, :] = np.sum(np.gradient(image[i]), axis=0)
-        if USE_CYTHON:
-            grad = cython_img3d_gray_mean(grad_matrix, segm)
-        else:
-            grad = numpy_img3d_gray_mean(grad_matrix, segm)
-        features.append(grad)
-        names += ['%s_meanGrad' % ch_name]
-    _check_unrecognised_feature_names(list_feature_flags)
+        features.append(_fn_mean(grad_matrix, segm))
+
+    names = ['%s_%s' % (ch_name, fts_name)
+             for fts_name in ('mean', 'std', 'energy', 'median', 'meanGrad')
+             if fts_name in feature_flags]
+    _check_unrecognised_feature_names(feature_flags)
+
     features = np.concatenate(tuple([fts] for fts in features), axis=0)
     features = np.nan_to_num(features).T
     # normalise +/- zeros as set all as positive
@@ -724,15 +713,15 @@ def compute_image3d_gray_statistic(image, segm,
 
 
 def compute_image2d_color_statistic(image, segm,
-                                    list_feature_flags=NAMES_FEATURE_FLAGS,
+                                    feature_flags=NAMES_FEATURE_FLAGS,
                                     color_name='color'):
     """ compute complete descriptors / statistic on color (2D) images
 
     :param ndarray image:
     :param ndarray segm: segmentation
-    :param list_feature_flags:
+    :param [str] feature_flags:
     :param str color_name: channel name
-    :return np.ndarray<nb_samples, nb_features>, [str]:
+    :return (ndarray, [str]): np.ndarray<nb_samples, nb_features>
 
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
@@ -758,51 +747,38 @@ def compute_image2d_color_statistic(image, segm,
 
     image = np.nan_to_num(image)
     features = np.empty((np.max(segm) + 1, 0))
-    names = []
     ch_names = ['%s-ch%i' % (color_name, i + 1) for i in range(3)]
+
+    _fn_mean = cython_img2d_color_mean if USE_CYTHON else numpy_img2d_color_mean
+    _fn_std = cython_img2d_color_std if USE_CYTHON else numpy_img2d_color_std
+    _fn_energy = cython_img2d_color_energy if USE_CYTHON else numpy_img2d_color_energy
 
     # MEAN
     mean = None
-    if 'mean' in list_feature_flags:
-        if USE_CYTHON:
-            mean = cython_img2d_color_mean(image, segm)
-        else:
-            mean = numpy_img2d_color_mean(image, segm)
+    if 'mean' in feature_flags:
+        mean = _fn_mean(image, segm)
         features = np.hstack((features, mean))
-        names += ['%s_mean' % n for n in ch_names]
     # Standard Deviation
-    if 'std' in list_feature_flags:
-        if USE_CYTHON:
-            std = cython_img2d_color_std(image, segm, mean)
-        else:
-            std = numpy_img2d_color_std(image, segm, mean)
-        features = np.hstack((features, std))
-        names += ['%s_std' % n for n in ch_names]
+    if 'std' in feature_flags:
+        features = np.hstack((features, _fn_std(image, segm, mean)))
     # ENERGY
-    if 'energy' in list_feature_flags:
-        if USE_CYTHON:
-            energy = cython_img2d_color_energy(image, segm)
-        else:
-            energy = numpy_img2d_color_energy(image, segm)
-        features = np.hstack((features, energy))
-        names += ['%s_energy' % n for n in ch_names]
-    # Median
-    if 'median' in list_feature_flags:
-        median = numpy_img2d_color_median(image, segm)
-        features = np.hstack((features, median))
-        names += ['%s_median' % n for n in ch_names]
+    if 'energy' in feature_flags:
+        features = np.hstack((features, _fn_energy(image, segm)))
+    # MEDIAN
+    if 'median' in feature_flags:
+        features = np.hstack((features, numpy_img2d_color_median(image, segm)))
     # mean Gradient
-    if 'meanGrad' in list_feature_flags:
+    if 'meanGrad' in feature_flags:
         grad_matrix = np.zeros_like(image)
         for i in range(image.shape[-1]):
             grad_matrix[:, :, i] = np.sum(np.gradient(image[:, :, i]), axis=0)
-        if USE_CYTHON:
-            grad = cython_img2d_color_mean(grad_matrix, segm)
-        else:
-            grad = numpy_img2d_color_mean(grad_matrix, segm)
-        features = np.hstack((features, grad))
-        names += ['%s_meanGrad' % n for n in ch_names]
-    _check_unrecognised_feature_names(list_feature_flags)
+        features = np.hstack((features, _fn_mean(grad_matrix, segm)))
+
+    feature_names = ('mean', 'std', 'energy', 'median', 'meanGrad')
+    names = list(itertools.chain.from_iterable(['%s_%s' % (n, fts_name) for n in ch_names]
+                                               for fts_name in feature_names
+                                               if fts_name in feature_flags))
+    _check_unrecognised_feature_names(feature_flags)
     # mean Gradient
     # G = np.zeros_like(image)
     # for i in range(image.shape[0]):
