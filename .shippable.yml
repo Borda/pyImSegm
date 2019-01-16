@@ -44,7 +44,8 @@ install:
 
 script:
   - mkdir mkdir output && mkdir results
-  - gcc --version ; python --version ; pip --version ; pwd ; ls -l
+  - gcc --version ; python --version ; pwd ; ls -l
+  - pip --version ; pip freeze
   - python setup.py build_ext --inplace
 
   # - nosetests -v --with-xunit --xunit-file=$CI_REPORTS/nosetests.xml

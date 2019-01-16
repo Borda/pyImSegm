@@ -79,9 +79,8 @@ def aparse_params(dict_paths):
     parser.add_argument('--visual', required=False, action='store_true',
                         help='export visualisations', default=False)
     args = vars(parser.parse_args())
-    logging.info('ARG PARAMETERS: \n %s', repr(args))
-    if not isinstance(args['path_image'], str) \
-            or args['path_image'].lower() == 'none':
+    logging.info('ARG PARAMETERS: \n %r', args)
+    if not isinstance(args['path_image'], str) or args['path_image'].lower() == 'none':
         args['path_image'] = None
 
     _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])),

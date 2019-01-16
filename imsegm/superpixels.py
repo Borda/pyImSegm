@@ -39,9 +39,8 @@ def segment_slic_img2d(img, sp_size=50, relative_compact=0.1, slico=False):
     >>> slic.shape
     (150, 100)
     """
-    logging.debug('Init SLIC superpixels 2d RGB clustering with params'
-                  ' size=%i and regul=%f for image dims %s',
-                  sp_size, relative_compact, repr(img.shape))
+    logging.debug('Init SLIC superpixels 2d RGB clustering with params size=%i and'
+                  ' regul=%f for image dims %r', sp_size, relative_compact, img.shape)
     nb_pixels = np.prod(img.shape[:2])
 
     if not isinstance(img, np.ndarray):
@@ -55,8 +54,8 @@ def segment_slic_img2d(img, sp_size=50, relative_compact=0.1, slico=False):
     # set native SLIC parameters
     slic_nb_spx = int(nb_pixels / (sp_size ** 2))
     slic_compact = (sp_size * relative_compact) ** 1.5
-    logging.debug('Starting SLIC with params NB=%i & compat=%f for image %s',
-                  slic_nb_spx, slic_compact, repr(img.shape))
+    logging.debug('Starting SLIC with params NB=%i & compat=%f for image %r',
+                  slic_nb_spx, slic_compact, img.shape)
     # run SLIC segmentation
     slic_segments = ski_segm.slic(img, n_segments=slic_nb_spx,
                                   compactness=slic_compact,
@@ -88,8 +87,8 @@ def segment_slic_img3d_gray(im, sp_size=50, relative_compact=0.1,
     (100, 100, 10)
     """
     logging.debug('Init SLIC superpixels 3d Gray clustering with params'
-                  ' size=%i and regul=%f for image dims %s',
-                  sp_size, relative_compact, repr(im.shape))
+                  ' size=%i and regul=%f for image dims %r',
+                  sp_size, relative_compact, im.shape)
     nb_pixels = np.prod(im.shape)
     sp_size = np.prod(sp_size / np.asarray(space, dtype=np.float32) * min(space))
     # set native SLIC parameters
@@ -97,7 +96,7 @@ def segment_slic_img3d_gray(im, sp_size=50, relative_compact=0.1,
     # slic_compact = int((sp_size * relative_compact) ** 1.5)
     slic_compact = int((sp_size * relative_compact) ** 1.5)
     logging.debug('Starting SLIC superpixels clustering with params NB=%i and '
-                  'compat=%f and spacing=%s', slic_nb_sp, slic_compact, repr(space))
+                  'compat=%f and spacing=%r', slic_nb_sp, slic_compact, space)
     # run SLIC segmentation
     # slic_segments = SLIC.slic_n(np.array(im), slic_nb_sp, slic_compact)
     slic_segments = ski_segm.slic(np.array(im), n_segments=slic_nb_sp,
@@ -235,7 +234,7 @@ def superpixel_centers(segments):
         for lb, vals in enumerate(centers):
             centers[lb] = np.mean(vals, axis=0).tolist()
     else:
-        logging.error('not supported image dim: %s', repr(segments.shape))
+        logging.error('not supported image dim: %r', segments.shape)
     return centers
 
 

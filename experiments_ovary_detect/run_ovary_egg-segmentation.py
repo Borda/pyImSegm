@@ -166,7 +166,7 @@ def arg_parse_params(params):
         params[k] = tl_data.update_path(arg_params[k], absolute=True)
         assert os.path.exists(params[k]), 'missing: %s' % params[k]
     # load saved configuration
-    logging.info('ARG PARAMETERS: \n %s', repr(params))
+    logging.info('ARG PARAMETERS: \n %r', params)
     return params
 
 
@@ -187,7 +187,7 @@ def load_image(path_img, img_type=TYPE_LOAD_IMAGE):
     else:
         logging.error('not supported loading img_type: %s', img_type)
         img = tl_data.io_imread(path_img)
-    logging.debug('image shape: %s, value range %f - %f', repr(img.shape),
+    logging.debug('image shape: %r, value range %f - %f', img.shape,
                   img.min(), img.max())
     return img
 
@@ -382,7 +382,7 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points,
         ellipse.estimate(points)
         if not ellipse:
             continue
-        logging.debug('ellipse params: %s', repr(ellipse.params))
+        logging.debug('ellipse params: %r', ellipse.params)
         segm = ell_fit.add_overlap_ellipse(segm, ellipse.params, lb, thr_overlap)
 
         if np.any(segm == lb):
@@ -417,7 +417,7 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
                                          max_trials=250)
         if not ransac_model:
             continue
-        logging.debug('ellipse params: %s', repr(ransac_model.params))
+        logging.debug('ellipse params: %r', ransac_model.params)
         segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb,
                                            thr_overlap)
 
@@ -460,7 +460,7 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
                                               max_trials=250)
         if not ransac_model:
             continue
-        logging.debug('ellipse params: %s', repr(ransac_model.params))
+        logging.debug('ellipse params: %r', ransac_model.params)
         segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb,
                                            thr_overlap)
 
@@ -694,8 +694,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     img_rgb = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     seg = load_image(row_path['path_segm'], 'segm')
     assert img_rgb.shape[:2] == seg.shape, \
-        'image %s and segm %s do not match' \
-        % (repr(img_rgb.shape[:2]), repr(seg.shape))
+        'image %r and segm %r do not match' % (img_rgb.shape[:2], seg.shape)
     if not os.path.isfile(row_path['path_centers']):
         logging.warning('no center was detected for "%s"', name)
         return name
@@ -744,8 +743,8 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
                 for k in dict_export:
                     export_partial(k, dict_export[k], path_dir, name)
 
-            logging.info('running time of %s on image "%s" is %d s',
-                         repr(fn.__name__), image_name, time.time() - t)
+            logging.info('running time of %r on image "%s" is %d s',
+                         fn.__name__, image_name, time.time() - t)
             tl_data.io_imsave(path_segm, segm_obj.astype(np.uint8))
             export_draw_image_segm(path_fig, img_rgb, seg, segm_obj, centers)
             # export also centers
@@ -783,8 +782,8 @@ def main(params, debug_export=DEBUG_EXPORT):
     # tl_expt.create_subfolders(params['path_exp'], [FOLDER_IMAGE])
 
     df_paths = pd.read_csv(params['path_list'], index_col=0)
-    logging.info('loaded %i items with columns: %s', len(df_paths),
-                 repr(df_paths.columns.tolist()))
+    logging.info('loaded %i items with columns: %r', len(df_paths),
+                 df_paths.columns.tolist())
     df_paths.dropna(how='any', inplace=True)
 
     # create sub-folders if required

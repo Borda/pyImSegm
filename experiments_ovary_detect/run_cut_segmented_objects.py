@@ -56,7 +56,7 @@ def arg_parse_params(dict_paths):
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     args = vars(parser.parse_args())
-    logging.info('ARG PARAMETERS: \n %s', repr(args))
+    logging.info('ARG PARAMETERS: \n %r', args)
 
     _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])),
                                       os.path.basename(args[k]))
@@ -77,7 +77,7 @@ def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
     annot, _ = tl_data.load_image_2d(df_row['path_1'])
     img, name = tl_data.load_image_2d(df_row['path_2'])
     assert annot.shape[:2] == img.shape[:2], \
-        'image sizes not match %s vs %s' % (repr(annot.shape), repr(img.shape))
+        'image sizes not match %r vs %r' % (annot.shape, img.shape)
 
     uq_objects = np.unique(annot)
     if len(uq_objects) == 1:

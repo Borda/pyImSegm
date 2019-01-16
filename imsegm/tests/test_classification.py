@@ -13,9 +13,9 @@ import numpy as np
 from sklearn import metrics
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.classification as seg_clf
+from imsegm.classification import create_classifiers, create_classif_search_train_export
 
-CLASSIFIER_NAMES = seg_clf.create_classifiers().keys()
+CLASSIFIER_NAMES = create_classifiers().keys()
 
 
 def generate_data(nb_samples=100, nb_classes=3, dim_features=4):
@@ -66,8 +66,8 @@ class TestClassification(unittest.TestCase):
         data_train, labels_train = generate_data()
         data_test, labels_test = generate_data()
         for n in CLASSIFIER_NAMES:
-            logging.info('created classif.: %s', n)
-            clf = seg_clf.create_classifiers()[n]
+            logging.info('created classifier: %s', n)
+            clf = create_classifiers()[n]
             clf.fit(data_train, labels_train)
             self.classif_eval(clf, data_train, labels_train,
                               data_test, labels_test)
@@ -78,8 +78,8 @@ class TestClassification(unittest.TestCase):
         data_test, labels_test = generate_data()
         for n in CLASSIFIER_NAMES:
             logging.info('created classif.: %s', n)
-            clf, _ = seg_clf.create_classif_search_train_export(n, data_train,
-                                                                labels_train)
+            clf, _ = create_classif_search_train_export(n, data_train, labels_train,
+                                                        nb_search_iter=5)
             self.classif_eval(clf, data_train, labels_train,
                               data_test, labels_test)
 

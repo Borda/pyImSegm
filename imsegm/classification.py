@@ -11,6 +11,7 @@ import logging
 import random
 import collections
 import itertools
+import multiprocessing as mproc
 from functools import partial
 
 import numpy as np
@@ -49,6 +50,7 @@ METRIC_AVERAGES = ('macro', 'weighted')
 METRIC_SCORING = ('f1_macro', 'accuracy', 'precision_macro', 'recall_macro')
 # rounding unique features, in case to detail precision
 ROUND_UNIQUE_FTS_DIGITS = 3
+NB_THREADS_SERACH = min(1, mproc.cpu_count() * 0.5)
 
 
 DICT_SCORING = {
@@ -308,8 +310,8 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     assert y_true.shape == y_pred.shape, \
         'prediction (%i) and annotation (%i) should be equal' \
         % (len(y_true), len(y_pred))
-    logging.debug('unique lbs true: %s, predict %s',
-                  repr(np.unique(y_true)), repr(np.unique(y_pred)))
+    logging.debug('unique lbs true: %r, predict %r',
+                  np.unique(y_true), np.unique(y_pred))
 
     uq_labels = np.unique(np.hstack((y_true, y_pred)))
     # in case there are just two classes, relabel them as [0, 1], sklearn error:
@@ -380,9 +382,8 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
     [[13, 17], [0, 0]]
     """
     annot, segm, name = annot_segm_name
-    assert segm.shape == annot.shape, 'dimension do not match for ' \
-                                      'segm: %s - annot: %s' \
-                                      % (repr(segm.shape), repr(annot.shape))
+    assert segm.shape == annot.shape, 'dimension do not match for segm: %r - annot: %r' \
+                                      % (segm.shape, annot.shape)
     y_true, y_pred = annot.ravel(), segm.ravel()
     # filter particular labels
     if drop_labels is not None:
@@ -475,8 +476,9 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
 
     >>> from sklearn.datasets import make_classification
     >>> features, labels = make_classification(n_samples=250, n_features=5,
-    ...                         n_informative=3, n_redundant=0, n_repeated=0,
-    ...                         n_classes=2, random_state=0, shuffle=False)
+    ...                                        n_informative=3, n_redundant=0,
+    ...                                        n_repeated=0, n_classes=2,
+    ...                                        random_state=0, shuffle=False)
     >>> indices, df_scoring = feature_scoring_selection(features, labels)
     >>> indices
     array([1, 0, 2, 3, 4])
@@ -491,18 +493,17 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     >>> features[:, 2] = 1
     >>> path_out = 'test_fts-select'
     >>> os.mkdir(path_out)
-    >>> indices, df_scoring = feature_scoring_selection(features, labels,
+    >>> indices, df_scoring = feature_scoring_selection(features.tolist(), labels.tolist(),
     ...                                                 path_out=path_out)
     >>> indices
     array([1, 0, 3, 4, 2])
     >>> import shutil
     >>> shutil.rmtree(path_out, ignore_errors=True)
     """
-    logging.info('Feature selection for %s', repr(names))
-    logging.debug('Features: %s and labels: %s',
-                  repr(features.shape), repr(labels.shape))
-    if not isinstance(features, np.ndarray):
-        features = np.array(features)
+    logging.info('Feature selection for %r', names)
+    features = np.array(features) if not isinstance(features, np.ndarray) else features
+    labels = np.array(labels) if not isinstance(labels, np.ndarray) else labels
+    logging.debug('Features: %r and labels: %r', features.shape, labels.shape)
     # Build a forest and compute the feature importances
     forest = ensemble.ExtraTreesClassifier(n_estimators=125, random_state=0)
     forest.fit(features, labels)
@@ -562,7 +563,7 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None,
     'TESTINNG'
     >>> os.remove(p_clf)
     """
-    assert os.path.isdir(path_out), 'missing folder: %s' % repr(path_out)
+    assert os.path.isdir(path_out), 'missing folder: %r' % path_out
     dict_classif = {
         'params': params,
         'name': clf_name,
@@ -594,7 +595,7 @@ def load_classifier(path_classif):
     with open(path_classif, 'rb') as f:
         dict_clf = pickle.load(f)
     # dict_clf['name'] = classif_name
-    logging.debug('load classifier: %s', repr(dict_clf.keys()))
+    logging.debug('load classifier: %r', dict_clf.keys())
     return dict_clf
 
 
@@ -605,24 +606,23 @@ def export_results_clf_search(path_out, clf_name, clf_search):
     :param str clf_name: name of selected classifier
     :param object clf_search:
     """
-    assert os.path.isdir(path_out), 'missing folder: %s' % repr(path_out)
+    assert os.path.isdir(path_out), 'missing folder: %s' % path_out
 
     def _fn_path_out(s):
         return os.path.join(path_out, 'classif_%s_%s.txt' % (clf_name, s))
 
     with open(_fn_path_out('search_params_scores'), 'w') as fp:
+        results = 'no results'
         if hasattr(clf_search, 'grid_scores_'):  # for sklearn < 0.18
-            fp.write('\n'.join([repr(gs) for gs in clf_search.grid_scores_]))
+            results = '\n'.join([repr(gs) for gs in clf_search.grid_scores_])
         elif hasattr(clf_search, 'cv_results_'):
-            fp.write('\n'.join(['"%s": %s' % (k, repr(clf_search.cv_results_[k]))
-                                for k in clf_search.cv_results_]))
-        else:
-            fp.write('no results')
+            results = '\n'.join(['"%s": %r' % (k, clf_search.cv_results_[k])
+                                 for k in clf_search.cv_results_])
+        fp.write(results)
 
     with open(_fn_path_out('search_params_best'), 'w') as fp:
         params = clf_search.best_params_
-        rows = ['{:30s} {}'.format('"{}":'.format(k), params[k])
-                for k in params]
+        rows = ['{:30s} {}'.format('"{}":'.format(k), params[k]) for k in params]
         fp.write('\n'.join(rows))
 
 
@@ -640,8 +640,7 @@ def relabel_sequential(labels, uq_labels=None):
     if uq_labels is None:
         uq_labels = np.unique(labels)
     lut = np.zeros(np.max(uq_labels) + 1)
-    logging.debug('relabeling original %s to %s', repr(uq_labels),
-                  range(len(uq_labels)))
+    logging.debug('relabeling original %r to %r', uq_labels, range(len(uq_labels)))
     for i, lb in enumerate(uq_labels):
         lut[lb] = i
     labesl_new = lut[labels].astype(labels.dtype).tolist()
@@ -650,7 +649,7 @@ def relabel_sequential(labels, uq_labels=None):
 
 def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
                                        nb_search_iter=100, search_type='random',
-                                       eval_metric='f1', nb_jobs=5,
+                                       eval_metric='f1', nb_jobs=NB_THREADS_SERACH,
                                        path_out=None, params=None, pca_coef=0.98,
                                        feature_names=None, label_names=None):
     """ create classifier and train it once or find best parameters.
@@ -702,12 +701,12 @@ def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
         % (len(features), len(labels))
     assert features.ndim == 2 and features.shape[1] > 0, \
         'at least one feature is required'
-    logging.debug('training data: %s, labels (%i): %s', repr(features.shape),
-                  len(labels), repr(collections.Counter(labels)))
+    logging.debug('training data: %r, labels (%i): %r', features.shape,
+                  len(labels), collections.Counter(labels))
     # gc.collect(), time.sleep(1)
     logging.info('create Classifier: %s', clf_name)
     clf_pipeline = create_clf_pipeline(clf_name, pca_coef)
-    logging.debug('pipeline: %s', repr(clf_pipeline.steps))
+    logging.debug('pipeline: %r', clf_pipeline.steps)
     if nb_search_iter > 1 or search_type == 'grid':
         # find the best params for the classif.
         logging.debug('Performing param search...')
@@ -723,11 +722,11 @@ def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
         # NOTE, this is temporal just for purposes of computing statistic
         clf_search.fit(features, relabel_sequential(labels))
 
-        logging.info('Best score: %s', repr(clf_search.best_score_))
+        logging.info('Best score: %r', clf_search.best_score_)
         clf_pipeline = clf_search.best_estimator_
         best_parameters = clf_pipeline.get_params()
 
-        logging.info('Best parameters set: \n %s', repr(best_parameters))
+        logging.info('Best parameters set: \n %r', best_parameters)
         if path_out is not None and os.path.isdir(path_out):
             export_results_clf_search(path_out, clf_name, clf_search)
 
@@ -802,8 +801,8 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
             scores = model_selection.cross_val_score(classif, features, labels,
                                                      cv=cross_val,
                                                      scoring=scoring)
-            logging.info('Cross-Val score (%s = %f):\n %s',
-                         scoring, np.mean(scores), repr(scores))
+            logging.info('Cross-Val score (%s = %f):\n %r',
+                         scoring, np.mean(scores), scores)
             df_scoring[scoring] = scores
         except Exception:
             logging.exception('model_selection.cross_val_score')
@@ -816,7 +815,7 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
 
     if len(df_scoring) > 1:
         df_stat = df_scoring.describe()
-        logging.info('cross_val scores: \n %s', repr(df_stat))
+        logging.info('cross_val scores: \n %r', df_stat)
         if path_out is not None:
             assert os.path.exists(path_out), 'missing: "%s"' % path_out
             name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'statistic')
@@ -890,7 +889,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     labels_bin = np.zeros((len(labels), np.max(labels) + 1))
     unique_labels = np.unique(labels)
     assert all(unique_labels >= 0), \
-        'some labels are negative: %s' % repr(unique_labels)
+        'some labels are negative: %r' % unique_labels
     for lb in unique_labels:
         labels_bin[:, lb] = (labels == lb)
 
@@ -926,7 +925,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
         name_txt = NAME_TXT_CLASSIF_CV_AUC.format(clf_name, 'mean')
         with open(os.path.join(path_out, name_txt), 'w') as fp:
             fp.write(str(auc))
-    logging.debug('cross_val ROC: \n %s', repr(df_roc))
+    logging.debug('cross_val ROC: \n %r', df_roc)
     return df_roc, auc
 
 
@@ -1214,7 +1213,7 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
     """
     logging.debug('convert set of features and labels to single one')
     assert all(k in imgs_labels.keys() for k in imgs_features.keys()), \
-        'missing some items of %s' % repr(list(imgs_labels.keys()))
+        'missing some items of %r' % imgs_labels.keys()
     features_all, labels_all, sizes = list(), list(), list()
     for name in sorted(imgs_features.keys()):
         features = np.array(imgs_features[name])
@@ -1266,10 +1265,10 @@ def compute_tp_tn_fp_fn(annot, segm, label_positive=None):
     y_pred = np.asarray(segm).ravel()
     uq_labels = np.unique([y_true, y_pred]).tolist()
     if len(uq_labels) > 2:
-        logging.debug('too many labels: %s', repr(uq_labels))
+        logging.debug('too many labels: %r', uq_labels)
         return np.nan, np.nan, np.nan, np.nan
     elif len(uq_labels) < 2:
-        logging.debug('only one label: %s', repr(uq_labels))
+        logging.debug('only one label: %r', uq_labels)
         return len(y_true), 0, 0, 0
 
     if label_positive is None or label_positive not in uq_labels:
@@ -1401,7 +1400,7 @@ class HoldOut(object):
     [([2, 8, 4, 9, 1, 6, 7], [3, 0, 5])]
     """
     def __init__(self, nb_samples, hold_out, rand_seed=0):
-        """
+        """ constructor
 
         :param int nb_samples: total number of samples
         :param int hold_out: index where the test starts
@@ -1435,9 +1434,9 @@ class HoldOut(object):
         return 1
 
 
-class CrossValidatePOut(object):
+class CrossValidate(object):
     """
-    Hold-out cross-validator generator. In the hold-out, the
+    Cross-validator generator. In the hold-out, the
     data is split only once into a train set and a test set.
 
     Parameters
@@ -1445,10 +1444,11 @@ class CrossValidatePOut(object):
     nb_samples : integer, total number of samples
     nb_hold_out : integer, number of samples hold out
     rand_seed :  seed for the random number generator
+    ignore_overflow: float, tolerance while dividing dataset to folds
 
-    Example 1
+    Example 1 - balanced split
     ---------
-    >>> cv = CrossValidatePOut(6, 3, rand_seed=False)
+    >>> cv = CrossValidate(6, 3, rand_seed=False)
     >>> cv.indexes
     [0, 1, 2, 3, 4, 5]
     >>> len(cv)
@@ -1456,12 +1456,12 @@ class CrossValidatePOut(object):
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([3, 4, 5], [0, 1, 2]),
      ([0, 1, 2], [3, 4, 5])]
-    >>> [(len(tr), len(ts)) for tr, ts in CrossValidatePOut(340, 0.41)]
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidate(340, 0.41)]
     [(201, 139), (201, 139), (201, 139)]
 
-    Example 2
+    Example 2 - not rounded split
     ---------
-    >>> cv = CrossValidatePOut(7, 3, rand_seed=0)
+    >>> cv = CrossValidate(7, 3, rand_seed=0)
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([3, 0, 5, 4], [6, 2, 1]),
      ([6, 2, 1, 4], [3, 0, 5]),
@@ -1471,35 +1471,54 @@ class CrossValidatePOut(object):
     >>> cv.indexes
     [6, 2, 1, 3, 0, 5, 4]
 
-    Example 3
+    Example 3 - larger test then train
     ---------
-    >>> cv = CrossValidatePOut(7, 5, rand_seed=0)
+    >>> cv = CrossValidate(7, 5, rand_seed=0)
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([6, 2], [1, 3, 0, 5, 4]),
      ([1, 3], [6, 2, 0, 5, 4]),
      ([0, 5], [6, 2, 1, 3, 4]),
      ([4, 6], [2, 1, 3, 0, 5])]
-    >>> [(len(tr), len(ts)) for tr, ts in CrossValidatePOut(340, 0.55)]
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidate(340, 0.55)]
     [(153, 187), (153, 187), (153, 187)]
-    """
 
-    def __init__(self, nb_samples, nb_hold_out, rand_seed=None):
+    Example 4 - impact of tolerance
+    ---------
+    >>> len(CrossValidate(340, 0.33, ignore_overflow=0.0))
+    4
+    >>> len(CrossValidate(340, 0.33, ignore_overflow=0.05))
+    3
+
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidate(4651, 0.25, ignore_overflow=0.)]
+    [(3488, 1163), (3488, 1163), (3488, 1163), (3488, 1163)]
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidate(4651, 0.25, ignore_overflow=1e-2)]
+    [(3488, 1163), (3488, 1163), (3488, 1163), (3489, 1162)]
+    """
+    def __init__(self, nb_samples, nb_hold_out, rand_seed=None, ignore_overflow=0.01):
         """ constructor
 
         :param int nb_samples: list of sizes
         :param int|float nb_hold_out: how much hold out
-        :param int|None rand_seed:
+        :param int|None rand_seed: random seed for shuffling
+        :param float ignore_overflow: tolerance while dividing dataset to folds
         """
         assert nb_samples > nb_hold_out, \
-            'number of holdout has to be smaller then total size'
-        assert nb_hold_out > 0, 'number of holdout has to be positive number'
+            'Number of holdout has to be smaller then total size.'
+        assert nb_hold_out > 0, 'Number of holdout has to be positive number.'
         self._nb_samples = nb_samples
         self._nb_hold_out = int(np.round(nb_samples * nb_hold_out)) \
             if nb_hold_out < 1 else nb_hold_out
+        ignore_overflow = abs(ignore_overflow)
+        self._ignore_overflow = int(np.round(nb_samples * ignore_overflow)) \
+            if ignore_overflow < 1 else ignore_overflow
+        assert self._nb_hold_out > self._ignore_overflow, \
+            'The tolerance of overflowing (%i) the split has to be larger than' \
+            ' the number of hold out samples (%i).' % (self._ignore_overflow,
+                                                       self._nb_hold_out)
 
         self._revert = False  # sets the sizes
         if self._nb_hold_out > (self._nb_samples / 2.):
-            logging.debug('WARNING: you are running in reverse mode, '
+            logging.debug('WARNING: You are running in reverse mode, '
                           'while using all training examples '
                           'there are much more yield test cases.')
             self._nb_hold_out = self._nb_samples - self._nb_hold_out
@@ -1513,28 +1532,45 @@ class CrossValidatePOut(object):
             np.random.shuffle(self.indexes)
         else:
             self._shuffle = False
-        logging.debug('sets ordering: %s', repr(np.array(self.indexes)))
+        logging.debug('sets ordering: %r', np.array(self.indexes))
 
         self.iter = 0
+
+    def __steps(self):
+        """ adjust this iterator, tol_balance
+
+        :return [int]: indexes of steps
+        """
+        steps = list(range(0, self._nb_samples, self._nb_hold_out))
+        steps_wtol = [i for i in steps if (self._nb_samples - i) >= self._ignore_overflow]
+        if steps != steps_wtol:
+            logging.debug('WARNING: The last fold that would overflow was'
+                          ' dropped due to low tolerance `ignore_overflow`.')
+        return steps_wtol
 
     def __iter__(self):
         """ iterate the folds
 
         :return ([int], [int]):
         """
-        for i in range(0, self._nb_samples, self._nb_hold_out):
+        # iterate over all filtered splits
+        for i in self.__steps():
             i_end = i + self._nb_hold_out
             inds_test = self.indexes[i:i_end]
             inds_train = self.indexes[:i] + self.indexes[i_end:]
             # over flow the limited set
             if i_end > self._nb_samples:
-                i_begin = i_end - self._nb_samples
-                inds_test += self.indexes[:i_begin]
-                inds_train = self.indexes[i_begin:i]
-                logging.warning('Your demand for last test fold overflow by %i, '
-                                'to keep the train-test ration we reuse part '
-                                'of the already tested samples from the %s beginning.',
-                                i_begin, 'shuffled' if self._shuffle else '')
+                if (i_end - self._nb_samples) > self._ignore_overflow:
+                    i_begin = i_end - self._nb_samples
+                    inds_test += self.indexes[:i_begin]
+                    inds_train = self.indexes[i_begin:i]
+                    logging.debug('WARNING: Your demand for last test fold overflow'
+                                  ' by %i, to keep the train-test ration we reuse part'
+                                  ' of the already tested samples from the %s beginning.',
+                                  i_begin, 'shuffled' if self._shuffle else '')
+                else:
+                    logging.debug('WARNING: To keep the set strictly balances,'
+                                  ' you need to decrees tolerance `ignore_overflow`.')
             # reverting the train -test split
             if self._revert:
                 inds_train, inds_test = inds_test, inds_train
@@ -1545,12 +1581,12 @@ class CrossValidatePOut(object):
 
         :return int:
         """
-        return int(np.ceil(self._nb_samples / float(self._nb_hold_out)))
+        return len(self.__steps())
 
 
-class CrossValidatePSetsOut(CrossValidatePOut):
+class CrossValidateGroups(CrossValidate):
     """
-    Hold-out cross-validator generator. In the hold-out, the
+    Cross-validator generator. In the hold-out, the
     data is split only once into a train set and a test set.
 
     Parameters
@@ -1558,10 +1594,11 @@ class CrossValidatePSetsOut(CrossValidatePOut):
     set_sizes : list of integers, number of samples in each set
     nb_hold_out : integer, number of sets hold out
     rand_seed :  seed for the random number generator
+    ignore_overflow: float, tolerance while dividing dataset to folds
 
-    Example 1
+    Example 1 - balance split
     ---------
-    >>> cv = CrossValidatePSetsOut([2, 3, 2, 3], 2, rand_seed=False)
+    >>> cv = CrossValidateGroups([2, 3, 2, 3], 2, rand_seed=False)
     >>> cv.set_indexes
     [[0, 1], [2, 3, 4], [5, 6], [7, 8, 9]]
     >>> len(cv)
@@ -1569,12 +1606,12 @@ class CrossValidatePSetsOut(CrossValidatePOut):
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([5, 6, 7, 8, 9], [0, 1, 2, 3, 4]),
      ([0, 1, 2, 3, 4], [5, 6, 7, 8, 9])]
-    >>> [(len(tr), len(ts)) for tr, ts in CrossValidatePSetsOut([7] * 340, 0.41)]
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidateGroups([7] * 340, 0.41)]
     [(1407, 973), (1407, 973), (1407, 973)]
 
-    Example 2
+    Example 2 - unbalanced split
     ---------
-    >>> cv = CrossValidatePSetsOut([2, 2, 1, 2, 1], 2, rand_seed=0)
+    >>> cv = CrossValidateGroups([2, 2, 1, 2, 1], 2, rand_seed=0)
     >>> cv.set_indexes
     [[0, 1], [2, 3], [4], [5, 6], [7]]
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
@@ -1586,26 +1623,27 @@ class CrossValidatePSetsOut(CrossValidatePOut):
     >>> cv.indexes
     [2, 0, 1, 3, 4]
 
-    Example 3
+    Example 3 - larger test then train
     ---------
-    >>> cv = CrossValidatePSetsOut([2, 2, 1, 2, 1, 1], 4, rand_seed=0)
+    >>> cv = CrossValidateGroups([2, 2, 1, 2, 1, 1], 4, rand_seed=0)
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([8, 4], [2, 3, 5, 6, 0, 1, 7]),
      ([2, 3, 5, 6], [8, 4, 0, 1, 7]),
      ([0, 1, 7], [8, 4, 2, 3, 5, 6])]
-    >>> [(len(tr), len(ts)) for tr, ts in CrossValidatePSetsOut([7] * 340, 0.55)]
+    >>> [(len(tr), len(ts)) for tr, ts in CrossValidateGroups([7] * 340, 0.55)]
     [(1071, 1309), (1071, 1309), (1071, 1309)]
     """
 
-    def __init__(self, set_sizes, nb_hold_out, rand_seed=None):
+    def __init__(self, set_sizes, nb_hold_out, rand_seed=None, ignore_overflow=0.01):
         """ construct
 
         :param [int] set_sizes: list of sizes
         :param int|float nb_hold_out: how much hold out
-        :param int|None rand_seed:
+        :param int|None rand_seed: random seed for shuffling
+        :param float ignore_overflow: tolerance while dividing dataset to folds
         """
-        super(CrossValidatePSetsOut, self).__init__(
-            len(set_sizes), nb_hold_out, rand_seed)
+        super(CrossValidateGroups, self).__init__(
+            len(set_sizes), nb_hold_out, rand_seed, ignore_overflow)
 
         self._set_sizes = list(set_sizes)
         self.set_indexes = []
@@ -1634,7 +1672,7 @@ class CrossValidatePSetsOut(CrossValidatePOut):
 
         :return ([int], [int]):
         """
-        for train, test in super(CrossValidatePSetsOut, self).__iter__():
+        for train, test in super(CrossValidateGroups, self).__iter__():
             inds_train = self.__iter_indexes(train)
             inds_test = self.__iter_indexes(test)
             yield inds_train, inds_test

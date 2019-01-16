@@ -111,7 +111,7 @@ def perform_img_convert(path_img, path_out, dict_colors):
             img = img[:, :, :3]
         img_new = convert_colors_2_labels(img, dict_colors, path_out)
     else:
-        logging.warning('not supported image format %s', repr(img.shape))
+        logging.warning('not supported image format %r', img.shape)
         img_new = None
 
     if img_new is not None:
@@ -142,7 +142,7 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_jobs=1):
         os.mkdir(path_out)
 
     dict_colors = load_dict_colours(path_json)
-    logging.debug('loaded dictionary %s', repr(dict_colors))
+    logging.debug('loaded dictionary %r', dict_colors)
     _wrapper_img_convert = partial(perform_img_convert, path_out=path_out,
                                    dict_colors=dict_colors)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_img_convert, path_imgs,

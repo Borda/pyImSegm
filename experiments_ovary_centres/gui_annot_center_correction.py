@@ -92,7 +92,7 @@ def arg_parse_params():
         params[k] = os.path.abspath(os.path.expanduser(params[k]))
         p = os.path.dirname(params[k]) if '*' in params[k] else params[k]
         assert os.path.exists(p), 'missing: %s' % p
-    logging.info('ARG PARAMETERS: \n %s', repr(params))
+    logging.info('ARG PARAMETERS: \n %r', params)
     return params
 
 
@@ -124,7 +124,7 @@ def load_paths_image_csv(params, skip_csv=POSIX_CSV_LABEL):
         (len(list_imgs), len(list_csv))
     list_join_img_csv = zip(list_imgs, list_csv)
     assert all(get_name(p1) == get_name(p2) for p1, p2 in list_join_img_csv), \
-        'names has to be same for %s' % repr(list_join_img_csv)
+        'names has to be same for %r' % list_join_img_csv
     return list_join_img_csv
 
 

@@ -80,7 +80,7 @@ def arg_parse_params(params):
     parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     params = vars(parser.parse_args())
-    logging.info('ARG PARAMETERS: \n %s', repr(params))
+    logging.info('ARG PARAMETERS: \n %r', params)
     for k in (k for k in params if 'path' in k):
         params[k] = tl_data.update_path(params[k])
         if k == 'path_out' and not os.path.isdir(params[k]):

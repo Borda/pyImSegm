@@ -4,7 +4,7 @@ codecov:
     require_ci_to_pass: yes
 
 coverage:
-  precision: 2  # 2 = xx.xx%, 0 = xx%
+  precision: 0  # 2 = xx.xx%, 0 = xx%
   round: nearest # how coverage is rounded: down/up/nearest
   range: 10...90 # custom range of coverage colors from red -> yellow -> green
   status:

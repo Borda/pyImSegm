@@ -370,14 +370,14 @@ def transform_rays_model_cdf_mixture(list_rays, coef_components=1):
     rays = np.array(list_rays)
     ms = cluster.MeanShift()
     ms.fit(rays)
-    logging.debug('MeanShift found: %s', repr(np.bincount(ms.labels_)))
+    logging.debug('MeanShift found: %r', np.bincount(ms.labels_))
 
     nb_components = int(len(np.unique(ms.labels_)) * coef_components)
     mm = mixture.BayesianGaussianMixture(n_components=nb_components)
     # gmm.fit(np.array(list_rays))
     mm.fit(rays, ms.labels_)
-    logging.debug('Mixture model found % components with weights: %s',
-                  len(mm.weights_), repr(mm.weights_))
+    logging.debug('Mixture model found % components with weights: %r',
+                  len(mm.weights_), mm.weights_)
 
     # compute the fairest mean + sigma over all components and ray angles
     max_dist = np.max([[m[i] + np.sqrt(c[i, i]) for i in range(len(m))]
@@ -414,8 +414,8 @@ def transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_components=5,
     mm = mixture.BayesianGaussianMixture(n_components=nb_components,
                                          covariance_type='diag')
     mm.fit(rays)
-    logging.debug('Mixture model found % components with weights: %s',
-                  len(mm.weights_), repr(mm.weights_))
+    logging.debug('Mixture model found % components with weights: %r',
+                  len(mm.weights_), mm.weights_)
 
     list_mean_cdf = []
     # stds = mm.covariances_[:, np.eye(mm.means_.shape[1], dtype=bool)]
@@ -485,8 +485,8 @@ def transform_rays_model_cdf_spectral(list_rays, nb_components=5):
     rays = np.array(list_rays)
     sc = cluster.SpectralClustering(nb_components)
     sc.fit(rays)
-    logging.debug('SpectralClustering found % components with counts: %s',
-                  len(np.unique(sc.labels_)), repr(np.bincount(sc.labels_)))
+    logging.debug('SpectralClustering found % components with counts: %r',
+                  len(np.unique(sc.labels_)), np.bincount(sc.labels_))
 
     labels = sc.labels_
     means = np.zeros((len(np.unique(labels)), rays.shape[1]))
@@ -527,7 +527,7 @@ def transform_rays_model_cdf_kmeans(list_rays, nb_components=None):
     if not nb_components:
         ms = cluster.MeanShift()
         ms.fit(rays)
-        logging.debug('MeanShift found: %s', repr(np.bincount(ms.labels_)))
+        logging.debug('MeanShift found: %r', np.bincount(ms.labels_))
         nb_components = len(np.unique(ms.labels_))
         kmeans = cluster.KMeans(nb_components)
         kmeans.fit(rays, ms.labels_)

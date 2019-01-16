@@ -9,6 +9,7 @@ import re
 import glob
 import logging
 import warnings
+from functools import wraps
 
 import numpy as np
 import pandas as pd
@@ -147,8 +148,7 @@ def load_landmarks_txt(path_file):
         vals = [int(float(i)) for i in vals]
         # logging.debug(' load_landmarks_txt: ' + repr(vals))
         landmarks.append(vals)
-    logging.debug(' load_landmarks_txt (%i): \n%s',
-                  len(landmarks), repr(landmarks))
+    logging.debug(' load_landmarks_txt (%i): \n%r', len(landmarks), landmarks)
     return landmarks
 
 
@@ -171,8 +171,8 @@ def load_landmarks_csv(path_file):
     assert os.path.exists(path_file), 'missing "%s"' % path_file
     df = pd.read_csv(path_file, index_col=0)
     landmarks = df[COLUMNS_COORDS].values.tolist()
-    logging.debug(' load_landmarks_csv (%i): \n%s', len(landmarks),
-                  repr(np.asarray(landmarks).astype(int).tolist()))
+    logging.debug(' load_landmarks_csv (%i): \n%r', len(landmarks),
+                  np.asarray(landmarks).astype(int).tolist())
     return landmarks
 
 
@@ -210,6 +210,7 @@ def save_landmarks_txt(path_file, landmarks):
     assert os.path.exists(os.path.dirname(path_file)), \
         'missing "%s"' % os.path.dirname(path_file)
     path_file = os.path.splitext(path_file)[0] + '.txt'
+    logging.info(' save_landmarks_txt: -> creating TXT file: %s', path_file)
     logging.info(' save_landmarks_txt: -> creating TXT file: %s', path_file)
     # create the results file in TXT
     with open(path_file, 'w') as f:
@@ -289,50 +290,54 @@ def scale_image_intensity(img, im_range=1., quantiles=(2, 98)):
     return img
 
 
-# def convert_tiff_2_ndarray(im, im_range=255):
-#     img = np.empty(im.shape)
-#     for i in range(img.shape[0]):
-#         img[i, :, :] = np.array(im[i])
-#     img = scale_image_intensity(img, im_range)
-#     return img
+def io_image_decorate(func):
+    """ costume decorator to suppers debug messages from the PIL function
+    to suppress PIl debug logging
+    - DEBUG:PIL.PngImagePlugin:STREAM b'IHDR' 16 13
+
+    :param func:
+    :return:
+    """
+    @wraps(func)
+    def wrap(*args, **kwargs):
+        log_level = logging.getLogger().getEffectiveLevel()
+        logging.getLogger().setLevel(logging.INFO)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            response = func(*args, **kwargs)
+        logging.getLogger().setLevel(log_level)
+        return response
+    return wrap
 
 
+@io_image_decorate
 def io_imread(path_img):
-    """ jsut a wrapper to suppers debug messages from the PIL function
+    """ just a wrapper to suppers debug messages from the PIL function
 
     :param str path_img:
     :return ndarray:
     """
-    log_level = logging.getLogger().getEffectiveLevel()
-    logging.getLogger().setLevel(logging.INFO)
-    img = io.imread(path_img)
-    logging.getLogger().setLevel(log_level)
-    return img
+    return io.imread(path_img)
 
 
+@io_image_decorate
 def image_open(path_img):
-    """ jsut a wrapper to suppers debug messages from the PIL function
+    """ just a wrapper to suppers debug messages from the PIL function
 
     :param str path_img:
     :return Image:
     """
-    log_level = logging.getLogger().getEffectiveLevel()
-    logging.getLogger().setLevel(logging.INFO)
-    img = Image.open(path_img)
-    logging.getLogger().setLevel(log_level)
-    return img
+    return Image.open(path_img)
 
 
+@io_image_decorate
 def io_imsave(path_img, img):
     """ just a wrapper to suppers debug messages from the PIL function
 
     :param str path_img:
     :param ndarray img: image
     """
-    log_level = logging.getLogger().getEffectiveLevel()
-    logging.getLogger().setLevel(logging.INFO)
     io.imsave(path_img, img)
-    logging.getLogger().setLevel(log_level)
 
 
 def load_image_2d(path_img):
@@ -442,11 +447,11 @@ def export_image(path_img, img, stretch_range=True):
     (5, 20, 25)
     >>> os.remove(path_img)
     """
-    assert img.ndim >= 2, 'wrong image dim: %s' % repr(img.shape)
+    assert img.ndim >= 2, 'wrong image dim: %r' % img.shape
     if not os.path.isdir(os.path.dirname(path_img)):
         return ''
-    logging.debug(' .. saving image %s with %s to "%s"', repr(img.shape),
-                  repr(np.unique(img)), path_img)
+    logging.debug(' .. saving image %r with %r to "%s"',
+                  img.shape, np.unique(img), path_img)
     if img.ndim == 2 or (img.ndim == 3 and img.shape[2] == 3):
         if stretch_range and img.max() > 0:
             img = img / float(img.max()) * 255
@@ -460,7 +465,7 @@ def export_image(path_img, img, stretch_range=True):
         # tif = libtiff.TIFF.open(path_img, mode='w')
         # tif.write_image(img_clip.astype(np.uint16))
     else:
-        logging.warning('not supported image format: %s', repr(img.shape))
+        logging.warning('not supported image format: %r', img.shape)
     return path_img
 
 
@@ -648,27 +653,13 @@ def load_image_tiff_volume(path_img, im_range=None):
 
     img = io_imread(path_img)
 
-    # import libtiff
-    # tif = libtiff.TIFF.open(path_img, mode='r')
-    # img = []
-    # # to read all images in a TIFF file:
-    # for im in tif.iter_images():
-    #     img.append(im)
-    # tif.close()
-    # img = np.array(img)
-
     # special case of loading 2d tiff
     if img.ndim == 4:
-        if img.shape[1] == 3:
-            img = img[:, 0, ...]
-        else:
-            img = img[..., 0]
         # rotate for RGB image
-        if img.shape[0] == 3:
-            img = np.rollaxis(img, 0, 3)
+        if img.shape[1] == 3:
+            img = np.rollaxis(img, 1, 4)
 
-    logging.debug('image %s values (%d - %d)',
-                  repr(img.shape), img.min(), img.max())
+    logging.debug('image %r values (%d - %d)', img.shape, img.min(), img.max())
     if im_range is not None:
         img = scale_image_intensity(img, im_range)
     return img
@@ -686,17 +677,20 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
     >>> p_img = os.path.join(update_path('data_images'), 'drosophila_ovary_3D',
     ...                      'AU10-13_f0011.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
-    >>> img_b1.shape
-    (15, 323, 512)
-    >>> img_b2.shape
-    (15, 323, 512)
+    >>> img_b1.shape, img_b2.shape
+    ((15, 323, 512), (15, 323, 512))
     >>> p_img = os.path.join(update_path('data_images'),
     ...                      'drosophila_ovary_slice', 'image', 'insitu7545.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
-    >>> img_b1.shape
-    (1, 647, 1024)
-    >>> img_b2.shape
-    (1, 647, 1024)
+    >>> img_b1.shape, img_b2.shape
+    ((1, 647, 1024), (1, 647, 1024))
+    >>> img = np.random.randint(0, 255, (1, 3, 250, 200))
+    >>> p_img = './sample-multistack.tif'
+    >>> io.imsave(p_img, img)
+    >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
+    >>> img_b1.shape, img_b2.shape
+    ((1, 250, 200), (1, 250, 200))
+    >>> os.remove(p_img)
     """
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
@@ -713,12 +707,11 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
         img_b2 = np.array(img[1::2])
         if not img_b2.size:
             # loading also 2d images with rgb bands
-            assert img_b1.ndim == 4, 'image is not RGB'
+            assert img_b1.ndim == 4, 'image is not stack of RGB'
             img_b2 = np.array([img_b1[0, :, :, 1]])
             img_b1 = np.array([img_b1[0, :, :, 0]])
     assert img_b1.shape[0] == img_b2.shape[0], \
-        'not equal slice number for %s and %s' \
-        % (repr(img_b1.shape), repr(img_b2.shape))
+        'not equal slice number for %r and %r' % (img_b1.shape, img_b2.shape)
     return img_b1, img_b2
 
 
@@ -919,17 +912,14 @@ def merge_image_channels(img_ch1, img_ch2, img_ch3=None):
     (150, 125, 3)
     """
     assert img_ch1.ndim == 2, \
-        'image as to strictly 2D and single channel, got %s' \
-        % repr(img_ch1.shape)
+        'image as to strictly 2D and single channel, got %r' % img_ch1.shape
     assert img_ch1.shape == img_ch2.shape, \
-        'channel dimension has to match: %s vs %s' \
-        % (repr(img_ch1.shape), repr(img_ch2.shape))
+        'channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch2.shape)
     if img_ch3 is None:
         img_ch3 = np.zeros(img_ch1.shape)
     else:
         assert img_ch1.shape == img_ch3.shape, \
-            'channel dimension has to match: %s vs %s' \
-            % (repr(img_ch1.shape), repr(img_ch3.shape))
+            'channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch3.shape)
     img_rgb = np.rollaxis(np.array([img_ch1, img_ch2, img_ch3]), 0, 3)
     return img_rgb
 
@@ -1036,7 +1026,7 @@ def get_image2d_boundary_color(image, size=1):
         bg_pixels = np.vstack([b.reshape(-1, image.shape[-1]) for b in bounds])
         bg_color = np.median(bg_pixels, axis=0)
     else:
-        logging.error('not supported image dim: %s' % repr(image.shape))
+        logging.error('not supported image dim: %r', image.shape)
         bg_color = np.array(0)
     bg_color = bg_color.astype(image.dtype)
     return bg_color

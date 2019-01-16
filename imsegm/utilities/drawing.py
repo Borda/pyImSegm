@@ -248,7 +248,7 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
     True
     """
     assert img.shape[:2] == seg.shape[:2], \
-        'different image %s & seg_pipe %s sizes' % (repr(img.shape), repr(seg.shape))
+        'different image %r & seg_pipe %r sizes' % (img.shape, seg.shape)
     if img.ndim == 2:  # for gray images of ovary
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         img = color.gray2rgb(img)
@@ -437,7 +437,7 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
 
     fig, ax = create_figure_by_image(img.shape[:2], fig_size)
     assert img.ndim == 2, \
-        'required image dimension is 2 to instead %s' % repr(img.shape)
+        'required image dimension is 2 to instead %r' % img.shape
     ax.imshow(img, cmap=plt.cm.Greys_r)
 
     for i, params in enumerate(ellipses):
@@ -781,8 +781,7 @@ def merge_object_masks(list_masks, thr_overlap=0.7):
             union = np.sum(np.logical_or(mask == j, list_masks[i] == 1))
             overlap_ratios.append(float(overlap) / float(union))
         if any(r > thr_overlap for r in overlap_ratios):
-            logging.debug('skip egg drawing while it overlap by %s',
-                          repr(overlap_ratios))
+            logging.debug('skip egg drawing while it overlap by %r', overlap_ratios)
             continue
         mask[list_masks[i] == 1] = np.max(mask) + 1
 
@@ -823,8 +822,7 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
     # fig.gca().imshow(mark_boundaries(img, slic))
     if seg_contour is not None and isinstance(seg_contour, np.ndarray):
         assert img.shape[:2] == seg_contour.shape[:2], \
-            'image size %s and segm. %s should match' \
-            % (repr(img.shape), repr(seg_contour.shape))
+            'image size %r and segm. %r should match' % (img.shape, seg_contour.shape)
         ax.contour(seg_contour, linewidths=3, levels=np.unique(seg_contour))
     if labels is not None:
         assert len(points) == len(labels), \
@@ -869,8 +867,7 @@ def figure_image_segm_centres(img, segm, centers=None, cmap_contour=plt.cm.Blues
                 color=COLOR_ORANGE)
     elif isinstance(centers, np.ndarray):
         assert img.shape[:2] == centers.shape[:2], \
-            'image size %s and centers %s should match' \
-            % (repr(img.shape), repr(centers.shape))
+            'image size %r and centers %r should match' % (img.shape, centers.shape)
         ax.contour(centers, levels=np.unique(centers), cmap=plt.cm.YlOrRd)
 
     ax.set_xlim([0, img.shape[1]])
@@ -1040,7 +1037,7 @@ def make_overlap_images_optical(images):
     logging.info(' make_overlap_images_optical: overlap images')
     # get max dimension of the images
     max_size = np.max(np.vstack(tuple([im.shape for im in images])), 0)
-    logging.debug('compute maximal image size: ' + repr(max_size))
+    logging.debug('compute maximal image size: %r', max_size)
     imgs_w = []
     for im in images:
         imgs_w.append(np.zeros(max_size, dtype=im.dtype))
@@ -1073,7 +1070,7 @@ def make_overlap_images_chess(images, chess_field=SIZE_CHESS_FIELD):
     logging.info(' make_overlap_images_chess: overlap images')
     # get max dimension of the images
     max_size = np.max(np.vstack(tuple([im.shape for im in images])), 0)
-    logging.debug('compute maximal image size: ' + repr(max_size))
+    logging.debug('compute maximal image size: %r', max_size)
     imgs_w = []
     for im in images:
         imgs_w.append(np.zeros(max_size, dtype=im.dtype))
@@ -1123,7 +1120,7 @@ def draw_image_clusters_centers(ax, img, centres, points=None,
     if img is not None:
         img = (img / float(np.max(img)))
         assert img.ndim == 2, \
-            'required image dimension is 2 to instead %s' % repr(img.shape)
+            'required image dimension is 2 to instead %r' % img.shape
         ax.imshow(img, cmap=plt.cm.Greys_r)
         ax.set_xlim([0, img.shape[1]])
         ax.set_ylim([img.shape[0], 0])
@@ -1162,8 +1159,7 @@ def figure_segm_boundary_dist(segm_ref, segm, subfig_size=9):
     True
     """
     assert segm_ref.shape == segm.shape, \
-        'ref segm (%s) and segm (%s) should match' \
-        % (repr(segm_ref.shape), repr(segm.shape))
+        'ref segm %r and segm %r should match' % (segm_ref.shape, segm.shape)
     segr_boundary = segmentation.find_boundaries(segm_ref, mode='thick')
     segm_boundary = segmentation.find_boundaries(segm, mode='thick')
     segm_distance = ndimage.distance_transform_edt(~segm_boundary)

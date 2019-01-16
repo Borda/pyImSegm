@@ -83,7 +83,7 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     logging.debug('quantize img: "%s"', path_image)
     im = tl_data.io_imread(path_image)
     if not im.ndim == 3:
-        logging.warning('not valid color image of dims %s', repr(im.shape))
+        logging.warning('not valid color image of dims %r', im.shape)
         return
     im = im[:, :, :3]
     # im = io.imread(path_image)[:, :, :3]

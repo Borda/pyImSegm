@@ -226,8 +226,8 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     >>> mm.predict_proba(fts).shape
     (100, 2)
     """
-    logging.debug('estimate GMM for all given features %s and %i component',
-                  repr(features.shape), nb_classes)
+    logging.debug('estimate GMM for all given features %r and %i component',
+                  features.shape, nb_classes)
     # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
     gmm = mixture.GaussianMixture(n_components=nb_classes,
                                   covariance_type='full', max_iter=99)
@@ -263,8 +263,7 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++',
     (100, 2)
     """
     logging.debug('estimate Gaussian from k-means clustering for all given '
-                  'features %s and %i components', repr(features.shape),
-                  nb_classes)
+                  'features %r and %i components', features.shape, nb_classes)
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
     if init_type == 'quantiles':
         quntiles = np.linspace(5, 95, nb_classes).tolist()
@@ -410,7 +409,7 @@ def compute_edge_model(edges, proba, metric='l_T'):
     [0.0, 0.002, 0.0, 0.005, 0.0, 0.0, 0.101, 0.092, 0.001]
     """
     assert np.max(edges) < len(proba), \
-        'max vertex %i exceed size of proba %s' % (np.max(edges), repr(proba.shape))
+        'max vertex %i exceed size of proba %r' % (np.max(edges), proba.shape)
     vertex_1 = proba[edges[:, 0]]
     vertex_2 = proba[edges[:, 1]]
     # pp 32, http://www.coe.utah.edu/~cs7640/readings/graph_cuts_intro.pdf
@@ -503,8 +502,8 @@ def create_pairwise_matrix(gc_regul, nb_classes):
     """
     if isinstance(gc_regul, np.ndarray):
         assert gc_regul.shape[0] == gc_regul.shape[1] == nb_classes, \
-            'GC regul matrix %s should match match number o lasses (%i)' \
-            % (repr(gc_regul.shape), nb_classes)
+            'GC regul matrix %r should match match number of classes (%i)' \
+            % (gc_regul.shape, nb_classes)
         # sub_min = np.tile(np.min(gc_regul, axis=0), (gc_regul.shape[0], 1))
         pairwise = gc_regul - np.min(gc_regul)
     elif isinstance(gc_regul, list):
@@ -615,10 +614,10 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
     _, edges = get_vertexes_edges(segments)
     # convert variables
     edges = np.array(edges, dtype=np.int32)
-    logging.debug('graph edges %s', repr(edges.shape))
+    logging.debug('graph edges %r', edges.shape)
 
     if edge_type.startswith('model'):
-        assert proba is not None, '"proba" is requuired'
+        assert proba is not None, '"proba" is required'
         metric = edge_type.split('_')[-1] if '_' in edge_type else 'lT'
         edge_weights = compute_edge_model(edges, proba, metric)
     elif edge_type == 'color':
@@ -716,12 +715,12 @@ def segment_graph_cut_general(segments, proba, image=None, features=None,
     edges, edge_weights = compute_edge_weights(segments, image, features,
                                                proba, edge_type)
     edge_weights *= edge_cost
-    logging.debug('graph edges weights %s', repr(edge_weights.shape))
+    logging.debug('graph edges weights %r', edge_weights.shape)
 
     unary_cost = compute_unary_cost(proba)
-    logging.debug('graph unaries potentials: %s', repr(unary_cost.shape))
+    logging.debug('graph unaries potentials: %r', unary_cost.shape)
     pairwise_cost = compute_pairwise_cost(gc_regul, proba.shape)
-    logging.debug('graph pairwise coefs: \n%s', repr(pairwise_cost))
+    logging.debug('graph pairwise coefs: \n%r', pairwise_cost)
 
     if gc_regul <= 0:
         logging.debug('gc_regul=%f so we use just argmax()', gc_regul)

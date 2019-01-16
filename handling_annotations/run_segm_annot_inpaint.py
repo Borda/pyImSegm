@@ -55,7 +55,7 @@ def perform_img_inpaint(path_img, labels):
 
     :param str path_img: image path
     """
-    logging.debug('repaint labels %s for image: "%s"', repr(labels), path_img)
+    logging.debug('repaint labels %r for image: "%s"', labels, path_img)
     img = np.array(tl_data.io.imread(path_img), dtype=np.float)
 
     for label in labels:

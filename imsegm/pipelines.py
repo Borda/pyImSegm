@@ -75,7 +75,7 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
     model = seg_gc.estim_class_model(features, nb_classes, estim_model,
                                      pca_coef, use_scaler)
     proba = model.predict_proba(features)
-    logging.debug('list of probabilities: %s', repr(proba.shape))
+    logging.debug('list of probabilities: %r', proba.shape)
 
     # gmm = mixture.GaussianMixture(n_components=nb_classes,
     #                               covariance_type='full', max_iter=1)
@@ -192,7 +192,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
         debug_visual['slic_mean'] = sk_color.label2rgb(slic, image, kind='avg')
 
     proba = model_pipeline.predict_proba(features)
-    logging.debug('list of probabilities: %s', repr(proba.shape))
+    logging.debug('list of probabilities: %r', proba.shape)
 
     # gmm = mixture.GaussianMixture(n_components=proba.shape[1],
     #                               covariance_type='full', max_iter=1)
@@ -231,7 +231,7 @@ def compute_color2d_superpixels_features(image, dict_features,
     logging.debug('extract slic/superpixels features.')
     features, _ = seg_fts.compute_selected_features_img2d(image, slic,
                                                           dict_features)
-    logging.debug('list of features RAW: %s', repr(features.shape))
+    logging.debug('list of features RAW: %r', features.shape)
     features[np.isnan(features)] = 0
 
     # if fts_norm:
@@ -248,8 +248,7 @@ def wrapper_compute_color2d_slic_features_labels(img_annot,
     # in case of binary annotation convert it to integers labels
     annot = annot.astype(int)
     assert img.shape[:2] == annot.shape[:2], \
-        'image (%s) and annot (%s) should match' \
-        % (repr(img.shape), repr(annot.shape))
+        'image %r and annot %r should match' % (img.shape, annot.shape)
     slic, features = compute_color2d_superpixels_features(img, dict_features,
                                                           sp_size=sp_size,
                                                           sp_regul=sp_regul)
@@ -325,7 +324,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
     # clf_pipeline.fit(np.array(features), np.array(labels, dtype=int))
 
     if len(sizes) > (nb_hold_out * 5):
-        cv = seg_clf.CrossValidatePSetsOut(sizes, nb_hold_out=nb_hold_out)
+        cv = seg_clf.CrossValidateGroups(sizes, nb_hold_out=nb_hold_out)
     # for small nuber of training images this does not make sence
     else:
         cv = 10
@@ -369,16 +368,16 @@ def pipe_gray3d_slic_features_model_graphcut(image, nb_classes, dict_features,
     features, _ = seg_fts.compute_selected_features_gray3d(image, slic,
                                                            dict_features)
     # merge features together
-    logging.debug('list of features RAW: %s', repr(features.shape))
+    logging.debug('list of features RAW: %r', features.shape)
     features[np.isnan(features)] = 0
 
     logging.info('norm all features.')
     features, _ = seg_fts.norm_features(features)
-    logging.debug('list of features NORM: %s', repr(features.shape))
+    logging.debug('list of features NORM: %r', features.shape)
 
     model = seg_gc.estim_class_model(features, nb_classes)
     proba = model.predict_proba(features)
-    logging.debug('list of probabilities: %s', repr(proba.shape))
+    logging.debug('list of probabilities: %r', proba.shape)
 
     # resultGraph = graphCut.segment_graph_cut_int_vals(segments, prob, gcReg)
     graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,

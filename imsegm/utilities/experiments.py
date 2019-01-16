@@ -11,7 +11,7 @@ import time
 import types
 import logging
 import multiprocessing as mproc
-# from functools import partial
+from functools import wraps
 
 import tqdm
 import numpy as np
@@ -270,6 +270,21 @@ def extend_list_params(params, name_param, options):
                 '%s-%i#%i' % (name_param, len(options), i + 1)
             list_params_new.append(p_new)
     return list_params_new
+
+
+def try_decorator(func):
+    """ costume decorator to wrap function in try/except
+
+    :param func:
+    :return:
+    """
+    @wraps(func)
+    def wrap(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            logging.exception('%r with %r and %r', func.__name__, args, kwargs)
+    return wrap
 
 
 def create_subfolders(path_out, folders):

@@ -137,7 +137,7 @@ def main(params):
 
     # run_train.check_pathes_patterns(paths)
     tl_expt.set_experiment_logger(params['path_expt'])
-    logging.info('COMPUTER: \n%s', repr(os.uname()))
+    logging.info('COMPUTER: \n%r', os.uname())
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBFOLDER)
@@ -165,7 +165,7 @@ def main(params):
 
     df_stat.set_index(['image'], inplace=True)
     df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES))
-    logging.info('STATISTIC: \n %s', repr(df_stat.describe()))
+    logging.info('STATISTIC: \n %r', df_stat.describe())
 
 
 if __name__ == '__main__':

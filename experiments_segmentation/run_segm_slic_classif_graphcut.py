@@ -189,8 +189,8 @@ def load_image_annot_compute_features_labels(idx_row, params,
     annot = load_image(row['path_annot'], '2d_segm')
     logging.debug('.. processing: %s', idx_name)
     assert img.shape[:2] == annot.shape[:2], \
-        'individual size of image %s and seg_pipe %s for "%s" - "%s"' % \
-        (repr(img.shape), repr(annot.shape), row['path_image'], row['path_annot'])
+        'individual size of image %r and seg_pipe %r for "%s" - "%s"' % \
+        (img.shape, annot.shape, row['path_image'], row['path_annot'])
     if show_debug_imgs:
         plt.imsave(_path_out_img(params, FOLDER_IMAGE, idx_name), img,
                    cmap=plt.cm.gray)
@@ -403,7 +403,7 @@ def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
     logging.info(metrics.classification_report(
         seg_label.convert_segms_2_list(list_segm),
         seg_label.convert_segms_2_list(list_annot), digits=4))
-    logging.debug(repr(df_stat))
+    logging.debug('%r', df_stat)
     return df_stat
 
 
@@ -509,7 +509,7 @@ def experiment_lpo(params, df_stat, dict_annot, idx_paths_img, path_classif,
     logging.info('run prediction on training images as Leave-%i-Out...',
                  nb_holdout)
     dict_segms, dict_segms_gc = dict(), dict()
-    cv = seg_clf.CrossValidatePOut(len(idx_paths_img), nb_hold_out=nb_holdout)
+    cv = seg_clf.CrossValidate(len(idx_paths_img), nb_hold_out=nb_holdout)
     test_imgs_idx_path = [[idx_paths_img[i] for i in ids] for _, ids in cv]
     path_out = os.path.join(params['path_exp'], FOLDER_LPO)
     path_visu = os.path.join(params['path_exp'], FOLDER_LPO_VISU) \
@@ -549,7 +549,7 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
     logging.info('train classifier...')
     seg_clf.feature_scoring_selection(features, labels, feature_names,
                                       path_out=params['path_exp'])
-    cv = seg_clf.CrossValidatePSetsOut(sizes, nb_hold_out=nb_holdout)
+    cv = seg_clf.CrossValidateGroups(sizes, nb_hold_out=nb_holdout)
     # feature norm & train classification
     fname_classif = seg_clf.TEMPLATE_NAME_CLF.format(params['classif'])
     path_classif = os.path.join(params['path_exp'], fname_classif)
@@ -561,7 +561,7 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
         params = dict_classif['params']
         params.update({k: params_local[k] for k in params_local
                        if k.startswith('path_') or k.startswith('gc_')})
-        logging.debug('loaded PARAMETERS: %s', repr(params))
+        logging.debug('loaded PARAMETERS: %r', params)
     else:
         classif, path_classif = seg_clf.create_classif_search_train_export(
             params['classif'], features, labels, cross_val=cv, params=params,
@@ -570,7 +570,7 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
             nb_search_iter=params.get('nb_classif_search', 1),
             nb_jobs=params['nb_jobs'], path_out=params['path_exp'])
     params['path_classif'] = path_classif
-    cv = seg_clf.CrossValidatePSetsOut(sizes, nb_hold_out=nb_holdout)
+    cv = seg_clf.CrossValidateGroups(sizes, nb_hold_out=nb_holdout)
     seg_clf.eval_classif_cross_val_scores(params['classif'], classif,
                                           features, labels, cross_val=cv,
                                           path_out=params['path_exp'])
@@ -668,8 +668,8 @@ def main_train(params):
         params['label_transitions'] = \
             seg_gc.count_label_transitions_connected_segments(dict_slics,
                                                               dict_labels)
-        logging.info('summary on edge-label transitions: \n %s',
-                     repr(params['label_transitions']))
+        logging.info('summary on edge-label transitions: \n %r',
+                     params['label_transitions'])
 
     path_purity_visu = None
     if show_visual:
@@ -722,7 +722,7 @@ def main_train(params):
         write_skip_file(_path_expt(FOLDER_LPO))
         # write_skip_file(_path_expt(FOLDER_LPO_VISU))
 
-    logging.info('Statistic: \n %s', repr(df_stat.describe()))
+    logging.info('Statistic: \n %r', df_stat.describe())
     logging.info('training DONE')
     return params
 

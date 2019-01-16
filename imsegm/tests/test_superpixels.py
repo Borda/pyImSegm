@@ -13,39 +13,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-import imsegm.utilities.data_samples as d_spl
-import imsegm.utilities.data_io as tl_data
-import imsegm.superpixels as seg_spx
+from imsegm.utilities.data_samples import (IMAGE_LENNA, load_sample_image,
+                                           sample_segment_vertical_2d,
+                                           sample_segment_vertical_3d)
+from imsegm.utilities.data_io import update_path
+from imsegm.superpixels import (segment_slic_img2d, make_graph_segm_connect_grid2d_conn4,
+                                make_graph_segm_connect_grid3d_conn6)
 
 # set default output path
-PATH_OUTPUT = tl_data.update_path('output', absolute=True)
+PATH_OUTPUT = update_path('output', absolute=True)
 
 
 class TestSuperpixels(unittest.TestCase):
 
-    img = d_spl.load_sample_image(d_spl.IMAGE_LENNA)
-    seg2d = d_spl.sample_segment_vertical_2d()
-    seg3d = d_spl.sample_segment_vertical_3d()
+    img = load_sample_image(IMAGE_LENNA)
+    seg2d = sample_segment_vertical_2d()
+    seg3d = sample_segment_vertical_3d()
 
     def test_segm_connect(self):
         logging.debug(self.seg2d)
-        vertices, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(self.seg2d)
+        vertices, edges = make_graph_segm_connect_grid2d_conn4(self.seg2d)
         logging.debug('vertices: {} -> edges: {}'.format(vertices, edges))
 
         logging.debug(self.seg3d)
-        vertices, edges = seg_spx.make_graph_segm_connect_grid3d_conn6(self.seg3d)
+        vertices, edges = make_graph_segm_connect_grid3d_conn6(self.seg3d)
         logging.debug('vertices: {} -> edges: {}'.format(vertices, edges))
 
     def test_general(self):
-        slic = seg_spx.segment_slic_img2d(self.img, sp_size=15, relative_compact=0.2)
+        slic = segment_slic_img2d(self.img, sp_size=15, relative_compact=0.2)
 
         logging.debug(np.max(slic))
 
-        vertices, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
-        logging.debug(repr(vertices))
+        vertices, edges = make_graph_segm_connect_grid2d_conn4(slic)
+        logging.debug('vertices: %r', vertices)
         logging.debug(len(edges))
-        logging.debug(repr(edges))
-
+        logging.debug('edges: %r', edges)
         fig, axarr = plt.subplots(ncols=2)
         axarr[0].imshow(self.img)
         axarr[1].imshow(slic, cmap=plt.cm.jet)

@@ -56,23 +56,23 @@ def read_struct(data, t):
 #    print t, vartype
     next_data = data[2:]  # skip vartype I16
 
-    if t is '?':
+    if t == '?':
         return [None, next_data]
-    if t is 'EMPTY':
+    elif t == 'EMPTY':
         return [None, next_data]
-    if t is 'NULL':
+    elif t == 'NULL':
         return [None, next_data]
-    if t is 'I2':
+    elif t == 'I2':
         low = struct.unpack('<h', next_data[:2])
         return [low[0], next_data[2:]]
-    if t is 'I4':
+    elif t == 'I4':
         r = i32(next_data[:4])
         return [r, next_data[4:]]
-    if t is 'BLOB':
+    elif t == 'BLOB':
         size = i32(next_data[:4])
         r = next_data[4:4 + size]
         return [r, next_data[4 + size:]]
-    if t is 'BSTR':
+    elif t == 'BSTR':
         # ! 4 extra bytes escaped
         low, high = struct.unpack('<hh', next_data[:4])
         size = (high << 16) + low

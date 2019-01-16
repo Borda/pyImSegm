@@ -82,7 +82,7 @@ def arg_parse_params(params):
     params.update(arg_params)
     for k in (k for k in params if 'path' in k):
         params[k] = tl_data.update_path(params[k], absolute=True)
-    logging.info('ARG PARAMETERS: \n %s', repr(params))
+    logging.info('ARG PARAMETERS: \n %r', params)
     return params
 
 

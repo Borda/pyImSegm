@@ -193,7 +193,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
     :param int nb_jobs:
     :return DF:
     """
-    logging.info('evaluate stages: %s', repr(stage))
+    logging.info('evaluate stages: %r', stage)
     str_stage = '-'.join(map(str, stage))
 
     path_csv = os.path.join(path_out, NAME_CSV_ANNOT_STAGE % str_stage)
@@ -215,7 +215,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
     path_annot = os.path.join(path_out, FOLDER_ANNOT % str_stage)
     path_visu = os.path.join(path_out, FOLDER_ANNOT_VISUAL % str_stage)
     list_dirs = [os.path.basename(p) for p in [path_annot, path_visu]]
-    logging.debug('create sub-dirs: %s', repr(list_dirs))
+    logging.debug('create sub-dirs: %r', list_dirs)
     tl_expt.create_subfolders(path_out, list_dirs)
 
     # perfom on new images
@@ -265,7 +265,7 @@ def main(params):
 
     if not df_eval.empty:
         df_stat = df_eval.describe().transpose()
-        logging.info('STATISTIC: \n %s', repr(df_stat))
+        logging.info('STATISTIC: \n %r', df_stat)
         df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STATISTIC))
 
 

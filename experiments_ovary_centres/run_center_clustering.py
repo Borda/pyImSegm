@@ -131,7 +131,7 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
     :return {}:
     """
     assert all(n in dict_row for n in ['path_points', 'path_image', 'path_segm']), \
-        'missing some required fields: %s' % repr(dict_row)
+        'missing some required fields: %r' % dict_row
     name = os.path.splitext(os.path.basename(dict_row['path_points']))[0]
     points = tl_data.load_landmarks_csv(dict_row['path_points'])
     if not list(points):

@@ -67,14 +67,14 @@ def contour_binary_map(seg, label=1, include_boundary=False):
     if include_boundary:
         for i in range(0, w):
             if seg[i, 0] == label:
-                    res[i, 0] = 1
+                res[i, 0] = 1
             if seg[i, -1] == label:
-                    res[i, -1] = 1
+                res[i, -1] = 1
         for j in range(0, h):
             if seg[0, j] == label:
-                    res[0, j] = 1
+                res[0, j] = 1
             if seg[-1, j] == label:
-                    res[-1, j] = 1
+                res[-1, j] = 1
     # logger.debug('matrix seg_pipe \total{}'.format(repr(res)))
     return res
 
@@ -106,14 +106,14 @@ def contour_coords(seg, label=1, include_boundary=False):
     if include_boundary:
         for i in range(0, w):
             if seg[i, 0] == label:
-                    res.append([i, 0])
+                res.append([i, 0])
             if seg[i, -1] == label:
-                    res.append([i, h - 1])
+                res.append([i, h - 1])
         for j in range(0, h):
             if seg[0, j] == label:
-                    res.append([0, j])
+                res.append([0, j])
             if seg[-1, j] == label:
-                    res.append([w - 1, j])
+                res.append([w - 1, j])
     return res
 
 
@@ -190,8 +190,8 @@ def segm_labels_assignment(segm, segm_gt):
      6: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
      7: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}
     """
-    assert segm_gt.shape == segm.shape, 'segm %s and annot %s should match' \
-                                        % (repr(segm.shape), repr(segm_gt.shape))
+    assert segm_gt.shape == segm.shape, 'segm %r and annot %r should match' \
+                                        % (segm.shape, segm_gt.shape)
     labels = np.unique(segm)
     # label_hist = {}
     # for lb in labels:
@@ -261,8 +261,8 @@ def histogram_regions_labels_norm(slic, segm):
            [ 0.66666667,  0.        ,  0.33333333],
            [ 0.        ,  0.        ,  1.        ]])
     """
-    assert slic.shape == segm.shape, 'dimension of SLIC %s and segm %s should match' \
-                                     % (repr(slic.shape), repr(segm.shape))
+    assert slic.shape == segm.shape, \
+        'dimension of SLIC %r and segm %r should match' % (slic.shape, segm.shape)
     assert np.sum(np.unique(segm) < 0) == 0, 'only positive labels are allowed'
     matrix_hist = histogram_regions_labels_counts(slic, segm)
     region_sums = np.tile(np.sum(matrix_hist, axis=1),
@@ -505,10 +505,10 @@ def compute_labels_overlap_matrix(seg1, seg2):
            [ 2,  0,  0, 12],
            [ 9,  6,  0,  0]])
     """
-    logging.debug('computing overlap of two seg_pipe of shapes %s <-> %s',
-                  repr(seg1.shape), repr(seg2.shape))
-    assert seg1.shape == seg2.shape, 'segm (%s) and segm (%s) should match' \
-                                     % (repr(seg1.shape), repr(seg2.shape))
+    logging.debug('computing overlap of two seg_pipe of shapes %r <-> %r',
+                  seg1.shape, seg2.shape)
+    assert seg1.shape == seg2.shape, 'segm %r and segm %r should match' \
+                                     % (seg1.shape, seg2.shape)
     maxims = [np.max(seg1) + 1, np.max(seg2) + 1]
     overlap = np.zeros(maxims, dtype=int)
     for lb1, lb2 in zip(seg1.ravel(), seg2.ravel()):
@@ -571,8 +571,8 @@ def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
            [ 0,  3,  3,  3,  3,  3,  3,  2,  2,  2,  2,  2,  2,  2,  0]])
     """
     assert seg_ref.shape == seg_relabel.shape, \
-        'Reference segm (%s) and input segm (%s) should match' \
-        % (repr(seg_ref.shape), repr(seg_relabel.shape))
+        'Reference segm %r and input segm %r should match' \
+        % (seg_ref.shape, seg_relabel.shape)
     overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
 
     lut = [-1] * (np.max(seg_relabel) + 1)
@@ -651,8 +651,8 @@ def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
            [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0],
            [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0]])
     """
-    assert seg_ref.shape == seg_relabel.shape, 'Ref segm (%s) and segm (%s) should match' \
-                                               % (repr(seg_ref.shape), repr(seg_relabel.shape))
+    assert seg_ref.shape == seg_relabel.shape, 'Ref segm %r and segm %r should match' \
+                                               % (seg_ref.shape, seg_relabel.shape)
     overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
     # ref_ptn_size = np.bincount(seg_ref.ravel())
     # overlap = overlap.astype(float) / np.tile(ref_ptn_size, (overlap.shape[1], 1)).T
@@ -694,8 +694,8 @@ def compute_boundary_distances(segm_ref, segm):
     >>> dist.tolist()
     [2.0, 1.0, 2.0, 3.0, 2.0]
     """
-    assert segm_ref.shape == segm.shape, 'Ref segm %s and segm %s should match'\
-                                         % (repr(segm_ref.shape), repr(segm.shape))
+    assert segm_ref.shape == segm.shape, 'Ref. segm %r and segm %r should match' \
+                                         % (segm_ref.shape, segm.shape)
     grid_y, grid_x = np.meshgrid(range(segm_ref.shape[1]),
                                  range(segm_ref.shape[0]))
     segr_boundary = sk_segm.find_boundaries(segm_ref, mode='thick')

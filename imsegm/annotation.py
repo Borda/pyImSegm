@@ -142,8 +142,8 @@ def convert_img_labels_to_colors(segm, lut_label_colors):
            [ 0.9,  0.2,  0.9,  0.2,  0.9,  0.2,  0.9]])
     """
     assert all(lb in lut_label_colors.keys() for lb in np.unique(segm)), \
-        'some labels %s are missing in dictionary %s' \
-        % (repr(np.unique(segm)), repr(lut_label_colors.keys()))
+        'some labels %r are missing in dictionary %r' \
+        % (np.unique(segm), lut_label_colors.keys())
     # init Look-Up-Table
     min_label = np.min(segm)
     nb_labels = np.max(segm) - min_label + 1
@@ -186,8 +186,8 @@ def image_frequent_colors(img, ratio_threshold=1e-3):
         return dict()
     dict_clrs = dict([(clr, nb) for nb, clr in img_colors if nb >= nb_px_min])
     ration_main_colors = sum(dict_clrs.values()) / float(nb_pixels)
-    logging.debug('image main colors=%f and other=%f with colours: \n%s',
-                  ration_main_colors, 1. - ration_main_colors, repr(dict_clrs))
+    logging.debug('image main colors=%f and other=%f with colours: \n%r',
+                  ration_main_colors, 1. - ration_main_colors, dict_clrs)
     return dict_clrs
 
 
@@ -216,7 +216,7 @@ def group_images_frequent_colors(paths_img, ratio_threshold=1e-3):
             if clr not in dict_colors:
                 dict_colors[clr] = 0
             dict_colors[clr] += local_dict_colors[clr]
-    logging.info('img folder colours: %s', repr(dict_colors))
+    logging.info('img folder colours: %r', dict_colors)
     return dict_colors
 
 
@@ -277,8 +277,8 @@ def quantize_image_nearest_color(img, colors):
 
 def image_inpaint_pixels(img, valid_mask):
     assert img.shape == valid_mask.shape, \
-        'image size %s and mask size %s should be equal' \
-        % (repr(img.shape), repr(valid_mask.shape))
+        'image size %r and mask size %r should be equal' \
+        % (img.shape, valid_mask.shape)
     coords = np.array(np.nonzero(valid_mask)).T
     values = img[valid_mask]
     it = interpolate.NearestNDInterpolator(coords, values)

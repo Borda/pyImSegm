@@ -96,7 +96,7 @@ def arg_parse_params(paths):
         paths[k] = tl_data.update_path(arg_params[k], absolute=True)
         p = paths[k] if k == 'results' else os.path.dirname(paths[k])
         assert os.path.exists(p), 'missing: %s' % p
-    logging.info('ARG PARAMETERS: \n %s', repr(paths))
+    logging.info('ARG PARAMETERS: \n %s', (paths))
     return paths, export_visual, arg_params['nb_jobs']
 
 
@@ -110,8 +110,8 @@ def compute_metrics(row):
                   row['path_egg-segm'])
     annot, _ = tl_data.load_image_2d(row['path_annot'])
     segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
-    assert annot.shape == segm.shape, 'dimension do mot match %s - %s' % \
-                                      (repr(annot.shape), repr(segm.shape))
+    assert annot.shape == segm.shape, 'dimension do mot match %r - %r' % \
+                                      (annot.shape, segm.shape)
     jacobs = []
     segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=True)
     for lb in np.unique(annot)[1:]:
@@ -279,7 +279,7 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
 
     df_all.set_index(['method'], inplace=True)
     df_all.sort_index(inplace=True)
-    logging.info('STATISTIC: \n %s', repr(df_all))
+    logging.info('STATISTIC: \n %r', df_all)
     df_all.to_csv(os.path.join(dict_paths['results'], NAME_CSV_STAT % 'OVERALL'))
 
 

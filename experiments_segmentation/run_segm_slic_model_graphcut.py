@@ -150,7 +150,7 @@ def arg_parse_params(params):
                         help='each experiment has uniques stamp',
                         default=EACH_UNIQUE_EXPERIMENT)
     args = vars(parser.parse_args())
-    logging.info('ARG PARAMETERS: \n %s', repr(args))
+    logging.info('ARG PARAMETERS: \n %r', args)
     for k in (k for k in args if 'path' in k):
         if args[k] == '' or args[k] == 'none':
             continue
@@ -178,7 +178,7 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
     assert os.path.isfile(path_img), 'missing: "%s"' % path_img
     if img_type == '2d_split':
         img, _ = tl_data.load_img_double_band_split(path_img)
-        assert img.ndim == 2, 'image dims: %s' % repr(img.shape)
+        assert img.ndim == 2, 'image dims: %r' % img.shape
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         # if img.max() > 1:
         #     img = (img / 255.)
@@ -244,7 +244,7 @@ def parse_imgs_idx_path(imgs_idx_path):
     elif isinstance(imgs_idx_path, str):
         idx, path_img = None, imgs_idx_path
     else:
-        logging.error('not valid imgs_idx_path -> "%s"', repr(imgs_idx_path))
+        logging.error('not valid imgs_idx_path -> "%r"', imgs_idx_path)
         idx, path_img = None, ''
     return idx, path_img
 

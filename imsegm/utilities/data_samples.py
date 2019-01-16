@@ -125,7 +125,7 @@ def sample_color_image_rand_segment(im_size=SAMPLE_SEG_SIZE_2D_NORM,
            [0, 0, 1, 0, 1, 0]])
     """
     assert len(im_size) == 2, \
-        'required image dimension is 2 to instead %s' % repr(im_size)
+        'required image dimension is 2 to instead %r' % im_size
     np.random.seed(rand_seed)
     im_size_rgb = (im_size[0], im_size[1], 3)
     img = np.random.random_integers(0, 255, im_size_rgb)

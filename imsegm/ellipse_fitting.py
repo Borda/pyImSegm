@@ -110,10 +110,9 @@ class EllipseModelSegm(sk_fit.EllipseModel):
             if table_prob.shape[0] == 1:
                 table_prob = table_prob[0]
             table_prob = np.array([table_prob, 1. - table_prob])
-        assert table_prob.shape[0] == 2, 'table shape %s' % repr(table_prob.shape)
+        assert table_prob.shape[0] == 2, 'table shape %r' % table_prob.shape
         assert np.max(labels) < table_prob.shape[1], \
-            'labels (%i) exceed the table %s' \
-            % (np.max(labels), repr(table_prob.shape))
+            'labels (%i) exceed the table %r' % (np.max(labels), table_prob.shape)
 
         r_pos, c_pos = points[:, 0], points[:, 1]
         r_org, c_org, r_rad, c_rad, phi = self.params

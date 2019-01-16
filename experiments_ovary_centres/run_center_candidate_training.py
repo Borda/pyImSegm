@@ -171,7 +171,7 @@ def arg_parse_params(params):
             data = json.load(fd)
         params.update(data)
     params.update(paths)
-    logging.info('ARG PARAMETERS: \n %s', repr(params))
+    logging.info('ARG PARAMETERS: \n %r', params)
     return params
 
 
@@ -352,9 +352,8 @@ def estim_points_compute_features(name, img, segm, params):
     """
     # superpixels on image
     assert img.shape[:2] == segm.shape[:2], \
-        'not matching shapes: %s : %s' % (repr(img.shape), repr(segm.shape))
-    slic = seg_spx.segment_slic_img2d(img, params['slic_size'],
-                                      params['slic_regul'])
+        'not matching shapes: %r : %r' % (img.shape, segm.shape)
+    slic = seg_spx.segment_slic_img2d(img, params['slic_size'], params['slic_regul'])
     slic_centers = seg_spx.superpixel_centers(slic)
     # slic_edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
 
@@ -480,7 +479,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_jobs=NB_THRE
         dict_slics[name] = slic
         dict_points[name] = points
         dict_features[name] = features
-    logging.debug('computed features:\n %s', repr(feature_names))
+    logging.debug('computed features:\n %r', feature_names)
 
     dict_labels = dict()
     logging.info('assign labels according close distance to center')
@@ -643,7 +642,7 @@ def save_dump_data(path_dump_data, imgs, segms, slics, points, centers,
 
 
 def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
-                   dict_points, dict_features, feature_names):
+                   dict_points, dict_features, feature_names, params):
     logging.info('run LOO prediction on training data...')
     # test classif on images
     gener_data = ((n, dict_imgs[n], dict_segms[n], dict_centers[n],
@@ -662,7 +661,7 @@ def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
 
     df_stat.set_index(['image'], inplace=True)
     df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_STAT_TRAIN))
-    logging.info('STATISTIC: \n %s', repr(df_stat.describe().transpose()))
+    logging.info('STATISTIC: \n %r', df_stat.describe().transpose())
 
 
 def prepare_experiment_folder(params, dir_template):
@@ -743,14 +742,14 @@ def main_train(params):
 
     # feature norm & train classification
     nb_holdout = int(np.ceil(len(sizes) * CROSS_VAL_LEAVE_OUT_SEARCH))
-    cv = seg_clf.CrossValidatePSetsOut(sizes, nb_holdout)
+    cv = seg_clf.CrossValidateGroups(sizes, nb_holdout)
     classif, params['path_classif'] = seg_clf.create_classif_search_train_export(
         params['classif'], features, labels, cross_val=cv, params=params,
         feature_names=feature_names, nb_search_iter=params['nb_classif_search'],
         pca_coef=params.get('pca_coef', None), nb_jobs=params['nb_jobs'],
         path_out=params['path_expt'])
     nb_holdout = int(np.ceil(len(sizes) * CROSS_VAL_LEAVE_OUT_EVAL))
-    cv = seg_clf.CrossValidatePSetsOut(sizes, nb_holdout)
+    cv = seg_clf.CrossValidateGroups(sizes, nb_holdout)
     seg_clf.eval_classif_cross_val_scores(params['classif'], classif, features, labels,
                                           cross_val=cv, path_out=params['path_expt'])
     seg_clf.eval_classif_cross_val_roc(params['classif'], classif, features, labels,
@@ -758,7 +757,7 @@ def main_train(params):
 
     if RUN_LEAVE_ONE_OUT:
         experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
-                       dict_points, dict_features, feature_names)
+                       dict_points, dict_features, feature_names, params)
 
 
 if __name__ == '__main__':

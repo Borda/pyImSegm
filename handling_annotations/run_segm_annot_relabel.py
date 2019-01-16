@@ -66,8 +66,8 @@ def perform_image_relabel(path_img, path_out, labels_old, labels_new):
     :param str labels_new:
     :param str labels_old:
     """
-    logging.debug('repaint labels %s -> %s for image: "%s"',
-                  repr(labels_old), repr(labels_new), path_img)
+    logging.debug('repaint labels %r -> %r for image: "%s"',
+                  labels_old, labels_new, path_img)
     img = np.array(tl_data.io.imread(path_img), dtype=int)
 
     max_label = int(max(img.max(), max(labels_old)))
@@ -79,7 +79,7 @@ def perform_image_relabel(path_img, path_out, labels_old, labels_new):
     # for label_old, label_new in zip(labels_old, labels_new):
     #     img[img == label_old] = label_new
 
-    logging.debug('resulting image labels: i%s', repr(np.unique(img).tolist()))
+    logging.debug('resulting image labels: %r', np.unique(img).tolist())
     path_img_out = os.path.join(path_out, os.path.basename(path_img))
     tl_data.io_imsave(path_img_out, img)
     # plt.subplot(121), plt.imshow(img)

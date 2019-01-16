@@ -54,14 +54,14 @@ def arg_parse_params():
         p = os.path.dirname(params[k]) if k == 'path_annot' else params[k]
         assert os.path.exists(p), 'missing: %s' % p
     # load saved configuration
-    logging.info('ARG PARAMETERS: \n %s', repr(params))
+    logging.info('ARG PARAMETERS: \n %r', params)
     return params
 
 
 def main(path_annot, path_out, nb_comp=5):
     list_paths = sorted(glob.glob(path_annot))
-    logging.info('nb images: %i SAMPLES: %s', len(list_paths),
-                 repr([os.path.basename(p) for p in list_paths[:5]]))
+    logging.info('nb images: %i SAMPLES: %r', len(list_paths),
+                 [os.path.basename(p) for p in list_paths[:5]])
     list_segms = []
     for path_seg in list_paths:
         seg = tl_data.io_imread(path_seg)

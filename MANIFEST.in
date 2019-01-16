@@ -20,6 +20,8 @@ include setup.*
 
 # Exclude build configs
 exclude *.yml
+# Exclude testing
+exclude pytest.*
 
 # Exclude experiments
 exclude */*.sh
