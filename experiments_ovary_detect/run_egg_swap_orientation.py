@@ -123,7 +123,7 @@ def main(params):
                               img_template=img_mean)
     dir_name = os.path.dirname(params['path_images'])
     iterate = tl_expt.WrapExecuteSequence(_wrapper_object, list_img_paths,
-                                          nb_jobs=params['nb_jobs'],
+                                          nb_workers=params['nb_workers'],
                                           desc=dir_name)
     list(iterate)
 

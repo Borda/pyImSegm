@@ -69,7 +69,7 @@ def aparse_params(dict_paths):
                         default=dict_paths['output'])
     parser.add_argument('--drop_labels', type=int, required=False, nargs='*',
                         help='list of skipped labels from statistic')
-    parser.add_argument('--nb_jobs', type=int, required=False,
+    parser.add_argument('--nb_workers', type=int, required=False,
                         help='number of processes in parallel',
                         default=NB_THREADS)
     parser.add_argument('--overlap', type=float, required=False,
@@ -164,11 +164,11 @@ def stat_single_set(idx_row, drop_labels=None, relabel=False, path_visu='',
 
 
 def main(dict_paths, visual=True, drop_labels=None, relabel=True,
-         segm_alpha=1., nb_jobs=NB_THREADS):
+         segm_alpha=1., nb_workers=NB_THREADS):
     """ main evaluation
 
     :param {str: str} dict_paths:
-    :param int nb_jobs: number of thred running in parallel
+    :param int nb_workers: number of thred running in parallel
     :param bool relabel: whether relabel segmentation as sequential
     """
     if not os.path.isdir(dict_paths['output']):
@@ -200,7 +200,7 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True,
                             segm_alpha=segm_alpha)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_stat, df_paths.iterrows(),
                                           desc='compute statistic',
-                                          nb_jobs=nb_jobs)
+                                          nb_workers=nb_workers)
     list_stats = list(iterate)
     df_stat = pd.DataFrame(list_stats)
 
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     logging.info('running...')
 
     dict_paths, args = aparse_params(PATHS)
-    main(dict_paths, nb_jobs=args['nb_jobs'], visual=args['visual'],
+    main(dict_paths, nb_workers=args['nb_workers'], visual=args['visual'],
          drop_labels=args['drop_labels'], relabel=args['relabel'],
          segm_alpha=args['overlap'])
 

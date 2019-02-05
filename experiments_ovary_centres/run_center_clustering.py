@@ -213,7 +213,7 @@ def main(params):
                                   path_out=params['path_expt'])
     rows = (dict(row) for idx, row in df_paths.iterrows())
     iterate = tl_expt.WrapExecuteSequence(_wrapper_clustering, rows,
-                                          nb_jobs=params['nb_jobs'])
+                                          nb_workers=params['nb_workers'])
     for dict_center in iterate:
         df_paths_new = df_paths_new.append(dict_center, ignore_index=True)
 

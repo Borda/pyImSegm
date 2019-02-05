@@ -148,7 +148,7 @@ def arg_parse_params(params):
                         help='name of the experiment', default='ovary')
     parser.add_argument('-cfg', '--path_config', type=str, required=False,
                         help='path to the configuration', default=None)
-    parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     params.update(vars(parser.parse_args()))
     paths = {}
@@ -443,13 +443,13 @@ def wrapper_draw_export_slic_centers(args):
     return export_show_image_points_labels(*args)
 
 
-def dataset_load_images_segms_compute_features(params, df_paths, nb_jobs=NB_THREADS):
+def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_THREADS):
     """ create whole dataset composed from loading input data, computing features
     and label points by label whether its positive or negative center candidate
 
     :param {str: any} params: parameters
     :param DF df_paths: DataFrame
-    :param int nb_jobs: parallel
+    :param int nb_workers: parallel
     :return {str: ...}:
     """
     dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
@@ -458,7 +458,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_jobs=NB_THRE
     _wrapper_load = partial(load_image_segm_center, path_out=path_show_in,
                             dict_relabel=params['dict_relabel'])
     iterate = tl_expt.WrapExecuteSequence(_wrapper_load, df_paths.iterrows(),
-                                          nb_jobs=nb_jobs,
+                                          nb_workers=nb_workers,
                                           desc='loading input data')
     for name, img, seg, center in iterate:
         dict_imgs[name] = img
@@ -473,7 +473,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_jobs=NB_THRE
                                     params=params)
     feature_names = None
     iterate = tl_expt.WrapExecuteSequence(_wrapper_pnt_features,
-                                          gene_name_img_seg, nb_jobs=nb_jobs,
+                                          gene_name_img_seg, nb_workers=nb_workers,
                                           desc='estimate candidates & features')
     for name, slic, points, features, feature_names in iterate:
         dict_slics[name] = slic
@@ -499,7 +499,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_jobs=NB_THRE
 
 
 def export_dataset_visual(path_output, dict_imgs, dict_segms, dict_slics,
-                          dict_points, dict_labels, nb_jobs=NB_THREADS):
+                          dict_points, dict_labels, nb_workers=NB_THREADS):
     """ visualise complete training dataset by marking labeld points
     over image and input segmentation
 
@@ -508,7 +508,7 @@ def export_dataset_visual(path_output, dict_imgs, dict_segms, dict_slics,
     :param {str: ndarray} dict_slics:
     :param {str: ndarray} dict_points:
     :param {str: ndarray} dict_labels:
-    :param int nb_jobs: number processing in parallel
+    :param int nb_workers: number processing in parallel
     """
     logging.info('export training visualisations')
 
@@ -517,7 +517,7 @@ def export_dataset_visual(path_output, dict_imgs, dict_segms, dict_slics,
                    dict_points[name], dict_labels[name], dict_slics[name],
                    None, '_train') for name in dict_imgs)
     iterate = tl_expt.WrapExecuteSequence(wrapper_draw_export_slic_centers,
-                                          gener_args, nb_jobs=nb_jobs,
+                                          gener_args, nb_workers=nb_workers,
                                           desc='exporting visualisations')
     list(iterate)
 
@@ -653,7 +653,7 @@ def experiment_loo(classif, dict_imgs, dict_segms, dict_centers, dict_slics,
                                  path_output=params['path_expt'])
     df_stat = pd.DataFrame()
     iterate = tl_expt.WrapExecuteSequence(_wrapper_detection,
-                                          gener_data, nb_jobs=params['nb_jobs'],
+                                          gener_data, nb_workers=params['nb_workers'],
                                           desc='detect center candidates')
     for dict_stat in iterate:
         df_stat = df_stat.append(dict_stat, ignore_index=True)
@@ -718,7 +718,7 @@ def main_train(params):
     if not os.path.isfile(path_dump_data) or FORCE_RECOMP_DATA:
         (dict_imgs, dict_segms, dict_slics, dict_points, dict_centers,
          dict_features, dict_labels, feature_names) = \
-            dataset_load_images_segms_compute_features(params, df_paths, params['nb_jobs'])
+            dataset_load_images_segms_compute_features(params, df_paths, params['nb_workers'])
         assert len(dict_imgs) > 0, 'missing images'
         save_dump_data(path_dump_data, dict_imgs, dict_segms, dict_slics, dict_points,
                        dict_centers, dict_features, dict_labels, feature_names)
@@ -728,7 +728,7 @@ def main_train(params):
 
     if is_drawing(params['path_expt']) and EXPORT_TRAINING_DATA:
         export_dataset_visual(params['path_expt'], dict_imgs, dict_segms, dict_slics,
-                              dict_points, dict_labels, params['nb_jobs'])
+                              dict_points, dict_labels, params['nb_workers'])
 
     # concentrate features, labels
     features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
@@ -746,7 +746,7 @@ def main_train(params):
     classif, params['path_classif'] = seg_clf.create_classif_search_train_export(
         params['classif'], features, labels, cross_val=cv, params=params,
         feature_names=feature_names, nb_search_iter=params['nb_classif_search'],
-        pca_coef=params.get('pca_coef', None), nb_jobs=params['nb_jobs'],
+        pca_coef=params.get('pca_coef', None), nb_workers=params['nb_workers'],
         path_out=params['path_expt'])
     nb_holdout = int(np.ceil(len(sizes) * CROSS_VAL_LEAVE_OUT_EVAL))
     cv = seg_clf.CrossValidateGroups(sizes, nb_holdout)

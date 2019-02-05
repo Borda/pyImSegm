@@ -60,7 +60,7 @@ def arg_parse_params(params):
     parser.add_argument('-out', '--path_output', type=str, required=False,
                         help='path to the output directory',
                         default=params.get('path_output', None))
-    parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
@@ -157,7 +157,7 @@ def main(params):
     _wrapper_match = partial(select_optimal_ellipse,
                              path_dir_csv=path_dir_csv)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_match, df_info.iterrows(),
-                                          nb_jobs=params['nb_jobs'])
+                                          nb_workers=params['nb_workers'])
     for i, dict_row in enumerate(iterate):
         list_evals.append(dict_row)
         # every hundreds iteration do export

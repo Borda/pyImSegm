@@ -14,7 +14,7 @@ SAMPLE run:
 >> python run_segm_slic_model_graphcut.py \
    -l data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
    -i "data_images/langerhans_islets/image/*.jpg" \
-   -o results -n LangIsl --nb_classes 3 --nb_jobs 2 --visual
+   -o results -n LangIsl --nb_classes 3 --nb_workers 2 --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -141,7 +141,7 @@ def arg_parse_params(params):
     parser.add_argument('--nb_classes', type=int, required=False,
                         help='number of classes for segmentation',
                         default=params.get('nb_classes', 2))
-    parser.add_argument('--nb_jobs', type=int, required=False,
+    parser.add_argument('--nb_workers', type=int, required=False,
                         help='number of processes in parallel',
                         default=NB_THREADS)
     parser.add_argument('--visual', required=False, action='store_true',
@@ -419,7 +419,7 @@ def experiment_single_gmm(params, paths_img, path_out, path_visu,
                                path_out=path_out, path_visu=path_visu,
                                show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
-                                          nb_jobs=params['nb_jobs'],
+                                          nb_workers=params['nb_workers'],
                                           desc='experiment single GMM')
     # dict_segms_gmm = {}
     # for name, segm in iterate:
@@ -453,7 +453,7 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
                                path_out=path_out, path_visu=path_visu,
                                show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
-                                          nb_jobs=params['nb_jobs'],
+                                          nb_workers=params['nb_workers'],
                                           desc='experiment group GMM')
     # dict_segms_group = {}
     # for name, segm in iterate:

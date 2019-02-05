@@ -5,7 +5,7 @@ SAMPLE run:
 >> python run_segm_annot_relabel.py \
     -imgs "data_images/drosophila_ovary_slice/center_levels/*.png" \
     -out results/relabel_center_levels \
-    --label_old 2 3 --label_new 1 1 --nb_jobs 2
+    --label_old 2 3 --label_new 1 1 --nb_workers 2
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -44,7 +44,7 @@ def parse_arg_params():
                         help='labels to be replaced', default=[0])
     parser.add_argument('--label_new', type=int, required=False, nargs='+',
                         help='new labels after replacing', default=[0])
-    parser.add_argument('--nb_jobs', type=int, required=False,
+    parser.add_argument('--nb_workers', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
     for k in ['path_images', 'path_output']:
@@ -88,7 +88,7 @@ def perform_image_relabel(path_img, path_out, labels_old, labels_new):
 
 
 def relabel_folder_images(path_images, path_out, labels_old, labels_new,
-                          nb_jobs=1):
+                          nb_workers=1):
     """ perform single or multi thread image quantisation
 
     :param [int] labels_old:
@@ -97,7 +97,7 @@ def relabel_folder_images(path_images, path_out, labels_old, labels_new,
     :param path_out: output directory
     :param [int] labels_old: list of labels to be replaced
     :param [int] labels_new: list of new labels
-    :param int nb_jobs:
+    :param int nb_workers:
     """
     assert os.path.isdir(os.path.dirname(path_images)), \
         'missing folder: %s' % path_images
@@ -109,7 +109,7 @@ def relabel_folder_images(path_images, path_out, labels_old, labels_new,
     _wrapper_img_relabel = partial(perform_image_relabel, path_out=path_out,
                                    labels_old=labels_old, labels_new=labels_new)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_img_relabel, path_imgs,
-                                          nb_jobs=nb_jobs,
+                                          nb_workers=nb_workers,
                                           desc='relabel images')
     list(iterate)
 
@@ -125,7 +125,7 @@ def main(params):
 
     relabel_folder_images(params['path_images'], params['path_output'],
                           params['label_old'], params['label_new'],
-                          params['nb_jobs'])
+                          params['nb_workers'])
 
     logging.info('DONE')
 

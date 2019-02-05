@@ -127,7 +127,7 @@ We introduce some useful tools for work with image annotation and segmentation.
     ```bash
     python handling_annotations/run_image_color_quantization.py \
         -imgs "./data_images/drosophila_ovary_slice/segm_rgb/*.png" \
-        -m position -thr 0.01 --nb_jobs 2
+        -m position -thr 0.01 --nb_workers 2
     ```
 * **Paint labels:** concerting image labels into colour space and other way around.
     ```bash
@@ -174,14 +174,14 @@ We utilize (un)supervised segmentation according to given training examples or s
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -l ./data_images/langerhans_islets/list_lang-isl_imgs-annot.csv -i "" \
        --cdf experiments_segmentation/sample_config.json \
-       -o ./results -n langIsl --nb_classes 3 --visual --nb_jobs 2
+       -o ./results -n langIsl --nb_classes 3 --visual --nb_workers 2
     ```
     OR specified on particular path:
     ```bash
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -l "" -i "./data_images/langerhans_islets/image/*.jpg" \
        -cfg ./experiments_segmentation/sample_config.json \
-       -o ./results -n langIsl --nb_classes 3 --visual --nb_jobs 2
+       -o ./results -n langIsl --nb_classes 3 --visual --nb_workers 2
     ```
     ![unsupervised](figures/imag-disk-20_gmm.jpg)
 * Perform **Supervised** segmentation with afterwards evaluation.
@@ -190,7 +190,7 @@ We utilize (un)supervised segmentation according to given training examples or s
         -l ./data_images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
         -i "./data_images/drosophila_ovary_slice/image/*.jpg" \
         --path_config ./experiments_segmentation/sample_config.json \
-        -o ./results -n Ovary --img_type 2d_split --visual --nb_jobs 2
+        -o ./results -n Ovary --img_type 2d_split --visual --nb_workers 2
     ```
     ![supervised](figures/imag-disk-20_train.jpg)
 * For both experiment you can evaluate segmentation results.
@@ -301,7 +301,7 @@ pip install --user git+https://github.com/Borda/morph-snakes.git
     ```bash
     python experiments_ovary_detect/run_ovary_egg-segmentation.py  \
         -list ./data_images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
-        -out ./results -n ovary_image --nb_jobs 1 \
+        -out ./results -n ovary_image --nb_workers 1 \
         -m ellipse_moments \
            ellipse_ransac_mmt \
            ellipse_ransac_crit \

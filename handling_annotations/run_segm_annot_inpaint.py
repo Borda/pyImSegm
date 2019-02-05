@@ -4,7 +4,7 @@ Remove a label a inpant these pixels
 SAMPLE run:
 >> python run_image_annot_inpaint.py \
     -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
-    --label 4 --nb_jobs 2
+    --label 4 --nb_workers 2
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -39,7 +39,7 @@ def parse_arg_params():
                         help='path to dir with annot', default=PATH_IMAGES)
     parser.add_argument('--label', type=int, required=False, nargs='+',
                         help='labels to be replaced', default=[-1])
-    parser.add_argument('--nb_jobs', type=int, required=False,
+    parser.add_argument('--nb_workers', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
     p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
@@ -71,11 +71,11 @@ def perform_img_inpaint(path_img, labels):
     # plt.show()
 
 
-def quantize_folder_images(path_images, label, nb_jobs=1):
+def quantize_folder_images(path_images, label, nb_workers=1):
     """ perform single or multi thread image quantisation
 
     :param [str] path_images: list of image paths
-    :param int nb_jobs:
+    :param int nb_workers:
     """
     assert os.path.isdir(os.path.dirname(path_images)), \
         'input folder does not exist: %s' % os.path.dirname(path_images)
@@ -84,7 +84,7 @@ def quantize_folder_images(path_images, label, nb_jobs=1):
 
     _wrapper_img_inpaint = partial(perform_img_inpaint, labels=label)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_img_inpaint, path_imgs,
-                                          nb_jobs=nb_jobs,
+                                          nb_workers=nb_workers,
                                           desc='quantise images')
     list(iterate)
 
@@ -93,7 +93,7 @@ def main(params):
     """ the main_train entry point   """
     logging.info('running...')
     quantize_folder_images(params['path_images'], params['label'],
-                           nb_jobs=params['nb_jobs'])
+                           nb_workers=params['nb_workers'])
     logging.info('DONE')
 
 

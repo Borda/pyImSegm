@@ -48,7 +48,7 @@ def parse_arg_params():
     parser.add_argument('-thr', '--px_threshold', type=float, required=False,
                         help='percentage of pixels of a color to be removed',
                         default=THRESHOLD_INVALID_PIXELS)
-    parser.add_argument('--nb_jobs', type=int, required=False,
+    parser.add_argument('--nb_workers', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
     p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
@@ -103,14 +103,14 @@ def perform_quantize_image(path_image, list_colors, method='color'):
 
 
 def quantize_folder_images(path_images, colors=None, method='color',
-                           px_threshold=THRESHOLD_INVALID_PIXELS, nb_jobs=1):
+                           px_threshold=THRESHOLD_INVALID_PIXELS, nb_workers=1):
     """ perform single or multi thread image quantisation
 
     :param str path_images:, input directory and image pattern for loading
     :param colors: [(int, int, int)], list of possible colours
     :param str method: interpolation method
     :param float px_threshold: pixel threshold
-    :param int nb_jobs: number of jobs
+    :param int nb_workers: number of jobs
     """
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
@@ -121,7 +121,7 @@ def quantize_folder_images(path_images, colors=None, method='color',
     _wrapper_quantize_img = partial(perform_quantize_image,
                                     method=method, list_colors=colors)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_quantize_img, path_imgs,
-                                          nb_jobs=nb_jobs,
+                                          nb_workers=nb_workers,
                                           desc='quantize images')
     list(iterate)
 
@@ -131,7 +131,7 @@ def main(params):
     logging.info('running...')
     quantize_folder_images(params['path_images'], method=params['method'],
                            px_threshold=params['px_threshold'],
-                           nb_jobs=params['nb_jobs'])
+                           nb_workers=params['nb_workers'])
     logging.info('DONE')
 
 

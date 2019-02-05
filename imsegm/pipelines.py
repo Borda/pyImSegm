@@ -95,7 +95,7 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
 def estim_model_classes_group(list_images, nb_classes, dict_features,
                               sp_size=30, sp_regul=0.2,
                               use_scaler=True, pca_coef=None, model_type='GMM',
-                              nb_jobs=NB_THREADS):
+                              nb_workers=NB_THREADS):
     """ estimate a model from sequence of input images and return it as result
 
     :param [ndarray] list_images:
@@ -107,7 +107,7 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     :param float pca_coef: range (0, 1) or None
     :param bool use_scaler: whether use a scaler
     :param str model_type: model type
-    :param int nb_jobs: number of jobs running in parallel
+    :param int nb_workers: number of jobs running in parallel
     :return:
     """
     list_slic, list_features = list(), list()
@@ -116,7 +116,7 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
                                dict_features=dict_features)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_images,
                                           desc='compute SLIC & features',
-                                          nb_jobs=nb_jobs)
+                                          nb_workers=nb_workers)
     for slic, features in iterate:
         list_slic.append(slic)
         list_features.append(features)
@@ -273,7 +273,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
                                         feature_balance='unique',
                                         pca_coef=None, nb_classif_search=1,
                                         nb_hold_out=CROSS_VAL_LEAVE_OUT,
-                                        nb_jobs=1):
+                                        nb_workers=1):
     """ train classifier on list of annotated images
 
     :param [ndarray] list_images:
@@ -288,7 +288,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
     :param float pca_coef: select PCA coef or None
     :param int nb_classif_search: number of tries for hyper-parameters seach
     :param int nb_hold_out: cross-val leave out
-    :param int nb_jobs: parallelism
+    :param int nb_workers: parallelism
     :return:
     """
     logging.info('TRAIN Superpixels-Features-Classifier')
@@ -304,7 +304,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
     list_imgs_annot = zip(list_images, list_annots)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_imgs_annot,
                                           desc='compute SLIC & features & labels',
-                                          nb_jobs=nb_jobs)
+                                          nb_workers=nb_workers)
     for slic, fts, lbs in iterate:
         list_slic.append(slic)
         list_features.append(fts)
@@ -331,7 +331,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
 
     classif, _ = seg_clf.create_classif_search_train_export(
         clf_name, features, labels, pca_coef=pca_coef, cross_val=cv,
-        nb_search_iter=nb_classif_search, nb_jobs=nb_jobs)
+        nb_search_iter=nb_classif_search, nb_workers=nb_workers)
 
     return classif, list_slic, list_features, list_labels
 

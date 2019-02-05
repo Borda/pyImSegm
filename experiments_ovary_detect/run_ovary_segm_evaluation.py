@@ -83,13 +83,13 @@ def arg_parse_params(paths):
     parser.add_argument('--results', type=str, required=False,
                         help='path to the result directory',
                         default=paths['results'])
-    parser.add_argument('--nb_jobs', type=int, required=False,
+    parser.add_argument('--nb_workers', type=int, required=False,
                         default=NB_THREADS, help='number of processes in parallel')
     parser.add_argument('--visual', required=False, action='store_true',
                         default=False, help='export visualisations')
     arg_params = vars(parser.parse_args())
     export_visual = arg_params['visual']
-    for k in (k for k in arg_params if k != 'nb_jobs' and k != 'visual'):
+    for k in (k for k in arg_params if k != 'nb_workers' and k != 'visual'):
         if not isinstance(arg_params[k], str) or arg_params[k].lower() == 'none':
             paths[k] = None
             continue
@@ -97,7 +97,7 @@ def arg_parse_params(paths):
         p = paths[k] if k == 'results' else os.path.dirname(paths[k])
         assert os.path.exists(p), 'missing: %s' % p
     logging.info('ARG PARAMETERS: \n %s', (paths))
-    return paths, export_visual, arg_params['nb_jobs']
+    return paths, export_visual, arg_params['nb_workers']
 
 
 def compute_metrics(row):
@@ -250,14 +250,14 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
     return dict_eval
 
 
-def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
+def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_workers=NB_THREADS):
     """ evaluate all segmentations in experiment folder
 
     :param {str: str} paths: path to all required directories
     :param bool export_visual: export visualisations
-    :param int nb_jobs: number threads in parralel
+    :param int nb_workers: number threads in parralel
     """
-    logging.info('running in %i jobs...', nb_jobs)
+    logging.info('running in %i jobs...', nb_workers)
     logging.info(tl_expt.string_dict(dict_paths, desc='PATHS'))
 
     list_results = sorted(glob.glob(os.path.join(dict_paths['results'], '*')))
@@ -273,7 +273,7 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
     _wrapper_eval = partial(evaluate_folder, dict_paths=dict_paths,
                             export_visual=export_visual)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_eval, list_results,
-                                          nb_jobs=nb_jobs)
+                                          nb_workers=nb_workers)
     for dict_eval in iterate:
         df_all = df_all.append(dict_eval, ignore_index=True)
 
@@ -285,5 +285,5 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_jobs=NB_THREADS):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    paths, nb_jobs, export_visual = arg_parse_params(PATHS)
-    main(paths, export_visual, nb_jobs)
+    paths, nb_workers, export_visual = arg_parse_params(PATHS)
+    main(paths, export_visual, nb_workers)

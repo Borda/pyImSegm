@@ -158,7 +158,7 @@ def main(params):
                                  path_classif=params['path_classif'],
                                  path_output=params['path_expt'])
     iterate = tl_expt.WrapExecuteSequence(_wrapper_detection, df_paths.iterrows(),
-                                          nb_jobs=params['nb_jobs'])
+                                          nb_workers=params['nb_workers'])
     for dict_center in iterate:
         df_stat = df_stat.append(dict_center, ignore_index=True)
         df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_TEMP))

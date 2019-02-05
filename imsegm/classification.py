@@ -40,7 +40,7 @@ TEMPLATE_NAME_CLF = 'classifier_{}.pkl'
 DEFAULT_CLASSIF_NAME = 'RandForest'
 DEFAULT_CLUSTERING = 'kMeans'
 # DEFAULT_MIN_NB_SPL = 25
-# NB_JOBS_CLASSIF_SEARCH = 5
+# nb_workers_CLASSIF_SEARCH = 5
 # NB_CLASSIF_SEARCH_ITER = 250
 NAME_CSV_FEATURES_SELECT = 'feature_selection.csv'
 NAME_CSV_CLASSIF_CV_SCORES = 'classif_{}_cross-val_scores-{}.csv'
@@ -61,10 +61,10 @@ DICT_SCORING = {
 }
 
 
-def create_classifiers(nb_jobs=-1):
+def create_classifiers(nb_workers=-1):
     """ create all classifiers with default parameters
 
-    :param nb_jobs: int, number of parallel if possible
+    :param nb_workers: int, number of parallel if possible
     :return: {str: clf}
 
     >>> classifs = create_classifiers()
@@ -82,7 +82,7 @@ def create_classifiers(nb_jobs=-1):
                                                       # oob_score=True,
                                                       min_samples_leaf=2,
                                                       min_samples_split=3,
-                                                      n_jobs=nb_jobs),
+                                                      n_jobs=nb_workers),
         'GradBoost': ensemble.GradientBoostingClassifier(subsample=0.25,
                                                          warm_start=False,
                                                          max_depth=6,
@@ -90,8 +90,8 @@ def create_classifiers(nb_jobs=-1):
                                                          n_estimators=200,
                                                          min_samples_split=7),
         'LogistRegr': linear_model.LogisticRegression(solver='sag',
-                                                      n_jobs=nb_jobs),
-        'KNN': neighbors.KNeighborsClassifier(n_jobs=nb_jobs),
+                                                      n_jobs=nb_workers),
+        'KNN': neighbors.KNeighborsClassifier(n_jobs=nb_workers),
         'SVM': svm.SVC(kernel='rbf', probability=True,
                        tol=2e-3, max_iter=5000),
         'DecTree': tree.DecisionTreeClassifier(),
@@ -408,7 +408,7 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
     return dict_stat
 
 
-def compute_stat_per_image(segms, annots, names=None, nb_jobs=2,
+def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
                            drop_labels=None, relabel=False):
     """ compute statistic over multiple segmentations with annotation
 
@@ -417,14 +417,14 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=2,
     :param [str] names: list of names
     :param [int] drop_labels: labels to be ignored
     :param bool relabel: whether relabel
-    :param int nb_jobs: running jobs in parallel
+    :param int nb_workers: running jobs in parallel
     :return DF:
 
 
     >>> np.random.seed(0)
     >>> img_true = np.random.randint(0, 3, (50, 100))
     >>> img_pred = np.random.randint(0, 2, (50, 100))
-    >>> df = compute_stat_per_image([img_true], [img_true], nb_jobs=2,
+    >>> df = compute_stat_per_image([img_true], [img_true], nb_workers=2,
     ...                             relabel=True)
     >>> df.iloc[0]  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ARS                                                         1
@@ -455,7 +455,7 @@ def compute_stat_per_image(segms, annots, names=None, nb_jobs=2,
                             drop_labels=drop_labels, relabel=relabel)
     iterate = tl_expt.WrapExecuteSequence(_compute_stat,
                                           zip(annots, segms, names),
-                                          nb_jobs=nb_jobs,
+                                          nb_workers=nb_workers,
                                           desc='statistic per image')
     list_stat = list(iterate)
     df_stat = pd.DataFrame(list_stat)
@@ -649,7 +649,7 @@ def relabel_sequential(labels, uq_labels=None):
 
 def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
                                        nb_search_iter=100, search_type='random',
-                                       eval_metric='f1', nb_jobs=NB_THREADS_SERACH,
+                                       eval_metric='f1', nb_workers=NB_THREADS_SERACH,
                                        path_out=None, params=None, pca_coef=0.98,
                                        feature_names=None, label_names=None):
     """ create classifier and train it once or find best parameters.
@@ -665,7 +665,7 @@ def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
     :param float pca_coef: sklearn PCA - int/float/None
     :param int nb_search_iter: number of searcher for hyper-parameters
     :param str path_out: path to directory for exporting classifier
-    :param int nb_jobs: parallel processes
+    :param int nb_workers: parallel processes
     :param [str] feature_names: list of extracted features - names
     :param [str] label_names: list of label names
     :return: (obj, str): classifier, path to the exported classifier
@@ -717,7 +717,7 @@ def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
                                            cross_val=cross_val,
                                            eval_metric=eval_metric,
                                            nb_iter=nb_search_iter,
-                                           nb_jobs=nb_jobs)
+                                           nb_workers=nb_workers)
 
         # NOTE, this is temporal just for purposes of computing statistic
         clf_search.fit(features, relabel_sequential(labels))
@@ -958,7 +958,7 @@ def search_params_cut_down_max_nb_iter(clf_parameters, nb_iter):
 
 def create_classif_search(name_clf, clf_pipeline, nb_labels,
                           search_type='random', cross_val=10,
-                          eval_metric='f1', nb_iter=250, nb_jobs=5):
+                          eval_metric='f1', nb_iter=250, nb_workers=5):
     """ create sklearn search depending on spec. random or grid
 
     :param int nb_labels: number of labels
@@ -968,7 +968,7 @@ def create_classif_search(name_clf, clf_pipeline, nb_labels,
     :param str name_clf: name of classif.
     :param obj clf_pipeline: object
     :param obj cross_val: obj specific CV for fix train-test
-    :param int nb_jobs: number jobs running in parallel
+    :param int nb_workers: number jobs running in parallel
     :return:
     """
     score_weight = 'weighted' if nb_labels > 2 else 'binary'
@@ -979,14 +979,14 @@ def create_classif_search(name_clf, clf_pipeline, nb_labels,
         logging.info('init Grid search...')
         clf_search = GridSearchCV(
             clf_pipeline, clf_parameters, scoring=scoring, cv=cross_val,
-            n_jobs=nb_jobs, verbose=1, refit=True)
+            n_jobs=nb_workers, verbose=1, refit=True)
     else:
         clf_parameters = create_clf_param_search_distrib(name_clf)
         nb_iter = search_params_cut_down_max_nb_iter(clf_parameters, nb_iter)
         logging.info('init Randomized search...')
         clf_search = RandomizedSearchCV(
             clf_pipeline, clf_parameters, scoring=scoring, cv=cross_val,
-            n_jobs=nb_jobs, n_iter=nb_iter, verbose=1, refit=True)
+            n_jobs=nb_workers, n_iter=nb_iter, verbose=1, refit=True)
     return clf_search
 
 

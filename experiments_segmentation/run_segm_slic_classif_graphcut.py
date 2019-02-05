@@ -245,7 +245,7 @@ def dataset_load_images_annot_compute_features(params,
     _wrapper_load_compute = partial(load_image_annot_compute_features_labels,
                                     params=params, show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_load_compute, df_paths.iterrows(),
-                                          nb_jobs=params['nb_jobs'],
+                                          nb_workers=params['nb_workers'],
                                           desc='extract training data')
     for name, img, annot, slic, features, labels, label_hist, feature_names in iterate:
         dict_images[name] = img
@@ -374,7 +374,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
 
 def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
                             name_csv='statistic___.csv', drop_labels=None,
-                            nb_jobs=1):
+                            nb_workers=1):
     """ evaluate the segmentation results according given annotation
 
     :param {str: ...} params:
@@ -382,7 +382,7 @@ def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
     :param {str: ndarray} dict_segm:
     :param {str: ndarray} dict_label_hist:
     :param str name_csv:
-    :param int nb_jobs:
+    :param int nb_workers:
     :return:
     """
     if dict_label_hist is not None:
@@ -393,7 +393,7 @@ def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
     list_annot = [dict_annot[n] for n in dict_annot]
     list_segm = [dict_segm[n] for n in dict_annot]
     df_stat = seg_clf.compute_stat_per_image(list_segm, list_annot,
-                                             [n for n in dict_annot], nb_jobs,
+                                             [n for n in dict_annot], nb_workers,
                                              drop_labels=drop_labels)
 
     path_csv = os.path.join(params['path_exp'], name_csv)
@@ -484,7 +484,7 @@ def perform_train_predictions(params, paths_img, classif,
                                path_out=path_out, path_visu=path_visu,
                                show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
-                                          nb_jobs=params['nb_jobs'],
+                                          nb_workers=params['nb_workers'],
                                           desc='image segm: prediction')
     for name, segm, segm_gc in iterate:
         dict_segms[name] = segm
@@ -519,7 +519,7 @@ def experiment_lpo(params, df_stat, dict_annot, idx_paths_img, path_classif,
                                path_out=path_out, path_visu=path_visu,
                                show_debug_imgs=show_debug_imgs)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, test_imgs_idx_path,
-                                          nb_jobs=params['nb_jobs'],
+                                          nb_workers=params['nb_workers'],
                                           desc='experiment LPO')
     for dict_seg, dict_seg_gc in iterate:
         dict_segms.update(dict_seg)
@@ -530,13 +530,13 @@ def experiment_lpo(params, df_stat, dict_annot, idx_paths_img, path_classif,
     df = eval_segment_with_annot(params, dict_annot, dict_segms, None,
                                  NAME_CSV_SEGM_STAT_RESULT_LPO % nb_holdout,
                                  params.get('drop_labels', None),
-                                 params['nb_jobs'])
+                                 params['nb_workers'])
     df_stat = df_stat.append(get_summary(df, 'segm (L-%i-O)' % nb_holdout),
                              ignore_index=True)
     df = eval_segment_with_annot(params, dict_annot, dict_segms_gc, None,
                                  NAME_CSV_SEGM_STAT_RESULT_LPO_GC % nb_holdout,
                                  params.get('drop_labels', None),
-                                 params['nb_jobs'])
+                                 params['nb_workers'])
     df_stat = df_stat.append(get_summary(df, 'segm GC (L-%i-O)' % nb_holdout),
                              ignore_index=True)
     path_csv_stat = os.path.join(params['path_exp'], NAME_CSV_SEGM_STAT_RESULTS)
@@ -568,7 +568,7 @@ def load_train_classifier(params, features, labels, feature_names, sizes,
             feature_names=feature_names, pca_coef=params['pca_coef'],
             eval_metric=params.get('classif_metric', 'f1'),
             nb_search_iter=params.get('nb_classif_search', 1),
-            nb_jobs=params['nb_jobs'], path_out=params['path_exp'])
+            nb_workers=params['nb_workers'], path_out=params['path_exp'])
     params['path_classif'] = path_classif
     cv = seg_clf.CrossValidateGroups(sizes, nb_hold_out=nb_holdout)
     seg_clf.eval_classif_cross_val_scores(params['classif'], classif,
@@ -602,12 +602,12 @@ def wrapper_filter_labels(name_img_labels_slic_label_hist, label_purity,
 
 def filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
                              label_purity, dict_slics, drop_labels=None,
-                             path_visu=None, nb_jobs=NB_THREADS):
+                             path_visu=None, nb_workers=NB_THREADS):
     _w_filter = partial(wrapper_filter_labels, label_purity=label_purity,
                         drop_labels=drop_labels, path_visu=path_visu)
     iter_vals = ((n, dict_imgs[n], dict_labels[n], dict_slics[n],
                   dict_label_hist[n]) for n in dict_labels)
-    iterate = tl_expt.WrapExecuteSequence(_w_filter, iter_vals, nb_jobs=nb_jobs,
+    iterate = tl_expt.WrapExecuteSequence(_w_filter, iter_vals, nb_workers=nb_workers,
                                           desc='filter labels (purity)')
     for n, lbs in iterate:
         dict_labels[n] = lbs
@@ -659,7 +659,7 @@ def main_train(params):
     df = eval_segment_with_annot(params, dict_annot, dict_annot_slic,
                                  dict_label_hist, NAME_CSV_SEGM_STAT_SLIC_ANNOT,
                                  params.get('drop_labels', None),
-                                 params['nb_jobs'])
+                                 params['nb_workers'])
     df_stat = df_stat.append(get_summary(df, 'SLIC-annot'), ignore_index=True)
     path_csv_stat = os.path.join(params['path_exp'], NAME_CSV_SEGM_STAT_RESULTS)
     df_stat.set_index(['name']).to_csv(path_csv_stat)
@@ -678,7 +678,7 @@ def main_train(params):
                                            params['label_purity'], dict_slics,
                                            drop_labels=params.get('drop_labels', None),
                                            path_visu=path_purity_visu,
-                                           nb_jobs=params['nb_jobs'])
+                                           nb_workers=params['nb_workers'])
 
     logging.info('prepare features...')
     # concentrate features, labels
@@ -797,7 +797,7 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='SEGMENT___',
                                show_debug_imgs=show_debug_imgs)
     list_img_path = list(zip([None] * len(paths_img), paths_img))
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, list_img_path,
-                                          nb_jobs=params['nb_jobs'],
+                                          nb_workers=params['nb_workers'],
                                           desc='segmenting images')
     for _ in iterate:
         gc.collect()

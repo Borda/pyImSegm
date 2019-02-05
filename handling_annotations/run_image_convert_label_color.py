@@ -45,7 +45,7 @@ def parse_arg_params():
                         help='path to output dir', default=PATH_OUTPUT)
     parser.add_argument('-clrs', '--path_colors', type=str, required=False,
                         help='json with colour-label dict', default=None)
-    parser.add_argument('--nb_jobs', type=int, required=False,
+    parser.add_argument('--nb_workers', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = vars(parser.parse_args())
     for n in ['path_images', 'path_out']:
@@ -124,13 +124,13 @@ def perform_img_convert(path_img, path_out, dict_colors):
     # plt.show()
 
 
-def convert_folder_images(path_images, path_out, path_json=None, nb_jobs=1):
+def convert_folder_images(path_images, path_out, path_json=None, nb_workers=1):
     """ perform single or multi thread image quantisation
 
     :param [str] path_images: list of input images
     :param str path_out: output directory
     :param str path_json: path to json file
-    :param int int nb_jobs:
+    :param int int nb_workers:
     """
     assert os.path.isdir(os.path.dirname(path_images)), \
         'input folder does not exist'
@@ -146,7 +146,7 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_jobs=1):
     _wrapper_img_convert = partial(perform_img_convert, path_out=path_out,
                                    dict_colors=dict_colors)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_img_convert, path_imgs,
-                                          nb_jobs=nb_jobs,
+                                          nb_workers=nb_workers,
                                           desc='convert images')
     list(iterate)
 
@@ -161,7 +161,7 @@ def main(params):
         os.mkdir(params['path_out'])
 
     convert_folder_images(params['path_images'], params['path_out'],
-                          params['path_colors'], params['nb_jobs'])
+                          params['path_colors'], params['nb_workers'])
 
     logging.info('DONE')
 

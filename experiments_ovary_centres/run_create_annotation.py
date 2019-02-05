@@ -151,12 +151,12 @@ def create_annot_centers(path_img, path_out_seg, path_out_csv):
     df_center.to_csv(os.path.join(path_out_csv, name.replace('.png', '.csv')))
 
 
-def main(path_segs, path_out, nb_jobs):
+def main(path_segs, path_out, nb_workers):
     """ the main for creating annotations
 
     :param str path_segs: path with image pattern of images - obj segmentation
     :param str path_out:
-    :param int nb_jobs: number of processes in parallel
+    :param int nb_workers: number of processes in parallel
     """
     assert os.path.dirname(path_segs) != path_out, \
         'the output dir has to be different then the input object segmentation'
@@ -172,7 +172,7 @@ def main(path_segs, path_out, nb_jobs):
                                             path_out_seg=path_out,
                                             path_out_csv=path_out)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_create_annot_centers,
-                                          list_imgs, nb_jobs=nb_jobs,
+                                          list_imgs, nb_workers=nb_workers,
                                           desc='annotating images')
     list(iterate)
 
@@ -183,6 +183,6 @@ if __name__ == '__main__':
 
     params = run_train.arg_parse_params(PARAMS)
     path_out = os.path.join(params['path_output'], NAME_DIR)
-    main(params['path_segms'], path_out, params['nb_jobs'])
+    main(params['path_segms'], path_out, params['nb_workers'])
 
     logging.info('DONE')

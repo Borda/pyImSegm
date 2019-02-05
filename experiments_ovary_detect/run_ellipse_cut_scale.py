@@ -97,7 +97,7 @@ def perform_stage(df_group, stage, path_images, path_out):
                               path_out=path_out_stage, norm_size=norm_size)
     desc = 'stage %i - size %s' % (stage, norm_size)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_object, df_group.iterrows(),
-                                          nb_jobs=params['nb_jobs'],
+                                          nb_workers=params['nb_workers'],
                                           desc=desc)
     list(iterate)
 

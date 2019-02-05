@@ -53,7 +53,7 @@ def arg_parse_params(dict_paths):
                         help='mask by the segmentation', default=1)
     parser.add_argument('-bg', '--background', type=int, required=False,
                         help='using background color', default=None, nargs='+')
-    parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %r', args)
@@ -91,12 +91,12 @@ def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
 
 
 def main(dict_paths, padding=0, use_mask=False, bg_color=None,
-         nb_jobs=NB_THREADS):
+         nb_workers=NB_THREADS):
     """ the main executable
 
     :param dict_paths:
     :param int padding:
-    :param int nb_jobs:
+    :param int nb_workers:
     """
     if not os.path.isdir(dict_paths['output']):
         assert os.path.isdir(os.path.dirname(dict_paths['output'])), \
@@ -112,7 +112,7 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
                                padding=padding, use_mask=use_mask, bg_color=bg_color)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_cutting,
                                           (row for idx, row in df_paths.iterrows()),
-                                          nb_jobs=nb_jobs)
+                                          nb_workers=nb_workers)
     list(iterate)
 
 
@@ -122,6 +122,6 @@ if __name__ == '__main__':
 
     dict_paths, args = arg_parse_params(PATHS)
     main(dict_paths, args['padding'], args['mask'],
-         args['background'], args['nb_jobs'])
+         args['background'], args['nb_workers'])
 
     logging.info('DONE')

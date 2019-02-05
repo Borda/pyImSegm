@@ -183,14 +183,14 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
     return dict_stat
 
 
-def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
+def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_workers=1):
     """ evaluate center detection for particular list of stages
 
     :param df_paths:
     :param [int] stage:
     :param str path_info:
     :param str path_out:
-    :param int nb_jobs:
+    :param int nb_workers:
     :return DF:
     """
     logging.info('evaluate stages: %r', stage)
@@ -226,7 +226,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_jobs=1):
                                  col_prefix=stage_prefix)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_detection,
                                           df_paths.iterrows(),
-                                          nb_jobs=nb_jobs)
+                                          nb_workers=nb_workers)
     for dict_eval in iterate:
         df_eval = df_eval.append(dict_eval, ignore_index=True)
         df_eval.to_csv(os.path.join(path_out, NAME_CSV_TRIPLES_TEMP))
@@ -256,7 +256,7 @@ def main(params):
         df_eval = evaluate_detection_stage(df_eval, stage,
                                            params['path_infofile'],
                                            params['path_expt'],
-                                           params['nb_jobs'])
+                                           params['nb_workers'])
         if not df_eval.empty and 'image' in df_eval.columns:
             df_eval.set_index('image', inplace=True)
         df_eval.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_STAT))

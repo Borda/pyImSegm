@@ -318,10 +318,10 @@ class WrapExecuteSequence:
     """ wrapper for execution paralle of single thread as for...
 
     >>> it = WrapExecuteSequence(lambda x: (x, x ** 2), range(5),
-    ...                          nb_jobs=1, ordered=True)
+    ...                          nb_workers=1, ordered=True)
     >>> list(it)
     [(0, 0), (1, 1), (2, 4), (3, 9), (4, 16)]
-    >>> it = WrapExecuteSequence(sum, [[0, 1]] * 5, nb_jobs=2, desc=None)
+    >>> it = WrapExecuteSequence(sum, [[0, 1]] * 5, nb_workers=2, desc=None)
     >>> [o for o in it]
     [1, 1, 1, 1, 1]
     >>> it = WrapExecuteSequence(min, ([0, 1] for i in range(5)))
@@ -329,20 +329,20 @@ class WrapExecuteSequence:
     [0, 0, 0, 0, 0]
     """
 
-    def __init__(self, wrap_func, iterate_vals, nb_jobs=NB_THREADS, desc='',
+    def __init__(self, wrap_func, iterate_vals, nb_workers=NB_THREADS, desc='',
                  ordered=False):
         """ the init of this wrapper fro parallelism
 
         :param wrap_func: function which will be excited in the iterations
         :param [] iterate_vals: list or iterator which will ide in iterations
-        :param int nb_jobs: number og jobs running in parallel
+        :param int nb_workers: number og jobs running in parallel
         :param str desc: deception for the bar,
             if it is set None, bar is suppressed
         :param bool ordered: whether enforce ordering in the parallelism
         """
         self.wrap_func = wrap_func
         self.iterate_vals = list(iterate_vals)
-        self.nb_jobs = nb_jobs
+        self.nb_workers = nb_workers
         self.desc = desc
         self.ordered = ordered
 
@@ -352,9 +352,9 @@ class WrapExecuteSequence:
         else:
             tqdm_bar = None
 
-        if self.nb_jobs > 1:
-            logging.debug('perform parallel in %i threads', self.nb_jobs)
-            pool = mproc.Pool(self.nb_jobs)
+        if self.nb_workers > 1:
+            logging.debug('perform parallel in %i threads', self.nb_workers)
+            pool = mproc.Pool(self.nb_workers)
 
             pooling = pool.imap if self.ordered else pool.imap_unordered
 
@@ -375,12 +375,12 @@ class WrapExecuteSequence:
 
 
 # def wrap_execute_parallel(wrap_func, iterate_vals,
-#                           nb_jobs=NB_THREADS, desc=''):
+#                           nb_workers=NB_THREADS, desc=''):
 #     """ wrapper for execution paralle of single thread as for...
 #
 #     :param func wrap_func:
 #     :param [] iterate_vals:
-#     :param int nb_jobs:
+#     :param int nb_workers:
 #     :return:
 #
 #     >>> [o for o in wrap_execute_parallel(lambda x: x ** 2, range(5), 1)]
@@ -389,9 +389,9 @@ class WrapExecuteSequence:
 #     [1, 1, 1, 1, 1]
 #     """
 #     tqdm_bar = tqdm.tqdm(total=len(iterate_vals), desc=desc)
-#     if nb_jobs > 1:
-#         logging.debug('perform_sequence in %i threads', nb_jobs)
-#         pool = mproc.Pool(nb_jobs)
+#     if nb_workers > 1:
+#         logging.debug('perform_sequence in %i threads', nb_workers)
+#         pool = mproc.Pool(nb_workers)
 #         for out in pool.imap_unordered(wrap_func, iterate_vals):
 #             yield out
 #             tqdm_bar.update()

@@ -61,7 +61,7 @@ jobs:
 
   Py3:
       docker:
-        - image: circleci/python:3.5
+        - image: circleci/python:3.6
       steps: *steps
 
 workflows:

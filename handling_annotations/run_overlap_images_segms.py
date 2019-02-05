@@ -59,7 +59,7 @@ def parse_arg_params():
                         help='path to the output')
     parser.add_argument('--overlap', type=float, required=False,
                         help='alpha for segmentation', default=0.)
-    parser.add_argument('--nb_jobs', type=int, required=False,
+    parser.add_argument('--nb_workers', type=int, required=False,
                         help='number of jobs in parallel', default=NB_THREADS)
     args = parser.parse_args()
     paths = dict(zip(['images', 'segms', 'output'],
@@ -131,7 +131,7 @@ def perform_visu_overlap(path_img, paths, segm_alpha=MIDDLE_ALPHA_OVERLAP):
     return True
 
 
-def main(paths, nb_jobs=NB_THREADS, segm_alpha=MIDDLE_ALPHA_OVERLAP):
+def main(paths, nb_workers=NB_THREADS, segm_alpha=MIDDLE_ALPHA_OVERLAP):
     logging.info('running...')
     assert paths['segms'] != paths['output'], 'overwriting segmentation dir'
     assert os.path.basename(paths['images']) != paths['output'], \
@@ -151,7 +151,7 @@ def main(paths, nb_jobs=NB_THREADS, segm_alpha=MIDDLE_ALPHA_OVERLAP):
 
     created = []
     iterate = tl_expt.WrapExecuteSequence(_warped_overlap, paths_imgs,
-                                          nb_jobs=nb_jobs, desc='overlapping')
+                                          nb_workers=nb_workers, desc='overlapping')
     for r in iterate:
         created.append(r)
 
@@ -162,4 +162,4 @@ def main(paths, nb_jobs=NB_THREADS, segm_alpha=MIDDLE_ALPHA_OVERLAP):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     paths, args = parse_arg_params()
-    main(paths, args.nb_jobs, args.overlap)
+    main(paths, args.nb_workers, args.overlap)

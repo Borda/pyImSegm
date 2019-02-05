@@ -77,7 +77,7 @@ def arg_parse_params(params):
                         default=0.25, help='superpixel regularization')
     parser.add_argument('--slico', action='store_true', required=False,
                         default=False, help='using SLICO (ASLIC)')
-    parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     params = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %r', params)
@@ -138,7 +138,7 @@ def main(params):
     _wrapper_eval = partial(compute_boundary_distance, params=params,
                             path_out=params['path_out'])
     iterate = tl_expt.WrapExecuteSequence(_wrapper_eval, df_paths.iterrows(),
-                                          nb_jobs=params['nb_jobs'],
+                                          nb_workers=params['nb_workers'],
                                           desc='evaluate SLIC')
     for name, dist in iterate:
         df_dist = df_dist.append({'name': name, 'mean boundary distance': dist},

@@ -7,7 +7,7 @@ Require installation of Morph. Snakes - https://github.com/Borda/morph-snakes
 SAMPLE run:
 >> python run_ovary_egg-segmentation.py \
     -list data_images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
-    -out results -n ovary_slices --nb_jobs 1 \
+    -out results -n ovary_slices --nb_workers 1 \
     -m ellipse_moments \
        ellipse_ransac_mmt \
        ellipse_ransac_crit \
@@ -141,7 +141,7 @@ def arg_parse_params(params):
                         help='name of the experiment', default='ovary')
     parser.add_argument('-cfg', '--path_config', type=str, required=False,
                         help='path to the configuration', default=None)
-    parser.add_argument('--nb_jobs', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
                         help='number of processes in parallel')
     parser.add_argument('-m', '--methods', type=str, required=False, nargs='+',
                         help='list of segment. methods', default=None)
@@ -799,7 +799,7 @@ def main(params, debug_export=DEBUG_EXPORT):
 
     _wrapper_segment = partial(image_segmentation, params=params)
     iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, df_paths.iterrows(),
-                                          nb_jobs=params['nb_jobs'])
+                                          nb_workers=params['nb_workers'])
     list(iterate)
 
 
