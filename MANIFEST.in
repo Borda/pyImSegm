@@ -47,6 +47,7 @@ include data_images/others/lena.png
     data_images/langerhans_islets/image/gtExoIsl_21.jpg
 
 prune .git
+prune .github
 prune libs
 prune venv
 prune build

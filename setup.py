@@ -58,26 +58,27 @@ install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
 setup(
     name='ImSegm',
-    version='0.1.4',
+    version='0.1.5',
     url='https://borda.github.io/pyImSegm',
 
     author='Jiri Borovec',
     author_email='jiri.borovec@fel.cvut.cz',
     license='BSD 3-clause',
-    description='superpixel image segmentation: '
-                '(un)supervised, center detection, region growing',
+    description='superpixel image segmentation:'
+                ' (un)supervised, center detection, region growing',
 
-    packages=find_packages(exclude=['docs', 'notebooks',
-                                    'handling_annotations',
-                                    'experiments_*']),
+    packages=find_packages(
+        exclude=['docs', 'notebooks', 'handling_annotations', 'experiments_*']),
     cmdclass={'build_ext': BuildExt},
-    ext_modules=[Extension('imsegm.features_cython',
-                           language='c++',
-                           sources=['imsegm/features_cython.pyx'],
-                           extra_compile_args=['-O3', '-ffast-math',
-                                               '-march=native'],
-                           # extra_link_args=['-fopenmp'],
-                           )],
+    ext_modules=[
+        Extension('imsegm.features_cython',
+                  language='c++',
+                  sources=['imsegm/features_cython.pyx'],
+                  extra_compile_args=['-O3', '-ffast-math', '-march=native'],
+                  # extra_link_args=['-fopenmp'],
+                  )
+    ],
+
     setup_requires=setup_reqs,
     install_requires=install_reqs,
     # include_dirs = [np.get_include()],
@@ -96,8 +97,11 @@ setup(
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering :: Image Segmentation",
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 )

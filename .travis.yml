@@ -21,7 +21,7 @@ python:
   # - 3.4  # will be deprecated for pandas
   - 3.5
   - 3.6
-  # - "3.7-dev"
+  - 3.7
 
 # See http://docs.travis-ci.com/user/caching/#pip-cache
 cache: pip

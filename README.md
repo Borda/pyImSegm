@@ -3,11 +3,16 @@
 [![Build Status](https://travis-ci.org/Borda/pyImSegm.svg?branch=master)](https://travis-ci.org/Borda/pyImSegm)
 [![codecov](https://codecov.io/gh/Borda/pyImSegm/branch/master/graph/badge.svg?token=BCvf6F5sFP)](https://codecov.io/gh/Borda/pyImSegm)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/48b7976bbe9d42bc8452f6f9e573ee70)](https://www.codacy.com/app/Borda/pyImSegm?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Borda/pyImSegm&amp;utm_campaign=Badge_Grade)
+[![CircleCI](https://circleci.com/gh/Borda/pyImSegm.svg?style=svg&circle-token=a30180a28ae7e490c0c0829d1549fcec9a5c59d0)](https://circleci.com/gh/Borda/pyImSegm)
 [![Run Status](https://api.shippable.com/projects/5962ea48a125960700c197f8/badge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
 [![Coverage Badge](https://api.shippable.com/projects/5962ea48a125960700c197f8/coverageBadge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
-[![CircleCI](https://circleci.com/gh/Borda/pyImSegm.svg?style=svg&circle-token=a30180a28ae7e490c0c0829d1549fcec9a5c59d0)](https://circleci.com/gh/Borda/pyImSegm)
 [![CodeFactor](https://www.codefactor.io/repository/github/borda/pyimsegm/badge)](https://www.codefactor.io/repository/github/borda/pyimsegm)
+[![Gitter](https://badges.gitter.im/pyImSegm/community.svg)](https://gitter.im/pyImSegm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+<!--
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Borda/pyImSegm/master?filepath=notebooks)
+-->
 
+---
 
 ## Superpixel segmentation with GraphCut regularisation
 
@@ -25,7 +30,7 @@ Image segmentation is widely used as an initial phase of many image processing t
 ![input image](figures/insitu7545.jpg)
 ![segmentation](figures/insitu7545_gc.png)
 
-Borovec J., Svihlik J., Kybic J., Habart D. (2017). **Supervised and unsupervised segmentation using superpixels, model estimation, and Graph Cut.** In: Journal of Electronic Imaging.
+Reference: _Borovec J., Svihlik J., Kybic J., Habart D. (2017). **Supervised and unsupervised segmentation using superpixels, model estimation, and Graph Cut.** In: Journal of Electronic Imaging._
 
 
 ## Object centre detection and Ellipse approximation
@@ -41,7 +46,7 @@ An image processing pipeline to detect and localize Drosophila egg chambers that
 ![estimated centres](figures/insitu7545_center_clusters.jpg)
 ![ellipse fitting](figures/insitu7545_ellipse_fit.png)
 
-Borovec J., Kybic J., Nava R. (2017) **Detection and Localization of Drosophila Egg Chambers in Microscopy Images.** In: Machine Learning in Medical Imaging.
+Reference: _Borovec J., Kybic J., Nava R. (2017) **Detection and Localization of Drosophila Egg Chambers in Microscopy Images.** In: Machine Learning in Medical Imaging._
 
 ## Superpixel Region Growing with Shape prior
 
@@ -57,7 +62,7 @@ Region growing is a classical image segmentation method based on hierarchical re
 ![growing RG](figures/insitu7545_RG2SP_animation.gif)
 ![ellipse fitting](figures/insitu7545_RG2SP-gc-mm.png)
 
-Borovec J., Kybic J., Sugimoto, A. (2017). **Region growing using superpixels with learned shape prior.** In: Journal of Electronic Imaging.
+Reference: _Borovec J., Kybic J., Sugimoto, A. (2017). **Region growing using superpixels with learned shape prior.** In: Journal of Electronic Imaging._
 
 ---
 
@@ -109,14 +114,13 @@ python setup.py install
 
 ---
 
-
 ## Experiments
 
 Short description of our three sets of experiments that together compose single image processing pipeline in this order:
 
-1. **Structure segmentation**
-1. **Center detection (and ellipse fitting)**
-1. **Region growing with a shape prior**
+1. **Semantic (un/semi)supervised segmentation**
+1. **Center detection and ellipse fitting**
+1. **Region growing with the learned shape prior**
 
 
 ### Annotation tools
@@ -142,7 +146,7 @@ We introduce some useful tools for work with image annotation and segmentation.
         -segs ./data_images/drosophila_ovary_slice/segm \
         -out ./results/overlap_ovary_segment
     ```
-* **Inpainting** selected labels in segmentation.
+* **In-painting** selected labels in segmentation.
     ```bash
     python handling_annotations/run_segm_annot_inpaint.py \
         -imgs "./data_images/drosophila_ovary_slice/segm/*.png" \
@@ -156,7 +160,7 @@ We introduce some useful tools for work with image annotation and segmentation.
     ```
 
 
-### Structure segmentation
+### Semantic (un/semi)supervised segmentation
 
 We utilize (un)supervised segmentation according to given training examples or some expectations.
 ![vusial debug](figures/visual_img_43_debug.jpg)
@@ -169,7 +173,7 @@ We utilize (un)supervised segmentation according to given training examples or s
         --img_type 2d_split \
         --slic_size 20 --slic_regul 0.25 --slico
     ```
-* Perform **Unsupervised** segmentation in images given in CSV
+* Perform **Un-Supervised** segmentation in images given in CSV
     ```bash
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -l ./data_images/langerhans_islets/list_lang-isl_imgs-annot.csv -i "" \
@@ -193,6 +197,7 @@ We utilize (un)supervised segmentation according to given training examples or s
         -o ./results -n Ovary --img_type 2d_split --visual --nb_workers 2
     ```
     ![supervised](figures/imag-disk-20_train.jpg)
+* Perform **Semi-Supervised** is using the the supervised pipeline with not fully annotated images.
 * For both experiment you can evaluate segmentation results.
     ```bash
     python experiments_segmentation/run_compute-stat_annot-segm.py \
@@ -331,7 +336,6 @@ pip install --user git+https://github.com/Borda/morph-snakes.git
     ![user-annnot](figures/insitu7545_user-annot-segm.jpg)
 
 ---
-
 
 ## References
 
