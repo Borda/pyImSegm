@@ -16,6 +16,7 @@ jobs:
               sudo pip install nose coverage pytest pytest-cov flake8
               sudo pip install -U backports.functools_lru_cache  # required for matplotlib @py2
               pip install -r requirements.txt --user
+              pip list
 
         # BUILDING
         - run:

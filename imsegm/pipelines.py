@@ -12,17 +12,21 @@ import numpy as np
 import skimage.color as sk_color
 # from sklearn import mixture
 
-import imsegm.utilities.experiments as tl_expt
-import imsegm.graph_cuts as seg_gc
-import imsegm.superpixels as seg_sp
-import imsegm.descriptors as seg_fts
-import imsegm.labeling as seg_lbs
-import imsegm.classification as seg_clf
+from imsegm.utilities.experiments import WrapExecuteSequence
+from imsegm.graph_cuts import segment_graph_cut_general, estim_class_model
+from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
+from imsegm.descriptors import (
+    FEATURES_SET_COLOR, norm_features, compute_selected_features_img2d,
+    compute_selected_features_gray3d)
+from imsegm.labeling import histogram_regions_labels_norm
+from imsegm.classification import (
+    DEFAULT_CLASSIF_NAME, DEFAULT_CLUSTERING, convert_set_features_labels_2_dataset,
+    CrossValidateGroups, create_classif_search_train_export)
 
 CLASSIF_PARAMS = {'method': 'kNN', 'nb': 10}
-FTS_SET_SIMPLE = seg_fts.FEATURES_SET_COLOR
-CLASSIF_NAME = seg_clf.DEFAULT_CLASSIF_NAME
-CLUSTER_METHOD = seg_clf.DEFAULT_CLUSTERING
+FTS_SET_SIMPLE = FEATURES_SET_COLOR
+CLASSIF_NAME = DEFAULT_CLASSIF_NAME
+CLUSTER_METHOD = DEFAULT_CLUSTERING
 CROSS_VAL_LEAVE_OUT = 2
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.6))
 
@@ -72,8 +76,8 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
         debug_visual['slic'] = slic
         debug_visual['slic_mean'] = sk_color.label2rgb(slic, image, kind='avg')
 
-    model = seg_gc.estim_class_model(features, nb_classes, estim_model,
-                                     pca_coef, use_scaler)
+    model = estim_class_model(features, nb_classes, estim_model,
+                              pca_coef, use_scaler)
     proba = model.predict_proba(features)
     logging.debug('list of probabilities: %r', proba.shape)
 
@@ -84,10 +88,9 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
 
     segm_soft = proba[slic]
 
-    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
-                                                    features, gc_regul,
-                                                    gc_edge_type,
-                                                    debug_visual=debug_visual)
+    graph_labels = segment_graph_cut_general(slic, proba, image, features,
+                                             gc_regul, gc_edge_type,
+                                             debug_visual=debug_visual)
     segm = graph_labels[slic]
     return segm, segm_soft
 
@@ -114,9 +117,9 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     _wrapper_compute = partial(compute_color2d_superpixels_features,
                                sp_size=sp_size, sp_regul=sp_regul,
                                dict_features=dict_features)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_images,
-                                          desc='compute SLIC & features',
-                                          nb_workers=nb_workers)
+    iterate = WrapExecuteSequence(_wrapper_compute, list_images,
+                                  desc='compute SLIC & features',
+                                  nb_workers=nb_workers)
     for slic, features in iterate:
         list_slic.append(slic)
         list_features.append(features)
@@ -124,8 +127,7 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     features = np.concatenate(tuple(list_features), axis=0)
     features = np.nan_to_num(features)
 
-    model = seg_gc.estim_class_model(features, nb_classes, model_type,
-                                     pca_coef, use_scaler)
+    model = estim_class_model(features, nb_classes, model_type, pca_coef, use_scaler)
 
     return model, list_features
 
@@ -151,6 +153,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     :return [[int]]: segmentation matrix mapping each pixel into a class
 
     UnSupervised:
+    >>> import imsegm.descriptors as seg_fts
     >>> np.random.seed(0)
     >>> seg_fts.USE_CYTHON = False
     >>> image = np.random.random((125, 150, 3)) / 2.
@@ -164,6 +167,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     (125, 150, 2)
 
     Supervised:
+    >>> import imsegm.descriptors as seg_fts
     >>> np.random.seed(0)
     >>> seg_fts.USE_CYTHON = False
     >>> image = np.random.random((125, 150, 3)) / 2.
@@ -201,9 +205,9 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
 
     segm_soft = proba[slic]
 
-    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image, features,
-                                                    gc_regul, gc_edge_type,
-                                                    debug_visual=debug_visual)
+    graph_labels = segment_graph_cut_general(slic, proba, image, features,
+                                             gc_regul, gc_edge_type,
+                                             debug_visual=debug_visual)
     # relabel according classif classes
     if hasattr(model_pipeline, 'classes_'):
         graph_labels = model_pipeline.classes_[graph_labels]
@@ -224,13 +228,11 @@ def compute_color2d_superpixels_features(image, dict_features,
     """
     assert sp_regul > 0., 'slic. regularisation must be positive'
     logging.debug('run Superpixel clustering.')
-    slic = seg_sp.segment_slic_img2d(image, sp_size=sp_size,
-                                     relative_compact=sp_regul)
+    slic = segment_slic_img2d(image, sp_size=sp_size, relative_compact=sp_regul)
     # plt.figure(), plt.imshow(slic)
 
     logging.debug('extract slic/superpixels features.')
-    features, _ = seg_fts.compute_selected_features_img2d(image, slic,
-                                                          dict_features)
+    features, _ = compute_selected_features_img2d(image, slic, dict_features)
     logging.debug('list of features RAW: %r', features.shape)
     features[np.isnan(features)] = 0
 
@@ -256,7 +258,7 @@ def wrapper_compute_color2d_slic_features_labels(img_annot,
     if neg_label is not None:
         annot[annot < 0] = neg_label
 
-    label_hist = seg_lbs.histogram_regions_labels_norm(slic, annot)
+    label_hist = histogram_regions_labels_norm(slic, annot)
     labels = np.argmax(label_hist, axis=1)
     purity = np.max(label_hist, axis=1)
 
@@ -302,9 +304,9 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
                                dict_features=dict_features,
                                label_purity=label_purity)
     list_imgs_annot = zip(list_images, list_annots)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_compute, list_imgs_annot,
-                                          desc='compute SLIC & features & labels',
-                                          nb_workers=nb_workers)
+    iterate = WrapExecuteSequence(_wrapper_compute, list_imgs_annot,
+                                  desc='compute SLIC & features & labels',
+                                  nb_workers=nb_workers)
     for slic, fts, lbs in iterate:
         list_slic.append(slic)
         list_features.append(fts)
@@ -312,7 +314,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
 
     logging.debug('concentrate features...')
     # concentrate features, labels
-    features, labels, sizes = seg_clf.convert_set_features_labels_2_dataset(
+    features, labels, sizes = convert_set_features_labels_2_dataset(
         dict(zip(range(len(list_features)), list_features)),
         dict(zip(range(len(list_labels)), list_labels)),
         balance_type=feature_balance, drop_labels=[-1])
@@ -324,12 +326,12 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
     # clf_pipeline.fit(np.array(features), np.array(labels, dtype=int))
 
     if len(sizes) > (nb_hold_out * 5):
-        cv = seg_clf.CrossValidateGroups(sizes, nb_hold_out=nb_hold_out)
+        cv = CrossValidateGroups(sizes, nb_hold_out=nb_hold_out)
     # for small nuber of training images this does not make sence
     else:
         cv = 10
 
-    classif, _ = seg_clf.create_classif_search_train_export(
+    classif, _ = create_classif_search_train_export(
         clf_name, features, labels, pca_coef=pca_coef, cross_val=cv,
         nb_search_iter=nb_classif_search, nb_workers=nb_workers)
 
@@ -360,28 +362,26 @@ def pipe_gray3d_slic_features_model_graphcut(image, nb_classes, dict_features,
     (5, 125, 150)
     """
     logging.info('PIPELINE Superpixels-Features-GraphCut')
-    slic = seg_sp.segment_slic_img3d_gray(image, sp_size=sp_size,
-                                          relative_compact=sp_regul, space=spacing)
+    slic = segment_slic_img3d_gray(image, sp_size=sp_size,
+                                   relative_compact=sp_regul, space=spacing)
     # plt.imshow(segments)
     logging.info('extract segments/superpixels features.')
     # f = features.computeColourMean(image, segments)
-    features, _ = seg_fts.compute_selected_features_gray3d(image, slic,
-                                                           dict_features)
+    features, _ = compute_selected_features_gray3d(image, slic, dict_features)
     # merge features together
     logging.debug('list of features RAW: %r', features.shape)
     features[np.isnan(features)] = 0
 
     logging.info('norm all features.')
-    features, _ = seg_fts.norm_features(features)
+    features, _ = norm_features(features)
     logging.debug('list of features NORM: %r', features.shape)
 
-    model = seg_gc.estim_class_model(features, nb_classes)
+    model = estim_class_model(features, nb_classes)
     proba = model.predict_proba(features)
     logging.debug('list of probabilities: %r', proba.shape)
 
     # resultGraph = graphCut.segment_graph_cut_int_vals(segments, prob, gcReg)
-    graph_labels = seg_gc.segment_graph_cut_general(slic, proba, image,
-                                                    features, gc_regul)
+    graph_labels = segment_graph_cut_general(slic, proba, image, features, gc_regul)
 
     return graph_labels[slic]
 

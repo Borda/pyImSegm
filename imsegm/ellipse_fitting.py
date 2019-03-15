@@ -10,9 +10,11 @@ from skimage import morphology
 
 from skimage.measure import fit as sk_fit
 # from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
-import imsegm.utilities.drawing as tl_visu
-import imsegm.descriptors as seg_fts
-import imsegm.superpixels as seg_spx
+from imsegm.utilities.drawing import ellipse
+from imsegm.descriptors import (reduce_close_points, compute_ray_features_segm_2d,
+                                reconstruct_ray_features_2d)
+from imsegm.superpixels import (segment_slic_img2d, superpixel_centers,
+                                make_graph_segm_connect_grid2d_conn4)
 
 INIT_MASK_BORDER = 50.
 MIN_ELLIPSE_DAIM = 25.
@@ -44,8 +46,9 @@ class EllipseModelSegm(sk_fit.EllipseModel):
 
     Example
     -------
+    >>> from imsegm.utilities.drawing import ellipse_perimeter
     >>> params = 20, 30, 12, 16, np.deg2rad(30)
-    >>> rr, cc = tl_visu.ellipse_perimeter(*params)
+    >>> rr, cc = ellipse_perimeter(*params)
     >>> xy = np.array([rr, cc]).T
     >>> ellipse = EllipseModelSegm()
     >>> ellipse.estimate(xy)
@@ -268,9 +271,9 @@ def get_slic_points_labels(segm, img=None, slic_size=20, slic_regul=0.1):
     """
     if not img:
         img = segm / float(segm.max())
-    slic = seg_spx.segment_slic_img2d(img, sp_size=slic_size,
-                                      relative_compact=slic_regul)
-    slic_centers = np.array(seg_spx.superpixel_centers(slic)).astype(int)
+    slic = segment_slic_img2d(img, sp_size=slic_size,
+                              relative_compact=slic_regul)
+    slic_centers = np.array(superpixel_centers(slic)).astype(int)
     labels = segm[slic_centers[:, 0], slic_centers[:, 1]]
     return slic, slic_centers, labels
 
@@ -326,8 +329,7 @@ def add_overlap_ellipse(segm, ellipse_params, label, thr_overlap=1.):
         return segm
     mask = np.zeros(segm.shape)
     c1, c2, h, w, phi = ellipse_params
-    rr, cc = tl_visu.ellipse(int(c1), int(c2), int(h), int(w), orientation=phi,
-                             shape=segm.shape)
+    rr, cc = ellipse(int(c1), int(c2), int(h), int(w), orientation=phi, shape=segm.shape)
     mask[rr, cc] = 1
 
     # filter overlapping ellipses
@@ -379,16 +381,15 @@ def prepare_boundary_points_ray_join(seg, centers, close_points=5,
 
     points_centers = []
     for center in centers:
-        ray_bg = seg_fts.compute_ray_features_segm_2d(seg_bg, center)
+        ray_bg = compute_ray_features_segm_2d(seg_bg, center)
         ray_bg[ray_bg < min_diam] = min_diam
-        points_bg = seg_fts.reconstruct_ray_features_2d(center, ray_bg)
-        points_bg = seg_fts.reduce_close_points(points_bg, close_points)
+        points_bg = reconstruct_ray_features_2d(center, ray_bg)
+        points_bg = reduce_close_points(points_bg, close_points)
 
-        ray_fc = seg_fts.compute_ray_features_segm_2d(seg_fg, center,
-                                                      edge='down')
+        ray_fc = compute_ray_features_segm_2d(seg_fg, center, edge='down')
         ray_fc[ray_fc < min_diam] = min_diam
-        points_fc = seg_fts.reconstruct_ray_features_2d(center, ray_fc)
-        points_fc = seg_fts.reduce_close_points(points_fc, close_points)
+        points_fc = reconstruct_ray_features_2d(center, ray_fc)
+        points_fc = reduce_close_points(points_fc, close_points)
 
         points_both = np.vstack((points_bg, points_fc))
         points_centers.append(points_both)
@@ -470,10 +471,9 @@ def prepare_boundary_points_ray_edge(seg, centers, close_points=5,
 
     points_centers = []
     for center in centers:
-        ray_bg = seg_fts.compute_ray_features_segm_2d(seg_bg, center)
+        ray_bg = compute_ray_features_segm_2d(seg_bg, center)
 
-        ray_fc = seg_fts.compute_ray_features_segm_2d(seg_fc, center,
-                                                      edge='down')
+        ray_fc = compute_ray_features_segm_2d(seg_fc, center, edge='down')
 
         # replace not found (-1) by large values
         rays = np.array([ray_bg, ray_fc], dtype=float)
@@ -481,8 +481,8 @@ def prepare_boundary_points_ray_edge(seg, centers, close_points=5,
         rays[rays < min_diam] = min_diam
         # take the smallesr from both
         ray_close = np.min(rays, axis=0)
-        points_close = seg_fts.reconstruct_ray_features_2d(center, ray_close)
-        points_close = seg_fts.reduce_close_points(points_close, close_points)
+        points_close = reconstruct_ray_features_2d(center, ray_close)
+        points_close = reduce_close_points(points_close, close_points)
 
         points_centers.append(points_close)
     return points_centers
@@ -516,10 +516,9 @@ def prepare_boundary_points_ray_mean(seg, centers, close_points=5,
 
     points_centers = []
     for center in centers:
-        ray_bg = seg_fts.compute_ray_features_segm_2d(seg_bg, center)
+        ray_bg = compute_ray_features_segm_2d(seg_bg, center)
 
-        ray_fc = seg_fts.compute_ray_features_segm_2d(seg_fc, center,
-                                                      edge='down')
+        ray_fc = compute_ray_features_segm_2d(seg_fc, center, edge='down')
 
         # replace not found (-1) by large values
         rays = np.array([ray_bg, ray_fc], dtype=float)
@@ -531,8 +530,8 @@ def prepare_boundary_points_ray_mean(seg, centers, close_points=5,
         ray_mean = np.mean(rays, axis=0)
         ray_mean[np.isinf(ray_mean)] = ray_min[np.isinf(ray_mean)]
 
-        points_close = seg_fts.reconstruct_ray_features_2d(center, ray_mean)
-        points_close = seg_fts.reduce_close_points(points_close, close_points)
+        points_close = reconstruct_ray_features_2d(center, ray_mean)
+        points_close = reduce_close_points(points_close, close_points)
 
         points_centers.append(points_close)
     return points_centers
@@ -567,9 +566,9 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1,
 
     points = []
     for center in centers:
-        ray = seg_fts.compute_ray_features_segm_2d(seg_bg, center)
-        points_bg = seg_fts.reconstruct_ray_features_2d(center, ray, 0)
-        points_bg = seg_fts.reduce_close_points(points_bg, close_points)
+        ray = compute_ray_features_segm_2d(seg_bg, center)
+        points_bg = reconstruct_ray_features_2d(center, ray, 0)
+        points_bg = reduce_close_points(points_bg, close_points)
 
         points += points_bg.tolist()
     points = np.array(points)
@@ -585,10 +584,10 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1,
 
 
 def filter_boundary_points(segm, slic):
-    slic_centers = np.array(seg_spx.superpixel_centers(slic)).astype(int)
+    slic_centers = np.array(superpixel_centers(slic)).astype(int)
     labels = segm[slic_centers[:, 0], slic_centers[:, 1]]
 
-    vertices, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
+    vertices, edges = make_graph_segm_connect_grid2d_conn4(slic)
     nb_labels = labels.max() + 1
 
     neighbour_labels = np.zeros((len(vertices), nb_labels))
@@ -624,8 +623,8 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, relative_compact=0.3
     [[[6, 85], [8, 150], [16, 109], [27, 139], [32, 77], [36, 41], [34, 177],
     [59, 161], [54, 135], [67, 62], [64, 33], [84, 150], [91, 48], [92, 118]]]
     """
-    slic = seg_spx.segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
-                                      relative_compact=relative_compact)
+    slic = segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
+                              relative_compact=relative_compact)
     points_all = filter_boundary_points(seg, slic)
 
     dists = spatial.distance.cdist(points_all, centers, metric='euclidean')

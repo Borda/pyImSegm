@@ -15,7 +15,6 @@ from functools import wraps
 
 import tqdm
 import numpy as np
-# import pandas as pd
 from sklearn import metrics
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
@@ -347,10 +346,10 @@ class WrapExecuteSequence:
         self.ordered = ordered
 
     def __iter__(self):
+        tqdm_bar = None
         if self.desc is not None:
-            tqdm_bar = tqdm.tqdm(total=len(self), desc=self.desc)
-        else:
-            tqdm_bar = None
+            desc = '%r @%i-threads' % (self.desc, self.nb_workers)
+            tqdm_bar = tqdm.tqdm(total=len(self), desc=desc)
 
         if self.nb_workers > 1:
             logging.debug('perform parallel in %i threads', self.nb_workers)
@@ -359,16 +358,16 @@ class WrapExecuteSequence:
             pooling = pool.imap if self.ordered else pool.imap_unordered
 
             for out in pooling(self.wrap_func, self.iterate_vals):
+                tqdm_bar.update() if tqdm_bar is not None else None
                 yield out
-                if tqdm_bar is not None:
-                    tqdm_bar.update()
             pool.close()
             pool.join()
         else:
             for out in map(self.wrap_func, self.iterate_vals):
+                tqdm_bar.update() if tqdm_bar is not None else None
                 yield out
-                if tqdm_bar is not None:
-                    tqdm_bar.update()
+
+        tqdm_bar.close() if tqdm_bar is not None else None
 
     def __len__(self):
         return len(self.iterate_vals)

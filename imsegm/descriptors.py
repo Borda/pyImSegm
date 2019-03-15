@@ -20,7 +20,7 @@ from skimage import morphology
 # from numba.decorators import jit
 # from numba import int32, int64, float32
 
-import imsegm.utilities.data_io as tl_data
+from imsegm.utilities.data_io import convert_img_color_from_rgb
 try:
     import imsegm.features_cython as fts_cython
     # logging.debug('try to load Cython implementation')  # CRASH logger
@@ -1231,7 +1231,7 @@ def compute_selected_features_color2d(img, segments, feature_flags=FEATURES_SET_
         for k in k_color:
             if '_' in k:
                 clr = k.split('_')[-1]
-                img_color = tl_data.convert_img_color_from_rgb(img, clr)
+                img_color = convert_img_color_from_rgb(img, clr)
             else:
                 clr = 'rgb'
                 img_color = img

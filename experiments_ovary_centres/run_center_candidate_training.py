@@ -493,6 +493,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_T
         tl_data.save_landmarks_csv(path_csv, points)
 
         tqdm_bar.update()
+    tqdm_bar.close()
 
     return (dict_imgs, dict_segms, dict_slics, dict_points, dict_center,
             dict_features, dict_labels, feature_names)

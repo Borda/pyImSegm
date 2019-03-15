@@ -14,10 +14,12 @@ from sklearn import cluster, mixture
 from skimage import morphology
 from gco import cut_general_graph, cut_grid_graph
 
-import imsegm.graph_cuts as seg_gc
-import imsegm.labeling as seg_lb
-import imsegm.descriptors as seg_fts
-import imsegm.superpixels as seg_spx
+from imsegm.graph_cuts import MAX_PAIRWISE_COST, get_vertexes_edges, compute_spatial_dist
+from imsegm.labeling import histogram_regions_labels_norm
+from imsegm.descriptors import (compute_ray_features_segm_2d, interpolate_ray_dist,
+                                shift_ray_features)
+from imsegm.superpixels import (superpixel_centers, get_neighboring_segments,
+                                make_graph_segm_connect_grid2d_conn4)
 
 GC_REPLACE_INF = 1e5
 MIN_SHAPE_PROB = 0.01
@@ -63,7 +65,7 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
     array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0], dtype=int32)
     """
     assert np.min(labels_fg_prob) < 1, 'non label can ce strictly 1'
-    label_hist = seg_lb.histogram_regions_labels_norm(slic, segm)
+    label_hist = histogram_regions_labels_norm(slic, segm)
     labels = np.argmax(label_hist, axis=1)
 
     assert segm.max() <= len(labels_fg_prob), \
@@ -73,7 +75,7 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
 
     assert list(centres), 'at least one center has to be given'
     centres = [np.round(c).astype(int) for c in centres]
-    slic_points = seg_spx.superpixel_centers(slic)
+    slic_points = superpixel_centers(slic)
 
     proba = np.ones((len(labels), len(centres) + 1))
     proba[:, 0] = labels_bg_prob[labels]
@@ -92,7 +94,7 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
             cum = 1. - cdf + 1e-9
             shape[:, i + 1] = cum[dist.astype(int)]
 
-    _, edges = seg_gc.get_vertexes_edges(slic)
+    _, edges = get_vertexes_edges(slic)
     edges = np.array(edges)
 
     unary_cost = - np.log(proba) - coef_shape * np.log(shape)
@@ -118,9 +120,8 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
         vertex_2 = proba_fg[edges[:, 1]]
         dist = np.abs(vertex_1 - vertex_2)
         edge_weights = np.exp(- dist / (2 * np.std(dist) ** 2))
-        slic_centres = seg_spx.superpixel_centers(slic)
-        spatial_dist = seg_gc.compute_spatial_dist(slic_centres, edges,
-                                                   relative=True)
+        slic_centres = superpixel_centers(slic)
+        spatial_dist = compute_spatial_dist(slic_centres, edges, relative=True)
         edge_weights /= spatial_dist
     else:
         edge_weights = np.ones(len(edges))
@@ -263,13 +264,12 @@ def compute_segm_object_shape(img_object, ray_step=5, interp_order=3,
     """
     centre = ndimage.measurements.center_of_mass(img_object)
     centre = [int(round(c)) for c in centre]
-    ray_dist = seg_fts.compute_ray_features_segm_2d(img_object, centre,
-                                                    ray_step, 0, edge='down')
+    ray_dist = compute_ray_features_segm_2d(img_object, centre, ray_step, 0, edge='down')
     if interp_order is not None and -1 in ray_dist:
-        ray_dist = seg_fts.interpolate_ray_dist(ray_dist, interp_order)
+        ray_dist = interpolate_ray_dist(ray_dist, interp_order)
     if smooth_coef > 0:
         ray_dist = ndimage.filters.gaussian_filter1d(ray_dist, smooth_coef)
-    ray_dist, shift = seg_fts.shift_ray_features(ray_dist, shift_method)
+    ray_dist, shift = shift_ray_features(ray_dist, shift_method)
     return ray_dist.tolist(), shift
 
 
@@ -1111,7 +1111,7 @@ def compute_segm_prob_fg(slic, segm, labels_prob):
     >>> compute_segm_prob_fg(slic, segm, [0.3, 0.8])
     array([ 0.3,  0.8,  0.8,  0.3])
     """
-    label_hist = seg_lb.histogram_regions_labels_norm(slic, segm)
+    label_hist = histogram_regions_labels_norm(slic, segm)
     slic_labels = np.argmax(label_hist, axis=1)
     slic_prob_fg = np.array(labels_prob)[slic_labels]
     return slic_prob_fg
@@ -1249,13 +1249,13 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
     assert len(slic_prob_fg) >= np.max(slic), 'dims of probs %s and slic %s not match' \
                                               % (len(slic_prob_fg), np.max(slic))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
-    slic_points = seg_spx.superpixel_centers(slic)
+    slic_points = superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
-    _, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
-    slic_neighbours = seg_spx.get_neighboring_segments(edges)
+    _, edges = make_graph_segm_connect_grid2d_conn4(slic)
+    slic_neighbours = get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
 
     lut_data_cost, labels = compute_data_costs_points(slic, slic_prob_fg,
@@ -1393,8 +1393,7 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     min_unary = -np.log(MAX_UNARY_PROB)
     unary[unary < min_unary] = min_unary
 
-    spatial_dist = seg_gc.compute_spatial_dist(slic_points[vertexes], edges,
-                                               relative=True)
+    spatial_dist = compute_spatial_dist(slic_points[vertexes], edges, relative=True)
     edge_weights = np.ones(len(edges)) / spatial_dist
 
     pairwise = np.empty((unary.shape[-1], unary.shape[-1]))
@@ -1404,7 +1403,7 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     pairwise *= coef_pairwise
 
     # limit the maximal value
-    pairwise[pairwise > seg_gc.MAX_PAIRWISE_COST] = seg_gc.MAX_PAIRWISE_COST
+    pairwise[pairwise > MAX_PAIRWISE_COST] = MAX_PAIRWISE_COST
     return vertexes, np.array(edges), edge_weights, unary, pairwise
 
 
@@ -1554,13 +1553,13 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
         'dims of probs %s and slic %s not match' \
         % (len(slic_prob_fg), np.max(slic))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
-    slic_points = seg_spx.superpixel_centers(slic)
+    slic_points = superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
     slic_weights = np.bincount(slic.ravel())
     init_centres = np.round(centres).astype(int)
 
-    _, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
-    slic_neighbours = seg_spx.get_neighboring_segments(edges)
+    _, edges = make_graph_segm_connect_grid2d_conn4(slic)
+    slic_neighbours = get_neighboring_segments(edges)
     labels = np.zeros(len(slic_points), dtype=int)
     labels_history = [labels.copy()]
 

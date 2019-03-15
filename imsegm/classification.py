@@ -32,8 +32,8 @@ try:  # due to some chnages in between versions
 except Exception:
     from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
-import imsegm.labeling as seg_lbs
-import imsegm.utilities.experiments as tl_expt
+from imsegm.labeling import relabel_max_overlap_unique
+from imsegm.utilities.experiments import WrapExecuteSequence
 
 # NAME_FILE_RESULTS = 'results.csv'
 TEMPLATE_NAME_CLF = 'classifier_{}.pkl'
@@ -395,8 +395,7 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
         y_pred = y_pred[mask]
     # relabel such that the classes maximaly match
     if relabel:
-        y_pred = seg_lbs.relabel_max_overlap_unique(y_true, y_pred,
-                                                    keep_bg=False)
+        y_pred = relabel_max_overlap_unique(y_true, y_pred, keep_bg=False)
     dict_stat = compute_classif_metrics(y_true, y_pred,
                                         metric_averages=['macro'])
     # add binary metric
@@ -453,10 +452,9 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
         names = map(str, range(len(segms)))
     _compute_stat = partial(compute_classif_stat_segm_annot,
                             drop_labels=drop_labels, relabel=relabel)
-    iterate = tl_expt.WrapExecuteSequence(_compute_stat,
-                                          zip(annots, segms, names),
-                                          nb_workers=nb_workers,
-                                          desc='statistic per image')
+    iterate = WrapExecuteSequence(_compute_stat, zip(annots, segms, names),
+                                  nb_workers=nb_workers,
+                                  desc='statistic per image')
     list_stat = list(iterate)
     df_stat = pd.DataFrame(list_stat)
     df_stat.set_index('name', inplace=True)

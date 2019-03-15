@@ -15,7 +15,7 @@ from PIL import Image
 from scipy import interpolate
 
 # sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.data_io as tl_data
+from imsegm.utilities.data_io import io_imread
 
 COLUMNS_POSITION = ('ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y')
 SLICE_NAME_GROUPING = 'stack_path'
@@ -199,8 +199,9 @@ def group_images_frequent_colors(paths_img, ratio_threshold=1e-3):
     :return [int]:
 
     >>> from skimage import data
+    >>> from imsegm.utilities.data_io import io_imsave
     >>> path_img = './sample-image.png'
-    >>> tl_data.io_imsave(path_img, data.astronaut())
+    >>> io_imsave(path_img, data.astronaut())
     >>> d_clrs = group_images_frequent_colors([path_img], ratio_threshold=3e-4)
     >>> sorted([d_clrs[c] for c in d_clrs], reverse=True)  # doctest: +NORMALIZE_WHITESPACE
     [27969, 1345, 1237, 822, 450, 324, 313, 244, 229, 213, 163, 160, 158, 157,
@@ -210,7 +211,7 @@ def group_images_frequent_colors(paths_img, ratio_threshold=1e-3):
     logging.debug('passing %i images', len(paths_img))
     dict_colors = dict()
     for path_im in paths_img:
-        img = tl_data.io_imread(path_im)
+        img = io_imread(path_im)
         local_dict_colors = image_frequent_colors(img, ratio_threshold)
         for clr in local_dict_colors:
             if clr not in dict_colors:
@@ -331,7 +332,8 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     :param {int: [int]} dict_slice_tol:
     :return: DF
 
-    >>> path_txt = os.path.join(tl_data.update_path('data_images'),
+    >>> from imsegm.utilities.data_io import update_path
+    >>> path_txt = os.path.join(update_path('data_images'),
     ...                 'drosophila_ovary_slice', 'info_ovary_images.txt')
     >>> load_info_group_by_slices(path_txt, [4]) # doctest: +NORMALIZE_WHITESPACE
                 ant_x  ant_y  lat_x  lat_y post_x post_y
@@ -366,6 +368,7 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
             dict_slice['image'] = os.path.splitext(row['image_path'])[0]
             df_marked = df_marked.append(dict_slice, ignore_index=True)
         tqdm_bar.update()
+    tqdm_bar.close()
     if not df_marked.empty:
         df_marked.set_index('image', inplace=True)
     return df_marked

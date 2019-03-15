@@ -12,9 +12,13 @@ from skimage import filters
 from sklearn import metrics, preprocessing
 from sklearn import pipeline, cluster, mixture, decomposition
 
-import imsegm.utilities.drawing as tl_visu
-import imsegm.superpixels as seg_spx
-import imsegm.descriptors as seg_fts
+from imsegm.utilities.drawing import (
+    draw_graphcut_unary_cost_segments, draw_graphcut_weighted_edges,
+    draw_color_labeling)
+from imsegm.superpixels import (
+    make_graph_segm_connect_grid2d_conn4, make_graph_segm_connect_grid3d_conn6,
+    superpixel_centers)
+from imsegm.descriptors import compute_selected_features_img2d
 
 DEFAULT_GC_ITERATIONS = 25
 COEF_INT_CONVERSION = 1e6
@@ -287,9 +291,9 @@ def get_vertexes_edges(segments):
     :return:
     """
     if segments.ndim == 3:
-        vertices, edges = seg_spx.make_graph_segm_connect_grid3d_conn6(segments)
+        vertices, edges = make_graph_segm_connect_grid3d_conn6(segments)
     elif segments.ndim == 2:
-        vertices, edges = seg_spx.make_graph_segm_connect_grid2d_conn4(segments)
+        vertices, edges = make_graph_segm_connect_grid2d_conn4(segments)
     else:
         return None, None
     return vertices, edges
@@ -303,9 +307,10 @@ def compute_spatial_dist(centres, edges, relative=False):
     :param bool relative: normalise the distances to mean distance
     :return:
 
+    >>> from imsegm.superpixels import superpixel_centers
     >>> segments = np.array([[0] * 3 + [1] * 2 + [2] * 5,
     ...                      [4] * 4 + [5] * 2 + [6] * 4])
-    >>> centres = seg_spx.superpixel_centers(segments)
+    >>> centres = superpixel_centers(segments)
     >>> edges = [[0, 1], [1, 2], [4, 5], [5, 6], [0, 4], [1, 5], [2, 6]]
     >>> np.round(compute_spatial_dist(centres, edges), 2)
     array([ 2.5 ,  3.5 ,  3.  ,  3.  ,  1.12,  1.41,  1.12])
@@ -557,15 +562,14 @@ def insert_gc_debug_images(debug_visual, segments, graph_labels, unary_cost,
     debug_visual['segments'] = segments
     debug_visual['edges'] = edges
     debug_visual['edge_weights'] = edge_weights
-    debug_visual['imgs_unary_cost'] = \
-        tl_visu.draw_graphcut_unary_cost_segments(segments, unary_cost)
+    debug_visual['imgs_unary_cost'] = draw_graphcut_unary_cost_segments(segments,
+                                                                        unary_cost)
     img = debug_visual.get('slic_mean', None)
-    list_centres = seg_spx.superpixel_centers(segments)
+    list_centres = superpixel_centers(segments)
     debug_visual['img_graph_edges'] = \
-        tl_visu.draw_graphcut_weighted_edges(segments, list_centres, edges,
-                                             edge_weights, img_bg=img)
-    debug_visual['img_graph_segm'] = \
-        tl_visu.draw_color_labeling(segments, graph_labels)
+        draw_graphcut_weighted_edges(segments, list_centres, edges,
+                                     edge_weights, img_bg=img)
+    debug_visual['img_graph_segm'] = draw_color_labeling(segments, graph_labels)
 
 
 def compute_edge_weights(segments, image=None, features=None, proba=None,
@@ -625,8 +629,8 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
         image_float = np.array(image, dtype=float)
         if np.max(image) > 1:
             image_float /= 255.
-        color, _ = seg_fts.compute_selected_features_img2d(image_float, segments,
-                                                           {'color': ['mean']})
+        color, _ = compute_selected_features_img2d(image_float, segments,
+                                                   {'color': ['mean']})
         vertex_1 = color[edges[:, 0]]
         vertex_2 = color[edges[:, 1]]
         dist = metrics.pairwise.paired_manhattan_distances(vertex_1, vertex_2)
@@ -645,7 +649,7 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
 
     edge_weights = np.array(edge_weights, dtype=float)
     if edge_type in ['model', 'features', 'color', 'spatial']:
-        centres = seg_spx.superpixel_centers(segments)
+        centres = superpixel_centers(segments)
         spatial = compute_spatial_dist(centres, edges, relative=True)
         edge_weights /= spatial
 

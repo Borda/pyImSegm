@@ -19,7 +19,7 @@ from scipy import ndimage
 from skimage import exposure, io, color, measure
 import nibabel
 
-import imsegm.utilities.read_zvi as read_zvi
+from imsegm.utilities import read_zvi
 
 COLUMNS_COORDS = ['X', 'Y']
 DEFAULT_PATTERN_SET_LIST_FILE = '*.txt'

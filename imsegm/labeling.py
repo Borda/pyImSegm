@@ -10,7 +10,7 @@ import numpy as np
 from scipy import ndimage
 import skimage.segmentation as sk_segm
 
-import imsegm.utilities.data_io as tl_data
+from imsegm.utilities.data_io import get_image2d_boundary_color
 
 
 def neighbour_connect4(seg, label, pos):
@@ -736,7 +736,7 @@ def assume_bg_on_boundary(segm, bg_label=0, boundary_size=1):
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-    boundary_lb = tl_data.get_image2d_boundary_color(segm, size=boundary_size)
+    boundary_lb = get_image2d_boundary_color(segm, size=boundary_size)
     used_lbs = np.unique(segm)
     if boundary_lb not in used_lbs:
         segm[segm == boundary_lb] = bg_label
