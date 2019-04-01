@@ -9,10 +9,10 @@ Copyright (C) 2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import os
 import sys
 import logging
-import json
 # import multiprocessing as mproc
 from functools import partial
 
+import yaml
 import pandas as pd
 import numpy as np
 from sklearn import cluster
@@ -40,6 +40,7 @@ IMAGE_EXTENSIONS = ['.png', '.jpg']
 # subfigure size for visualisations
 MAX_FIGURE_SIZE = 12
 FOLDER_EXPERIMENT = 'detect-centers-predict_%s'
+NAME_YAML_PARAMS = 'config_clustering.yaml'
 
 # The asumtion is that the max distance is about 3 * sampling distance
 CLUSTER_PARAMS = {
@@ -194,9 +195,8 @@ def main(params):
     """
     params['path_expt'] = os.path.join(params['path_output'],
                                        FOLDER_EXPERIMENT % params['name'])
-    with open(os.path.join(params['path_expt'],
-                           'config_clustering.json'), 'w') as fp:
-        json.dump(params, fp)
+    with open(os.path.join(params['path_expt'], NAME_YAML_PARAMS), 'w') as fp:
+        yaml.dump(params, fp)
 
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 

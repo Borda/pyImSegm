@@ -27,7 +27,7 @@ exclude pytest.*
 exclude */*.sh
 
 # Include the experiments
-recursive-include experiments_* *.py *.json
+recursive-include experiments_* *.py *.yml
 recursive-include handling_annotations *.py
 
 # Include the figures

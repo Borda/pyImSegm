@@ -177,14 +177,14 @@ We utilize (un)supervised segmentation according to given training examples or s
     ```bash
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -l ./data_images/langerhans_islets/list_lang-isl_imgs-annot.csv -i "" \
-       --cdf experiments_segmentation/sample_config.json \
+       --cdf experiments_segmentation/sample_config.yml \
        -o ./results -n langIsl --nb_classes 3 --visual --nb_workers 2
     ```
     OR specified on particular path:
     ```bash
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -l "" -i "./data_images/langerhans_islets/image/*.jpg" \
-       -cfg ./experiments_segmentation/sample_config.json \
+       -cfg ./experiments_segmentation/sample_config.yml \
        -o ./results -n langIsl --nb_classes 3 --visual --nb_workers 2
     ```
     ![unsupervised](figures/imag-disk-20_gmm.jpg)
@@ -193,7 +193,7 @@ We utilize (un)supervised segmentation according to given training examples or s
     python experiments_segmentation/run_segm_slic_classif_graphcut.py \
         -l ./data_images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
         -i "./data_images/drosophila_ovary_slice/image/*.jpg" \
-        --path_config ./experiments_segmentation/sample_config.json \
+        --path_config ./experiments_segmentation/sample_config.yml \
         -o ./results -n Ovary --img_type 2d_split --visual --nb_workers 2
     ```
     ![supervised](figures/imag-disk-20_train.jpg)
@@ -208,20 +208,19 @@ We utilize (un)supervised segmentation according to given training examples or s
     ```
     ![vusial](figures/segm-visual_D03_sy04_100x.jpg)
 
-The previous two (un)segmentation accept [configuration file](experiments_segmentation/sample_config.json) (JSON) by parameter `-cfg` with some extra parameters which was not passed in arguments, for instance:
-```json
-{
-    "slic_size": 35,
-    "slic_regul": 0.2,
-    "features": {"color_hsv": ["mean", "std", "eng"]},
-    "classif": "SVM",
-    "nb_classif_search": 150,
-    "gc_edge_type": "model",
-    "gc_regul": 3.0,
-    "run_LOO": false,
-    "run_LPO": true,
-    "cross_val": 0.1
-}
+The previous two (un)segmentation accept [configuration file](experiments_segmentation/sample_config.yml) (YAML) by parameter `-cfg` with some extra parameters which was not passed in arguments, for instance:
+```yaml
+slic_size: 35,
+slic_regul: 0.2,
+features: 
+  color_hsv: ['mean', 'std', 'eng']
+classif: 'SVM'
+nb_classif_search: 150
+gc_edge_type: 'model'
+gc_regul: 3.0
+run_LOO: false
+run_LPO: true
+cross_val: 0.1
 ```
 
 ### Center detection and ellipse fitting

@@ -24,7 +24,6 @@ Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import os
 import sys
 import time
-import json
 import argparse
 import logging
 import pickle
@@ -36,6 +35,7 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
+import yaml
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -91,9 +91,8 @@ RG2SP_THRESHOLDS = {  # thresholds for updating between iterations
 }
 COLUMNS_ELLIPSE = ('xc', 'yc', 'a', 'b', 'theta')
 
-PATH_DATA = tl_data.update_path('data', absolute=True)
-PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
-                           'drosophila_ovary_slice')
+PATH_DATA = tl_data.update_path('data_images', absolute=True)
+PATH_IMAGES = os.path.join(PATH_DATA, 'drosophila_ovary_slice')
 # sample segmentation methods
 LIST_SAMPLE_METHODS = (
     'ellipse_moments', 'ellipse_ransac_mmt', 'ellipse_ransac_crit',
@@ -154,10 +153,11 @@ def arg_parse_params(params):
         params['path_config'] = tl_data.update_path(params['path_config'])
         assert os.path.isfile(params['path_config']), \
             'missing file: %s' % params['path_config']
-        assert os.path.splitext(params['path_config'])[-1] == '.json', \
-            '"%s" should be JSON file' % params['path_config']
+        ext = os.path.splitext(params['path_config'])[-1]
+        assert (ext == '.yaml' or ext == '.yml'), \
+            '"%s" should be YAML file' % os.path.basename(params['path_config'])
         with open(params['path_config'], 'r') as fd:
-            data = json.load(fd)
+            data = yaml.load(fd)
         params.update(data)
         params.update(arg_params)
     for k in (k for k in arg_params if 'path' in k):
@@ -527,13 +527,12 @@ def segment_rg2sp_greedy(slic, seg, centers, labels_fg_prob, path_model,
         shape_model = pickle.load(open(path_model, 'rb'))
     dict_debug = dict() if os.path.isdir(debug_export) else None
 
-    slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, [0.1, 0.9])
+    slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, labels_fg_prob)
     labels_greedy = seg_rg.region_growing_shape_slic_greedy(
         slic, slic_prob_fg, centers, (shape_model['mix_model'], shape_model['cdfs']),
-        shape_model['name'], coef_shape, coef_pairwise,
-        prob_label_trans, greedy_tol=1e-1, allow_obj_swap=allow_obj_swap,
-        dict_thresholds=dict_thresholds, nb_iter=1000,
-        debug_history=dict_debug)
+        shape_model['name'], coef_shape=coef_shape, coef_pairwise=coef_pairwise,
+        prob_label_trans=prob_label_trans, greedy_tol=1e-1, allow_obj_swap=allow_obj_swap,
+        dict_thresholds=dict_thresholds, nb_iter=1000, debug_history=dict_debug)
 
     if dict_debug is not None:
         nb_iter = len(dict_debug['energy'])
@@ -560,10 +559,9 @@ def segment_rg2sp_graphcut(slic, seg, centers, labels_fg_prob, path_model,
     slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, labels_fg_prob)
     labels_gc = seg_rg.region_growing_shape_slic_graphcut(
         slic, slic_prob_fg, centers, (shape_model['mix_model'], shape_model['cdfs']),
-        shape_model['name'], coef_shape, coef_pairwise, prob_label_trans,
-        optim_global=True, allow_obj_swap=allow_obj_swap,
-        dict_thresholds=dict_thresholds, nb_iter=250,
-        debug_history=dict_debug)
+        shape_model['name'], coef_shape=coef_shape, coef_pairwise=coef_pairwise,
+        prob_label_trans=prob_label_trans, optim_global=True, allow_obj_swap=allow_obj_swap,
+        dict_thresholds=dict_thresholds, nb_iter=250, debug_history=dict_debug)
 
     if dict_debug is not None:
         nb_iter = len(dict_debug['energy'])

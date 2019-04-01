@@ -25,11 +25,11 @@ Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import os
 import sys
 import logging
-import json
 import argparse
 import multiprocessing as mproc
 from functools import partial
 
+import yaml
 import tqdm
 import pandas as pd
 import numpy as np
@@ -69,7 +69,7 @@ LIST_SUBDIRS = [FOLDER_INPUT, FOLDER_POINTS,
 
 NAME_CSV_TRIPLES = 'list_images_segms_centers.csv'
 NAME_CSV_STAT_TRAIN = 'statistic_train_centers.csv'
-NAME_JSON_PARAMS = 'configuration.json'
+NAME_YAML_PARAMS = 'configuration.yaml'
 NAME_DUMP_TRAIN_DATA = 'dump_training_data.npz'
 
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
@@ -165,10 +165,11 @@ def arg_parse_params(params):
         assert os.path.exists(p_dir), 'missing (%s) %s' % (k, p_dir)
     # load saved configuration
     if params['path_config'] is not None:
-        assert os.path.splitext(params['path_config'])[-1] == '.json', \
+        ext = os.path.splitext(params['path_config'])[-1]
+        assert (ext == '.yaml' or ext == '.yml'), \
             'wrong extension for %s' % params['path_config']
         with open(params['path_config'], 'r') as fd:
-            data = json.load(fd)
+            data = yaml.load(fd)
         params.update(data)
     params.update(paths)
     logging.info('ARG PARAMETERS: \n %r', params)
@@ -708,8 +709,8 @@ def main_train(params):
     tl_expt.set_experiment_logger(params['path_expt'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
-    with open(os.path.join(params['path_expt'], NAME_JSON_PARAMS), 'w') as f:
-        json.dump(params, f)
+    with open(os.path.join(params['path_expt'], NAME_YAML_PARAMS), 'w') as f:
+        yaml.dump(params, f)
 
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 
