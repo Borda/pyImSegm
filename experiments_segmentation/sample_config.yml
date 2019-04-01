@@ -1,0 +1,54 @@
+# unsigned integer
+slic_size: 35
+
+# float between 0 ad 1
+slic_regul: 0.2
+
+# OPTIONS: {
+#	color: ['mean', 'std', 'energy', 'median', 'meanGrad'],
+#	color_hsv: ['mean', 'std', 'energy', 'median', 'meanGrad'],
+#	color_luv: ['mean', 'std', 'energy', 'median', 'meanGrad'],
+#	color_lab: ['mean', 'std', 'energy', 'median', 'meanGrad'],
+#	color_hed: ['mean', 'std', 'energy', 'median', 'meanGrad'],
+#	color_xyz: ['mean', 'std', 'energy', 'median', 'meanGrad'],
+#	tLM:   ['mean', 'std', 'energy', 'median', 'meanGrad'],
+#	tLM_short: ['mean', 'std', 'energy', 'median', 'meanGrad']
+# }
+features:
+  color_rgb: ['mean', 'std', 'energy']
+
+# float between 0 and 1 or None
+pca_coef: null
+
+# OPTIONS: ['GMM', 'GMM_kmeans', 'GMM_Otsu', 'kmeans', 'kmeans_quantiles', 'BGM']
+estim_model: 'GMM'
+
+# float between 0 ad 1
+label_purity: 0.95
+
+# OPTIONS: ['None', 'random', 'kmeans', 'unique']
+balance: 'unique'
+
+# OPTIONS: ['RandForest', 'KNN', 'SVM', 'DecTree', 'GradBoost', 'LogistRegr', 'AdaBoost']
+classif: 'RandForest'
+
+# OPTIONS: ['f1', 'accuracy', 'precision', 'recall']
+classif_metric: 'f1'
+
+# unsigned integer
+nb_classif_search: 50
+
+# OPTIONS: ['spatial', 'color', 'features', 'model', 'model_l1', 'model_l2', 'model_lT']
+gc_edge_type: 'model'
+
+# list of labels to be skipped
+drop_labels: []
+
+# positive float
+gc_regul: 3.0
+
+# float between 0 and 1
+cross_val: 0.1
+
+run_LPO: true
+run_groupGMM: true

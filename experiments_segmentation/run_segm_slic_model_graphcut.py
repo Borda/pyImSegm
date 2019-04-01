@@ -21,7 +21,6 @@ Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 
 import os
 import sys
-import json
 import glob
 import pickle
 import argparse
@@ -36,6 +35,7 @@ if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
+import yaml
 from PIL import Image
 import numpy as np
 import pandas as pd
@@ -161,7 +161,7 @@ def arg_parse_params(params):
     # if the config path is set load the it otherwise use default
     if os.path.isfile(args.get('path_config', '')):
         with open(args['path_config'], 'r') as fd:
-            config = json.load(fd)
+            config = yaml.load(fd)
         params.update(config)
     params.update(args)
     return params
@@ -275,7 +275,7 @@ def export_visual(idx_name, img, segm, debug_visual=None,
     :param str path_visu: path to dir with debug images
     """
     logging.info('export results and visualization...')
-    if set(np.unique(segm)) <= set([0, 1]):
+    if set(np.unique(segm)) <= {0, 1}:
         segm *= 255
 
     path_img = os.path.join(path_out, str(idx_name) + '.png')

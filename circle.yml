@@ -1,69 +1,75 @@
 version: 2.0
 
+references:
+
+  install_pips: &install_pips
+    run:
+      name: Install PyPI dependences
+      command: |
+        sudo apt-get update
+        sudo apt-get install tk-dev pkg-config python-dev python-tk
+        sudo pip install --upgrade pip setuptools
+        sudo pip install nose coverage pytest pytest-cov flake8
+        sudo pip install -U backports.functools_lru_cache  # required for matplotlib @py2
+        pip install -r requirements.txt --user
+        pip list
+
+  test_coverage: &test_coverage
+    run:
+      name: Testing and Formating
+      command: |
+        unset DISPLAY
+        coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
+        python setup.py check -m -s
+        flake8 . --ignore=E402,E731 --max-line-length=100
+
+  build_project: &build_project
+   run:
+     name: Building project
+     command: |
+       mkdir libs && mkdir output && mkdir results && mkdir test-reports
+       gcc --version ; python --version ; pwd ; ls -l
+       pip --version ; pip freeze
+       python setup.py build_ext --inplace
+
 jobs:
   Py2:
-      docker:
-        - image: circleci/python:2.7
-      steps: &steps
-        - checkout
-        # INSTALLATION
-        - run:
-            name: Install Packages
-            command: |
-              sudo apt-get update
-              sudo apt-get install tk-dev pkg-config python-dev python-tk
-              sudo pip install --upgrade pip setuptools
-              sudo pip install nose coverage pytest pytest-cov flake8
-              sudo pip install -U backports.functools_lru_cache  # required for matplotlib @py2
-              pip install -r requirements.txt --user
-              pip list
+    docker:
+      - image: circleci/python:2.7
+    steps: &steps
+      - checkout
+      # INSTALLATION
+      - *install_pips
+      # BUILDING
+      - *build_project
+      # TESTING
+      - *test_coverage
 
-        # BUILDING
-        - run:
-            name: Building project
-            command: |
-              mkdir libs && mkdir output && mkdir results && mkdir test-reports
-              gcc --version ; python --version ; pwd ; ls -l
-              pip --version ; pip freeze
-              python setup.py build_ext --inplace
+      # ANNOTATION section
+      - run: bash handling_annotations/test_annotations.sh
+      # SEGMENTATION section
+      - run: bash experiments_segmentation/test_segmentations.sh
+      # CENTER DETECT. section
+      - run: bash experiments_ovary_centres/test_ovary_cebters.sh
+      # REGION GROWING section
+      - run: bash experiments_ovary_detect/test_ovary_detect.sh
 
-        # TESTING
-        - run:
-            name: Testing and Formating
-            command: |
-              unset DISPLAY
-              coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
-              python setup.py check -m -s
-              flake8 . --ignore=E402,E731 --max-line-length=100
+      # PASSING
+      - run:
+          name: Finalise
+          command: |
+            python setup.py install --user
+            coverage report && coverage xml -o test-reports/coverage.xml
 
-        # ANNOTATION section
-        - run: bash handling_annotations/test_annotations.sh
-
-        # SEGMENTATION section
-        - run: bash experiments_segmentation/test_segmentations.sh
-
-        # CENTER DETECT. section
-        - run: bash experiments_ovary_centres/test_ovary_cebters.sh
-
-        # REGION GROWING section
-        - run: bash experiments_ovary_detect/test_ovary_detect.sh
-
-        # PASSING
-        - run:
-            name: Finalise
-            command: |
-              python setup.py install --user
-              coverage report && coverage xml -o test-reports/coverage.xml
-
-        - store_test_results:
-            path: test-reports
-        - store_artifacts:
-            path: test-reports
+      - store_test_results:
+          path: test-reports
+      - store_artifacts:
+          path: test-reports
 
   Py3:
-      docker:
-        - image: circleci/python:3.6
-      steps: *steps
+    docker:
+      - image: circleci/python:3.6
+    steps: *steps
 
 workflows:
   version: 2

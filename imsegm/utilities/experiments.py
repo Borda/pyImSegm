@@ -5,7 +5,6 @@ Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
-import json
 import copy
 import time
 import types
@@ -13,6 +12,7 @@ import logging
 import multiprocessing as mproc
 from functools import wraps
 
+import yaml
 import tqdm
 import numpy as np
 from sklearn import metrics
@@ -20,7 +20,7 @@ from sklearn import metrics
 NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
 FILE_RESULTS = 'resultStat.txt'
 FORMAT_DT = '%Y%m%d-%H%M%S'
-CONFIG_JSON = 'config.json'
+CONFIG_YAML = 'config.yml'
 RESULTS_TXT = FILE_RESULTS
 RESULTS_CSV = 'results.csv'
 FILE_LOGS = 'logging.txt'
@@ -140,19 +140,19 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     logging.info('creating experiment folder "{}"'.format(path_expt))
     if not os.path.exists(path_expt):
         os.mkdir(path_expt)
-    path_config = os.path.join(path_expt, CONFIG_JSON)
+    path_config = os.path.join(path_expt, CONFIG_YAML)
     if os.path.exists(path_config) and not skip_load:
         params_in = params
-        logging.debug('loading saved params from file "%s"', CONFIG_JSON)
+        logging.debug('loading saved params from file "%s"', CONFIG_YAML)
         with open(path_config, 'r') as fp:
-            params = json.load(fp)
+            params = yaml.load(fp)
         params.update({k: params_in[k] for k in params_in if 'path' in k})
         logging.info('loaded following PARAMETERS: %s', string_dict(params))
     params.update({'computer': os.uname(),
                    'path_exp': path_expt})
-    logging.debug('saving params to file "%s"', CONFIG_JSON)
-    with open(path_config, 'w') as f:
-        json.dump(params, f)
+    logging.debug('saving params to file "%s"', CONFIG_YAML)
+    with open(path_config, 'w') as fp:
+        yaml.dump(params, fp, default_flow_style=False)
     return params
 
 

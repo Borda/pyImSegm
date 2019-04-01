@@ -20,7 +20,7 @@ SAMPLE run:
 >> python run_segm_slic_classif_graphcut.py \
     -l data_images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
     -i "data_images/drosophila_ovary_slice/image/*.jpg" \
-   --path_config experiments_segmentation/sample_config.json \
+   --path_config experiments_segmentation/sample_config.yml \
     -o results -n Ovary --img_type 2d_split --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
