@@ -21,7 +21,7 @@ Image segmentation is widely used as an initial phase of many image processing t
 ![schema](figures/schema_slic-fts-clf-gc.jpg)
 
 **Sample ipython notebooks:**
-* [Supervised segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb) requires training anottaion
+* [Supervised segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb) requires training annotation
 * [Unsupervised segmentation](notebooks/segment-2d_slic-fts-model-gc.ipynb) just asks for expected number of classes
 * **partially annotated images** with missing annotation is marked by a negative number
 
@@ -107,7 +107,7 @@ The package can be installed via pip
 ```bash
 pip install git+https://github.com/Borda/pyImSegm.git
 ```
- or using `setuptools` from local folder 
+or using `setuptools` from local folder 
 ```bash
 python setup.py install
 ```
