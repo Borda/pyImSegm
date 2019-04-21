@@ -162,7 +162,7 @@ def convert_img_labels_to_colors(segm, lut_label_colors):
 def image_frequent_colors(img, ratio_threshold=1e-3):
     """ look  all images and estimate most frequent colours
 
-    :param ndarray img: np.array<h, w, 3>
+    :param ndarray img: np.array<height, width, 3>
     :param float ratio_threshold: percentage of nb color pixels to be assumed
         as important
     :return {(int, int, int) int}:
@@ -224,9 +224,9 @@ def group_images_frequent_colors(paths_img, ratio_threshold=1e-3):
 def image_color_2_labels(img, colors=None):
     """ quantize input image according given list of possible colours
 
-    :param ndarray img: np.array<h, w, 3>, input image
+    :param ndarray img: np.array<height, width, 3>, input image
     :param [(int, int, int)] colors: list of possible colours
-    :return ndarray: np.array<h, w>
+    :return ndarray: np.array<height, width>
 
     >>> np.random.seed(0)
     >>> rand = np.random.randint(0, 2, (5, 7)).astype(np.uint8)
@@ -251,9 +251,9 @@ def image_color_2_labels(img, colors=None):
 def quantize_image_nearest_color(img, colors):
     """ quantize input image according given list of possible colours
 
-    :param ndarray img: np.array<h, w, 3>, input image
+    :param ndarray img: np.array<height, width, 3>, input image
     :param [(int, int, int)] colors: list of possible colours
-    :return ndarray: np.array<h, w, 3>
+    :return ndarray: np.array<height, width, 3>
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (5, 7, 3)).astype(np.uint8)
@@ -290,9 +290,9 @@ def image_inpaint_pixels(img, valid_mask):
 def quantize_image_nearest_pixel(img, colors):
     """ quantize input image according given list of possible colours
 
-    :param ndarray img: np.array<h, w, 3>, input image
+    :param ndarray img: np.array<height, width, 3>, input image
     :param [(int, int, int)] colors: list of possible colours
-    :return ndarray: np.array<h, w, 3>
+    :return ndarray: np.array<height, width, 3>
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (5, 7, 3)).astype(np.uint8)

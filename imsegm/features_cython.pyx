@@ -61,12 +61,12 @@ def normColorFeatures(int[:, :] seg,
     cdef:
         int nb_segments = np.max(seg) + 1
         int[:] count = np.zeros(nb_segments, dtype=np.int32)
-        int w = seg.shape[0]
-        int h = seg.shape[1]
+        int w = seg.shape[1]
+        int h = seg.shape[0]
         int z, x, y, i
-    for x in range(w):
-        for y in range(h):
-            count[seg[x,y]] += 1
+    for x in range(h):
+        for y in range(w):
+            count[seg[x, y]] += 1
     # features = features / count
     # for z in prange(3, nogil=True):
     for z in range(3):
@@ -81,13 +81,13 @@ def computeColorImage2dMean(float[:, :, :] img,
     cdef:
         int nb_segments = np.max(seg) + 1
         double[:, :] features = np.zeros([nb_segments, 3], dtype=np.float64)
-        int w = seg.shape[0]
-        int h = seg.shape[1]
+        int w = seg.shape[1]
+        int h = seg.shape[0]
         int z, x, y, i
     # for z in prange(3, nogil=True):
     for z in range(3):
-        for x in range(w):
-            for y in range(h):
+        for x in range(h):
+            for y in range(w):
                 features[seg[x, y], z] += img[x, y, z]
     # features = features / count
     features = normColorFeatures(seg, features)
@@ -100,12 +100,12 @@ def computeColorImage2dEnergy(float[:, :, :] img,
         int nb_segments = np.max(seg) + 1
         double[:, :] features = np.zeros([nb_segments, 3], dtype=np.float64)
         float val
-        int w = seg.shape[0]
-        int h = seg.shape[1]
+        int w = seg.shape[1]
+        int h = seg.shape[0]
         int z, x, y, i
     for z in prange(3, nogil=True):
-        for x in range(w):
-            for y in range(h):
+        for x in range(h):
+            for y in range(w):
                 val = img[x, y, z]
                 features[seg[x, y], z] += val * val
     # features = features / count
@@ -119,13 +119,13 @@ def computeColorImage2dVariance(float[:, :, :] img,
     cdef:
         int nb_segments = np.max(seg) + 1
         double[:, :] features = np.zeros([nb_segments, 3], dtype=np.float64)
-        int w = seg.shape[0]
-        int h = seg.shape[1]
+        int w = seg.shape[1]
+        int h = seg.shape[0]
         int z, x, y, i
         float v
     for z in prange(3, nogil=True):
-        for x in range(w):
-            for y in range(h):
+        for x in range(h):
+            for y in range(w):
                 v = img[x, y, z] - mean[seg[x, y], z]
                 features[seg[x, y], z] += v * v
     # features = features / count
@@ -140,12 +140,12 @@ def computeGrayImage3dMean(float[:, :, :] img,
         double[:] features = np.zeros(nb_segments, dtype=np.float64)
         int[:] count = np.zeros(nb_segments, dtype=np.int32)
         int d = seg.shape[0]
-        int w = seg.shape[1]
-        int h = seg.shape[2]
+        int w = seg.shape[2]
+        int h = seg.shape[1]
         int z, x, y, i, idx
     for z in prange(d, nogil=True):
-        for x in range(w):
-            for y in range(h):
+        for x in range(h):
+            for y in range(w):
                 idx = seg[z, x, y]
                 count[idx] += 1
                 features[idx] += img[z, x, y]
@@ -163,12 +163,12 @@ def computeGrayImage3dEnergy(float[:, :, :] img,
         double[:] features = np.zeros(nb_segments, dtype=np.float64)
         int[:] count = np.zeros(nb_segments, dtype=np.int32)
         int d = seg.shape[0]
-        int w = seg.shape[1]
-        int h = seg.shape[2]
+        int w = seg.shape[2]
+        int h = seg.shape[1]
         int z, x, y, i, idx
     for z in prange(d, nogil=True):
-        for x in range(w):
-            for y in range(h):
+        for x in range(h):
+            for y in range(w):
                 idx = seg[z, x, y]
                 count[idx] += 1
                 features[idx] += img[z, x, y] * img[z, x, y]
@@ -187,13 +187,13 @@ def computeGrayImage3dVariance(float[:, :, :] img,
         double[:] features = np.zeros(nb_segments, dtype=np.float64)
         int[:] count = np.zeros(nb_segments, dtype=np.int32)
         int d = seg.shape[0]
-        int w = seg.shape[1]
-        int h = seg.shape[2]
+        int w = seg.shape[2]
+        int h = seg.shape[1]
         int z, x, y, i, idx
         float v
     for z in prange(d, nogil=True):
-        for x in range(w):
-            for y in range(h):
+        for x in range(h):
+            for y in range(w):
                 idx = seg[z, x, y]
                 count[idx] += 1
                 v = img[z, x, y] - mean[idx]
@@ -210,11 +210,11 @@ def computeLabelHistogram2d(short[:, :] segm_select,
                             int nb_labels):
     cdef:
         long[:] hist = np.zeros(nb_labels, dtype=np.int64)
-        int w = segm_select.shape[0]
-        int h = segm_select.shape[1]
+        int w = segm_select.shape[1]
+        int h = segm_select.shape[0]
 
-    for x in range(w):
-        for y in range(h):
+    for x in range(h):
+        for y in range(w):
             if segm_select[x, y] >= 0 and struc_elem[x, y] == 1:
                 hist[segm_select[x, y]] += 1
     return hist
@@ -228,8 +228,8 @@ def computeRayFeaturesBinary2d(char[:, :] seg_binary,
     cdef:
         float[:] angles = np.arange(0, 360, angle_step, dtype=np.float32)
         float[:] ray_dist = np.ones(len(angles), dtype=np.float32) * -1
-        int w = seg_binary.shape[0]
-        int h = seg_binary.shape[1]
+        int w = seg_binary.shape[1]
+        int h = seg_binary.shape[0]
         char last, actual
         int i, segm_diag
         float ang, rad, grad_max, diff_x, diff_y
@@ -251,7 +251,7 @@ def computeRayFeaturesBinary2d(char[:, :] seg_binary,
         for _ in range(segm_diag):
             pos[0] += grad[0]
             pos[1] += grad[1]
-            if pos[0] < 0 or round(pos[0]) >= w or pos[1] < 0 or round(pos[1]) >= h:
+            if pos[0] < 0 or round(pos[0]) >= h or pos[1] < 0 or round(pos[1]) >= w:
                 break
             actual = seg_binary[int(round(pos[0])), int(round(pos[1]))]
             if (edge == 1 and actual) or (edge == -1 and last and not actual):

@@ -567,9 +567,9 @@ def figure_used_samples(img, labels, slic, used_samples, fig_size=12):
 def draw_color_labeling(segments, lut_labels):
     """ visualise the graph cut results
 
-    :param ndarray segments: np.array<h, w>
-    :param [int] lut_labels:
-    :return ndarray: np.array<h, w, 3>
+    :param ndarray segments: np.array<height, width>
+    :param [int] lut_labels: look-up-table
+    :return ndarray: np.array<height, width, 3>
     """
     seg = np.asarray(lut_labels)[segments]
     clrs = plt.get_cmap('jet')
@@ -582,9 +582,9 @@ def draw_color_labeling(segments, lut_labels):
 def draw_graphcut_unary_cost_segments(segments, unary_cost):
     """ visualise the unary cost for each class
 
-    :param ndarray segments: np.array<h, w>
-    :param ndarray unary_cost: np.array<nb_spx, nb_cls>
-    :return []: [np.array<h, w, 3>] * nb_cls
+    :param ndarray segments: np.array<height, width>
+    :param ndarray unary_cost: np.array<nb_spx, nb_classes>
+    :return []: [np.array<height, width, 3>] * nb_cls
 
     >>> seg = np.random.randint(0, 100, (100, 150))
     >>> u_cost = np.random.random((100, 3))
@@ -874,12 +874,12 @@ def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights,
     """ visualise the edges on the overlapping a background image
 
     :param [(int, int)] centers: list of centers
-    :param ndarray segments: np.array<h, w>
+    :param ndarray segments: np.array<height, width>
     :param ndarray edges: list of edges of shape <nb_edges, 2>
     :param ndarray edge_weights: weight per edge <nb_edges, 1>
     :param ndarray img_bg: image background
     :param float img_alpha: transparency
-    :return ndarray: np.array<h, w, 3>
+    :return ndarray: np.array<height, width, 3>
 
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3+ [3] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3 + [7] * 3] * 4)

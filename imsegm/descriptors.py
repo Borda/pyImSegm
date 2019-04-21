@@ -1404,7 +1404,7 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
 
     :param ndarray segm: np.array<height, width>
     :param (float, float) position: position in the segmentation
-    :param ndarray struc_elem: np.array<h, w>
+    :param ndarray struc_elem: np.array<height, width>
     :param int nb_labels: total number of labels in the segmentation
     :return [float]:
 
@@ -1452,7 +1452,7 @@ def cython_label_hist_seg2d(segm_select, struc_elem, nb_labels):
 
     :param ndarray segm: np.array<height, width>
     :param (float, float) position: position in the segmentation
-    :param ndarray struc_elem: np.array<h, w>
+    :param ndarray struc_elem: np.array<height, width>
     :param int nb_labels: total number of labels in the segmentation
     :return [float]:
 
@@ -1677,7 +1677,7 @@ def numpy_ray_features_segm_2d(seg_binary, position, angle_step=5., edge='up'):
     # in case the position is inside the border label
     if bool(seg_binary[position[0], position[1]]) and edge == 'up':
         return ray_dist * 0
-    width, height = seg_binary.shape[0], seg_binary.shape[1]
+    width, height = seg_binary.shape[1], seg_binary.shape[0]
     segm_diag = int(np.sqrt(width ** 2 + height ** 2))
 
     for i, ang in enumerate(angles):
@@ -1688,8 +1688,8 @@ def numpy_ray_features_segm_2d(seg_binary, position, angle_step=5., edge='up'):
         last = seg_binary[position[0], position[1]]
         for _ in range(segm_diag):
             pos += grad
-            if pos[0] < 0 or round(pos[0]) >= width \
-                    or pos[1] < 0 or round(pos[1]) >= height:
+            if pos[0] < 0 or round(pos[0]) >= height \
+                    or pos[1] < 0 or round(pos[1]) >= width:
                 break
             actual = seg_binary[int(round(pos[0])), int(round(pos[1]))]
             if (edge == 'up' and actual) or (edge == 'down' and last and not actual):
