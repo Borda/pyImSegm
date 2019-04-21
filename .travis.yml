@@ -59,7 +59,7 @@ after_success:
   # SEGMENTATION section
   - bash experiments_segmentation/test_segmentations.sh
   # CENTER DETECT. section
-  - bash experiments_ovary_centres/test_ovary_cebters.sh
+  - bash experiments_ovary_centres/test_ovary_centers.sh
   # REGION GROWING section
   - bash experiments_ovary_detect/test_ovary_detect.sh
   # test installed package

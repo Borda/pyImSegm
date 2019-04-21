@@ -199,11 +199,10 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
     ...                               points_all, weights, labels,
     ...                               table_prob, 0.6, 3, max_trials=15)
     >>> np.round(ransac_model.params[:4]).astype(int)
-    array([60, 75, 40, 65])
+    array([60, 75, 41, 65])
     >>> np.round(ransac_model.params[4], 1)
     0.5
     """
-
     best_model = None
     best_inlier_num = 0
     best_model_fit = np.inf
@@ -263,11 +262,11 @@ def get_slic_points_labels(segm, img=None, slic_size=20, slic_regul=0.1):
     """ run SLIC on image or supepixels and return superpixels, their centers
     and also lebels (label from segmentation in position of superpixel centre)
 
-    :param ndarray segm:
-    :param ndarray img:
+    :param ndarray segm: segmentation
+    :param ndarray img: input image
     :param int slic_size: superpixel size
     :param float slic_regul: regularisation in range (0, 1)
-    :return:
+    :return ():
     """
     if not img:
         img = segm / float(segm.max())
@@ -282,11 +281,11 @@ def add_overlap_ellipse(segm, ellipse_params, label, thr_overlap=1.):
     """ add to existing image ellipse with specific label
     if the new ellipse does not ouvelap with already existing object / ellipse
 
-    :param ndarray segm:
-    :param () ellipse_params:
-    :param int label:
+    :param ndarray segm: segmentation
+    :param () ellipse_params: parameters
+    :param int label: selected label
     :param float thr_overlap: relative overlap with existing objects
-    :return:
+    :return ndarray:
 
     >>> seg = np.zeros((15, 20), dtype=int)
     >>> ell_params = 7, 10, 5, 8, np.deg2rad(30)
@@ -365,17 +364,14 @@ def prepare_boundary_points_ray_join(seg, centers, close_points=5,
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)
-    >>> pts = prepare_boundary_points_ray_join(seg, [(4, 9)], 5, 3,
+    >>> pts = prepare_boundary_points_ray_join(seg, [(4, 9)], 5., 3,
     ...                                        sel_bg=1, sel_fg=0)
     >>> np.round(pts).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [[[4.0, 16.0],
       [7.0, 10.0],
-      [9.0, 6.0],
-      [1.0, 9.0],
+      [9.0, 5.0],
       [4.0, 16.0],
-      [7.0, 10.0],
-      [1.0, 9.0]]]
-
+      [7.0, 10.0]]]
     """
     seg_bg, seg_fg = split_segm_background_foreground(seg, sel_bg, sel_fg)
 
@@ -403,7 +399,7 @@ def split_segm_background_foreground(seg, sel_bg=STRUC_ELEM_BG,
     :param ndarray seg: input segmentation
     :param int|float sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return:
+    :return (ndarray, ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
@@ -460,12 +456,14 @@ def prepare_boundary_points_ray_edge(seg, centers, close_points=5,
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)
-    >>> pts = prepare_boundary_points_ray_edge(seg, [(4, 9)], 5, 3,
-    ...                                        sel_bg=1, sel_fg=0)
+    >>> pts = prepare_boundary_points_ray_edge(seg, [(4, 9)], 2.5, 3, sel_bg=1, sel_fg=0)
     >>> np.round(pts).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [[[4.0, 16.0],
-      [9.0, 6.0],
-      [1.0, 9.0]]]
+      [7.0, 15.0],
+      [9.0, 5.0],
+      [4.0, 5.0],
+      [1.0, 7.0],
+      [0.0, 14.0]]]
     """
     seg_bg, seg_fc = split_segm_background_foreground(seg, sel_bg, sel_fg)
 
@@ -479,7 +477,7 @@ def prepare_boundary_points_ray_edge(seg, centers, close_points=5,
         rays = np.array([ray_bg, ray_fc], dtype=float)
         rays[rays < 0] = np.inf
         rays[rays < min_diam] = min_diam
-        # take the smallesr from both
+        # take the smallest from both
         ray_close = np.min(rays, axis=0)
         points_close = reconstruct_ray_features_2d(center, ray_close)
         points_close = reduce_close_points(points_close, close_points)
@@ -505,12 +503,15 @@ def prepare_boundary_points_ray_mean(seg, centers, close_points=5,
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)
-    >>> pts = prepare_boundary_points_ray_mean(seg, [(4, 9)], 5, 3,
+    >>> pts = prepare_boundary_points_ray_mean(seg, [(4, 9)], 2.5, 3,
     ...                                        sel_bg=1, sel_fg=0)
     >>> np.round(pts).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [[[4.0, 16.0],
-      [9.0, 6.0],
-      [1.0, 9.0]]]
+      [7.0, 15.0],
+      [9.0, 5.0],
+      [4.0, 5.0],
+      [1.0, 7.0],
+      [0.0, 14.0]]]
     """
     seg_bg, seg_fc = split_segm_background_foreground(seg, sel_bg, sel_fg)
 
@@ -552,15 +553,17 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1,
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)
-    >>> pts = prepare_boundary_points_ray_dist(seg, [(4, 9)], 2,
-    ...                                        sel_bg=0, sel_fg=0)
-    >>> np.round(pts).tolist()  # doctest: +NORMALIZE_WHITESPACE
+    >>> pts = prepare_boundary_points_ray_dist(seg, [(4, 9)], 2, sel_bg=0, sel_fg=0)
+    >>> np.round(pts, 2).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [[[4.0, 16.0],
-      [6.0, 15.0],
-      [9.0, 6.0],
-      [6.0, 5.0],
-      [3.0, 7.0],
-      [0.0, 10.0]]]
+      [6.8, 15.0],
+      [9.0, 5.5],
+      [4.35, 5.0],
+      [1.0, 6.9],
+      [1.0, 9.26],
+      [0.0, 11.31],
+      [0.5, 14.0],
+      [1.45, 16.0]]]
     """
     seg_bg, _ = split_segm_background_foreground(seg, sel_bg, sel_fg)
 
@@ -572,6 +575,8 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1,
 
         points += points_bg.tolist()
     points = np.array(points)
+    # remove all very small negative valeue, probaly by rounding
+    points[(points < 0) & (points > -1e-3)] = 0.
 
     dists = spatial.distance.cdist(points, centers, metric='euclidean')
     close_center = np.argmin(dists, axis=1)

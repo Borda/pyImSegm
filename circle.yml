@@ -50,7 +50,7 @@ jobs:
       # SEGMENTATION section
       - run: bash experiments_segmentation/test_segmentations.sh
       # CENTER DETECT. section
-      - run: bash experiments_ovary_centres/test_ovary_cebters.sh
+      - run: bash experiments_ovary_centres/test_ovary_centers.sh
       # REGION GROWING section
       - run: bash experiments_ovary_detect/test_ovary_detect.sh
 

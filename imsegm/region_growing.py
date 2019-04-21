@@ -157,7 +157,7 @@ def object_segmentation_graphcut_pixels(segm, centres,
     :param [(int, int)] centres: superpixel centres
     :param [float] labels_fg_prob: set how much particular label belongs to foreground
     :param float gc_regul: regularisation for GC
-    :param int seed_size: create circular neighoing around initaial centre
+    :param int seed_size: create circular neighborhood around initial centre
     :param float coef_shape: set the weight of shape prior
     :param shape_mean_std: mean and STD for shape prior
     :param {} debug_visual: dictionary with some intermediate results
@@ -168,16 +168,14 @@ def object_segmentation_graphcut_pixels(segm, centres,
     ...                 [0] * 6 + [1] * 4, [0] * 5 + [1] * 5,
     ...                 [0] * 10])
     >>> centres = [(1, 2), (4, 8)]
-    >>> object_segmentation_graphcut_pixels(segm, centres, gc_regul=0.,
-    ...                                     coef_shape=0.5)
+    >>> object_segmentation_graphcut_pixels(segm, centres, gc_regul=0., coef_shape=0.5)
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [2, 2, 1, 2, 2, 0, 0, 0, 0, 0],
            [2, 2, 2, 2, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 2, 2, 2, 2],
            [0, 0, 0, 0, 0, 2, 2, 2, 2, 2],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=int32)
-    >>> object_segmentation_graphcut_pixels(segm, centres, gc_regul=.5,
-    ...                                     seed_size=1)
+    >>> object_segmentation_graphcut_pixels(segm, centres, gc_regul=.5, seed_size=1)
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
            [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
@@ -245,7 +243,7 @@ def object_segmentation_graphcut_pixels(segm, centres,
 def compute_segm_object_shape(img_object, ray_step=5, interp_order=3,
                               smooth_coef=0, shift_method='phase'):
     """ assuming single object in image and compute gravity centre and for
-    this point compute Ray featuresand optionaly:
+    this point compute Ray features and optionally:
     - interpolate missing values
     - smooth the Ray features
 
@@ -259,8 +257,8 @@ def compute_segm_object_shape(img_object, ray_step=5, interp_order=3,
     >>> img = np.zeros((100, 100))
     >>> img[20:70, 30:80] = 1
     >>> rays, shift = compute_segm_object_shape(img, ray_step=45)
-    >>> rays
-    [36, 26, 35, 25, 35, 25, 35, 26]
+    >>> rays  # doctest: +ELLIPSIS
+    [36.7..., 26.0..., 35.3..., 25.0..., 35.3..., 25.0..., 35.3..., 26.0...]
     """
     centre = ndimage.measurements.center_of_mass(img_object)
     centre = [int(round(c)) for c in centre]
@@ -294,12 +292,12 @@ def compute_object_shapes(list_img_objects, ray_step=5, interp_order=3,
     >>> img2[50:80, 60:90] = 1
     >>> list_imgs = [img1, img2]
     >>> list_rays, list_shifts = compute_object_shapes(list_imgs, ray_step=45)
-    >>> list_rays # doctest: +NORMALIZE_WHITESPACE
-    [[19, 17, 9, 17, 19, 14, 19, 14],
-     [29, 21, 28, 20, 28, 20, 28, 21],
-     [22, 16, 21, 15, 21, 15, 21, 16],
-     [22, 16, 21, 15, 21, 15, 21, 16],
-     [22, 16, 21, 15, 21, 15, 21, 16]]
+    >>> np.array(list_rays).astype(int) # doctest: +NORMALIZE_WHITESPACE
+    array([[19, 17,  9, 17, 19, 14, 19, 14],
+           [29, 21, 28, 20, 28, 20, 28, 21],
+           [22, 16, 21, 15, 21, 15, 21, 16],
+           [22, 16, 21, 15, 21, 15, 21, 16],
+           [22, 16, 21, 15, 21, 15, 21, 16]])
     >>> np.array(list_shifts) % 180
     array([ 135.,   45.,   45.,   45.,   45.])
     """

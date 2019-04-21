@@ -1229,14 +1229,9 @@ def compute_selected_features_color2d(img, segments, feature_flags=FEATURES_SET_
     k_color = [k for k in feature_flags if k.startswith('color')]
     if k_color:
         for k in k_color:
-            if '_' in k:
-                clr = k.split('_')[-1]
-                img_color = convert_img_color_from_rgb(img, clr)
-            else:
-                clr = 'rgb'
-                img_color = img
-            fts, ns = compute_image2d_color_statistic(img_color, segments,
-                                                      feature_flags[k],
+            clr = k.split('_')[-1] if '_' in k else 'rgb'
+            img_color = convert_img_color_from_rgb(img, clr) if '_' in k else img
+            fts, ns = compute_image2d_color_statistic(img_color, segments, feature_flags[k],
                                                       color_name=clr)
             features.append(fts)
             names += ns
@@ -1246,8 +1241,7 @@ def compute_selected_features_color2d(img, segments, feature_flags=FEATURES_SET_
         for k in k_text:
             bank_type = k.split('_')[-1] if '_' in k else 'normal'
             fts, ns = compute_texture_desc_lm_img2d_clr(img, segments,
-                                                        feature_flags[k],
-                                                        bank_type)
+                                                        feature_flags[k], bank_type)
             features.append(fts)
             names += ns
 
@@ -1279,31 +1273,6 @@ def compute_selected_features_img2d(image, segm, features_flags=FEATURES_SET_COL
         logging.error('invalid image size - %r', image.shape)
 
 
-def extend_segm_by_struct_elem(segm, struc_elem):
-    """ extend the image by size of the stuctur element
-
-    :param ndarray segm: segmentations
-    :param ndarray struc_elem:
-    :return ndarray:
-    """
-    assert segm.ndim >= struc_elem.ndim, 'segment %r should be larger than element %r' \
-                                         % (segm.shape, struc_elem.shape)
-
-    shape_new = np.array(segm.shape[:struc_elem.ndim]) + np.array(struc_elem.shape)
-    begin = (np.array(struc_elem.shape) / 2).astype(int)
-    if segm.ndim == struc_elem.ndim:
-        segm_extend = np.full(shape_new, fill_value=np.NaN)
-        segm_extend[begin[0]:begin[0] + segm.shape[0],
-                    begin[1]:begin[1] + segm.shape[1]] = segm
-
-    else:
-        shape_new = np.hstack((shape_new, segm.shape[struc_elem.ndim:]))
-        segm_extend = np.zeros(shape_new)
-        segm_extend[begin[0]:begin[0] + segm.shape[0],
-                    begin[1]:begin[1] + segm.shape[1], :] = segm
-    return segm_extend
-
-
 def compute_label_histograms_positions(segm, positions,
                                        diameters=HIST_CIRCLE_DIAGONALS,
                                        nb_labels=None):
@@ -1328,20 +1297,20 @@ def compute_label_histograms_positions(segm, positions,
     >>> hists.shape
     (4, 9)
     >>> np.round(hists, 2)
-    array([[ 0.2 ,  0.8 ,  0.  ,  0.88, -0.12,  0.  , -0.03, -0.06,  0.  ],
-           [ 0.  ,  0.8 ,  0.2 ,  0.62,  0.5 , -0.12,  0.19, -0.08,  0.  ],
-           [ 0.2 ,  0.8 ,  0.  ,  0.5 ,  0.  ,  0.  ,  0.1 ,  0.03,  0.  ],
-           [ 0.  ,  0.2 ,  0.8 ,  0.  ,  0.62,  0.38,  0.44,  0.28, -0.06]])
+    array([[ 0.  ,  0.8 ,  0.2 ,  0.12,  0.62,  0.25,  0.44,  0.41,  0.15],
+           [ 0.  ,  0.2 ,  0.8 ,  0.  ,  0.62,  0.38,  0.22,  0.75,  0.03],
+           [ 0.2 ,  0.8 ,  0.  ,  0.5 ,  0.5 ,  0.  ,  0.46,  0.33,  0.21],
+           [ 0.  ,  0.8 ,  0.2 ,  0.12,  0.62,  0.25,  0.44,  0.41,  0.15]])
     >>> segm = np.zeros((10, 10, 2), dtype=int)
     >>> segm[3:7, 4:6, 1] = 1
     >>> segm[:, :, 0] = 1 - segm[:, :, 0]
     >>> points = [[3, 3], [4, 4], [2, 7], [6, 6]]
     >>> hists, names = compute_label_histograms_positions(segm, points, [1, 2, 4])
     >>> np.round(hists, 2)
-    array([[ 1.  ,  0.  ,  0.75,  0.  , -0.09,  0.  ],
-           [ 1.  ,  0.2 ,  1.  , -0.12,  0.11,  0.  ],
-           [ 1.  ,  0.  ,  0.5 ,  0.  ,  0.13,  0.  ],
-           [ 1.  ,  0.8 ,  1.  ,  0.38,  0.67, -0.06]])
+    array([[ 1.  ,  0.2 ,  1.  ,  0.25,  1.  ,  0.15],
+           [ 1.  ,  0.8 ,  1.  ,  0.38,  1.  ,  0.03],
+           [ 1.  ,  0.  ,  1.  ,  0.  ,  1.  ,  0.21],
+           [ 1.  ,  0.2 ,  1.  ,  0.25,  1.  ,  0.15]])
     """
     pos_dim = np.asarray(positions).shape[1]
     assert (segm.ndim - pos_dim) in (0, 1), \
@@ -1357,29 +1326,29 @@ def compute_label_histograms_positions(segm, positions,
 
     logging.debug('prepare extended segm. and struc. elements')
     list_struct_elems = [morphology.disk(d) for d in diameters]
-    list_segm_extend = [extend_segm_by_struct_elem(segm, sel)
-                        for sel in list_struct_elems]
 
     pos_hists = list()
     logging.debug('compute circular histogram')
     # for each position compute features
     for pos in positions:
-        hist_pos = list()
+        hist_inter = list()
         hist_last = np.zeros(nb_labels)
         sel_size_last = np.zeros(1)
-        for segm_extend, sel in zip(list_segm_extend, list_struct_elems):
+        for sel in list_struct_elems:
             # hist_new = segm_convol[diam, :, pos[1], pos[0]]
-            if segm_extend.ndim == len(pos):
-                hist, sel_size = compute_label_hist_segm(segm_extend, pos,
-                                                         sel, nb_labels)
+            if segm.ndim == len(pos):
+                hist, sel_size = compute_label_hist_segm(segm, pos, sel, nb_labels)
             else:
-                hist, sel_size = compute_label_hist_proba(segm_extend, pos, sel)
-            norm = sel_size - sel_size_last
-            assert norm > 0, 'norm or element should be positive'
-            hist_pos += ((hist - hist_last) / norm).tolist()
+                hist, sel_size = compute_label_hist_proba(segm, pos, sel)
+            inter_size = sel_size - sel_size_last
+            assert inter_size > 0, 'norm or element should be positive'
+            assert np.all(hist >= hist_last), \
+                'outer elem should have more labels %r then the inter %r' \
+                % (hist.tolist(), hist_last.tolist())
+            hist_inter += ((hist - hist_last) / float(inter_size)).tolist()
             hist_last = hist
             sel_size_last = sel_size
-        pos_hists.append(hist_pos)
+        pos_hists.append(hist_inter)
 
     feature_names = ['hist-d_%i-lb_%i' % (d, lb)
                      for d in diameters for lb in range(nb_labels)]
@@ -1434,9 +1403,9 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
     """ compute histogram of labels for set of centric annulus
 
     :param ndarray segm: np.array<height, width>
-    :param (float, float) position:
+    :param (float, float) position: position in the segmentation
     :param ndarray struc_elem: np.array<h, w>
-    :param int nb_labels: total number of labels in the segm.
+    :param int nb_labels: total number of labels in the segmentation
     :return [float]:
 
     >>> segm = np.zeros((10, 10), dtype=int)
@@ -1468,11 +1437,48 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
     struc_elem = struc_elem[bb_begin[0]:bb_end[0], bb_begin[1]:bb_end[1]]
     assert segm_select.shape == struc_elem.shape, \
         'segmentation %s and element %s should match' % (segm_select.shape, struc_elem.shape)
-    hist = np.zeros(nb_labels)
-    for lb in range(nb_labels):
-        hist[lb] = np.sum(np.logical_and(segm_select == lb, struc_elem == 1))
+    if USE_CYTHON:
+        hist = cython_label_hist_seg2d(segm_select, struc_elem, nb_labels)
+    else:  # use standard python code
+        hist = np.zeros(nb_labels)
+        for lb in range(nb_labels):
+            hist[lb] = np.sum(np.logical_and(segm_select == lb, struc_elem == 1))
     size = np.sum(struc_elem)
     return hist, size
+
+
+def cython_label_hist_seg2d(segm_select, struc_elem, nb_labels):
+    """ compute histogram of labels for set of centric annulus
+
+    :param ndarray segm: np.array<height, width>
+    :param (float, float) position: position in the segmentation
+    :param ndarray struc_elem: np.array<h, w>
+    :param int nb_labels: total number of labels in the segmentation
+    :return [float]:
+
+    NOTE: output of this function should be equal to
+    ```
+    for lb in range(nb_labels):
+        hist[lb] = np.sum(np.logical_and(segm_select == lb, struc_elem == 1))
+    ```
+
+    >>> segm = np.zeros((10, 10), dtype=int)
+    >>> segm[1:9, 2:8] = 1
+    >>> segm[3:7, 4:6] = 2
+    >>> cython_label_hist_seg2d(segm[2:5, 4:7], np.ones((3, 3)), 3)
+    array([ 0.,  5.,  4.])
+    >>> cython_label_hist_seg2d(segm[1:6, 3:8], np.ones((5, 5)), 3)
+    array([  0.,  19.,   6.])
+    """
+    assert np.array_equal(segm_select.shape, struc_elem.shape), \
+        'segm. %r and mask %r sizes do not match' % (segm_select.shape, struc_elem.shape)
+    # removing NaN which are converted as 0
+    segm_select[np.isnan(segm_select)] = -1
+    # assert nb_labels >= (np.nanmax(segm_select) + 1)
+    hist = fts_cython.computeLabelHistogram2d(np.array(segm_select, dtype=np.int16),
+                                              np.array(struc_elem, dtype=np.int16),
+                                              int(nb_labels))
+    return np.array(hist, dtype=float)
 
 
 def compute_label_hist_proba(segm, position, struc_elem):
@@ -1608,68 +1614,135 @@ def compute_ray_features_segm_2d_vectors(seg_binary, position, angle_step=5.,
     return np.array(ray_dist)
 
 
-def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
-                                 smooth_coef=0, edge='up'):
-    """ compute ray features vector , shift them to be startig from larges
-    and smooth_coef them by gauss filter
-    (from fiven point the close distance to boundary)
+def cython_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
+    """ computing the Ray features from a segmentation and given position
 
-    :param str edge: pointing to the up of down edge o
-    :param int smooth_coef:
     :param ndarray seg_binary: np.array<height, width>
-    :param (int, int) position:
-    :param float angle_step:
-    :return [float]:
+    :param (int, int) position: integer position in the segmentation
+    :param float angle_step: angular step for ray features
+    :param str edge: pointing to the up of down edge of an boundary
+    :return [float]: ray distances
 
-    example, see unittests
+    NOTE: this test should be equal to the `numpy_ray_features_segm_2d`
+
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
-    >>> compute_ray_features_segm_2d(seg_empty, (50, 75), 90)
-    array([-1, -1, -1, -1])
+    >>> cython_ray_features_seg2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
+    array([-1., -1., -1., -1.]...)
     >>> from skimage import draw
     >>> seg = np.ones((100, 150), dtype=bool)
     >>> x, y = draw.circle(50, 75, 40, shape=seg.shape)
     >>> seg[x, y] = False
-    >>> compute_ray_features_segm_2d(seg, (50, 75), 45)
-    array([40, 41, 40, 41, 40, 41, 40, 41])
-    >>> compute_ray_features_segm_2d(seg, (60, 40), 30, smooth_coef=1).tolist()
-    [65, 51, 31, 15, 6, 4, 4, 7, 15, 32, 52, 66]
-    >>> compute_ray_features_segm_2d(seg, (40, 60), 20).tolist()
-    [54, 57, 58, 56, 50, 43, 36, 31, 26, 24, 22, 22, 23, 25, 29, 34, 40, 47]
+    >>> cython_ray_features_seg2d(seg, (50, 75), 45).astype(int)  # doctest: +ELLIPSIS
+    array([40, 41, 40, 41, 40, 41, 40, 41]...)
+    >>> cython_ray_features_seg2d(seg, (60, 40), 30).astype(int).tolist()
+    [74, 55, 28, 10, 5, 4, 4, 5, 9, 30, 57, 75]
+    >>> cython_ray_features_seg2d(seg, (40, 60), 20).astype(int).tolist()
+    [54, 57, 58, 55, 50, 43, 38, 31, 26, 24, 22, 22, 23, 26, 29, 34, 41, 48]
     """
-    seg_binary = seg_binary.astype(bool)
-    # nb_steps = 360 / angle_step
-    angles = np.arange(0, 360, angle_step)
-    ray_dist = np.array([-1] * len(angles))
+    edge_int = {'down': -1, 'up': 1}[edge]
+    ray_dist = fts_cython.computeRayFeaturesBinary2d(np.array(seg_binary, dtype=np.int8),
+                                                     np.array(position, dtype=np.int32),
+                                                     float(angle_step), int(edge_int))
+    return np.array(ray_dist)
 
-    # in case the position is inside the border lable
-    label_position = seg_binary[int(position[0]), int(position[1])]
-    if bool(label_position) and edge == 'up':
+
+def numpy_ray_features_segm_2d(seg_binary, position, angle_step=5., edge='up'):
+    """ computing the Ray features from a segmentation and given position
+
+    :param ndarray seg_binary: np.array<height, width>
+    :param (int, int) position: integer position in the segmentation
+    :param float angle_step: angular step for ray features
+    :param str edge: pointing to the up of down edge of an boundary
+    :return [float]: ray distances
+
+    NOTE: this test should be equal to the `cython_ray_features_seg2d`
+
+    >>> seg_empty = np.zeros((100, 150), dtype=bool)
+    >>> numpy_ray_features_segm_2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
+    array([-1., -1., -1., -1.]...)
+    >>> from skimage import draw
+    >>> seg = np.ones((100, 150), dtype=bool)
+    >>> x, y = draw.circle(50, 75, 40, shape=seg.shape)
+    >>> seg[x, y] = False
+    >>> numpy_ray_features_segm_2d(seg, (50, 75), 45).astype(int)  # doctest: +ELLIPSIS
+    array([40, 41, 40, 41, 40, 41, 40, 41]...)
+    >>> numpy_ray_features_segm_2d(seg, (60, 40), 30).astype(int).tolist()
+    [74, 55, 28, 10, 5, 4, 4, 5, 9, 30, 57, 75]
+    >>> numpy_ray_features_segm_2d(seg, (40, 60), 20).astype(int).tolist()
+    [54, 57, 58, 55, 50, 43, 38, 31, 26, 24, 22, 22, 23, 26, 29, 34, 41, 48]
+    """
+    angles = np.arange(0, 360, angle_step)
+    ray_dist = np.array([-1.] * len(angles))
+
+    # in case the position is inside the border label
+    if bool(seg_binary[position[0], position[1]]) and edge == 'up':
         return ray_dist * 0
-    rect_diag = int(np.sqrt(seg_binary.shape[0] ** 2 + seg_binary.shape[1] ** 2))
+    width, height = seg_binary.shape[0], seg_binary.shape[1]
+    segm_diag = int(np.sqrt(width ** 2 + height ** 2))
 
     for i, ang in enumerate(angles):
         pos = np.array(position, dtype=float)
         rad = np.deg2rad(ang)
         grad = np.array([np.sin(rad), np.cos(rad)])
-        grad /= np.abs(grad).max()
-        last = seg_binary[int(position[0]), int(position[1])]
-        for _ in range(rect_diag):
+        grad /= max(np.abs(grad))
+        last = seg_binary[position[0], position[1]]
+        for _ in range(segm_diag):
             pos += grad
-            if pos[0] < 0 or pos[0] >= seg_binary.shape[0] \
-                    or pos[1] < 0 or pos[1] >= seg_binary.shape[1]:
+            if pos[0] < 0 or round(pos[0]) >= width \
+                    or pos[1] < 0 or round(pos[1]) >= height:
                 break
-            actual = seg_binary[int(pos[0]), int(pos[1])]
-            if (edge == 'up' and actual) \
-                    or (edge == 'down' and last and not actual):
+            actual = seg_binary[int(round(pos[0])), int(round(pos[1]))]
+            if (edge == 'up' and actual) or (edge == 'down' and last and not actual):
                 diff = np.asarray(pos) - np.asarray(position)
                 ray_dist[i] = np.sqrt(np.sum(diff ** 2))
                 break
             last = actual
+    return ray_dist
+
+
+def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
+                                 smooth_coef=0, edge='up'):
+    """ compute ray features vector , shift them to be starting from larges
+    and smooth_coef them by gauss filter
+    (from given point the close distance to boundary)
+
+    :param ndarray seg_binary: np.array<height, width>
+    :param (int, int) position: integer position in the segmentation
+    :param float angle_step: angular step for ray features
+    :param str edge: pointing to the up of down edge of an boundary
+    :param int smooth_coef: smoothing the final ray features
+    :return [float]: ray distances
+
+    example, see unittests
+    >>> seg_empty = np.zeros((100, 150), dtype=bool)
+    >>> compute_ray_features_segm_2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
+    array([-1., -1., -1., -1.]...)
+    >>> from skimage import draw
+    >>> seg = np.ones((100, 150), dtype=bool)
+    >>> x, y = draw.circle(50, 75, 40, shape=seg.shape)
+    >>> seg[x, y] = False
+    >>> np.round(compute_ray_features_segm_2d(seg, (50, 75), 45))  # doctest: +ELLIPSIS
+    array([ 40.,  41.,  40.,  41.,  40.,  41.,  40.,  41.]...)
+    >>> np.round(compute_ray_features_segm_2d(seg, (60, 40), 30, smooth_coef=1)).tolist()
+    [66.0, 52.0, 32.0, 16.0, 8.0, 5.0, 5.0, 8.0, 16.0, 33.0, 53.0, 67.0]
+    >>> ray_fts = compute_ray_features_segm_2d(seg, (40, 60), 20)
+    >>> np.round(ray_fts).tolist()  # doctest: +NORMALIZE_WHITESPACE
+    [54.0, 57.0, 59.0, 55.0, 51.0, 44.0, 38.0, 31.0, 27.0, 24.0, 22.0, 22.0,
+     23.0, 26.0, 29.0, 35.0, 42.0, 49.0]
+    """
+    assert seg_binary.ndim == len(position), \
+        'Segmentation dim of %r and position (%i) does not match' \
+        % (seg_binary.ndim, len(position))
+    seg_binary = seg_binary.astype(bool)
+    position = tuple(map(int, position))
+
+    fn_compute = cython_ray_features_seg2d if USE_CYTHON else numpy_ray_features_segm_2d
+    ray_dist = fn_compute(seg_binary, position, angle_step, edge)
 
     if smooth_coef is not None and smooth_coef > 0:
         ray_dist = gaussian_filter1d(ray_dist, smooth_coef)
 
-    return np.array(ray_dist)
+    return ray_dist
 
 
 def shift_ray_features(ray_dist, method='phase'):
@@ -1744,11 +1817,11 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     >>> points = [(50, 50), (60, 40), (44, 55)]
     >>> ray_dist, shift, _ = compute_ray_features_positions(seg, points, 20)
     >>> shift  # doctest: +ELLIPSIS
-    [315.1..., 316.0..., 83.9...]
-    >>> ray_dist.tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [[37, 36, 35, 32, 30, 27, 25, 24, 23, 23, 24, 25, 26, 28, 31, 33, 35, 38],
-     [50, 47, 41, 32, 23, 17, 13, 10, 9, 10, 9, 11, 14, 19, 26, 36, 44, 50],
-     [31, 31, 31, 31, 30, 30, 29, 30, 28, 29, 29, 30, 30, 29, 30, 30, 31, 31]]
+    [314.3..., 314.7..., 90.0...]
+    >>> ray_dist.astype(int).tolist()  # doctest: +NORMALIZE_WHITESPACE
+    [[37, 37, 35, 32, 30, 27, 25, 24, 23, 23, 24, 25, 26, 30, 31, 33, 35, 38],
+     [50, 47, 41, 31, 23, 17, 13, 10, 9, 9, 9, 11, 14, 19, 27, 37, 45, 50],
+     [31, 31, 31, 30, 30, 29, 30, 30, 29, 29, 30, 30, 29, 30, 30, 31, 31, 31]]
     >>> noise_pos = np.random.randint(10, 80, (2, 300))
     >>> seg[noise_pos[0], noise_pos[1]] = 0  # add random noise
     >>> ray_dist, shift, names = compute_ray_features_positions(seg, points, 45,
@@ -1759,7 +1832,7 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
      'ray-lb_0-agl_270', 'ray-lb_0-agl_315']
     >>> shift  # doctest: +ELLIPSIS
     [315.0..., 315.0..., 90.0...]
-    >>> ray_dist
+    >>> ray_dist.astype(int)
     array([[38, 35, 29, 25, 24, 25, 29, 35],
            [52, 41, 21, 11,  9, 11, 21, 41],
            [31, 31, 30, 29, 29, 29, 30, 31]])

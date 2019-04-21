@@ -110,11 +110,10 @@ class TestRegionGrowing(unittest.TestCase):
         for i, (_, list_cdf) in enumerate(list_mean_cdf):
             cdist = np.zeros((len(list_cdf), max_len))
             cdist[:, :len(list_cdf[0])] = np.array(list_cdf)
-            axarr[i, 0].set_title('Inverse cumulative distribution')
             axarr[i, 0].imshow(cdist, aspect='auto')
-            axarr[i, 0].set_xlim([0, max_len])
-            axarr[i, 0].set_ylabel('Ray steps')
-            axarr[i, 0].set_xlabel('Distance [px]')
+            axarr[i, 0].set(title='Inverse cumulative distribution',
+                            ylabel='Ray steps', xlabel='Distance [px]',
+                            xlim=[0, max_len])
             axarr[i, 1].set_title('Reconstructions')
             axarr[i, 1].imshow(compute_prior_map(cdist, step=10))
 

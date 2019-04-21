@@ -218,8 +218,7 @@ def figure_image_adjustment(fig, img_size):
     True
     """
     ax = fig.gca()
-    ax.set_xlim([0, img_size[1]])
-    ax.set_ylim([img_size[0], 0])
+    ax.set(xlim=[0, img_size[1]], ylim=[img_size[0], 0])
     ax.axis('off')
     ax.axes.get_xaxis().set_ticklabels([])
     ax.axes.get_yaxis().set_ticklabels([])
@@ -255,7 +254,6 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
 
     fig, axarr = create_figure_by_image(img.shape[:2], subfig_size,
                                         nb_subfigs=3)
-
     axarr[0].set_title('original image')
     axarr[0].imshow(img)
 
@@ -451,8 +449,7 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
     for i in range(len(centers)):
         ax.plot(centers[i, 1], centers[i, 0], 'o',
                 color=COLORS[i % len(COLORS)])
-    ax.set_xlim([0, seg.shape[1]])
-    ax.set_ylim([seg.shape[0], 0])
+    ax.set(xlim=[0, seg.shape[1]], ylim=[seg.shape[0], 0])
     ax.axis('off')
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     return fig
@@ -490,10 +487,9 @@ def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1,
     ax.set_title('Histogram of labels density in each segments '
                  'over all annotated images\n (superpixels: size=%i, regul=%f)'
                  % (slic_size, slic_regul))
+    ax.set(xlabel='region densities', ylabel='[%]')
     ax.legend()
     ax.grid()
-    ax.set_xlabel('region densities')
-    ax.set_ylabel('[%]')
     return fig
 
 
@@ -516,16 +512,14 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None,
     fig, axarr = plt.subplots(2, 1)
     axarr[0].imshow(1 - segm, cmap='gray', interpolation='nearest')
     axarr[0].plot(points[1], points[0], 'bo')
-    axarr[0].set_xlim([0, segm.shape[1]])
-    axarr[0].set_ylim([segm.shape[0], 0])
+    axarr[0].set(xlim=[0, segm.shape[1]], ylim=[segm.shape[0], 0])
     if points_reconst is not None:
         axarr[0].plot(points_reconst[:, 1], points_reconst[:, 0], 'g.')
     axarr[1].plot(np.linspace(0, 360, len(ray_dist_raw)).tolist(),
                   ray_dist_raw, 'b', label='original')
     axarr[1].plot(np.linspace(0, 360, len(ray_dist)).tolist(),
                   ray_dist, 'r', label='final')
-    axarr[1].set_xlabel('angles [deg]')
-    axarr[1].set_xlim([0, 360])
+    axarr[1].set(xlabel='angles [deg]', xlim=[0, 360])
     axarr[1].legend(loc=0)
     axarr[1].grid()
     return fig
@@ -834,8 +828,7 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
                     marker, color=clr)
     else:
         ax.plot(points[:, 1], points[:, 0], 'o', color=COLOR_ORANGE)
-    ax.set_xlim([0, img.shape[1]])
-    ax.set_ylim([img.shape[0], 0])
+    ax.set(xlim=[0, img.shape[1]], ylim=[img.shape[0], 0])
 
 
 def figure_image_segm_centres(img, segm, centers=None, cmap_contour=plt.cm.Blues):
@@ -870,8 +863,7 @@ def figure_image_segm_centres(img, segm, centers=None, cmap_contour=plt.cm.Blues
             'image size %r and centers %r should match' % (img.shape, centers.shape)
         ax.contour(centers, levels=np.unique(centers), cmap=plt.cm.YlOrRd)
 
-    ax.set_xlim([0, img.shape[1]])
-    ax.set_ylim([img.shape[0], 0])
+    ax.set(xlim=[0, img.shape[1]], ylim=[img.shape[0], 0])
     fig.tight_layout()
 
     return fig
@@ -941,8 +933,6 @@ def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights,
 
 
 def draw_rg2sp_results(ax, seg, slic, dict_rg2sp_debug, iter_index=-1):
-    ax.set_title('Iteration #%i with E=%.0f' %
-                 (iter_index, round(dict_rg2sp_debug['criteria'][iter_index])))
     ax.imshow(dict_rg2sp_debug['labels'][iter_index][slic], cmap=plt.cm.jet)
     ax.contour(seg, levels=np.unique(seg), colors='#bfbfbf')
     for centre, shift in zip(dict_rg2sp_debug['centres'][iter_index],
@@ -951,8 +941,9 @@ def draw_rg2sp_results(ax, seg, slic, dict_rg2sp_debug, iter_index=-1):
         ax.plot(centre[1], centre[0], 'ow')
         ax.arrow(centre[1], centre[0], np.cos(rot) * 50., np.sin(rot) * 50.,
                  fc='w', ec='w', head_width=20., head_length=30.)
-    ax.set_xlim([0, seg.shape[1]])
-    ax.set_ylim([seg.shape[0], 0])
+    ax.set(xlim=[0, seg.shape[1]], ylim=[seg.shape[0], 0],
+           title='Iteration #%i with E=%.0f'
+                 % (iter_index, round(dict_rg2sp_debug['criteria'][iter_index])))
     return ax
 
 
@@ -992,8 +983,7 @@ def figure_rg2sp_debug_complete(seg, slic, debug_rg2sp, iter_index=-1,
 
     axarr[0, 1].plot(debug_rg2sp['criteria'])
     axarr[0, 1].plot(iter_index, debug_rg2sp['criteria'][iter_index], 'og')
-    axarr[0, 1].set_ylabel('Energy')
-    axarr[0, 1].set_xlabel('iteration')
+    axarr[0, 1].set(ylabel='Energy', xlabel='iteration')
     axarr[0, 1].grid()
 
     axarr[0, 2].set_title('Data cost')
@@ -1122,8 +1112,7 @@ def draw_image_clusters_centers(ax, img, centres, points=None,
         assert img.ndim == 2, \
             'required image dimension is 2 to instead %r' % img.shape
         ax.imshow(img, cmap=plt.cm.Greys_r)
-        ax.set_xlim([0, img.shape[1]])
-        ax.set_ylim([img.shape[0], 0])
+        ax.set(xlim=[0, img.shape[1]], ylim=[img.shape[0], 0])
     if segm is not None:
         ax.imshow(segm, alpha=0.1)
         ax.contour(segm)
@@ -1174,7 +1163,7 @@ def figure_segm_boundary_dist(segm_ref, segm, subfig_size=9):
     axarr[0].contour(segm_ref, cmap=plt.cm.jet)
 
     segm_distance[~segr_boundary] = 0
-    axarr[0].set_title('distance projected to ref. boundary')
+    axarr[1].set_title('distance projected to ref. boundary')
     im = axarr[1].imshow(segm_distance, cmap=plt.cm.Reds)
     plt.colorbar(im, ax=axarr[1])
 
