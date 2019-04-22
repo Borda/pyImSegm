@@ -455,8 +455,7 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
     return fig
 
 
-def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1,
-                                       slic_regul=-1):
+def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1, slic_regul=-1):
     """ plot ration of labels  assigned to each superpixel
 
     :param dict_label_hist:
@@ -493,8 +492,7 @@ def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1,
     return fig
 
 
-def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None,
-                       points_reconst=None):
+def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None, points_reconst=None):
     """ visualise the segmentation with specific point and estimated ray dist.
 
     :param ndarray segm:
@@ -554,8 +552,7 @@ def figure_used_samples(img, labels, slic, used_samples, fig_size=12):
 
     axarr[1].imshow(img)
     axarr[1].contour(slic, levels=np.unique(slic), colors='w', linewidths=0.5)
-    cax = axarr[1].imshow(w_samples, cmap=plt.cm.RdYlGn,
-                          vmin=0, vmax=1, alpha=0.5)
+    cax = axarr[1].imshow(w_samples, cmap=plt.cm.RdYlGn, vmin=0, vmax=1, alpha=0.5)
     cbar = plt.colorbar(cax, ticks=[0, 1], boundaries=[-0.5, 0.5, 1.5])
     cbar.ax.set_yticklabels(['drop', 'used'])
     axarr[1].axis('off')
@@ -890,8 +887,7 @@ def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights,
     >>> img = np.random.randint(0, 256, slic.shape + (3,))
     >>> edge_weights = np.ones(len(edges))
     >>> edge_weights[0] = 0
-    >>> img = draw_graphcut_weighted_edges(slic, centres, edges, edge_weights,
-    ...                                    img_bg=img)
+    >>> img = draw_graphcut_weighted_edges(slic, centres, edges, edge_weights, img_bg=img)
     >>> img.shape
     (8, 12, 3)
     """
@@ -947,8 +943,7 @@ def draw_rg2sp_results(ax, seg, slic, dict_rg2sp_debug, iter_index=-1):
     return ax
 
 
-def figure_rg2sp_debug_complete(seg, slic, debug_rg2sp, iter_index=-1,
-                                max_size=5):
+def figure_rg2sp_debug_complete(seg, slic, debug_rg2sp, iter_index=-1, max_size=5):
     """ draw figure with all debug (intermediate) segmentation steps
 
     :param ndarray seg: segmentation
@@ -1088,8 +1083,7 @@ def make_overlap_images_chess(images, chess_field=SIZE_CHESS_FIELD):
     return img
 
 
-def draw_image_clusters_centers(ax, img, centres, points=None,
-                                labels_centre=None, segm=None):
+def draw_image_clusters_centers(ax, img, centres, points=None, labels_centre=None, segm=None):
     """ draw imageas bacround and clusters centers
 
     :param ax: figure axis
@@ -1134,7 +1128,7 @@ def draw_image_clusters_centers(ax, img, centres, points=None,
 
 
 def figure_segm_boundary_dist(segm_ref, segm, subfig_size=9):
-    """ visualise the boundary distances bteween two segmentations
+    """ visualise the boundary distances between two segmentation
 
     :param ndarray segm_ref:
     :param ndarray segm:

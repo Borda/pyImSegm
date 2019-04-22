@@ -13,11 +13,9 @@ from sklearn import metrics, preprocessing
 from sklearn import pipeline, cluster, mixture, decomposition
 
 from imsegm.utilities.drawing import (
-    draw_graphcut_unary_cost_segments, draw_graphcut_weighted_edges,
-    draw_color_labeling)
+    draw_graphcut_unary_cost_segments, draw_graphcut_weighted_edges, draw_color_labeling)
 from imsegm.superpixels import (
-    make_graph_segm_connect_grid2d_conn4, make_graph_segm_connect_grid3d_conn6,
-    superpixel_centers)
+    make_graph_segm_connect_grid2d_conn4, make_graph_segm_connect_grid3d_conn6, superpixel_centers)
 from imsegm.descriptors import compute_selected_features_img2d
 
 DEFAULT_GC_ITERATIONS = 25
@@ -247,8 +245,7 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     return gmm
 
 
-def estim_class_model_kmeans(features, nb_classes, init_type='k-means++',
-                             max_iter=99):
+def estim_class_model_kmeans(features, nb_classes, init_type='k-means++', max_iter=99):
     """ from all features estimate Gaussian from k-means clustering
 
     :param [[float]] features: list of features per segment

@@ -390,8 +390,7 @@ def transform_rays_model_cdf_mixture(list_rays, coef_components=1):
     return mm, cdist.tolist()
 
 
-def transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_components=5,
-                                               slic_size=15):
+def transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_components=5, slic_size=15):
     """ compute the mixture model and transform it into cumulative distribution
 
     :param [[int]] list_rays: list ray features (distances)
@@ -584,8 +583,7 @@ def transform_rays_model_cdf_histograms(list_rays, nb_bins=10):
     return list_chist
 
 
-def compute_shape_prior_table_cdf(point, cum_distribution, centre,
-                                  angle_shift=0):
+def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0):
     """ compute shape prior for a point based on centre, rotation shift
     and cumulative histogram
 
@@ -919,8 +917,7 @@ def compute_update_shape_costs_points_close_mean_cdf(
         segm_binary = (segm_obj == i + 1)
         centre_new, shift = compute_centre_moment_points(points[labels == i + 1])
         centre_new = np.round(centre_new).astype(int)
-        rays, _ = compute_segm_object_shape(segm_binary, angle_step,
-                                            smooth_coef=0)
+        rays, _ = compute_segm_object_shape(segm_binary, angle_step, smooth_coef=0)
         if swap_shift:
             shift = (shift + 90) % 360
             shifts[i] = shift

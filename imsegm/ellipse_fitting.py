@@ -195,9 +195,8 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
     ...                                           sel_bg=1, sel_fg=0)[0]
     >>> table_prob = [[0.01, 0.75, 0.95, 0.9], [0.99, 0.25, 0.05, 0.1]]
     >>> weights = np.bincount(slic.ravel())
-    >>> ransac_model, _ = ransac_segm(points, EllipseModelSegm,
-    ...                               points_all, weights, labels,
-    ...                               table_prob, 0.6, 3, max_trials=15)
+    >>> ransac_model, _ = ransac_segm(points, EllipseModelSegm, points_all, weights,
+    ...                               labels, table_prob, 0.6, 3, max_trials=15)
     >>> np.round(ransac_model.params[:4]).astype(int)
     array([60, 75, 41, 65])
     >>> np.round(ransac_model.params[4], 1)
@@ -364,8 +363,7 @@ def prepare_boundary_points_ray_join(seg, centers, close_points=5,
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)
-    >>> pts = prepare_boundary_points_ray_join(seg, [(4, 9)], 5., 3,
-    ...                                        sel_bg=1, sel_fg=0)
+    >>> pts = prepare_boundary_points_ray_join(seg, [(4, 9)], 5., 3, sel_bg=1, sel_fg=0)
     >>> np.round(pts).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [[[4.0, 16.0],
       [7.0, 10.0],
@@ -503,8 +501,7 @@ def prepare_boundary_points_ray_mean(seg, centers, close_points=5,
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)
-    >>> pts = prepare_boundary_points_ray_mean(seg, [(4, 9)], 2.5, 3,
-    ...                                        sel_bg=1, sel_fg=0)
+    >>> pts = prepare_boundary_points_ray_mean(seg, [(4, 9)], 2.5, 3, sel_bg=1, sel_fg=0)
     >>> np.round(pts).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [[[4.0, 16.0],
       [7.0, 15.0],

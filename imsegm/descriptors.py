@@ -13,8 +13,7 @@ import logging
 
 import numpy as np
 from scipy import ndimage, interpolate, optimize, spatial
-from scipy.ndimage.filters import (gaussian_filter, gaussian_filter1d,
-                                   gaussian_laplace)
+from scipy.ndimage.filters import gaussian_filter, gaussian_filter1d, gaussian_laplace
 from sklearn import preprocessing
 from skimage import morphology
 # from numba.decorators import jit
@@ -310,9 +309,7 @@ def numpy_img2d_color_mean(img, seg):
     for i in range(seg.shape[0]):
         for j in range(seg.shape[1]):
             lb = seg[i, j]
-            means[lb, 0] += img[i, j, 0]
-            means[lb, 1] += img[i, j, 1]
-            means[lb, 2] += img[i, j, 2]
+            means[lb, :] += img[i, j, :]
             counts[lb] += 1
     # prevent dividing by 0
     counts[counts == 0] = -1
@@ -394,9 +391,7 @@ def numpy_img2d_color_energy(img, seg):
     for i in range(seg.shape[0]):
         for j in range(seg.shape[1]):
             lb = seg[i, j]
-            energy[lb, 0] += img[i, j, 0] ** 2
-            energy[lb, 1] += img[i, j, 1] ** 2
-            energy[lb, 2] += img[i, j, 2] ** 2
+            energy[lb, :] += img[i, j, :] ** 2
             counts[lb] += 1
     # prevent dividing by 0
     counts[counts == 0] = -1
@@ -433,15 +428,13 @@ def numpy_img2d_color_median(img, seg):
     for i in range(seg.shape[0]):
         for j in range(seg.shape[1]):
             lb = seg[i, j]
-            list_values[lb][0].append(img[i, j, 0])
-            list_values[lb][1].append(img[i, j, 1])
-            list_values[lb][2].append(img[i, j, 2])
+            for k in range(3):
+                list_values[lb][k].append(img[i, j, k])
 
     medians = np.zeros((nb_labels, 3))
     for i in range(nb_labels):
-        medians[i, 0] = np.median(list_values[i][0])
-        medians[i, 1] = np.median(list_values[i][1])
-        medians[i, 2] = np.median(list_values[i][2])
+        for k in range(3):
+            medians[i, k] = np.median(list_values[i][k])
     return medians
 
 
@@ -823,9 +816,9 @@ def compute_image2d_color_statistic(image, segm,
         features = np.hstack((features, _fn_mean(grad_matrix, segm)))
 
     feature_names = ('mean', 'std', 'energy', 'median', 'meanGrad')
-    names = list(itertools.chain.from_iterable(['%s_%s' % (n, fts_name) for n in ch_names]
-                                               for fts_name in feature_names
-                                               if fts_name in feature_flags))
+    names = list(itertools.chain.from_iterable(
+        ['%s_%s' % (n, fts_name) for n in ch_names]
+        for fts_name in feature_names if fts_name in feature_flags))
     _check_unrecognised_feature_names(feature_flags)
     # mean Gradient
     # G = np.zeros_like(image)
@@ -1133,8 +1126,7 @@ def compute_selected_features_gray3d(img, segments, feature_flags=FEATURES_SET_C
     if k_text:
         for k in k_text:
             bank_type = k.split('_')[-1] if '_' in k else 'normal'
-            fts, ns = compute_texture_desc_lm_img3d_val(img, segments,
-                                                        feature_flags[k],
+            fts, ns = compute_texture_desc_lm_img3d_val(img, segments, feature_flags[k],
                                                         bank_type)
             features.append(fts)
             names += ns
@@ -1240,8 +1232,8 @@ def compute_selected_features_color2d(img, segments, feature_flags=FEATURES_SET_
     if k_text:
         for k in k_text:
             bank_type = k.split('_')[-1] if '_' in k else 'normal'
-            fts, ns = compute_texture_desc_lm_img2d_clr(img, segments,
-                                                        feature_flags[k], bank_type)
+            fts, ns = compute_texture_desc_lm_img2d_clr(img, segments, feature_flags[k],
+                                                        bank_type)
             features.append(fts)
             names += ns
 
