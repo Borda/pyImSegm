@@ -571,7 +571,7 @@ def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
            [ 0,  3,  3,  3,  3,  3,  3,  2,  2,  2,  2,  2,  2,  2,  0]])
     """
     assert seg_ref.shape == seg_relabel.shape, \
-        'Reference segm %r and input segm %r should match' \
+        'Reference segm. %r and input segm. %r should match' \
         % (seg_ref.shape, seg_relabel.shape)
     overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
 
@@ -651,7 +651,7 @@ def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
            [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0],
            [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0]])
     """
-    assert seg_ref.shape == seg_relabel.shape, 'Ref segm %r and segm %r should match' \
+    assert seg_ref.shape == seg_relabel.shape, 'Ref. segm %r and segm %r should match' \
                                                % (seg_ref.shape, seg_relabel.shape)
     overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
     # ref_ptn_size = np.bincount(seg_ref.ravel())
@@ -706,7 +706,7 @@ def compute_boundary_distances(segm_ref, segm):
     dist = segm_distance[segr_boundary].ravel()
 
     assert len(points) == len(dist), \
-        'number of points and disntances should be equal'
+        'number of points and distances should be equal'
     return points, dist
 
 

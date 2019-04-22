@@ -1170,11 +1170,9 @@ def balance_dataset_by_(features, labels, balance_type='random',
     dict_features = compose_dict_label_features(features, labels)
 
     if balance_type.lower() == 'random':
-        dict_features = down_sample_dict_features_random(dict_features,
-                                                         min_samples)
+        dict_features = down_sample_dict_features_random(dict_features, min_samples)
     elif balance_type.lower() == 'kmeans':
-        dict_features = down_sample_dict_features_kmean(dict_features,
-                                                        min_samples)
+        dict_features = down_sample_dict_features_kmean(dict_features, min_samples)
     elif balance_type.lower() == 'unique':
         dict_features = down_sample_dict_features_unique(dict_features)
     else:

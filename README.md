@@ -16,12 +16,12 @@
 
 ## Superpixel segmentation with GraphCut regularisation
 
-Image segmentation is widely used as an initial phase of many image processing tasks in computer vision and image analysis.  Many recent segmentation methods use superpixels because they reduce the size of the segmentation problem by order of magnitude.   Also,  features on superpixels are much more robust than features on pixels only.   We use spatial regularization on superpixels to make segmented regions more compact. The segmentation pipeline comprises  (i) computation of superpixels; (ii) extraction of descriptors such as color and texture;  (iii) soft classification,  using a standard classifier for supervised learning,  or the Gaussian Mixture Model for unsupervised learning; (iv) final segmentation using Graph Cut.  We use this segmentation pipeline on real-world applications in medical imaging (see a sample [images](./data_images)). We also show that [unsupervised segmentation](./notebooks/segment-2d_slic-fts-model-gc.ipynb) is sufficient for some situations, and provides similar results to those obtained using [trained segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb).
+Image segmentation is widely used as an initial phase of many image processing tasks in computer vision and image analysis. Many recent segmentation methods use superpixels because they reduce the size of the segmentation problem by order of magnitude. Also,  features on superpixels are much more robust than features on pixels only. We use spatial regularisation on superpixels to make segmented regions more compact. The segmentation pipeline comprises (i) computation of superpixels; (ii) extraction of descriptors such as colour and texture; (iii) soft classification, using a standard classifier for supervised learning, or the Gaussian Mixture Model for unsupervised learning; (iv) final segmentation using Graph Cut. We use this segmentation pipeline on real-world applications in medical imaging (see a sample [images](./data_images)). We also show that [unsupervised segmentation](./notebooks/segment-2d_slic-fts-model-gc.ipynb) is sufficient for some situations, and provides similar results to those obtained using [trained segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb).
 
 ![schema](figures/schema_slic-fts-clf-gc.jpg)
 
 **Sample ipython notebooks:**
-* [Supervised segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb) requires training anottaion
+* [Supervised segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb) requires training annotation
 * [Unsupervised segmentation](notebooks/segment-2d_slic-fts-model-gc.ipynb) just asks for expected number of classes
 * **partially annotated images** with missing annotation is marked by a negative number
 
@@ -50,7 +50,7 @@ Reference: _Borovec J., Kybic J., Nava R. (2017) **Detection and Localization of
 
 ## Superpixel Region Growing with Shape prior
 
-Region growing is a classical image segmentation method based on hierarchical region aggregation using local similarity rules. Our proposed approach differs from standard region growing in three essential aspects. First, it works on the level of superpixels instead of pixels, which leads to a substantial speedup. Second, our method uses learned statistical shape properties which encourage growing leading to plausible shapes. In particular, we use ray features to describe the object boundary. Third, our method can segment multiple objects and ensure that the segmentations do not overlap. The problem is represented as energy minimization and is solved either greedily, or iteratively using GraphCuts.
+Region growing is a classical image segmentation method based on hierarchical region aggregation using local similarity rules. Our proposed approach differs from standard region growing in three essential aspects. First, it works on the level of superpixels instead of pixels, which leads to a substantial speedup. Second, our method uses learned statistical shape properties which encourage growing leading to plausible shapes. In particular, we use ray features to describe the object boundary. Third, our method can segment multiple objects and ensure that the segmentations do not overlap. The problem is represented as energy minimisation and is solved either greedily, or iteratively using GraphCuts.
 
 **Sample ipython notebooks:**
 * [General GraphCut](notebooks/egg_segment_graphcut.ipynb) from given centers and initial structure segmentation.
@@ -99,7 +99,7 @@ We have implemented `cython` version of some functions, especially computing des
 ```bash
 python setup.py build_ext --inplace
 ```
-If loading of compiled descriptors in `cython` fails, it is automatically swapped to `numpy` which gives the same results, but it is significantly slower.
+If loading of compiled descriptors in `cython` fails, it is automatically swapped to use `numpy` which gives the same results, but it is significantly slower.
 
 **Installation**
 
@@ -107,7 +107,7 @@ The package can be installed via pip
 ```bash
 pip install git+https://github.com/Borda/pyImSegm.git
 ```
- or using `setuptools` from local folder 
+or using `setuptools` from a local folder 
 ```bash
 python setup.py install
 ```
@@ -127,7 +127,7 @@ Short description of our three sets of experiments that together compose single 
 
 We introduce some useful tools for work with image annotation and segmentation.
 
-* **Quantization:** in case you have some smooth color labeling in your images you can remove them with following quantization script.
+* **Quantization:** in case you have some smooth colour labelling in your images you can remove them with following quantisation script.
     ```bash
     python handling_annotations/run_image_color_quantization.py \
         -imgs "./data_images/drosophila_ovary_slice/segm_rgb/*.png" \
@@ -162,10 +162,10 @@ We introduce some useful tools for work with image annotation and segmentation.
 
 ### Semantic (un/semi)supervised segmentation
 
-We utilize (un)supervised segmentation according to given training examples or some expectations.
+We utilise (un)supervised segmentation according to given training examples or some expectations.
 ![vusial debug](figures/visual_img_43_debug.jpg)
 
-* Evaluate superpixels (with given SLIC parameters) quality against given segmentation. It helps find out best SLIC configuration.
+* Evaluate superpixels (with given SLIC parameters) quality against given segmentation. It helps to find out the best SLIC configuration.
     ```bash
     python experiments_segmentation/run_eval_superpixels.py \
         -imgs "./data_images/drosophila_ovary_slice/image/*.jpg" \
@@ -225,15 +225,15 @@ cross_val: 0.1
 
 ### Center detection and ellipse fitting
 
-In general, the input is a formatted list (CSV file) of input images and annotations. Another option is set `-list none` and then the list is paired with given paths to images and annotations.
+In general, the input is a formatted list (CSV file) of input images and annotations. Another option is set by `-list none` and then the list is paired with given paths to images and annotations.
 
-**Experiment sequence is following:**
+**Experiment sequence is the following:**
 
-1. We can create the annotation completely manually or use following script which uses annotation of individual objects and create the zones automatically.
+1. We can create the annotation completely manually or use the following script which uses annotation of individual objects and create the zones automatically.
     ```bash
     python experiments_ovary_centres/run_create_annotation.py
     ```
-1. With zone annotation, we train a classifier for center candidate prediction. The annotation can be a CSV file with annotated centers as points, and the zone of positive examples is set uniformly as the circular neighborhood around these points. Another way (preferable) is to use an annotated image with marked zones for positive, negative and neutral examples.
+1. With zone annotation, we train a classifier for centre candidate prediction. The annotation can be a CSV file with annotated centres as points, and the zone of positive examples is set uniformly as the circular neighbourhood around these points. Another way (preferable) is to use an annotated image with marked zones for positive, negative and neutral examples.
     ```bash
     python experiments_ovary_centres/run_center_candidate_training.py -list none \
         -segs "./data_images/drosophila_ovary_slice/segm/*.png" \
@@ -286,16 +286,16 @@ In general, the input is a formatted list (CSV file) of input images and annotat
 
 ### Region growing with a shape prior
 
-In case you do not have estimated object centers, you can use [plugins](ij_macros) for landmarks import/export for [Fiji](http://fiji.sc/).
+In case you do not have estimated object centres, you can use [plugins](ij_macros) for landmarks import/export for [Fiji](http://fiji.sc/).
 
-**Note:** install multi-snake package which is used in multi-method segmentation experiment.
+**Note:** install the multi-snake package which is used in multi-method segmentation experiment.
 ```bash
 pip install --user git+https://github.com/Borda/morph-snakes.git
 ```
 
-**Experiment sequence is following:**
+**Experiment sequence is the following:**
 
-1. Estimating shape model from set training images containing single egg annotation.
+1. Estimating the shape model from set training images containing a single egg annotation.
     ```bash
     python experiments_ovary_detect/run_RG2Sp_estim_shape-models.py  \
         -annot "~/Medical-drosophila/egg_segmentation/mask_2d_slice_complete_ind_egg/*.png" \

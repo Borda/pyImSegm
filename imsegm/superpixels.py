@@ -204,7 +204,7 @@ def make_graph_segm_connect_grid3d_conn6(grid):
 def superpixel_centers(segments):
     """ estimate centers of each superpixel
 
-    :param ndarray segments: segmentation np.array<h, w>
+    :param ndarray segments: segmentation np.array<height, width>
     :return [(float, float)]:
 
     >>> segm = np.array([[0] * 6 + [1] * 5, [0] * 6 + [2] * 5])

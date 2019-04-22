@@ -282,8 +282,7 @@ def scale_image_intensity(img, im_range=1., quantiles=(2, 98)):
     """
     p_low = np.percentile(img, quantiles[0])
     p_high = np.percentile(img, quantiles[1])
-    img = exposure.rescale_intensity(img.astype(float),
-                                     in_range=(p_low, p_high),
+    img = exposure.rescale_intensity(img.astype(float), in_range=(p_low, p_high),
                                      out_range='float')
     if im_range == 255:
         img = np.array(img * im_range).astype(np.uint8)
@@ -721,8 +720,7 @@ def load_zvi_volume_double_band_split(path_img):
     :param str path_img: path to the image
     :return ndarray, ndarray:
 
-    >>> p_img = os.path.join(update_path('data_images'),
-    ...                      'others', 'sample.zvi')
+    >>> p_img = os.path.join(update_path('data_images'), 'others', 'sample.zvi')
     >>> img_b1, img_b2 = load_zvi_volume_double_band_split(p_img)
     >>> img_b1.shape
     (2, 488, 648)
@@ -743,8 +741,7 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     :param (int, int) quantiles: scale image values in certain percentile range
     :return:
 
-    >>> p_imgs = os.path.join(update_path('data_images'),
-    ...                      'drosophila_ovary_slice', 'image')
+    >>> p_imgs = os.path.join(update_path('data_images'), 'drosophila_ovary_slice', 'image')
     >>> p_img = os.path.join(p_imgs, 'insitu7545.jpg')
     >>> img_b1, img_b2 = load_img_double_band_split(p_img)
     >>> img_b1.shape
@@ -1096,18 +1093,15 @@ def cut_object(img, mask, padding, use_mask=False, bg_color=None):
     shift = np.append(shift, np.zeros(img.ndim - mask.ndim))
 
     mask = ndimage.interpolation.shift(mask, -shift[:mask.ndim], order=0)
-    mask = ndimage.rotate(mask, -rotate, order=0, mode='constant',
-                          cval=np.nan)
+    mask = ndimage.rotate(mask, -rotate, order=0, mode='constant', cval=np.nan)
 
     img_cut = ndimage.interpolation.shift(img, -shift[:img.ndim], order=0)
-    img_cut = ndimage.rotate(img_cut, -rotate, order=0, mode='constant',
-                             cval=np.nan)
+    img_cut = ndimage.rotate(img_cut, -rotate, order=0, mode='constant', cval=np.nan)
     img_cut[np.isnan(mask), ...] = bg_color
     mask[np.isnan(mask)] = bg_mask
 
     prop = measure.regionprops(mask.astype(int))[0]
-    min_row, min_col, max_row, max_col = add_padding(img_cut.shape, padding,
-                                                     *prop.bbox)
+    min_row, min_col, max_row, max_col = add_padding(img_cut.shape, padding, *prop.bbox)
     img_cut = img_cut[min_row:max_row, min_col:max_col, ...]
 
     if use_mask:
