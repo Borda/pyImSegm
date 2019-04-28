@@ -1,9 +1,10 @@
 """
 Attempt to detect egg centers in the segmented images from annotated data
-The input is
-1) 4-class segmentation of ovary images
+The inputs are:
+
+1. 4-class segmentation of ovary images
     (background, nurse, follicular cells and cytoplasm)
-2) annotation of egg centers as
+2. annotation of egg centers as
   2a) csv list of centers
   2b) 3-class annotation:
         (i) for close center,
@@ -12,12 +13,13 @@ The input is
 
 The output is list of potential center candidates
 
-SAMPLE run:
->> python run_center_candidate_training.py -list none \
-    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
-    -segs "data_images/drosophila_ovary_slice/segm/*.png" \
-    -centers "data_images/drosophila_ovary_slice/center_levels/*.png" \
-    -out results -n ovary
+Sample usage::
+
+    python run_center_candidate_training.py -list none \
+        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -segs "data_images/drosophila_ovary_slice/segm/*.png" \
+        -centers "data_images/drosophila_ovary_slice/center_levels/*.png" \
+        -out results -n ovary
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -191,7 +193,8 @@ def find_match_images_segms_centers(path_pattern_imgs, path_pattern_segms,
                                     path_pattern_center=None):
     """ walk over dir with images and segmentation and pair those with the same
     name and if the folder with centers exists also add to each par a center
-    NOTE: returns just paths
+
+    .. note:: returns just paths
 
     :param str path_pattern_imgs:
     :param str path_pattern_segms:

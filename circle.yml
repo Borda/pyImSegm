@@ -9,7 +9,7 @@ references:
         sudo apt-get update
         sudo apt-get install tk-dev pkg-config python-dev python-tk
         sudo pip install --upgrade pip setuptools
-        sudo pip install nose coverage pytest pytest-cov flake8
+        sudo pip install -r requirements-dev.txt
         sudo pip install -U backports.functools_lru_cache  # required for matplotlib @py2
         pip install -r requirements.txt --user
         pip list
@@ -32,6 +32,15 @@ references:
        pip --version ; pip freeze
        python setup.py build_ext --inplace
 
+  make_docs: &make_docs
+   run:
+     name: Make Documentation
+     command: |
+       sudo apt-get install pandoc
+       sudo pip install -r docs/requirements.txt
+       # sphinx-apidoc -o ./docs/source ./imsegm **/tests/* --force --follow-links
+       cd docs; make html
+
 jobs:
   Py2:
     docker:
@@ -44,6 +53,8 @@ jobs:
       - *build_project
       # TESTING
       - *test_coverage
+      # DOCUMENTATION
+      - *make_docs
 
       # ANNOTATION section
       - run: bash handling_annotations/test_annotations.sh

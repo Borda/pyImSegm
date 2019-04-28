@@ -1,11 +1,12 @@
 """
 Replace labels in annotation
 
-SAMPLE run:
->> python run_segm_annot_relabel.py \
-    -imgs "data_images/drosophila_ovary_slice/center_levels/*.png" \
-    -out results/relabel_center_levels \
-    --label_old 2 3 --label_new 1 1 --nb_workers 2
+SAMPLE run::
+
+    python run_segm_annot_relabel.py \
+        -imgs "data_images/drosophila_ovary_slice/center_levels/*.png" \
+        -out results/relabel_center_levels \
+        --label_old 2 3 --label_new 1 1 --nb_workers 2
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

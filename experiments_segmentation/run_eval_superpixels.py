@@ -3,12 +3,13 @@ Evaluate superpixels quality regarding given annotation
 Perform experiment with specified parameters and export output statistic
 per image if the output path is given
 
-SAMPLE run:
->> python run_eval_superpixels.py \
-    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
-    -segm "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
-    --img_type 2d_split \
-    --slic_size 20 --slic_regul 0.25 --slico
+Sample usage::
+
+    python run_eval_superpixels.py \
+        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -segm "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
+        --img_type 2d_split \
+        --slic_size 20 --slic_regul 0.25 --slico
 
 Copyright (C) 2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

@@ -3,13 +3,14 @@ This script is a simple one purpose script to visualise the segmented
 individual eggs compare to user annotation. Generally it can serve as showing
 two different eggs segmentation for the same image
 
-SAMPLE run:
->> python run_export_user-annot-segm.py \
-    -imgs "~/Medical-drosophila/ovary_selected_slices/png2/*.png"
-    -segs "~/Medical-drosophila/RESULTS/ovary_centers_detect/ellipse/*.png"
-    -centers "~/Medical-drosophila/RESULTS/ovary_centers_detect/centre/*.csv"
-    -info "~/Medical-drosophila/info_ovary.txt"
-    -out "~/Medical-drosophila/RESULTS/ovary_centers_detect/ellipse_user-annot"
+Sample usage::
+
+    python run_export_user-annot-segm.py \
+        -imgs "~/Medical-drosophila/ovary_selected_slices/png2/*.png"
+        -segs "~/Medical-drosophila/RESULTS/ovary_centers_detect/ellipse/*.png"
+        -centers "~/Medical-drosophila/RESULTS/ovary_centers_detect/centre/*.csv"
+        -info "~/Medical-drosophila/info_ovary.txt"
+        -out "~/Medical-drosophila/RESULTS/ovary_centers_detect/ellipse_user-annot"
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

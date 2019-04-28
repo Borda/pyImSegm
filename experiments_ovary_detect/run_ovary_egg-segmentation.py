@@ -1,22 +1,24 @@
 """
 Run experiments with several segmentation techniques for instance segmentation
 
-Require installation of Morph. Snakes - https://github.com/Borda/morph-snakes
->> pip install --user git+https://github.com/Borda/morph-snakes.git
+Require installation of Morph. Snakes - https://github.com/Borda/morph-snakes ::
 
-SAMPLE run:
->> python run_ovary_egg-segmentation.py \
-    -list data_images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
-    -out results -n ovary_slices --nb_workers 1 \
-    -m ellipse_moments \
-       ellipse_ransac_mmt \
-       ellipse_ransac_crit \
-       GC_pixels-large \
-       GC_pixels-shape \
-       GC_slic-shape \
-       rg2sp_greedy-mixture \
-       rg2sp_GC-mixture \
-       watershed_morph
+    pip install --user git+https://github.com/Borda/morph-snakes.git
+
+Sample usage::
+
+    python run_ovary_egg-segmentation.py \
+        -list data_images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
+        -out results -n ovary_slices --nb_workers 1 \
+        -m ellipse_moments \
+           ellipse_ransac_mmt \
+           ellipse_ransac_crit \
+           GC_pixels-large \
+           GC_pixels-shape \
+           GC_slic-shape \
+           rg2sp_greedy-mixture \
+           rg2sp_GC-mixture \
+           watershed_morph
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

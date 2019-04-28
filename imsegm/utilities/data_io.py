@@ -346,6 +346,7 @@ def load_image_2d(path_img):
     :return str, ndarray: image name, image as matrix
 
     PNG image
+    ---------
     >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(20, 20, 3))
     >>> path_img = export_image(os.path.join('.', img_name), img,
@@ -368,6 +369,7 @@ def load_image_2d(path_img):
     >>> os.remove(path_img)
 
     TIFF image
+    ----------
     >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(5, 20, 20))
     >>> path_img = export_image(os.path.join('.', img_name), img,
@@ -415,7 +417,8 @@ def export_image(path_img, img, stretch_range=True):
     :param bool stretch_range:
     :return str: path to the image
 
-    Image - PNG
+    PNG image
+    ---------
     >>> np.random.seed(0)
     >>> img = np.random.random([5, 10])
     >>> path_img = export_image(os.path.join('.', 'testing-image'), img)
@@ -434,7 +437,8 @@ def export_image(path_img, img, stretch_range=True):
            [ 93, 113, 181,  15, 173, 174,  54,  33,  82,  94]], dtype=uint8)
     >>> os.remove(path_img)
 
-    Image - TIFF
+    TIFF image
+    ----------
     >>> img = np.random.random([5, 20, 25])
     >>> path_img = export_image(os.path.join('.', 'testing-image'), img)
     >>> path_img
@@ -924,7 +928,8 @@ def merge_image_channels(img_ch1, img_ch2, img_ch3=None):
 def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     """ walk over dir with images and segmentation and pair those with the same
     name and if the folder with centers exists also add to each par a center
-    NOTE: returns just paths
+
+    .. note:: returns just paths
 
     :param [str] list_path_pattern: list of paths with image name patterns
     :param bool drop_none: drop if there are some none - missing values in rows

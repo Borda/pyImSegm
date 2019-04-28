@@ -26,6 +26,8 @@ except ImportError:
     from distutils.core import setup, Extension, find_packages  # , Command
     from distutils.command.build_ext import build_ext
 
+import imsegm
+
 # from Cython.Distutils import build_ext
 # from Cython.Build import cythonize
 # extensions = [Extension("*", "*.pyx")]
@@ -58,14 +60,17 @@ install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
 setup(
     name='ImSegm',
-    version='0.1.6',
-    url='https://borda.github.io/pyImSegm',
-
-    author='Jiri Borovec',
-    author_email='jiri.borovec@fel.cvut.cz',
-    license='BSD 3-clause',
-    description='superpixel image segmentation:'
+    version=imsegm.__version__,
+    url=imsegm.__home__,
+    author=imsegm.__author__,
+    author_email=imsegm.__author_email__,
+    license=imsegm.__license__,
+    description='General superpixel image segmentation:'
                 ' (un)supervised, center detection, region growing',
+    keywords='image segmentation region-growing center-detection ellipse-fitting',
+
+    long_description=imsegm.__doc__,
+    long_description_content_type='text/markdown',
 
     packages=find_packages(
         exclude=['docs', 'notebooks', 'handling_annotations', 'experiments_*']),
@@ -84,10 +89,6 @@ setup(
     # include_dirs = [np.get_include()],
     include_package_data=True,
 
-    long_description="""Image segmentation package contains:
- * supervised and unsupervised segmentation on superpixels using GraphCut,
- * detection object centres and cluster candidates,
- * region growing on superpixel level with a shape prior.""",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",

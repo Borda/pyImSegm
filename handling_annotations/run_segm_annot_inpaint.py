@@ -1,10 +1,11 @@
 """
 Remove a label a inpant these pixels
 
-SAMPLE run:
->> python run_image_annot_inpaint.py \
-    -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
-    --label 4 --nb_workers 2
+SAMPLE run::
+
+    python run_image_annot_inpaint.py \
+        -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
+        --label 4 --nb_workers 2
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

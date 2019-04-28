@@ -15,11 +15,13 @@ Clicking on the image plane by left button change label or ad new point
 and click by right middle remove actual point and right button changes the state
 change to not changed
 
->> sudo apt-get install python-gtk2-dev
->> python gui_annot_center_correction.py \
-    -imgs "~/Medical-drosophila/ovary_all_slices/png/*.png" \
-    -csv "~/Medical-drosophila/TEMPORARY_OVARY/detect_ovary_centers_detect/insitu*.csv" \
-    -info ~/Medical-drosophila/ovary_image_info_for_prague_short.csv
+Sample usage::
+
+    sudo apt-get install python-gtk2-dev
+    python gui_annot_center_correction.py \
+        -imgs "~/Medical-drosophila/ovary_all_slices/png/*.png" \
+        -csv "~/Medical-drosophila/TEMPORARY_OVARY/detect_ovary_centers_detect/insitu*.csv" \
+        -info ~/Medical-drosophila/ovary_image_info_for_prague_short.csv
 
 Copyright (C) 2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

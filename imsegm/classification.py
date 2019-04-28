@@ -239,7 +239,7 @@ def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
             'classif__n_estimators': sp_randint(2, 100),
         }
     }
-    # if this classif is not set use no params
+    # if this classifier is not set use no params
     if name_classif not in clf_params.keys():
         clf_params[name_classif] = {}
     return clf_params[name_classif]
@@ -1431,9 +1431,8 @@ class HoldOut(object):
 
 
 class CrossValidate(object):
-    """
-    Cross-validator generator. In the hold-out, the
-    data is split only once into a train set and a test set.
+    """Cross-validator generator.
+    In the hold-out, the data is split only once into a train set and a test set.
 
     Parameters
     ----------
@@ -1442,8 +1441,9 @@ class CrossValidate(object):
     rand_seed :  seed for the random number generator
     ignore_overflow: float, tolerance while dividing dataset to folds
 
-    Example 1 - balanced split
-    ---------
+    Examples
+    --------
+    >>> # balanced split
     >>> cv = CrossValidate(6, 3, rand_seed=False)
     >>> cv.indexes
     [0, 1, 2, 3, 4, 5]
@@ -1455,8 +1455,7 @@ class CrossValidate(object):
     >>> [(len(tr), len(ts)) for tr, ts in CrossValidate(340, 0.41)]
     [(201, 139), (201, 139), (201, 139)]
 
-    Example 2 - not rounded split
-    ---------
+    >>> # not rounded split
     >>> cv = CrossValidate(7, 3, rand_seed=0)
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([3, 0, 5, 4], [6, 2, 1]),
@@ -1467,8 +1466,7 @@ class CrossValidate(object):
     >>> cv.indexes
     [6, 2, 1, 3, 0, 5, 4]
 
-    Example 3 - larger test then train
-    ---------
+    >>> # larger test then train
     >>> cv = CrossValidate(7, 5, rand_seed=0)
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([6, 2], [1, 3, 0, 5, 4]),
@@ -1478,8 +1476,7 @@ class CrossValidate(object):
     >>> [(len(tr), len(ts)) for tr, ts in CrossValidate(340, 0.55)]
     [(153, 187), (153, 187), (153, 187)]
 
-    Example 4 - impact of tolerance
-    ---------
+    >>> # impact of tolerance
     >>> len(CrossValidate(340, 0.33, ignore_overflow=0.0))
     4
     >>> len(CrossValidate(340, 0.33, ignore_overflow=0.05))
@@ -1592,8 +1589,9 @@ class CrossValidateGroups(CrossValidate):
     rand_seed :  seed for the random number generator
     ignore_overflow: float, tolerance while dividing dataset to folds
 
-    Example 1 - balance split
-    ---------
+    Examples
+    --------
+    >>> # balance split
     >>> cv = CrossValidateGroups([2, 3, 2, 3], 2, rand_seed=False)
     >>> cv.set_indexes
     [[0, 1], [2, 3, 4], [5, 6], [7, 8, 9]]
@@ -1605,8 +1603,7 @@ class CrossValidateGroups(CrossValidate):
     >>> [(len(tr), len(ts)) for tr, ts in CrossValidateGroups([7] * 340, 0.41)]
     [(1407, 973), (1407, 973), (1407, 973)]
 
-    Example 2 - unbalanced split
-    ---------
+    >>> # unbalanced split
     >>> cv = CrossValidateGroups([2, 2, 1, 2, 1], 2, rand_seed=0)
     >>> cv.set_indexes
     [[0, 1], [2, 3], [4], [5, 6], [7]]
@@ -1619,8 +1616,7 @@ class CrossValidateGroups(CrossValidate):
     >>> cv.indexes
     [2, 0, 1, 3, 4]
 
-    Example 3 - larger test then train
-    ---------
+    >>> # larger test then train
     >>> cv = CrossValidateGroups([2, 2, 1, 2, 1, 1], 4, rand_seed=0)
     >>> list(cv)  # doctest: +NORMALIZE_WHITESPACE
     [([8, 4], [2, 3, 5, 6, 0, 1, 7]),

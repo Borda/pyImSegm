@@ -521,7 +521,8 @@ def compute_labels_overlap_matrix(seg1, seg2):
 def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
     """ relabel the second segmentation cu that maximise relative overlap
     for each pattern (object), the relation among patterns is 1-1
-    NOTE: it skips background class - 0
+
+    .. note:: it skips background class - 0
 
     :param ndarray seg_ref: reference segmentation
     :param ndarray seg_relabel: segmentation for relabeling
@@ -611,7 +612,8 @@ def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
     """ relabel the second segmentation cu that maximise relative overlap
     for each pattern (object), if one pattern in reference atlas is likely
     composed from multiple patterns in relabel atlas, it merge them
-    NOTE: it skips background class - 0
+
+    .. note:: it skips background class - 0
 
     :param ndarray seg_ref: reference segmentation
     :param ndarray seg_relabel: segmentation for relabeling

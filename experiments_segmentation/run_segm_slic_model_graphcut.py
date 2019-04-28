@@ -2,19 +2,21 @@
 Run supervised segmentation experiment with superpixels and training examples
 
 Pipeline:
+
  1. segment SLIC superpixels
  2. compute features (color and texture)
  3. estimate model from single image or whole set
  4. segment new images
 
-NOTE: there are a few constants to that have an impact on the experiment,
-see them bellow with explanation for each of them.
+.. note:: there are a few constants to that have an impact on the experiment,
+ see them bellow with explanation for each of them.
 
-SAMPLE run:
->> python run_segm_slic_model_graphcut.py \
-   -l data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-   -i "data_images/langerhans_islets/image/*.jpg" \
-   -o results -n LangIsl --nb_classes 3 --nb_workers 2 --visual
+Sample usage::
+
+    python run_segm_slic_model_graphcut.py \
+       -l data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
+       -i "data_images/langerhans_islets/image/*.jpg" \
+       -o results -n LangIsl --nb_classes 3 --nb_workers 2 --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

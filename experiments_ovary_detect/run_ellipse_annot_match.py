@@ -2,11 +2,12 @@
 Attempt to find best matching between annotation and ellipses
 - reconstruct the user annotation and compare it with estimated ellipses
 
-SAMPLE run:
->> python run_ellipse_annot_match.py \
-    -info ~/Medical-drosophila/all_ovary_image_info_for_prague.txt \
-    -ells ~/Medical-drosophila/RESULTS/3_ellipse_ransac_crit_params/*.csv \
-    -out ~/Medical-drosophila/RESULTS
+Sample usage::
+
+    python run_ellipse_annot_match.py \
+        -info ~/Medical-drosophila/all_ovary_image_info_for_prague.txt \
+        -ells ~/Medical-drosophila/RESULTS/3_ellipse_ransac_crit_params/*.csv \
+        -out ~/Medical-drosophila/RESULTS
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

@@ -30,7 +30,6 @@ read ZVI (Zeiss) image file
 >>> img = load_image(path_file)
 >>> img.shape
 (4, 488, 648)
-
 """
 
 import struct

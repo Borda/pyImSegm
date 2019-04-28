@@ -1,13 +1,14 @@
 """
 Evaluate the resulting individual object / egg segmentation
 
-SAMPLE run:
->> python run_ovary_segm_evaluation.py \
-    --images "~/Medical-drosophila/ovary_selected_slices/png2/*.png" \
-    --annots "~/Medical-drosophila/Ovary-eggs/mask_2d_slice_complete_ind_egg/*.png" \
-    --segments "~/Medical-drosophila/RESULTS/segment_ovary_slices_selected/*.png" \
-    --centers "~/Medical-drosophila/RESULTS/detect_ovary_centers_detect/*.csv" \
-    --results ~/Medical-drosophila/RESULTS/experiment_egg-segment_ovary
+Sample usage::
+
+    python run_ovary_segm_evaluation.py \
+        --images "~/Medical-drosophila/ovary_selected_slices/png2/*.png" \
+        --annots "~/Medical-drosophila/Ovary-eggs/mask_2d_slice_complete_ind_egg/*.png" \
+        --segments "~/Medical-drosophila/RESULTS/segment_ovary_slices_selected/*.png" \
+        --centers "~/Medical-drosophila/RESULTS/detect_ovary_centers_detect/*.csv" \
+        --results ~/Medical-drosophila/RESULTS/experiment_egg-segment_ovary
 
 Copyright (C) 2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

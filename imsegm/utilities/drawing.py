@@ -72,7 +72,6 @@ def _ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
            [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-
     center = np.array([r, c])
     radii = np.array([r_radius, c_radius])
     # allow just rotation with in range +/- 180 degree
@@ -112,9 +111,10 @@ def _ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
     return rr, cc
 
 
-# Should be solved in skimage v0.13
 def ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
     """ temporary wrapper until release New version scikit-image v0.13
+
+    .. note:: Should be solved in skimage v0.13
 
     :param int r: center position in rows
     :param int c: center position in columns
@@ -150,10 +150,10 @@ def ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
     return rr, cc
 
 
-# Should be solved in skimage v0.14
 def ellipse_perimeter(r, c, r_radius, c_radius, orientation=0., shape=None):
     """ see New version scikit-image v0.14
 
+    .. note:: Should be solved in skimage v0.14
 
     :param int r: center position in rows
     :param int c: center position in columns
@@ -211,7 +211,7 @@ def figure_image_adjustment(fig, img_size):
 
     :param fig: Figure
     :param (int, int) img_size: image size
-    :return:
+    :return Figure:
 
     >>> fig = figure_image_adjustment(plt.figure(), (150, 200))
     >>> isinstance(fig, matplotlib.figure.Figure)
@@ -418,7 +418,7 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
     :param [(int, int)] centers:
     :param [float] crits:
     :param float fig_size:
-    :return:
+    :return Figure:
 
     >>> img = np.random.random((100, 150, 3))
     >>> seg = np.random.randint(0, 2, (100, 150))
@@ -502,7 +502,7 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None, points_re
     :param ndarray points_reconst:
     :return Figure:
 
-    example, see unittests
+    .. note:: for more examples, see unittests
     """
     ray_dist_raw = ray_dist_raw if ray_dist_raw is not None else []
     ray_dist = ray_dist if ray_dist is not None else []

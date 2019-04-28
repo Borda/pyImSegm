@@ -1,14 +1,16 @@
 """
 Quantize annotation, common application:
+
  * remove some noise in the image
  * gradients along edges
 
-NOTE, for JPEG there is always some smoothing so only allowed format is PNG
+.. note:: for JPEG there is always some smoothing so only allowed format is PNG
 
-SAMPLE run:
->> python run_image_color_quantization.py \
-    -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png" \
-    -m position
+SAMPLE run::
+
+    python run_image_color_quantization.py \
+        -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png" \
+        -m position
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

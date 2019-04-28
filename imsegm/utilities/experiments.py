@@ -27,8 +27,10 @@ FILE_LOGS = 'logging.txt'
 
 
 class Experiment(object):
-    """
+    """ Basic experiment class
 
+    Example
+    -------
     >>> import shutil
     >>> params = {'path_out': './my_experiments', 'name': 'My-Sample'}
     >>> expt = Experiment(params)
@@ -314,8 +316,10 @@ def create_subfolders(path_out, folders):
 
 
 class WrapExecuteSequence:
-    """ wrapper for execution paralle of single thread as for...
+    """ wrapper for execution paralle of single thread as for ...
 
+    Example
+    -------
     >>> it = WrapExecuteSequence(lambda x: (x, x ** 2), range(5),
     ...                          nb_workers=1, ordered=True)
     >>> list(it)

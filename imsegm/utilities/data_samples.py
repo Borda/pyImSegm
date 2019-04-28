@@ -23,22 +23,15 @@ IMAGE_LENNA = os.path.join('others', 'lena.png')
 IMAGE_OBJECTS = os.path.join('synthetic', 'reference.jpg')
 IMAGE_3CLS = os.path.join('synthetic', 'texture_rgb_3cls.jpg')
 IMAGE_STAR = os.path.join('others', 'sea_starfish-2.jpg')
-IMAGE_HISTOL_CIMA = \
-    os.path.join('histology_CIMA', '29-041-Izd2-w35-CD31-3-les1.jpg')
-IMAGE_HISTOL_FLAGSHIP = \
-    os.path.join('histology_Flagship', 'Case001_Cytokeratin.jpg')
-IMAGE_DROSOPHILA_DISC = \
-    os.path.join('drosophila_disc', 'image', 'img_6.jpg')
-ANNOT_DROSOPHILA_DISC = \
-    os.path.join('drosophila_disc', 'annot', 'img_6.png')
-IMAGE_DROSOPHILA_OVARY_2D = \
-    os.path.join('drosophila_ovary_slice', 'image', 'insitu7545.jpg')
-ANNOT_DROSOPHILA_OVARY_2D = \
-    os.path.join('drosophila_ovary_slice', 'annot_struct', 'insitu7545.png')
-IMAGE_DROSOPHILA_OVARY_3D = \
-    os.path.join('drosophila_ovary_3D', 'AU10-13_f0011.tif')
-IMAGE_LANGER_ISLET = \
-    os.path.join('langerhans_islets', 'image', 'gtExoIsl_21.jpg')
+IMAGE_HISTOL_CIMA = os.path.join('histology_CIMA', '29-041-Izd2-w35-CD31-3-les1.jpg')
+IMAGE_HISTOL_FLAGSHIP = os.path.join('histology_Flagship', 'Case001_Cytokeratin.jpg')
+IMAGE_DROSOPHILA_DISC = os.path.join('drosophila_disc', 'image', 'img_6.jpg')
+ANNOT_DROSOPHILA_DISC = os.path.join('drosophila_disc', 'annot', 'img_6.png')
+IMAGE_DROSOPHILA_OVARY_2D = os.path.join('drosophila_ovary_slice', 'image', 'insitu7545.jpg')
+ANNOT_DROSOPHILA_OVARY_2D = os.path.join('drosophila_ovary_slice', 'annot_struct',
+                                         'insitu7545.png')
+IMAGE_DROSOPHILA_OVARY_3D = os.path.join('drosophila_ovary_3D', 'AU10-13_f0011.tif')
+IMAGE_LANGER_ISLET = os.path.join('langerhans_islets', 'image', 'gtExoIsl_21.jpg')
 
 LIST_ALL_IMAGES = [
     IMAGE_LENNA, IMAGE_3CLS, IMAGE_OBJECTS, IMAGE_STAR,

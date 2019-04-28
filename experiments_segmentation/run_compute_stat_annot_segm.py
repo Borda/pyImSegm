@@ -2,11 +2,13 @@
 Compute segmentation statistic against given annotation
 Specify the segmentation and annotation folder and optionaly the image folder
 
->> python run_compute_stat_annot_segm.py \
-    -a "data_images/drosophila_ovary_slice/annot_struct/*.png" \
-    -s "results/experiment_segm-supervise_ovary/*.png" \
-    -i "data_images/drosophila_ovary_slice/image/*.jpg" \
-    -o results/evaluation --drop_labels -1 --overlap 0.2 --visual
+Sample usage::
+
+    python run_compute_stat_annot_segm.py \
+        -a "data_images/drosophila_ovary_slice/annot_struct/*.png" \
+        -s "results/experiment_segm-supervise_ovary/*.png" \
+        -i "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -o results/evaluation --drop_labels -1 --overlap 0.2 --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

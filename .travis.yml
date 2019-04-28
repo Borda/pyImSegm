@@ -31,9 +31,8 @@ before_install:
 
 install:
   - mkdir libs
-
   - pip install -r requirements.txt
-  - pip install nose coverage codecov pytest codacy-coverage check-manifest flake8
+  - pip install -r requirements-dev.txt
   - pip list
 
 before_script:

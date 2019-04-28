@@ -2,12 +2,13 @@
 Attempt to detect egg centers in the segmented images from annotated data.
 The output is list of potential center candidates.
 
-SAMPLE run:
->> python run_center_prediction.py -list none \
-    -segs "data_images/drosophila_ovary_slice/segm/*.png" \
-    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
-    -centers results/detect-centers-train_ovary/classifier_RandForest.pkl \
-    -out results -n ovary
+Sample usage::
+
+    python run_center_prediction.py -list none \
+        -segs "data_images/drosophila_ovary_slice/segm/*.png" \
+        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -centers results/detect-centers-train_ovary/classifier_RandForest.pkl \
+        -out results -n ovary
 
 Copyright (C) 2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

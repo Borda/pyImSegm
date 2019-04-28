@@ -1448,7 +1448,7 @@ def cython_label_hist_seg2d(segm_select, struc_elem, nb_labels):
     :param int nb_labels: total number of labels in the segmentation
     :return [float]:
 
-    NOTE: output of this function should be equal to
+    .. note:: output of this function should be equal to
     ```
     for lb in range(nb_labels):
         hist[lb] = np.sum(np.logical_and(segm_select == lb, struc_elem == 1))
@@ -1535,7 +1535,8 @@ def compute_ray_features_segm_2d_vectors(seg_binary, position, angle_step=5.,
     :param float angle_step:
     :return [float]:
 
-    example, see unittests
+    .. note:: for more examples, see unittests
+
     >>> from skimage import draw
     >>> seg = np.ones((100, 100), dtype=bool)
     >>> x, y = draw.circle(45, 55, 30, shape=seg.shape)
@@ -1615,7 +1616,7 @@ def cython_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
     :param str edge: pointing to the up of down edge of an boundary
     :return [float]: ray distances
 
-    NOTE: this test should be equal to the `numpy_ray_features_segm_2d`
+    .. note:: this test should be equal to the `numpy_ray_features_segm_2d`
 
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
     >>> cython_ray_features_seg2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
@@ -1647,7 +1648,7 @@ def numpy_ray_features_segm_2d(seg_binary, position, angle_step=5., edge='up'):
     :param str edge: pointing to the up of down edge of an boundary
     :return [float]: ray distances
 
-    NOTE: this test should be equal to the `cython_ray_features_seg2d`
+    .. note:: this test should be equal to the `cython_ray_features_seg2d`
 
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
     >>> numpy_ray_features_segm_2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
@@ -1705,7 +1706,8 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
     :param int smooth_coef: smoothing the final ray features
     :return [float]: ray distances
 
-    example, see unittests
+    .. note:: for more examples, see unittests
+
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
     >>> compute_ray_features_segm_2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
     array([-1., -1., -1., -1.]...)
@@ -1798,7 +1800,8 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     :param str edge: type of edge up/down
     :return:
 
-    example, see unittests
+    .. note:: for more examples, see unittests
+
     >>> from skimage import draw
     >>> np.random.seed(0)
     >>> seg = np.zeros((100, 100), dtype=int)
@@ -1941,7 +1944,8 @@ def reconstruct_ray_features_2d(position, ray_features, shift=0):
     :param float shift:
     :return [[float, float]]:
 
-    example, see unittests
+    .. note:: for more examples, see unittests
+
     >>> reconstruct_ray_features_2d((10., 10), np.array([1] * 4))
     array([[ 10.,  11.],
            [ 11.,  10.],

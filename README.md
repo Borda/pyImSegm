@@ -5,10 +5,11 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/48b7976bbe9d42bc8452f6f9e573ee70)](https://www.codacy.com/app/Borda/pyImSegm?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Borda/pyImSegm&amp;utm_campaign=Badge_Grade)
 [![CircleCI](https://circleci.com/gh/Borda/pyImSegm.svg?style=svg&circle-token=a30180a28ae7e490c0c0829d1549fcec9a5c59d0)](https://circleci.com/gh/Borda/pyImSegm)
 [![Run Status](https://api.shippable.com/projects/5962ea48a125960700c197f8/badge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
-[![Coverage Badge](https://api.shippable.com/projects/5962ea48a125960700c197f8/coverageBadge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
 [![CodeFactor](https://www.codefactor.io/repository/github/borda/pyimsegm/badge)](https://www.codefactor.io/repository/github/borda/pyimsegm)
+[![Documentation Status](https://readthedocs.org/projects/pyimsegm/badge/?version=latest)](https://pyimsegm.readthedocs.io/en/latest/?badge=latest)
 [![Gitter](https://badges.gitter.im/pyImSegm/community.svg)](https://gitter.im/pyImSegm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 <!--
+[![Coverage Badge](https://api.shippable.com/projects/5962ea48a125960700c197f8/coverageBadge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Borda/pyImSegm/master?filepath=notebooks)
 -->
 
@@ -16,13 +17,13 @@
 
 ## Superpixel segmentation with GraphCut regularisation
 
-Image segmentation is widely used as an initial phase of many image processing tasks in computer vision and image analysis. Many recent segmentation methods use superpixels because they reduce the size of the segmentation problem by order of magnitude. Also,  features on superpixels are much more robust than features on pixels only. We use spatial regularisation on superpixels to make segmented regions more compact. The segmentation pipeline comprises (i) computation of superpixels; (ii) extraction of descriptors such as colour and texture; (iii) soft classification, using a standard classifier for supervised learning, or the Gaussian Mixture Model for unsupervised learning; (iv) final segmentation using Graph Cut. We use this segmentation pipeline on real-world applications in medical imaging (see a sample [images](./data_images)). We also show that [unsupervised segmentation](./notebooks/segment-2d_slic-fts-model-gc.ipynb) is sufficient for some situations, and provides similar results to those obtained using [trained segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb).
+Image segmentation is widely used as an initial phase of many image processing tasks in computer vision and image analysis. Many recent segmentation methods use superpixels because they reduce the size of the segmentation problem by order of magnitude. Also,  features on superpixels are much more robust than features on pixels only. We use spatial regularisation on superpixels to make segmented regions more compact. The segmentation pipeline comprises (i) computation of superpixels; (ii) extraction of descriptors such as colour and texture; (iii) soft classification, using a standard classifier for supervised learning, or the Gaussian Mixture Model for unsupervised learning; (iv) final segmentation using Graph Cut. We use this segmentation pipeline on real-world applications in medical imaging (see a sample [images](./data_images)). We also show that [unsupervised segmentation](notebooks/segment-2d_slic-fts-clust-gc.ipynb) is sufficient for some situations, and provides similar results to those obtained using [trained segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb).
 
 ![schema](figures/schema_slic-fts-clf-gc.jpg)
 
 **Sample ipython notebooks:**
 * [Supervised segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb) requires training annotation
-* [Unsupervised segmentation](notebooks/segment-2d_slic-fts-model-gc.ipynb) just asks for expected number of classes
+* [Unsupervised segmentation](notebooks/segment-2d_slic-fts-clust-gc.ipynb) just asks for expected number of classes
 * **partially annotated images** with missing annotation is marked by a negative number
 
 **Illustration**
@@ -339,6 +340,6 @@ pip install --user git+https://github.com/Borda/morph-snakes.git
 ## References
 
 For complete references see [BibTex](docs/references.bib).
-1. Borovec J., Svihlik J., Kybic J., Habart D. (2017). **Supervised and unsupervised segmentation using superpixels, model estimation, and Graph Cut.** SPIE Journal of Electronic Imaging 26(6), 061610, [DOI: 10.1117/1.JEI.26.6.061610](http://doi.org/10.1117/1.JEI.26.6.061610).
+1. Borovec J., Svihlik J., Kybic J., Habart D. (2017). **Supervised and unsupervised segmentation using superpixels, model estimation, and Graph Cut.** SPIE Journal of Electronic Imaging 26(6), 061610. [DOI: 10.1117/1.JEI.26.6.061610](http://doi.org/10.1117/1.JEI.26.6.061610).
 1. Borovec J., Kybic J., Nava R. (2017) **Detection and Localization of Drosophila Egg Chambers in Microscopy Images.** In: Wang Q., Shi Y., Suk HI., Suzuki K. (eds) Machine Learning in Medical Imaging. MLMI 2017. LNCS, vol 10541. Springer, Cham. [DOI: 10.1007/978-3-319-67389-9_3](http://doi.org/10.1007/978-3-319-67389-9_3).
-1. Borovec J., Kybic J., Sugimoto, A. (2017). **Region growing using superpixels with learned shape prior.** SPIE Journal of Electronic Imaging 26(6),  061611, [DOI: 10.1117/1.JEI.26.6.061611](http://doi.org/10.1117/1.JEI.26.6.061611).
+1. Borovec J., Kybic J., Sugimoto, A. (2017). **Region growing using superpixels with learned shape prior.** SPIE Journal of Electronic Imaging 26(6),  061611. [DOI: 10.1117/1.JEI.26.6.061611](http://doi.org/10.1117/1.JEI.26.6.061611).

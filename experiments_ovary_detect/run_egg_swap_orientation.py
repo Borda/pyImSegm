@@ -1,10 +1,11 @@
 """
 Rotate the extracted eggs according major mass in main diagonal
 
-SAMPLE run:
->> python run_egg_swap_orientation.py \
-    -imgs "~/Medical-drosophila/RESULTS/images_cut_ellipse_stages/2/*.png" \
-    -out ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages/2
+Sample usage::
+
+    python run_egg_swap_orientation.py \
+        -imgs "~/Medical-drosophila/RESULTS/images_cut_ellipse_stages/2/*.png" \
+        -out ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages/2
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

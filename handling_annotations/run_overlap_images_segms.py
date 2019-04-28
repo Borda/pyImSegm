@@ -2,11 +2,12 @@
 Taking folder with images and also related segmentation and generate to another
 folder a figure for each image as image with overlapped contour of the segmentation
 
-SAMPLE run:
->> python run_overlap_images_segms.py \
-    -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
-    -segs data_images/drosophila_ovary_slice/segm \
-    -out results/overlap_ovary_segment
+SAMPLE run::
+
+    python run_overlap_images_segms.py \
+        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -segs data_images/drosophila_ovary_slice/segm \
+        -out results/overlap_ovary_segment
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

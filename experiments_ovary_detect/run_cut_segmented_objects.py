@@ -1,11 +1,12 @@
 """
 Cut out images according given object segmentation
 
-SAMPLE run:
->> python run_cut_segmented_objects.py \
-    -annot "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
-    -img "data_images/drosophila_ovary_slice/segm/*.png" \
-    -out results/cut_images --padding 20
+Sample usage::
+
+    python run_cut_segmented_objects.py \
+        -annot "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
+        -img "data_images/drosophila_ovary_slice/segm/*.png" \
+        -out results/cut_images --padding 20
 
 """
 

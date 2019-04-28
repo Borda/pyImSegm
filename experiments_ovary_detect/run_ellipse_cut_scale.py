@@ -1,11 +1,12 @@
 """
 Estimate the normal size per stage, cut these images and norm them
 
-SAMPLE run:
->> python run_ellipse_cut_scale.py \
-    -info ~/Medical-drosophila/RESULTS/info_ovary_images_ellipses.csv \
-    -imgs ~/Medical-drosophila/RESULTS/0_input_images_png/*.png \
-    -out ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages
+Sample usage::
+
+    python run_ellipse_cut_scale.py \
+        -info ~/Medical-drosophila/RESULTS/info_ovary_images_ellipses.csv \
+        -imgs ~/Medical-drosophila/RESULTS/0_input_images_png/*.png \
+        -out ~/Medical-drosophila/RESULTS/images_cut_ellipse_stages
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

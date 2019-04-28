@@ -185,7 +185,6 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
     ----------
     .. [1] "RANSAC", Wikipedia, http://en.wikipedia.org/wiki/RANSAC
 
-
     >>> seg = np.zeros((120, 150), dtype=int)
     >>> ell_params = 60, 75, 40, 65, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)

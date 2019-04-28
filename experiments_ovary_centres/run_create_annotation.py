@@ -3,18 +3,20 @@ This script takes folder with some segmentation and identify all independent
 regions (eggs), and fo each region it compute cennter of mass and all centers
 export into single csv file.
 
-Note, it keep same names fo the in and out dir has to be different
+.. note:: it keep same names fo the in and out dir has to be different
 
-SAMPLE run:
->> python run_create_annot_centers.py \
-    -segs "~/Medical-drosophila/RESULTS/segment_ovary_slices_selected/*.png" \
-    -out ~/Medical-drosophila/egg_segmentation/mask_center_levels
+Sample usage::
 
-Visualize:
->> python handling_annotations/run_overlap_images_segms.py \
-    -imgs "~/Medical-drosophila/ovary_all_slices/png/*.png" \
-    -segs ~/Medical-drosophila/egg_segmentation/mask_center_levels \
-    -out ~/Medical-drosophila/RESULTS/visu_mask_center_levels
+    python run_create_annot_centers.py \
+        -segs "~/Medical-drosophila/RESULTS/segment_ovary_slices_selected/*.png" \
+        -out ~/Medical-drosophila/egg_segmentation/mask_center_levels
+
+Visualize::
+
+    python handling_annotations/run_overlap_images_segms.py \
+        -imgs "~/Medical-drosophila/ovary_all_slices/png/*.png" \
+        -segs ~/Medical-drosophila/egg_segmentation/mask_center_levels \
+        -out ~/Medical-drosophila/RESULTS/visu_mask_center_levels
 
 Copyright (C) 2015-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

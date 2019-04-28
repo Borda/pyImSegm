@@ -1,11 +1,12 @@
 """
 Convert label image to colors and other way around
 
-SAMPLE run:
->> python run_image_convert_label_color.py \
-    -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
-    -out data_images/drosophila_ovary_slice/segm_rgb \
-    -clrs data_images/drosophila_ovary_slice/segm_rgb/dict_label-color.json
+SAMPLE run::
+
+    python run_image_convert_label_color.py \
+        -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
+        -out data_images/drosophila_ovary_slice/segm_rgb \
+        -clrs data_images/drosophila_ovary_slice/segm_rgb/dict_label-color.json
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

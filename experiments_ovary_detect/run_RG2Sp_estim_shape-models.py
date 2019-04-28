@@ -1,10 +1,11 @@
 """
 Create the Ray shape model fro Region Growing segmentation
 
-SAMPLE run:
->> python run_RG2Sp_estim-shape-models.py \
-    -annot "~/Medical-drosophila/mask_2d_slice_complete_ind_egg/*.png" \
-    -out data -nb 15
+Sample usage::
+
+    python run_RG2Sp_estim-shape-models.py \
+        -annot "~/Medical-drosophila/mask_2d_slice_complete_ind_egg/*.png" \
+        -out data -nb 15
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """

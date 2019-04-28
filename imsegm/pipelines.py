@@ -152,7 +152,9 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     :param debug_visual: {str: ...}
     :return [[int]]: segmentation matrix mapping each pixel into a class
 
-    UnSupervised:
+    Examples
+    --------
+    >>> # UnSupervised:
     >>> import imsegm.descriptors as seg_fts
     >>> np.random.seed(0)
     >>> seg_fts.USE_CYTHON = False
@@ -166,7 +168,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     >>> seg_soft.shape
     (125, 150, 2)
 
-    Supervised:
+    >>> # Supervised:
     >>> import imsegm.descriptors as seg_fts
     >>> np.random.seed(0)
     >>> seg_fts.USE_CYTHON = False
