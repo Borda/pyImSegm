@@ -77,7 +77,7 @@ def segment_slic_img3d_gray(im, sp_size=50, relative_compact=0.1,
     :param int sp_size: superpixel initial size
     :param float relative_compact: relative regularisation in range (0, 1)
         where 0 is for free form and 1 for nearly rectangular superpixels
-    :param (int, int, int) space: spacing in 3d image may not be equal
+    :param tuple(int,int,int) space: spacing in 3d image may not be equal
     :return ndarray:
 
     >>> np.random.seed(0)
@@ -116,7 +116,7 @@ def make_graph_segment_connect_edges(vertices, all_edges):
 
     :param ndarray vertices:
     :param ndarray all_edges:
-    :return (ndarray, ndarray):
+    :return tuple(ndarray,ndarray):
     """
     all_edges = all_edges[all_edges[:, 0] != all_edges[:, 1], :]
     all_edges = np.sort(all_edges, axis=1)

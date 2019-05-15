@@ -25,7 +25,7 @@ def generate_data(nb_samples=100, nb_classes=3, dim_features=4):
     :param int nb_samples: number of samples per class
     :param int dim_features: dimension of feature space
     :param int nb_classes: number of classes
-    :return ([int], ndarray): [int], np.array<nb_samples, dim_fts>
+    :return tuple(list(int),ndarray): list(int), np.array<nb_samples, dim_fts>
     """
     labels = range(int(nb_classes))
     labels = list(labels) * nb_samples
@@ -47,9 +47,9 @@ class TestClassification(unittest.TestCase):
 
         :param clf: classifier object
         :param features_train: np.array<nb_spl, dim_fts>
-        :param labels_train: [int]
+        :param list(int) labels_train:
         :param features_test: np.array<nb_spl, dim_fts>
-        :param labels_test: [int]
+        :param list(int) labels_test:
         """
         nb_classes = len(np.unique(labels_train))
         f1_train = metrics.f1_score(labels_train, clf.predict(features_train),

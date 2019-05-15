@@ -109,11 +109,11 @@ class Experiment(object):
 def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True):
     """ create the experiment folder and iterate while there is no available
 
-    :param {str: any} params:
+    :param dict params:
     :param str dir_name: folder name
     :param bool stamp_unique: use unique timestamp
     :param bool skip_load: skip loading folder params
-    :return {str: ...}:
+    :return dict:
 
     >>> import shutil
     >>> p = {'path_out': '.'}
@@ -174,7 +174,7 @@ def set_experiment_logger(path_out, file_name=FILE_LOGS, reset=True):
 def string_dict(d, offset=30, desc='DICTIONARY'):
     """ transform dictionary to a formatted string
 
-    :param {} d:
+    :param dict d:
     :param int offset: length between name and value
     :param str desc: dictionary title
     :return str:
@@ -241,10 +241,10 @@ def is_iterable(var):
 def extend_list_params(params, name_param, options):
     """ extend the parameter list by all sub-datasets
 
-    :param [{str: ...}] params: list of parameters
+    :param list(dict) params: list of parameters
     :param str name_param: parameter name
     :param [] options: lost of options
-    :return [{str: ...}]:
+    :return list(dict):
 
     >>> import pandas as pd
     >>> params = extend_list_params([{'a': 1}], 'a', [3, 4])
@@ -292,7 +292,7 @@ def create_subfolders(path_out, folders):
     """ create subfolders in rood directory
 
     :param str path_out: root dictionary
-    :param [str] folders: list of subfolders
+    :param list(str) folders: list of subfolders
     :return int:
 
     >>> import shutil

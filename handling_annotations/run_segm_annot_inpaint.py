@@ -75,7 +75,7 @@ def perform_img_inpaint(path_img, labels):
 def quantize_folder_images(path_images, label, nb_workers=1):
     """ perform single or multi thread image quantisation
 
-    :param [str] path_images: list of image paths
+    :param list(str) path_images: list of image paths
     :param int nb_workers:
     """
     assert os.path.isdir(os.path.dirname(path_images)), \

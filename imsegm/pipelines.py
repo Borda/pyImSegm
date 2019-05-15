@@ -45,14 +45,14 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
     :param int sp_size: initial size of a superpixel(meaning edge length)
     :param float sp_regul: regularisation in range(0,1) where 0 gives elastic
                    and 1 nearly square slic
-    :param {} dict_features: {clr: [str]}
+    :param dict dict_features: {clr: list(str)}
     :param float pca_coef: range (0, 1) or None
     :param str estim_model: estimating model
     :param float gc_regul: GC regularisation
     :param str gc_edge_type: graphCut edge type
     :param bool use_scaler: using scaler block in pipeline
-    :param debug_visual: {str: ...}
-    :return [[int]]: segmentation matrix maping each pixel into a class
+    :param debug_visual: dict
+    :return list(list(int)): segmentation matrix maping each pixel into a class
 
     >>> np.random.seed(0)
     >>> image = np.random.random((125, 150, 3)) / 2.
@@ -106,7 +106,7 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
         and "1" nearly square slic
-    :param {str: [str]} dict_features: list of features to be extracted
+    :param dict(list(str)) dict_features: list of features to be extracted
     :param float pca_coef: range (0, 1) or None
     :param bool use_scaler: whether use a scaler
     :param str model_type: model type
@@ -146,11 +146,11 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
                    and "1" nearly square slic
-    :param {str: [str]} dict_features: list of features to be extracted
+    :param dict(list(str)) dict_features: list of features to be extracted
     :param float gc_regul: GC regularisation
     :param str gc_edge_type: select the GC edge type
-    :param debug_visual: {str: ...}
-    :return [[int]]: segmentation matrix mapping each pixel into a class
+    :param debug_visual: dict
+    :return list(list(int)): segmentation matrix mapping each pixel into a class
 
     Examples
     --------
@@ -222,11 +222,11 @@ def compute_color2d_superpixels_features(image, dict_features,
     """ segment image into superpixels and estimate features per superpixel
 
     :param ndarray image: input RGB image
-    :param {str: [str]} dict_features: list of features to be extracted
+    :param dict(list(str)) dict_features: list of features to be extracted
     :param int sp_size: initial size of a superpixel(meaning edge length)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
            and "1" nearly square segments
-    :return [[int]], [[floats]]: superpixels and related of features
+    :return list(list(int)), [[floats]]: superpixels and related of features
     """
     assert sp_regul > 0., 'slic. regularisation must be positive'
     logging.debug('run Superpixel clustering.')
@@ -285,7 +285,7 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
         and "1" nearly square segments
-    :param {str: [str]} dict_features: list of features to be extracted
+    :param dict(list(str)) dict_features: list of features to be extracted
     :param str clf_name: selet udsed classifier
     :param float label_purity: set the sample-labels purity for training
     :param str feature_balance: set how to balance datasets
@@ -352,9 +352,9 @@ def pipe_gray3d_slic_features_model_graphcut(image, nb_classes, dict_features,
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
            and "1" nearly square segments
     :param int nb_classes: number of classes to be segmented(indexing from 0)
-    :param (int, int, int) spacing:
+    :param tuple(int,int,int) spacing:
     :param float gc_regul: regularisation for GC
-    :return [[int]]: segmentation matrix maping each pixel into a class
+    :return list(list(int)): segmentation matrix maping each pixel into a class
 
     >>> np.random.seed(0)
     >>> image = np.random.random((5, 125, 150)) / 2.

@@ -44,15 +44,15 @@ def object_segmentation_graphcut_slic(slic, segm, centres,
     :param ndarray slic: superpixel pre-segmentation
     :param ndarray segm: input structure segmentation
     :param [(int, int)] centres: superpixel centres
-    :param [float] labels_fg_prob: weight for particular label belongs to FG
+    :param list(float) labels_fg_prob: weight for particular label belongs to FG
     :param float gc_regul: regularisation for GC
     :param float edge_coef: weight og edges on GC
     :param str edge_type: select the egde weights on graph
     :param float coef_shape: set the weight of shape prior
     :param shape_mean_std: mean and STD for shape prior
     :param bool add_neighbours: add also neighboring supepixels to the center
-    :param {} debug_visual: dictionary with some intermediate results
-    :return [[int]]:
+    :param dict debug_visual: dictionary with some intermediate results
+    :return list(list(int)):
 
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3 + [3] * 3 + [4] * 3,
     ...                  [5] * 3 + [6] * 3 + [7] * 3 + [8] * 3 + [9] * 3])
@@ -155,13 +155,13 @@ def object_segmentation_graphcut_pixels(segm, centres,
     :param ndarray centres:
     :param ndarray segm: input structure segmentation
     :param [(int, int)] centres: superpixel centres
-    :param [float] labels_fg_prob: set how much particular label belongs to foreground
+    :param list(float) labels_fg_prob: set how much particular label belongs to foreground
     :param float gc_regul: regularisation for GC
     :param int seed_size: create circular neighborhood around initial centre
     :param float coef_shape: set the weight of shape prior
     :param shape_mean_std: mean and STD for shape prior
-    :param {} debug_visual: dictionary with some intermediate results
-    :return [[int]]:
+    :param dict debug_visual: dictionary with some intermediate results
+    :return list(list(int)):
 
     >>> segm = np.array([[0] * 10,
     ...                 [1] * 5 + [0] * 5, [1] * 4 + [0] * 6,
@@ -252,7 +252,7 @@ def compute_segm_object_shape(img_object, ray_step=5, interp_order=3,
     :param int interp_order: if None, no interpolation is performed
     :param float smooth_coef: smoothing the ray features
     :param str shift_method: use method for estimate shift maxima (phase or max)
-    :return [int], int:
+    :return tuple(list(int), int):
 
     >>> img = np.zeros((100, 100))
     >>> img[20:70, 30:80] = 1
@@ -281,7 +281,7 @@ def compute_object_shapes(list_img_objects, ray_step=5, interp_order=3,
     :param int interp_order: if None, no interpolation is performed
     :param float smooth_coef: smoothing the ray features
     :param str shift_method: use method for estimate shift maxima (phase or max)
-    :return [[int]], [int]:
+    :return tuple(list(list(int)),list(int)):
 
     >>> img1 = np.zeros((100, 100))
     >>> img1[20:50, 30:60] = 1
@@ -352,9 +352,9 @@ def compute_cumulative_distrib(means, stds, weights, max_dist):
 def transform_rays_model_cdf_mixture(list_rays, coef_components=1):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays: list ray features (distances)
+    :param list(list(int)) list_rays: list ray features (distances)
     :param int coef_components: multiplication for number of components
-    :return any, [[int]]: mixture model, cumulative distribution
+    :return any, list(list(int)): mixture model, cumulative distribution
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
@@ -393,10 +393,10 @@ def transform_rays_model_cdf_mixture(list_rays, coef_components=1):
 def transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_components=5, slic_size=15):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays: list ray features (distances)
+    :param list(list(int)) list_rays: list ray features (distances)
     :param int nb_components: number components in mixture model
     :param int slic_size: superpixel size
-    :return any, [[int]]:  mixture model, list of stat/param of models
+    :return tuple(any,list(list(int))):  mixture model, list of stat/param of models
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
@@ -433,9 +433,9 @@ def transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_components=5, slic_
 def transform_rays_model_sets_mean_cdf_kmeans(list_rays, nb_components=5):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays: list ray features (distances)
+    :param list(list(int)) list_rays: list ray features (distances)
     :param int nb_components: number components in mixture model
-    :return any, [[int]]:  mixture model, list of stat/param of models
+    :return tuple(any,list(list(int))):  mixture model, list of stat/param of models
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
@@ -466,9 +466,9 @@ def transform_rays_model_sets_mean_cdf_kmeans(list_rays, nb_components=5):
 def transform_rays_model_cdf_spectral(list_rays, nb_components=5):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays: list ray features (distances)
+    :param list(list(int)) list_rays: list ray features (distances)
     :param int nb_components: number components in mixture model
-    :return any, [[int]]:  mixture model, list of stat/param of models
+    :return tuple(any,list(list(int))):  mixture model, list of stat/param of models
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
@@ -506,9 +506,9 @@ def transform_rays_model_cdf_spectral(list_rays, nb_components=5):
 def transform_rays_model_cdf_kmeans(list_rays, nb_components=None):
     """ compute the mixture model and transform it into cumulative distribution
 
-    :param [[int]] list_rays: list ray features (distances)
+    :param list(list(int)) list_rays: list ray features (distances)
     :param int nb_components: number components in mixture model
-    :return any, [[int]]:  mixture model, list of stat/param of models
+    :return any, list(list(int)):  mixture model, list of stat/param of models
 
     >>> np.random.seed(0)
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
@@ -551,7 +551,7 @@ def transform_rays_model_cdf_kmeans(list_rays, nb_components=None):
 def transform_rays_model_cdf_histograms(list_rays, nb_bins=10):
     """ from list of all measured rays create cumulative histogram for each ray
 
-    :param [[int]] list_rays: list ray features (distances)
+    :param list(list(int)) list_rays: list ray features (distances)
     :param int nb_bins: binarise histogram
     :return:
 
@@ -587,8 +587,8 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
     """ compute shape prior for a point based on centre, rotation shift
     and cumulative histogram
 
-    :param (int, int) point: single points
-    :param (int, int) centre: center of model
+    :param tuple(int,int) point: single points
+    :param tuple(int,int) centre: center of model
     :param [[float]] cum_distribution: cumulative histogram
     :param float angle_shift:
     :return float:
@@ -649,8 +649,8 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 #     """ compute shape prior for a point based on centre, rotation shift
 #     and cumulative histogram
 #
-#     :param (int, int) point:
-#     :param (int, int) centre:
+#     :param tuple(int,int) point:
+#     :param tuple(int,int) centre:
 #     :param [[float]] cum_hist:
 #     :param float shift:
 #     :return float:
@@ -751,19 +751,19 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
 
     :param lut_shape_cost: look-up-table for shape cost for GC
     :param [[int, int]] points: subsample space, points = superpixel centres
-    :param [int] labels: labels for points to be assigned to an object
+    :param list(int) labels: labels for points to be assigned to an object
     :param [[int, int]] init_centres: initial centre position for compute
         center shift during the iteretions
     :param [[int, int]] centres: actual centre postion
-    :param [int] shifts: orientation for each region / object
-    :param [int] volumes: size / volume for each region
+    :param list(int) shifts: orientation for each region / object
+    :param list(int) volumes: size / volume for each region
     :param shape_chist: represent the shape prior and histograms
-    :param [int] selected_idx: selected object for update
+    :param list(int) selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optimal
-    :param {} dict_thresholds: configuration with thresholds
-    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
-    :return [float], [int]:
+    :param dict dict_thresholds: configuration with thresholds
+    :param dict|None dict_thresholds: set some threshold updating shape prior
+    :return tuple(list(float),list(int)):
 
     >>> cdf = np.zeros((8, 20))
     >>> cdf[:10] = 0.5
@@ -848,19 +848,19 @@ def compute_update_shape_costs_points_close_mean_cdf(
     :param lut_shape_cost: look-up-table for shape cost for GC
     :param ndarray slic: superpixel segmentation
     :param [[int, int]] points: subsample space, points = superpixel centres
-    :param [int] labels: labels for points to be assigned to an object
+    :param list(int) labels: labels for points to be assigned to an object
     :param [[int, int]] init_centres: initial centre position for compute
         center shift during the iterations
     :param [[int, int]] centres: actual centre position
-    :param [int] shifts: orientation for each region / object
-    :param [int] volumes: size / volume for each region
+    :param list(int) shifts: orientation for each region / object
+    :param list(int) volumes: size / volume for each region
     :param shape_model_cdfs: represent the shape prior and histograms
-    :param [int] selected_idx: selected object for update
+    :param list(int) selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optimal
-    :param {} dict_thresholds: configuration with thresholds
-    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
-    :return [float], [int]:
+    :param dict dict_thresholds: configuration with thresholds
+    :param dict|None dict_thresholds: set some threshold updating shape prior
+    :return tuple(list(float),list(int)):
 
     >>> np.random.seed(0)
     >>> h, w, step = 8, 8, 2
@@ -972,9 +972,9 @@ def compute_data_costs_points(slic, slic_prob_fg, centres, labels):
     """ compute Look up Table ro date term costs
 
     :param nadarray slic: superpixel segmentation
-    :param [float] slic_prob_fg: weight for particular pixel belongs to FG
+    :param list(float) slic_prob_fg: weight for particular pixel belongs to FG
     :param [[int, int]] centres: actual centre position
-    :param [int] labels: labels for points to be assigned to an object
+    :param list(int) labels: labels for points to be assigned to an object
     :return:
     """
     data_proba = np.empty((len(labels), len(centres) + 1))
@@ -999,20 +999,20 @@ def update_shape_costs_points(lut_shape_cost, slic, points, labels, init_centres
     :param lut_shape_cost: look-up-table for shape cost for GC
     :param nadarray slic: superpixel segmentation
     :param [[int, int]] points: subsample space, points = superpixel centres
-    :param [int] labels: labels for points to be assigned to an object
+    :param list(int) labels: labels for points to be assigned to an object
     :param [[int, int]] init_centres: initial centre position for compute
         center shift during the iteretions
     :param [[int, int]] centres: actual centre postion
-    :param [int] shifts: orientation for each region / object
+    :param list(int) shifts: orientation for each region / object
     :param [int] volumes: size / volume for each region
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: type or shape model
     :param [int] selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optima
-    :param {} dict_thresholds: configuration with thresholds
-    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
-    :return [float], [int]:
+    :param dict dict_thresholds: configuration with thresholds
+    :param dict|None dict_thresholds: set some threshold updating shape prior
+    :return tuple(list(float),list(int)):
     """
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     if shape_type == 'cdf':
@@ -1098,7 +1098,7 @@ def compute_segm_prob_fg(slic, segm, labels_prob):
 
     :param ndarray slic:
     :param ndarray segm:
-    :param [float] labels_prob:
+    :param list(float) labels_prob:
     :return:
 
     >>> slic = np.array([[0, 0, 0, 0, 1, 1, 1, 1], [2, 2, 2, 2, 3, 3, 3, 3]])
@@ -1122,7 +1122,7 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
     it uses the Greedy strategy and set some stopping criterion
 
     :param ndarray slic: superpixel segmentation
-    :param [float] slic_prob_fg: weight for particular superpixel belongs to FG
+    :param list(float) slic_prob_fg: weight for particular superpixel belongs to FG
     :param [(int, int)] centres: list of initial centres
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: identification of used shape model
@@ -1133,9 +1133,9 @@ def region_growing_shape_slic_greedy(slic, slic_prob_fg, centres, shape_model,
         and objects and among objects (second)
     :param bool allow_obj_swap: allow swapping foreground object labels
     :param float greedy_tol: stopping criterion - energy change between inters
-    :param {} dict_thresholds: configuration with thresholds
+    :param dict dict_thresholds: configuration with thresholds
     :param int nb_iter: maximal number of iterations
-    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
+    :param dict|None dict_thresholds: set some threshold updating shape prior
     :return:
 
     >>> np.random.seed(0)
@@ -1344,7 +1344,7 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     :param [int] candidates: list of candidates, neighbours of actual objects
     :param [(int, int)] slic_points:
     :param [[int]] slic_neighbours: list of neighboring superpixel for each one
-    :param [float] slic_weights: weight for each superpixel
+    :param list(float) slic_weights: weight for each superpixel
     :param [int] labels: labels for each superpixel
     :param int nb_centres: number of centres - classes
     :param ndarray lut_data_cost: look-up-table for data cost for each
@@ -1427,7 +1427,7 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
     it uses the GraphCut strategy on neigbouring superpixels
 
     :param ndarray slic: superpixel segmentation
-    :param [float] slic_prob_fg: weight for particular superpixel belongs to FG
+    :param list(float) slic_prob_fg: weight for particular superpixel belongs to FG
     :param [(int, int)] centres: list of initial centres
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: identification of used shape model
@@ -1438,9 +1438,9 @@ def region_growing_shape_slic_graphcut(slic, slic_prob_fg, centres, shape_model,
         and objects and among objects (second)
     :param bool optim_global: optimise the GC as global or per object
     :param bool allow_obj_swap: allow swapping foreground object labels
-    :param {} dict_thresholds: configuration with thresholds
+    :param dict dict_thresholds: configuration with thresholds
     :param int nb_iter: maximal number of iterations
-    :param {str: ...}|None dict_thresholds: set some threshold updating shape prior
+    :param dict|None dict_thresholds: set some threshold updating shape prior
 
     >>> h, w, step = 15, 20, 2
     >>> segm = np.zeros((h, w), dtype=int)

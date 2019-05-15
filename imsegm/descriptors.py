@@ -171,8 +171,8 @@ def _check_color_image(image):
 def _check_unrecognised_feature_group(feature_flags):
     """ search for not defined flags
 
-    :param {} feature_flags: input
-    :return [str]: unrecognised
+    :param dict feature_flags: input
+    :return list(str): unrecognised
 
     >>> _check_unrecognised_feature_group({'color': [], 'texture': []})
     ['texture']
@@ -187,8 +187,8 @@ def _check_unrecognised_feature_group(feature_flags):
 def _check_unrecognised_feature_names(feature_flags):
     """ search for not defined flags
 
-    :param [str] feature_flags: input
-    :return [str]: unrecognised
+    :param list(str) feature_flags: input
+    :return list(str): unrecognised
 
     >>> _check_unrecognised_feature_names(['mean', 'average'])
     ['average']
@@ -678,9 +678,9 @@ def compute_image3d_gray_statistic(image, segm,
 
     :param ndarray image:
     :param ndarray segm: segmentation
-    :param [str] feature_flags:
+    :param list(str) feature_flags:
     :param str ch_name: channel name
-    :return (ndarray, [str]): np.ndarray<nb_samples, nb_features>
+    :return tuple(ndarray,list(str)): np.ndarray<nb_samples, nb_features>
 
     >>> image = np.zeros((2, 3, 8))
     >>> image[0, :, 2:6] = 1
@@ -760,9 +760,9 @@ def compute_image2d_color_statistic(image, segm,
 
     :param ndarray image:
     :param ndarray segm: segmentation
-    :param [str] feature_flags:
+    :param list(str) feature_flags:
     :param str color_name: channel name
-    :return (ndarray, [str]): np.ndarray<nb_samples, nb_features>
+    :return tuple(ndarray,list(str)): np.ndarray<nb_samples, nb_features>
 
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
@@ -838,7 +838,7 @@ def norm_features(features, scaler=None):
 
     :param ndarray features: vector of features
     :param obj scaler:
-    :return [[float]]:
+    :return list(list(float)):
     """
     if not scaler:
         scaler = preprocessing.StandardScaler()
@@ -877,7 +877,7 @@ def create_filter_bank_lm_2d(radius=16, sigmas=DEFAULT_FILTERS_SIGMAS,
     :param radius:
     :param sigmas:
     :param nb_orient:
-    :return np.ndarray<nb_samples, nb_features>, [str]:
+    :return np.ndarray<nb_samples, nb_features>, list(str):
 
     >>> filters, names = create_filter_bank_lm_2d(6, SHORT_FILTERS_SIGMAS, 2)
     >>> [f.shape for f in filters]  # doctest: +NORMALIZE_WHITESPACE
@@ -974,9 +974,9 @@ def compute_texture_desc_lm_img3d_val(img, seg, feature_flags, bank_type='normal
 
     :param [[[float]]] img: image
     :param [[[int]]] seg: segmentation
-    :param [str] feature_flags: list of feature flags
+    :param list(str) feature_flags: list of feature flags
     :param str bank_type: define used LM filter bank ['short', 'normal']
-    :return ndarray, [str]: np.ndarray<nb_samples, nb_features>, names
+    :return tuple(ndarray,list(str)): np.ndarray<nb_samples, nb_features>, names
     """
     _check_gray_image_segm(img, seg)
 
@@ -1017,9 +1017,9 @@ def compute_texture_desc_lm_img2d_clr(img, seg, feature_flags, bank_type='normal
 
     :param ndarray img: image
     :param ndarray seg: segmentation
-    :param [str] feature_flags:
+    :param list(str) feature_flags:
     :param str bank_type: define used LM filter bank ['short', 'normal']
-    :return np.ndarray<nb_samples, nb_features>, [str]:
+    :return tuple(np.ndarray<nb_samples, nb_features>, list(str)):
 
     >>> h, w, step = 30, 20, 5
     >>> np.random.seed(0)
@@ -1085,8 +1085,8 @@ def compute_selected_features_gray3d(img, segments, feature_flags=FEATURES_SET_C
 
     :param ndarray img: image
     :param ndarray segments: segmentation
-    :param {str: [str]} feature_flags: dictionary of feature flags
-    :return np.ndarray<nb_samples, nb_features>, [str]:
+    :param dict(list(str)) feature_flags: dictionary of feature flags
+    :return tuple(np.ndarray<nb_samples, nb_features>, list(str)):
 
     >>> np.random.seed(0)
     >>> img = np.random.random((2, 10, 15))
@@ -1148,8 +1148,8 @@ def compute_selected_features_gray2d(img, segments, features_flags=FEATURES_SET_
 
     :param ndarray img: image
     :param ndarray segments: segmentation
-    :param {str: [str]} feature_flags: dictionary of feature flags
-    :return np.ndarray<nb_samples, nb_features>, [str]:
+    :param dict(list(str)) feature_flags: dictionary of feature flags
+    :return tuple(np.ndarray<nb_samples, nb_features>, list(str)):
 
     >>> image = np.zeros((2, 10))
     >>> image[0, 2:6] = 1
@@ -1186,8 +1186,8 @@ def compute_selected_features_color2d(img, segments, feature_flags=FEATURES_SET_
 
     :param ndarray img: image
     :param ndarray segments: segmentation
-    :param {str: [str]} feature_flags: dictionary of feature flags
-    :return np.ndarray<nb_samples, nb_features>, [str]:
+    :param dict(list(str)) feature_flags: dictionary of feature flags
+    :return tuple(np.ndarray<nb_samples, nb_features>, list(str)):
 
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
@@ -1254,7 +1254,7 @@ def compute_selected_features_img2d(image, segm, features_flags=FEATURES_SET_COL
 
     :param ndarray img: image
     :param ndarray segments: segmentation
-    :param {str: [str]} feature_flags: dictionary of feature flags
+    :param dict(list(str)) feature_flags: dictionary of feature flags
     :return:
     """
     if image.ndim == 3 and image.shape[2] == 3:
@@ -1273,9 +1273,9 @@ def compute_label_histograms_positions(segm, positions,
 
     :param ndarray segm: np.array<height, width>
     :param [(int, int)] positions: list of positions
-    :param [int] diameters: circular diameters
+    :param list(int) diameters: circular diameters
     :param int nb_labels:
-    :return (ndarray, [str]): ndarray<nb_samples, nb_features>, names
+    :return tuple(ndarray,list(str)): ndarray<nb_samples, nb_features>, names
 
     >>> segm = np.zeros((10, 10), dtype=int)
     >>> segm[1:9, 2:8] = 1
@@ -1353,9 +1353,9 @@ def compute_label_histograms_positions(segm, positions,
 def adjust_bounding_box_crop(image_size, bbox_size, position):
     """ adjust the bounding box according image sizes and position
 
-    :param (int, int)|[int, int] image_size: image size
-    :param (int, int)|[int, int] bbox_size: size of the bounding box
-    :param (int, int)|[int, int] position: position in yhe image
+    :param tuple(int,int)|[int, int] image_size: image size
+    :param tuple(int,int)|[int, int] bbox_size: size of the bounding box
+    :param tuple(int,int)|[int, int] position: position in yhe image
     :return (), (), (), (): im_begin, im_end, bb_begin, bb_end
 
     >>> adjust_bounding_box_crop((50, 50), (7, 7), (20, 20))
@@ -1395,10 +1395,10 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
     """ compute histogram of labels for set of centric annulus
 
     :param ndarray segm: np.array<height, width>
-    :param (float, float) position: position in the segmentation
+    :param tuple(float,float) position: position in the segmentation
     :param ndarray struc_elem: np.array<height, width>
     :param int nb_labels: total number of labels in the segmentation
-    :return [float]:
+    :return list(float):
 
     >>> segm = np.zeros((10, 10), dtype=int)
     >>> segm[1:9, 2:8] = 1
@@ -1443,10 +1443,10 @@ def cython_label_hist_seg2d(segm_select, struc_elem, nb_labels):
     """ compute histogram of labels for set of centric annulus
 
     :param ndarray segm: np.array<height, width>
-    :param (float, float) position: position in the segmentation
+    :param tuple(float,float) position: position in the segmentation
     :param ndarray struc_elem: np.array<height, width>
     :param int nb_labels: total number of labels in the segmentation
-    :return [float]:
+    :return list(float):
 
     .. note:: output of this function should be equal to
     ```
@@ -1478,9 +1478,9 @@ def compute_label_hist_proba(segm, position, struc_elem):
     expecting that each label has own layer
 
     :param ndarray segm: np.array<height, width>
-    :param (float, float) position:
+    :param tuple(float,float) position:
     :param ndarray struc_elem: np.array<height, width>
-    :return [float]:
+    :return list(float):
 
     >>> seg = np.zeros((50, 50, 2), dtype=float)
     >>> seg[15:35, 20:40, 1] = 1
@@ -1531,9 +1531,9 @@ def compute_ray_features_segm_2d_vectors(seg_binary, position, angle_step=5.,
     :param str edge: pointing to the up of down edge o
     :param int smooth_coef:
     :param ndarray seg_binary: np.array<height, width>
-    :param (int, int) position:
+    :param tuple(int,int) position:
     :param float angle_step:
-    :return [float]:
+    :return list(float):
 
     .. note:: for more examples, see unittests
 
@@ -1611,10 +1611,10 @@ def cython_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
     """ computing the Ray features from a segmentation and given position
 
     :param ndarray seg_binary: np.array<height, width>
-    :param (int, int) position: integer position in the segmentation
+    :param tuple(int,int) position: integer position in the segmentation
     :param float angle_step: angular step for ray features
     :param str edge: pointing to the up of down edge of an boundary
-    :return [float]: ray distances
+    :return list(float): ray distances
 
     .. note:: this test should be equal to the `numpy_ray_features_segm_2d`
 
@@ -1643,10 +1643,10 @@ def numpy_ray_features_segm_2d(seg_binary, position, angle_step=5., edge='up'):
     """ computing the Ray features from a segmentation and given position
 
     :param ndarray seg_binary: np.array<height, width>
-    :param (int, int) position: integer position in the segmentation
+    :param tuple(int,int) position: integer position in the segmentation
     :param float angle_step: angular step for ray features
     :param str edge: pointing to the up of down edge of an boundary
-    :return [float]: ray distances
+    :return list(float): ray distances
 
     .. note:: this test should be equal to the `cython_ray_features_seg2d`
 
@@ -1700,11 +1700,11 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
     (from given point the close distance to boundary)
 
     :param ndarray seg_binary: np.array<height, width>
-    :param (int, int) position: integer position in the segmentation
+    :param tuple(int,int) position: integer position in the segmentation
     :param float angle_step: angular step for ray features
     :param str edge: pointing to the up of down edge of an boundary
     :param int smooth_coef: smoothing the final ray features
-    :return [float]: ray distances
+    :return list(float): ray distances
 
     .. note:: for more examples, see unittests
 
@@ -1742,9 +1742,9 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
 def shift_ray_features(ray_dist, method='phase'):
     """ shift Ray features ti the global maxim to be rotation invariant
 
-    :param [float] ray_dist: array of features
+    :param list(float) ray_dist: array of features
     :param str method: use method for estimate shift maxima (phase or max)
-    :return [float]:
+    :return list(float):
 
     >>> vec = np.array([43, 46, 44, 39, 28, 18, 12, 10,  9, 12, 22, 28])
     >>> ray, shift = shift_ray_features(vec)
@@ -1793,7 +1793,7 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
     :param ndarray segm: np.array<height, width>
     :param [(int, int)] list_positions:
     :param float angle_step:
-    :param [int] border_labels: all labels to be set as boundaries
+    :param list(int) border_labels: all labels to be set as boundaries
     :param int segm_open:
     :param float smooth_ray:
     :param bool shifting:
@@ -1873,9 +1873,9 @@ def compute_ray_features_positions(segm, list_positions, angle_step=5.,
 def interpolate_ray_dist(ray_dists, order='spline'):
     """ interpolate ray distances
 
-    :param [float] ray_dists:
+    :param list(float) ray_dists:
     :param str|int order: degree of interpolation
-    :return [float]:
+    :return list(float):
 
     >>> interpolate_ray_dist([-1] * 5)
     array([-1, -1, -1, -1, -1])
@@ -1939,8 +1939,8 @@ def interpolate_ray_dist(ray_dists, order='spline'):
 def reconstruct_ray_features_2d(position, ray_features, shift=0):
     """ reconstruct ray features for 2D image
 
-    :param (int, int)|(float, float) position:
-    :param [float] ray_features:
+    :param tuple(int,int)|tuple(float,float) position:
+    :param list(float) ray_features:
     :param float shift:
     :return [[float, float]]:
 

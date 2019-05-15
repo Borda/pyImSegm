@@ -121,7 +121,7 @@ def arg_parse_params(params):
     """ argument parser from cmd
 
     SEE: https://docs.python.org/3/library/argparse.html
-    :return {str: ...}:
+    :return dict:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--path_train_list', type=str, required=False,
@@ -204,7 +204,7 @@ def load_model(path_model):
     """ load exported segmentation model
 
     :param str path_model:
-    :return (obj, obj, obj, {}, [str]):
+    :return (obj, obj, obj, {}, list(str)):
     """
     logging.info('loading dumped model "%s"', path_model)
     with open(path_model, 'rb') as f:
@@ -223,8 +223,8 @@ def save_model(path_model, model, params=None, feature_names=None):
     :param obj scaler:
     :param obj pca:
     :param obj model:
-    :param {str: ...} params:
-    :param [str] feature_names:
+    :param dict params:
+    :param list(str) feature_names:
     """
     logging.info('save (dump) model to "%s"', path_model)
     # np.savez_compressed(path_model, scaler=scaler, pca=pca,
@@ -307,7 +307,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
     """ segment image indecently (estimate model just for this model)
 
     :param (int, str) img_idx_path:
-    :param {str: ...} params: segmentation parameters
+    :param dict params: segmentation parameters
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
     :return (str, ndarray):
@@ -350,7 +350,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
     """ segment image with already estimated model
 
     :param (int, str) imgs_idx_path:
-    :param {str: ...} params: segmentation parameters
+    :param dict params: segmentation parameters
     :param obj scaler:
     :param obj pca:
     :param obj model:
@@ -493,8 +493,8 @@ def main(params):
     1) segment each image indecently
     2) estimate model over whole image sequence and estimate
 
-    :param {str: ...} params:
-    :return {str: ...}:
+    :param dict params:
+    :return dict:
     """
     logging.getLogger().setLevel(logging.DEBUG)
     show_visual = params.get('visual', False)

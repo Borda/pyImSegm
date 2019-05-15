@@ -264,7 +264,7 @@ def get_slic_points_labels(segm, img=None, slic_size=20, slic_regul=0.1):
     :param ndarray img: input image
     :param int slic_size: superpixel size
     :param float slic_regul: regularisation in range (0, 1)
-    :return ():
+    :return tuple:
     """
     if not img:
         img = segm / float(segm.max())
@@ -280,7 +280,7 @@ def add_overlap_ellipse(segm, ellipse_params, label, thr_overlap=1.):
     if the new ellipse does not ouvelap with already existing object / ellipse
 
     :param ndarray segm: segmentation
-    :param () ellipse_params: parameters
+    :param tuple ellipse_params: parameters
     :param int label: selected label
     :param float thr_overlap: relative overlap with existing objects
     :return ndarray:
@@ -396,7 +396,7 @@ def split_segm_background_foreground(seg, sel_bg=STRUC_ELEM_BG,
     :param ndarray seg: input segmentation
     :param int|float sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return (ndarray, ndarray):
+    :return tuple(ndarray,ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)

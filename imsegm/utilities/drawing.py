@@ -54,8 +54,8 @@ def _ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
     :param int r_radius: ellipse diam in rows
     :param int c_radius: ellipse diam in columns
     :param float orientation: ellipse orientation
-    :param (int, int) shape: size of output mask
-    :return ([int], [int]): indexes of filled positions
+    :param tuple(int,int) shape: size of output mask
+    :return tuple(list(int),list(int)): indexes of filled positions
 
     >>> img = np.zeros((10, 12), dtype=int)
     >>> rr, cc = _ellipse(5, 6, 3, 5, orientation=np.deg2rad(30))
@@ -121,8 +121,8 @@ def ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
     :param int r_radius: ellipse diam in rows
     :param int c_radius: ellipse diam in columns
     :param float orientation: ellipse orientation
-    :param (int, int) shape: size of output mask
-    :return ([int], [int]): indexes of filled positions
+    :param tuple(int,int) shape: size of output mask
+    :return tuple(list(int),list(int)): indexes of filled positions
 
     >>> img = np.zeros((14, 20), dtype=int)
     >>> rr, cc = ellipse(7, 10, 3, 9, np.deg2rad(30), img.shape)
@@ -160,8 +160,8 @@ def ellipse_perimeter(r, c, r_radius, c_radius, orientation=0., shape=None):
     :param int r_radius: ellipse diam in rows
     :param int c_radius: ellipse diam in columns
     :param float orientation: ellipse orientation
-    :param (int, int) shape: size of output mask
-    :return ([int], [int]): indexes of filled positions
+    :param tuple(int,int) shape: size of output mask
+    :return tuple(list(int),list(int)): indexes of filled positions
 
     >>> img = np.zeros((14, 20), dtype=int)
     >>> rr, cc = ellipse_perimeter(7, 10, 3, 9, np.deg2rad(30), img.shape)
@@ -210,7 +210,7 @@ def figure_image_adjustment(fig, img_size):
     """ adjust figure as nice image without axis
 
     :param fig: Figure
-    :param (int, int) img_size: image size
+    :param tuple(int,int) img_size: image size
     :return Figure:
 
     >>> fig = figure_image_adjustment(plt.figure(), (150, 200))
@@ -286,7 +286,7 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9,
     :param ndarray img: original image
     :param int subfig_size:
     :param float segm_alpha: use transparency
-    :param [int] drop_labels: labels to be ignored
+    :param list(int) drop_labels: labels to be ignored
     :return Figure:
 
     >>> img = np.random.random((100, 150, 3))
@@ -414,9 +414,9 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
 
     :param ndarray img:
     :param ndarray seg:
-    :param [(int, int, int, int, float)] ellipses:
-    :param [(int, int)] centers:
-    :param [float] crits:
+    :param list(tuple(int,int,int,int,float)) ellipses:
+    :param list(tuple(int,int)) centers:
+    :param list(float) crits:
     :param float fig_size:
     :return Figure:
 
@@ -497,8 +497,8 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None, points_re
 
     :param ndarray segm:
     :param [(float, float)] points:
-    :param [float] ray_dist_raw:
-    :param [float] ray_dist:
+    :param list(float) ray_dist_raw:
+    :param list(float) ray_dist:
     :param ndarray points_reconst:
     :return Figure:
 
@@ -527,9 +527,9 @@ def figure_used_samples(img, labels, slic, used_samples, fig_size=12):
     """ draw used examples (superpixels)
 
     :param ndarray img:
-    :param [int] labels:
+    :param list(int) labels:
     :param ndarray slic:
-    :param [bool] used_samples:
+    :param list(bool) used_samples:
     :param int fig_size:
     :return Figure:
 
@@ -565,7 +565,7 @@ def draw_color_labeling(segments, lut_labels):
     """ visualise the graph cut results
 
     :param ndarray segments: np.array<height, width>
-    :param [int] lut_labels: look-up-table
+    :param list(int) lut_labels: look-up-table
     :return ndarray: np.array<height, width, 3>
     """
     seg = np.asarray(lut_labels)[segments]
@@ -603,10 +603,10 @@ def draw_graphcut_unary_cost_segments(segments, unary_cost):
 def closest_point_on_line(start, end, point):
     """ projection of the point to the line
 
-    :param [int] start:
-    :param [int] end:
-    :param [int] point:
-    :return [int]:
+    :param list(int) start:
+    :param list(int) end:
+    :param list(int) point:
+    :return list(int):
 
     >>> closest_point_on_line([0, 0], [1, 2], [0, 2])
     array([ 0.8,  1.6])
@@ -621,7 +621,7 @@ def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
                       threshold_overlap=0.6):
     """ from given 3 point estimate the ellipse
 
-    :param (int, int) mask_shape:
+    :param tuple(int,int) mask_shape:
     :param [[int, int]] pos_ant:
     :param [[int, int]] pos_lat:
     :param [[int, int]] pos_post:
@@ -701,7 +701,7 @@ def parse_annot_rectangles(rows_slice):
 def draw_eggs_rectangle(mask_shape, pos_ant, pos_lat, pos_post):
     """ from given 3 point estimate the ellipse
 
-    :param (int, int) mask_shape:
+    :param tuple(int,int) mask_shape:
     :param [[int, int]] pos_ant:
     :param [[int, int]] pos_lat:
     :param [[int, int]] pos_post:
@@ -789,7 +789,7 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
     :param ax: figure axis
     :param ndarray img: image
     :param [(int, int)] points:
-    :param [int] labels:
+    :param list(int) labels:
     :param ndarray slic:
     :param str color_slic:
     :param {int: (str, str)} lut_label_marker:
@@ -1090,7 +1090,7 @@ def draw_image_clusters_centers(ax, img, centres, points=None, labels_centre=Non
     :param ndarray img: image
     :param ndarray centres: points
     :param ndarray points: optional list of all points
-    :param [int] labels_centre: optional list of labels for points
+    :param list(int) labels_centre: optional list of labels for points
     :param ndarray segm: optional segmentation
 
     >>> img = np.random.randint(0, 256, (100, 100, 3))

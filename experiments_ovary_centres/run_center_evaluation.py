@@ -238,7 +238,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_workers=1)
 def main(params):
     """ PIPELINE for new detections
 
-    :param {str: ...} params:
+    :param dict params:
     """
     params['path_expt'] = os.path.join(params['path_output'],
                                        run_detect.FOLDER_EXPERIMENT % params['name'])

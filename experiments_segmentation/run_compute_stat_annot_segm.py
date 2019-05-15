@@ -110,7 +110,7 @@ def fill_lut(lut, segm, offset=0):
 def export_visual(name, annot, segm, img, path_out, drop_labels, segm_alpha=1.):
     """ given visualisation of segmented image and annotation
 
-    :param {str: ...} df_row:
+    :param dict df_row:
     :param str path_out: path to the visualisation directory
     :param [int] drop_labels: whether skip some labels
     """

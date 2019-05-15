@@ -63,9 +63,9 @@ def parse_arg_params():
 def see_images_color_info(path_images, px_thr=THRESHOLD_INVALID_PIXELS):
     """ look to the folder on all images and estimate most frequent colours
 
-    :param [str] path_images: list of images
+    :param list(str) path_images: list of images
     :param float px_th: percentage of nb clr pixels to be assumed as important
-    :return {}:
+    :return dict:
     """
     if not os.path.isdir(os.path.dirname(path_images)):
         logging.error('input folder does not exist')

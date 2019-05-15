@@ -18,7 +18,7 @@ def neighbour_connect4(seg, label, pos):
 
     :param ndarray seg: segmentation
     :param int label: selected label
-    :param (int, int) pos: position
+    :param tuple(int,int) pos: position
     :return:
 
     >>> neighbour_connect4(np.eye(5), 1, (2, 2))
@@ -121,7 +121,7 @@ def binary_image_from_coords(coords, size):
     """ create binary image just from point contours
 
     :param ndarray coords:
-    :param (int, int) size:
+    :param tuple(int,int) size:
     :return ndarray:
 
     >>> img = np.zeros((6, 6), dtype=int)
@@ -298,9 +298,9 @@ def histogram_regions_labels_norm(slic, segm):
 def assign_label_by_threshold(dict_label_hist, thresh=0.75):
     """ assign label if the purity reach certain threshold
 
-    :param {int: [int]} dict_label_hist: dictionary of label histogram
+    :param dict(list(int)) dict_label_hist: mapping of label to histogram
     :param float thresh: threshold for region purity
-    :return [int]: resulting LookUpTable
+    :return list(int): resulting LookUpTable
 
     >>> slic = np.array([[0] * 4 + [1] * 3 + [2] * 3 + [3] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3 + [7] * 4] * 4)
@@ -325,8 +325,8 @@ def assign_label_by_threshold(dict_label_hist, thresh=0.75):
 def assign_label_by_max(label_hist):
     """ assign label according maximal label count in particular region
 
-    :param {int: [int]} label_hist: dictionary of label histogram
-    :return [int]: resulting LookUpTable
+    :param dict(list(int)) label_hist: mapping of label to histogram
+    :return list(int): resulting LookUpTable
 
     >>> slic = np.array([[0] * 4 + [1] * 3 + [2] * 3 + [3] * 3] * 4 +
     ...                 [[4] * 3 + [5] * 3 + [6] * 3 + [7] * 4] * 4)
@@ -349,7 +349,7 @@ def convert_segms_2_list(segms):
     evaluation (classification or clustering metrics)
 
     :param [ndarray] segms: list of segmentation
-    :return [int]:
+    :return list(int):
 
     >>> seg_pipe = np.ones((2, 3), dtype=int)
     >>> convert_segms_2_list([seg_pipe, seg_pipe * 0, seg_pipe * 2])
@@ -364,7 +364,7 @@ def mask_segm_labels(img_labeling, labels, mask_init=None):
     all labels in the list (perform logical or on image with a list of labels)
 
     :param ndarray im_labeling: np.array<height, width> input labeling
-    :param [int] labels: list of wanted labels to be detected in image
+    :param list(int) labels: list of wanted labels to be detected in image
     :param ndarray mask_init: np.array<height, width> initial bool mask on the beginning
     :return ndarray: np.array<height, width> bool mask
 
@@ -404,7 +404,7 @@ def sequence_labels_merge(labels_stack, dict_colors, labels_free, change_label=-
 
     :param ndarray labels_stack: np.array<date, height, width> input stack of labeled images
     :param {int: (int, int, int)} dict_colors: dictionary of labels-colors
-    :param [int] labels_free: list of free labels
+    :param list(int) labels_free: list of free labels
     :param int change_label: label that is set for non constant time series
     :return ndarray: np.array<height, width>
 
@@ -437,7 +437,7 @@ def relabel_by_dict(labels, dict_labels):
     """ relabel according given dictionary of new - old labels
 
     :param ndarray labels:
-    :param {int: [int]} dict_labels:
+    :param dict(list(int)) dict_labels: mapping of label to histogram
     :return ndarray:
 
     >>> labels = np.array([2, 1, 0, 3, 3, 0, 2, 3, 0, 0])
@@ -456,7 +456,7 @@ def merge_probab_labeling_2d(proba, dict_labels):
     """ merging probability labeling
 
     :param ndarray proba: probabilities
-    :param {int: [int]} dict_labels:
+    :param dict(list(int)) dict_labels: mapping of label to histogram
     :return ndarray:
 
     >>> p = np.ones((5, 5))
