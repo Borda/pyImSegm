@@ -57,7 +57,7 @@ DEFAULT_PARAMS = {
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return {str: ...}:
+    :return dict:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=False,
@@ -97,7 +97,7 @@ def compute_boundary_distance(idx_row, params, path_out=''):
     """ compute nearest distance between two segmentation contours
 
     :param (int, str) idx_row:
-    :param {} params:
+    :param dict params:
     :param str path_out:
     :return (str, float):
     """
@@ -125,7 +125,7 @@ def compute_boundary_distance(idx_row, params, path_out=''):
 def main(params):
     """ compute the distance among segmented superpixels and given annotation
 
-    :param {str: ...} params:
+    :param dict params:
     """
     if os.path.isdir(params['path_out']):
         logging.info('Missing output dir -> no visual export & results table.')

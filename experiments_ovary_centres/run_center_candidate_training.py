@@ -125,7 +125,7 @@ CENTER_PARAMS.update({
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return {str: ...}:
+    :return dict:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-list', '--path_list', type=str, required=False,
@@ -352,7 +352,7 @@ def estim_points_compute_features(name, img, segm, params):
     :param ndarray img:
     :param ndarray segm:
     :param {str: any} params:
-    :return (str, ndarray, [(int, int)], [[float]], [str]):
+    :return (str, ndarray, [(int, int)], [[float]], list(str)):
     """
     # superpixels on image
     assert img.shape[:2] == segm.shape[:2], \
@@ -373,7 +373,7 @@ def compute_points_features(segm, points, params):
     :param ndarray segm: segmentations
     :param [(int, int)] points: positions in image
     :param {str: any} params: parameters
-    :return ([[float]], [str]): [[float] * nb_features] * nb_points, [str] * nb_features
+    :return ([[float]], list(str)): [[float] * nb_features] * nb_points, list(str) * nb_features
     """
     features, feature_names = np.empty((len(points), 0)), list()
 
@@ -454,7 +454,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_T
     :param {str: any} params: parameters
     :param DF df_paths: DataFrame
     :param int nb_workers: parallel
-    :return {str: ...}:
+    :return dict:
     """
     dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
     logging.info('loading input data (images, segmentation and centers)')
@@ -538,9 +538,9 @@ def compute_statistic_centers(dict_stat, img, segm, center, slic, points, labels
     :param ndarray slic:
     :param points:
     :param labels:
-    :param {str: ...} params:
+    :param dict params:
     :param str path_out:
-    :return {}:
+    :return dict:
     """
     labels_gt = label_close_points(center, points, params)
 
@@ -579,11 +579,11 @@ def detect_center_candidates(name, image, segm, centers_gt, slic, points,
     :param slic: np.array
     :param [(int, int)] points:
     :param features:
-    :param [str] feature_names:
-    :param {} params:
+    :param list(str) feature_names:
+    :param dict params:
     :param str path_out:
     :param classif: obj
-    :return {}:
+    :return dict:
     """
     labels = classif.predict(features)
     # proba = classif.predict_proba(features)
@@ -618,7 +618,7 @@ def load_dump_data(path_dump_data):
     """ loading saved data prom previous stages
 
     :param path_dump_data:
-    :return {}:
+    :return dict:
     """
     logging.info('loading dumped data "%s"', path_dump_data)
     # with open(os.path.join(path_out, NAME_DUMP_TRAIN_DATA), 'r') as f:

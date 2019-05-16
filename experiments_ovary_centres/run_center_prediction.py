@@ -57,7 +57,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
     generate points, compute features and using given classifier predict labels
 
     :param (int, DF:row) idx_row:
-    :param {} params:
+    :param dict params:
     :param obj classif:
     :param str path_classif:
     :param str path_output:

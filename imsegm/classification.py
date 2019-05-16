@@ -64,8 +64,8 @@ DICT_SCORING = {
 def create_classifiers(nb_workers=-1):
     """ create all classifiers with default parameters
 
-    :param nb_workers: int, number of parallel if possible
-    :return: {str: clf}
+    :param int nb_workers: number of parallel if possible
+    :return dict: {str: clf}
 
     >>> classifs = create_classifiers()
     >>> classifs  # doctest: +ELLIPSIS
@@ -125,7 +125,7 @@ def create_clf_param_search_grid(name_classif=DEFAULT_CLASSIF_NAME):
     """ create parameter grid for search
 
     :param str name_classif: key name of selected classifier
-    :return: {str: ...}
+    :return: dict
 
     >>> create_clf_param_search_grid('RandForest') # doctest: +ELLIPSIS
     {'classif__...': ...}
@@ -189,7 +189,7 @@ def create_clf_param_search_distrib(name_classif=DEFAULT_CLASSIF_NAME):
     """ create parameter distribution for random search
 
     :param str name_classif: key name of classifier
-    :return: {str: ...}
+    :return: dict
 
     >>> create_clf_param_search_distrib()  # doctest: +ELLIPSIS
     {...}
@@ -283,10 +283,10 @@ def create_pipeline_neuron_net():
 def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     """ compute standard metrics for multi-class classification
 
-    :param [int] y_true:
-    :param [int] y_pred:
-    :param str|[str] metric_averages:
-    :return {str: float}:
+    :param list(int) y_true:
+    :param list(int) y_pred:
+    :param str|list(str) metric_averages:
+    :return dict(float):
 
     >>> np.random.seed(0)
     >>> y_true = np.random.randint(0, 3, 25) * 2
@@ -356,8 +356,8 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
                                     relabel=False):
     """ compute classification statistic between annotation and segmentation
 
-    :param (ndarray, ndarray, str) annot_segm_name:
-    :param [int] drop_labels: labels to be ignored
+    :param tuple(ndarray,ndarray,str) annot_segm_name:
+    :param list(int) drop_labels: labels to be ignored
     :param bool relabel: whether relabel
     :return:
 
@@ -413,8 +413,8 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
 
     :param [ndarray] segms: segmntations
     :param [ndarray] annots: annotations
-    :param [str] names: list of names
-    :param [int] drop_labels: labels to be ignored
+    :param list(str) names: list of names
+    :param list(int) drop_labels: labels to be ignored
     :param bool relabel: whether relabel
     :param int nb_workers: running jobs in parallel
     :return DF:
@@ -468,9 +468,9 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
 
     :param ndarray features: np.array<nb_samples, nb_features>
     :param ndarray labels: np.array<nb_samples, 1>
-    :param [str] names:
+    :param list(str) names:
     :param str path_out:
-    :return ([int], DF): indices, Dataframe with scoring
+    :return tuple(list(int),DF): indices, Dataframe with scoring
 
     >>> from sklearn.datasets import make_classification
     >>> features, labels = make_classification(n_samples=250, n_features=5,
@@ -543,9 +543,9 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None,
     :param str path_out: path for exporting trained classofier
     :param classif: sklearn classif.
     :param str clf_name: name of selected classifier
-    :param [str] feature_names: list of string names
-    :param {} params: extra parameters
-    :param [str] label_names: list of string names of label_names
+    :param list(str) feature_names: list of string names
+    :param dict params: extra parameters
+    :param list(str) label_names: list of string names of label_names
     :return str:
 
     >>> clf = create_classifiers()['RandForest']
@@ -582,7 +582,7 @@ def load_classifier(path_classif):
     """ estimate classifier for all data and export it
 
     :param str path_classif: path to the exported classifier
-    :return {str: ...}:
+    :return dict:
 
     >>> load_classifier('none.abc')
     """
@@ -627,8 +627,8 @@ def export_results_clf_search(path_out, clf_name, clf_search):
 def relabel_sequential(labels, uq_labels=None):
     """ relabel sequential vector staring from 0
 
-    :param [int] labels: all labels
-    :param [int] uq_labels: unique labels
+    :param list(int) labels: all labels
+    :param list(int) uq_labels: unique labels
     :return []:
 
     >>> relabel_sequential([0, 0, 0, 5, 5, 5, 0, 5])
@@ -655,17 +655,17 @@ def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
 
     :param str clf_name: name of selected classifier
     :param ndarray features: features in dimension nb_samples x nb_features
-    :param [int] labels: annotation for samples
+    :param list(int) labels: annotation for samples
     :param int|obj cross_val: Cross validation
     :param str search_type: search type
     :param str eval_metric: evaluation metric
-    :param {} params: extra parameters
+    :param dict params: extra parameters
     :param float pca_coef: sklearn PCA - int/float/None
     :param int nb_search_iter: number of searcher for hyper-parameters
     :param str path_out: path to directory for exporting classifier
     :param int nb_workers: parallel processes
-    :param [str] feature_names: list of extracted features - names
-    :param [str] label_names: list of label names
+    :param list(str) feature_names: list of extracted features - names
+    :param list(str) label_names: list of label names
     :return: (obj, str): classifier, path to the exported classifier
 
     >>> np.random.seed(0)
@@ -750,10 +750,10 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     :param str clf_name: name of selected classifier
     :param obj classif: sklearn classifier
     :param ndarray features: features in dimension nb_samples x nb_features
-    :param [int] labels: annotation for samples
+    :param list(int) labels: annotation for samples
     :param object cross_val:
     :param str path_out: path for exporting statistic
-    :param [str] scorings: list of used scorings
+    :param list(str) scorings: list of used scorings
     :return DF:
 
     >>> labels = np.array([0] * 150 + [1] * 100 + [2] * 50)
@@ -833,7 +833,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     :param str clf_name: name of selected classifier
     :param obj classif: sklearn classifier
     :param ndarray features: features in dimension nb_samples x nb_features
-    :param [int] labels: annotation for samples
+    :param list(int) labels: annotation for samples
     :param object cross_val:
     :param str path_out: path for exporting statistic
     :param int nb_steps: number of thresholds
@@ -931,7 +931,7 @@ def search_params_cut_down_max_nb_iter(clf_parameters, nb_iter):
     """ create parameters list and count number of possible combination
     in case they are they are limited
 
-    :param {str: ...} clf_parameters: dictionary with parameters
+    :param dict clf_parameters: dictionary with parameters
     :param int nb_iter: nb of random tryes
     :return int:
 
@@ -993,7 +993,7 @@ def shuffle_features_labels(features, labels):
     while keeping link between feature and its label
 
     :param ndarray features: features in dimension nb_samples x nb_features
-    :param [int] labels: annotation for samples
+    :param list(int) labels: annotation for samples
     :return: np.array<nb_samples, nb_features>, np.array<nb_samples>
 
     >>> np.random.seed(0)
@@ -1020,8 +1020,8 @@ def convert_dict_label_features_2_vectors(dict_features):
     """ convert dictionary of features where key is the labels
     to vector of all features and related labels
 
-    :param {int: [[float]]} dict_features: {int: [[float] * nb_features] * nb_samples}
-    :return (ndarray, [int]): np.array<nb_samples, nb_features>, [int]
+    :param {int: [list(float)]} dict_features: {int: [list(float) * nb_features] * nb_samples}
+    :return tuple(ndarray,list(int)): np.array<nb_samples, nb_features>, list(int)
     """
     features, labels = [], []
     for k in dict_features:
@@ -1035,7 +1035,7 @@ def compose_dict_label_features(features, labels):
     to a dictionary of features where key is the lables
 
     :param ndarray features: features in dimension nb_samples x nb_features
-    :param [int] labels: annotation for samples
+    :param list(int) labels: annotation for samples
     :return {int: ndarray}: {int: np.array<nb, nb_features>}
     """
     dict_features = dict()
@@ -1049,9 +1049,9 @@ def down_sample_dict_features_random(dict_features, nb_samples):
     """ browse all label features and take random subset of features to have
     given nb_samples per class
 
-    :param {} dict_features: {int: [[float] * nb_features] * nb}
+    :param dict dict_features: {int: [list(float) * nb_features] * nb}
     :param int nb_samples:
-    :return {}: {int: [[float] * nb_features] * nb_samples}
+    :return dict: {int: [list(float) * nb_features] * nb_samples}
 
     >>> np.random.seed(0)
     >>> d_fts = {'a': np.random.random((100, 3))}
@@ -1076,9 +1076,9 @@ def down_sample_dict_features_kmean(dict_features, nb_samples):
     """ cluser with kmeans the features with nb cluster == given nb_samples
     and the retirn features which are closer to each cluster center
 
-    :param {} dict_features: {int: [[float] * nb_features] * nb}
+    :param dict dict_features: {int: [list(float) * nb_features] * nb}
     :param int nb_samples:
-    :return {}: {int: [[float] * nb_features] * nb_samples}
+    :return dict: {int: [list(float) * nb_features] * nb_samples}
 
     >>> np.random.seed(0)
     >>> d_fts = {'a': np.random.random((100, 3))}
@@ -1125,8 +1125,8 @@ def unique_rows(data):
 def down_sample_dict_features_unique(dict_features):
     """ browse all label features and take unique features
 
-    :param {} dict_features: {int: [[float] * nb_features] * nb_samples}
-    :return {}: {int: [[float] * nb_features] * nb}
+    :param dict dict_features: {int: [list(float) * nb_features] * nb_samples}
+    :return dict: {int: [list(float) * nb_features] * nb}
 
     >>> np.random.seed(0)
     >>> d_fts = {'a': np.random.random((100, 3))}
@@ -1150,10 +1150,10 @@ def balance_dataset_by_(features, labels, balance_type='random',
     """ balance number of training examples per class by several method
 
     :param ndarray features: features in dimension nb_samples x nb_features
-    :param [int] labels: annotation for samples
+    :param list(int) labels: annotation for samples
     :param str balance_type: type of balancing dataset
     :param int|None min_samples: if None take the smallest class
-    :return (ndarray, ndarray):
+    :return tuple(ndarray,ndarray):
 
     >>> np.random.seed(0)
     >>> fts, lbs = balance_dataset_by_(np.random.random((25, 3)),
@@ -1190,9 +1190,9 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
 
     :param {str: ndarray} imgs_features: dictionary of name and features
     :param {str: ndarray} imgs_labels: dictionary of name and labels
-    :param [int] drop_labels: labels to be ignored
+    :param list(int) drop_labels: labels to be ignored
     :param bool balance_type: whether balance_type number of sampler per class
-    :return (ndarray, ndarray, ndarray):
+    :return tuple(ndarray,ndarray,ndarray):
 
     >>> np.random.seed(0)
     >>> d_fts = {'a': np.random.random((25, 3)),
@@ -1237,7 +1237,7 @@ def compute_tp_tn_fp_fn(annot, segm, label_positive=None):
     :param ndarray annot: annotation
     :param ndarray segm: segmentation
     :param int label_positive: indexes of positive labels
-    :return (float,float, float, float):
+    :return tuple(float,float,float,float):
 
     >>> np.random.seed(0)
     >>> annot = np.random.randint(0, 2, (5, 7)) * 9
@@ -1348,8 +1348,8 @@ def compute_metric_tpfp_tpfn(annot, segm, label_positive=None):
 # def format_classif_stat(y_true, y_pred):
 #     """ format classification statistic
 #
-#     :param [int] y_true: annotation
-#     :param [int] y_pred: predictions
+#     :param list(int) y_true: annotation
+#     :param list(int) y_pred: predictions
 #     :return:
 #
 #     >>> np.random.seed(0)
@@ -1416,7 +1416,7 @@ class HoldOut(object):
     def __iter__(self):
         """ iterate the folds
 
-        :return ([int], [int]):
+        :return tuple(list(int),list(int)):
         """
         ind_train = self._indexes[:self.hold_out]
         ind_test = self._indexes[self.hold_out:]
@@ -1532,7 +1532,7 @@ class CrossValidate(object):
     def __steps(self):
         """ adjust this iterator, tol_balance
 
-        :return [int]: indexes of steps
+        :return list(int): indexes of steps
         """
         steps = list(range(0, self._nb_samples, self._nb_hold_out))
         steps_wtol = [i for i in steps if (self._nb_samples - i) >= self._ignore_overflow]
@@ -1544,7 +1544,7 @@ class CrossValidate(object):
     def __iter__(self):
         """ iterate the folds
 
-        :return ([int], [int]):
+        :return tuple(list(int),list(int)):
         """
         # iterate over all filtered splits
         for i in self.__steps():
@@ -1629,7 +1629,7 @@ class CrossValidateGroups(CrossValidate):
     def __init__(self, set_sizes, nb_hold_out, rand_seed=None, ignore_overflow=0.01):
         """ construct
 
-        :param [int] set_sizes: list of sizes
+        :param list(int) set_sizes: list of sizes
         :param int|float nb_hold_out: how much hold out
         :param int|None rand_seed: random seed for shuffling
         :param float ignore_overflow: tolerance while dividing dataset to folds
@@ -1653,8 +1653,8 @@ class CrossValidateGroups(CrossValidate):
     def __iter_indexes(self, sets):
         """ return enrol indexes from sets
 
-        :param [int] sets: selection of indexes
-        :return [int]:
+        :param list(int) sets: selection of indexes
+        :return list(int):
         """
         inds = list(itertools.chain(*[self.set_indexes[i] for i in sets]))
         return inds
@@ -1662,7 +1662,7 @@ class CrossValidateGroups(CrossValidate):
     def __iter__(self):
         """ iterate the folds
 
-        :return ([int], [int]):
+        :return tuple(list(int),list(int)):
         """
         for train, test in super(CrossValidateGroups, self).__iter__():
             inds_train = self.__iter_indexes(train)

@@ -52,7 +52,7 @@ def show_segm_results_2d(img, seg, path_dir, fig_name='temp-segm_.png'):
 def show_segm_debugs_2d(images, path_dir, fig_name='temp-debug_.png'):
     """ show and expert partial segmentation results
 
-    :param {str: ...} images:
+    :param dict images:
     :param str path_dir: path to the visualisations
     :param str fig_name: figure name
     """
@@ -74,9 +74,9 @@ def run_segm2d_gmm_gc(img2d, dir_name, params, types_edge=('model', 'const'),
 
     :param ndarray img2d: input image
     :param str dir_name: create the folder in output path
-    :param [str] types_edge: list of performed edge types
-    :param {str: ...} params: segmentation parameters
-    :param [float] list_regul: list of performed edge types
+    :param list(str) types_edge: list of performed edge types
+    :param dict params: segmentation parameters
+    :param list(float) list_regul: list of performed edge types
     """
     path_dir = os.path.join(PATH_OUTPUT, dir_name)
     if not os.path.isdir(path_dir):

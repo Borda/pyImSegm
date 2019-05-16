@@ -46,7 +46,7 @@ DEFAULT_PARAMS = {
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return {str: ...}:
+    :return dict:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-imgs', '--path_images', type=str, required=False,
@@ -77,7 +77,7 @@ def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD)
     :param (int, row) idx_row: index and row with user annotation
     :param str path_dir_csv: path to list of ellipse parameters
     :param float overlap_thr: skip all annot. which Jaccard lower then threshold
-    :return {}:
+    :return dict:
     """
     _, row = idx_row
     dict_row = dict(row)

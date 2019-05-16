@@ -104,7 +104,7 @@ def arg_parse_params(paths):
 def compute_metrics(row):
     """ load segmentation and compute similarity metrics
 
-    :param {str: ...} row:
+    :param dict row:
     :return {str: float}:
     """
     logging.debug('loading annot "%s"\n and segm "%s"', row['path_annot'],
@@ -144,7 +144,7 @@ def compute_metrics(row):
 def expert_visual(row, method_name, path_out, max_fig_size=10):
     """ export several visualisation segmentation and annotation
 
-    :param {str: ...} row:
+    :param dict row:
     :param str method_name:
     :param str path_out:
     :param int max_fig_size:

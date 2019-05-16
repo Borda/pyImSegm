@@ -94,7 +94,7 @@ def relabel_folder_images(path_images, path_out, labels_old, labels_new,
 
     :param [int] labels_old:
     :param [int] labels_new:
-    :param [str] path_images: list of input images
+    :param list(str) path_images: list of input images
     :param path_out: output directory
     :param [int] labels_old: list of labels to be replaced
     :param [int] labels_new: list of new labels

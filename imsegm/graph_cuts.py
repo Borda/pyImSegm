@@ -162,7 +162,7 @@ def compute_multivarian_otsu(features):
     combinations of orienting the asign for tight cases it may not decide
 
     :param ndarray features:
-    :return [bool]:
+    :return list(bool):
 
     >>> np.random.seed(0)
     >>> fts = np.row_stack([np.random.random((5, 3)) - 1,
@@ -391,7 +391,7 @@ def compute_edge_model(edges, proba, metric='l_T'):
     :param [(int, int)] edges:
     :param [[float]] proba:
     :param str metric:
-    :return [float]:
+    :return list(float):
 
 
     >>> segments = np.array([[0] * 3 + [1] * 5 + [2] * 4,
@@ -540,7 +540,7 @@ def compute_pairwise_cost(gc_regul, proba_shape,
     """ wrapper for creating GC pairwise cost
 
     :param gc_regul:
-    :param (int, int) proba_shape:
+    :param tuple(int,int) proba_shape:
     :param float max_pairwise_cost:
     :return ndarray:
     """
@@ -670,8 +670,8 @@ def segment_graph_cut_general(segments, proba, image=None, features=None,
     :param str edge_type:
     :param str edge_cost:
     :param gc_regul: regularisation for GrphCut
-    :param {} debug_visual:
-    :return [int]: labelling by resulting classes
+    :param dict debug_visual:
+    :return list(int): labelling by resulting classes
 
     >>> np.random.seed(0)
     >>> segments = np.array([[0] * 3 + [2] * 3 + [4] * 3 + [6] * 3 + [8] * 3,
@@ -744,8 +744,8 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
                                                nb_labels=None):
     """ count transitions among labeled segment in between connected segments
 
-    :param {str: [[int]]} dict_slics: image name: ndarray
-    :param {str: [int]} dict_labels: image name: ndarray
+    :param dict(list(list(int))) dict_slics: image name: ndarray
+    :param dict(list(int)) dict_labels: image name: ndarray
     :param int nb_labels:
     :return ndarray: matrix of shape nb_labels x nb_labels
 

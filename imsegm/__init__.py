@@ -1,12 +1,21 @@
-import imsegm.utilities
+"""
+Using the try/except import since the init is called in setup  to get pkg info
+before satisfying install requirements
 
-imsegm.utilities
+"""
+
+try:
+    import imsegm.utilities
+    imsegm.utilities
+except ImportError:
+    import traceback
+    traceback.print_exc()
 
 __version__ = '0.1.7'
 __author__ = 'Jiri Borovec'
 __author_email__ = 'jiri.borovec@fel.cvut.cz'
 __license__ = 'BSD 3-clause'
-__home__ = 'https://borda.github.io/pyImSegm'
+__homepage__ = 'https://borda.github.io/pyImSegm'
 __copyright__ = 'Copyright (c) 2014-2019, Jiri Borovec.'
 __doc__ = """
 # Image segmentation - general superpixel segmentation & region growing

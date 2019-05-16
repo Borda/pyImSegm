@@ -6,13 +6,13 @@ codecov:
 coverage:
   precision: 0  # 2 = xx.xx%, 0 = xx%
   round: nearest # how coverage is rounded: down/up/nearest
-  range: 10...90 # custom range of coverage colors from red -> yellow -> green
+  range: 30...100 # custom range of coverage colors from red -> yellow -> green
   status:
     # https://codecov.readme.io/v1.0/docs/commit-status
     project:
       default:
         against: auto
-        target: 70% # specify the target coverage for each commit status
+        target: 90% # specify the target coverage for each commit status
         threshold: 50% # allow this little decrease on project
         # https://github.com/codecov/support/wiki/Filtering-Branches
         # branches: master
@@ -39,4 +39,4 @@ comment:
   layout: header, diff
   require_changes: false
   behavior: default  # update if exists else create new
-  branches: *
+  # branches: *

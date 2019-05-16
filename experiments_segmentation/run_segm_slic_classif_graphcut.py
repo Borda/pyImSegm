@@ -178,7 +178,7 @@ def load_image_annot_compute_features_labels(idx_row, params,
     """ load image and annotation, and compute superpixel features and labels
 
     :param (int, {...}) idx_row: row from table with paths
-    :param {str: ...} params: segmentation parameters
+    :param dict params: segmentation parameters
     :param bool show_debug_imgs: whether show debug images
     :return (...):
     """
@@ -230,9 +230,9 @@ def dataset_load_images_annot_compute_features(params,
     1) load image and annotation
     2) compute superpixel features and labels
 
-    :param {str: ...} params: segmentation parameters
+    :param dict params: segmentation parameters
     :param bool show_debug_imgs: whether show debug images
-    :return ({str: ndarray} * 6, [str]):
+    :return ({str: ndarray} * 6, list(str)):
     """
     dict_images, dict_annots = dict(), dict()
     dict_slics, dict_features, dict_labels, dict_label_hist = \
@@ -266,7 +266,7 @@ def load_dump_data(path_dump_data):
     """ load dumped data from previous run of experiment
 
     :param str path_dump_data:
-    :return ({str: ndarray} * 6, [str]):
+    :return ({str: ndarray} * 6, list(str)):
     """
     logging.info('loading dumped data "%s"', path_dump_data)
     # with open(os.path.join(path_out, NAME_DUMP_TRAIN_DATA), 'r') as f:
@@ -294,7 +294,7 @@ def save_dump_data(path_dump_data, imgs, annot, slics, features, labels,
     :param {str: ndarray} features: dictionary {name: data} of features
     :param {str: ndarray} labels: dictionary {name: data} of lables
     :param {str: ndarray} label_hist: dictionary {name: data} of
-    :param [str] feature_names: list of feature names
+    :param list(str) feature_names: list of feature names
     """
     logging.info('save (dump) data to "%s"', path_dump_data)
     np.savez_compressed(path_dump_data, dict_images=imgs, dict_annot=annot,
@@ -316,7 +316,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None,
     and trained classifier, and save results
 
     :param (int, str) imgs_idx_path:
-    :param {str: ...} params: segmentation parameters
+    :param dict params: segmentation parameters
     :param obj classif: trained classifier
     :param str path_out: path for output
     :param str path_visu: the existing patch means export also visualisation
@@ -379,7 +379,7 @@ def eval_segment_with_annot(params, dict_annot, dict_segm, dict_label_hist=None,
                             nb_workers=1):
     """ evaluate the segmentation results according given annotation
 
-    :param {str: ...} params:
+    :param dict params:
     :param {str: ndarray} dict_annot:
     :param {str: ndarray} dict_segm:
     :param {str: ndarray} dict_label_hist:
@@ -415,7 +415,7 @@ def retrain_lpo_segment_image(list_imgs_idx_path,
     """ load the classifier, and dumped data, subtract the image,
     retrain the classif without it and do the segmentation
 
-    :param [str] list_imgs_idx_path: path to input image
+    :param list(str) list_imgs_idx_path: path to input image
     :param str path_classif: path to saved classifier
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
@@ -498,15 +498,15 @@ def experiment_lpo(params, df_stat, dict_annot, idx_paths_img, path_classif,
                    path_dump, nb_holdout, show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ experiment Leave-P-samples-Out
 
-    :param {str: ...} params:
+    :param dict params:
     :param DF df_stat:
     :param {str: ndarray} dict_annot:
-    :param [str] paths_img:
+    :param list(str) paths_img:
     :param str path_classif:
     :param str path_dump:
     :param int nb_holdout:
     :param bool show_debug_imgs: whether show debug images
-    :return {}:
+    :return dict:
     """
     logging.info('run prediction on training images as Leave-%i-Out...',
                  nb_holdout)
@@ -624,8 +624,8 @@ def main_train(params):
     3) load or train classifier with hyper-parameters search
     4) perform Leave-One-Out and Leave-P-Out experiments on images
 
-    :param {str: ...} params:
-    :return {str: ...}:
+    :param dict params:
+    :return dict:
     """
     logging.getLogger().setLevel(logging.DEBUG)
     logging.info('running TRAINING...')

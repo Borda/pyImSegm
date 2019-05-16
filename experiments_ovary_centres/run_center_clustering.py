@@ -126,10 +126,10 @@ def export_draw_image_centers_clusters(path_out, name, img, centres, points=None
 def cluster_points_draw_export(dict_row, params, path_out=None):
     """ cluster points into centers and export visualisations
 
-    :param {} dict_row:
-    :param {str: ...} params:
+    :param dict dict_row:
+    :param dict params:
     :param str path_out:
-    :return {}:
+    :return dict:
     """
     assert all(n in dict_row for n in ['path_points', 'path_image', 'path_segm']), \
         'missing some required fields: %r' % dict_row

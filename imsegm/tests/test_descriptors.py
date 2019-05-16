@@ -40,10 +40,10 @@ def export_ray_results(seg, center, points, ray_dist_raw, ray_dist, name):
     """ export result from Ray features extractions
 
     :param ndarray seg: segmentation
-    :param (int, int) center: center of the Ray features
+    :param tuple(int,int) center: center of the Ray features
     :param [[int, int]] points: list of reconstructed points
-    :param [[int]] ray_dist_raw: list of raw Ray distances in regular step
-    :param [[int]] ray_dist: list of normalised Ray distances in regular step
+    :param list(list(int)) ray_dist_raw: list of raw Ray distances in regular step
+    :param list(list(int)) ray_dist: list of normalised Ray distances in regular step
     :param str name: name of particular figure
     """
     fig = figure_ray_feature(seg, center, ray_dist_raw=ray_dist_raw,

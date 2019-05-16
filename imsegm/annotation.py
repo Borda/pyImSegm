@@ -194,9 +194,9 @@ def image_frequent_colors(img, ratio_threshold=1e-3):
 def group_images_frequent_colors(paths_img, ratio_threshold=1e-3):
     """ look  all images and estimate most frequent colours
 
-    :param [str] paths_img: path to images
+    :param list(str) paths_img: path to images
     :param float ratio_threshold: percentage of nb, clr pixels to be assumed as important
-    :return [int]:
+    :return list(int):
 
     >>> from skimage import data
     >>> from imsegm.utilities.data_io import io_imsave
@@ -327,9 +327,9 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     """ load all info and group position info according name if stack
 
     :param str path_txt:
-    :param [int] stages: stages
-    :param [str] pos_columns:
-    :param {int: [int]} dict_slice_tol:
+    :param list(int) stages: stages
+    :param list(str) pos_columns:
+    :param dict(list(int)) dict_slice_tol: mapping of int to list
     :return: DF
 
     >>> from imsegm.utilities.data_io import update_path

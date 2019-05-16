@@ -61,7 +61,7 @@ install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 setup(
     name='ImSegm',
     version=imsegm.__version__,
-    url=imsegm.__home__,
+    url=imsegm.__homepage__,
     author=imsegm.__author__,
     author_email=imsegm.__author_email__,
     license=imsegm.__license__,

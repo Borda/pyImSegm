@@ -50,7 +50,7 @@ def sample_segment_vertical_2d(seg_size=SAMPLE_SEG_SIZE_2D_SMALL,
                                nb_labels=SAMPLE_SEG_NB_CLASSES):
     """ create sample segmentation with vertical stripes
 
-    :param (int, int) seg_size:
+    :param tuple(int,int) seg_size:
     :param int nb_labels:
     :return ndarray:
 
@@ -74,7 +74,7 @@ def sample_segment_vertical_3d(seg_size=SAMPLE_SEG_SIZE_3D_SMALL,
                                nb_labels=SAMPLE_SEG_NB_CLASSES, levels=2):
     """ create sample regular 3D segmentation
 
-    :param (int, int)|(int, int, int) seg_size:
+    :param tuple(int,int)|(int, int, int) seg_size:
     :param int nb_labels:
     :param int levels:
     :return ndarray:
@@ -102,7 +102,7 @@ def sample_color_image_rand_segment(im_size=SAMPLE_SEG_SIZE_2D_NORM,
                                     rand_seed=None):
     """ create samoe image and segmentation
 
-    :param (int, int) im_size:
+    :param tuple(int,int) im_size:
     :param int nb_classes:
     :param rand_seed:
     :return:

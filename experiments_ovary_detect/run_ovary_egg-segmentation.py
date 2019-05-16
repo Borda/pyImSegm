@@ -598,7 +598,7 @@ def simplify_segm_3cls(seg, lut=(0., 0.8, 1.), smooth=True):
 def create_dict_segmentation(params, slic, segm, img, centers):
     """ create dictionary of segmentation function hash, function and parameters
 
-    :param {str: ...} params:
+    :param dict params:
     :param ndarray slic:
     :param ndarray segm:
     :param [[float]] centers:
@@ -679,7 +679,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     and perform segmentation of various imsegm methods
 
     :param (int, str) idx_row: input image and centres
-    :param {str: ...} params: segmentation parameters
+    :param dict params: segmentation parameters
     :return str: image name
     """
     _, row_path = idx_row
@@ -770,7 +770,7 @@ def export_partial(str_key, obj_content, path_dir, name):
 def main(params, debug_export=DEBUG_EXPORT):
     """ the main entry point
 
-    :param {str: ...} params: segmentation parameters
+    :param dict params: segmentation parameters
     :param bool debug_export: whether export visualisations
     """
     logging.getLogger().setLevel(logging.DEBUG)

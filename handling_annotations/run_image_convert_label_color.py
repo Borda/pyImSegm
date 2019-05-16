@@ -98,7 +98,7 @@ def perform_img_convert(path_img, path_out, dict_colors):
 
     :param str path_img:
     :param str path_out:
-    :param {} dict_colors:
+    :param dict dict_colors:
     """
     img = tl_data.io.imread(path_img)
 
@@ -128,7 +128,7 @@ def perform_img_convert(path_img, path_out, dict_colors):
 def convert_folder_images(path_images, path_out, path_json=None, nb_workers=1):
     """ perform single or multi thread image quantisation
 
-    :param [str] path_images: list of input images
+    :param list(str) path_images: list of input images
     :param str path_out: output directory
     :param str path_json: path to json file
     :param int int nb_workers:

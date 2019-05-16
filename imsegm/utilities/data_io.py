@@ -269,7 +269,7 @@ def scale_image_intensity(img, im_range=1., quantiles=(2, 98)):
 
     :param ndarray img: input image
     :param im_range: range to scale image values (1. or 255)
-    :param (int, int) quantiles: scale image values in certain quantile range
+    :param tuple(int,int) quantiles: scale image values in certain quantile range
     :return ndarray:
 
     >>> np.random.seed(0)
@@ -476,7 +476,7 @@ def load_params_from_txt(path_file):
     """ parse the parameter file which was coded by repr function
 
     :param str path_file: path to file with parameters
-    :return {str: ...}:
+    :return dict:
 
     >>> p = {'abc': 123}
     >>> path_file = './sample_config.txt'
@@ -742,7 +742,7 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
 
     :param str path_img: path to the image
     :param float|None im_range: range to scale image values (1. or 255)
-    :param (int, int) quantiles: scale image values in certain percentile range
+    :param tuple(int,int) quantiles: scale image values in certain percentile range
     :return:
 
     >>> p_imgs = os.path.join(update_path('data_images'), 'drosophila_ovary_slice', 'image')
@@ -813,7 +813,7 @@ def load_complete_image_folder(path_dir, img_name_pattern='*.png',
     :param str img_name_pattern: image name pattern
     :param int nb_sample: load just some subset of images
     :param im_range: range to scale image values (1. or 255)
-    :param [str]|None skip: skip some prticular images by name
+    :param list(str)|None skip: skip some prticular images by name
     :return:
 
     >>> p_imgs = os.path.join(update_path('data_images'),
@@ -836,9 +836,9 @@ def load_complete_image_folder(path_dir, img_name_pattern='*.png',
 def load_images_list(path_imgs, im_range=255):
     """ load list of images together with image names
 
-    :param [str] path_imgs: paths to input images
+    :param list(str) path_imgs: paths to input images
     :param im_range: range to scale image values (1. or 255)
-    :return [ndarray], [str]:
+    :return [ndarray], list(str):
 
     >>> np.random.seed(0)
     >>> path_in = './temp_sample-image.png'
@@ -931,7 +931,7 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
 
     .. note:: returns just paths
 
-    :param [str] list_path_pattern: list of paths with image name patterns
+    :param list(str) list_path_pattern: list of paths with image name patterns
     :param bool drop_none: drop if there are some none - missing values in rows
     :return: DF<path_1, path_2, ...>
 
@@ -1037,13 +1037,13 @@ def get_image2d_boundary_color(image, size=1):
 def add_padding(img_size, padding, min_row, min_col, max_row, max_col):
     """ add some padding but still be inside image
 
-    :param (int, int) img_size:
+    :param tuple(int,int) img_size:
     :param int padding: set padding around segmented object
     :param int min_row: setting top left corner of bounding box
     :param int min_col: setting top left corner of bounding box
     :param int max_row: setting bottom right corner of bounding box
     :param int max_col: setting bottom right corner of bounding box
-    :return (int, int, int, int):
+    :return tuple(int,int,int,int):
 
     >>> add_padding((50, 50), 5, 15, 25, 35, 55)
     (10, 20, 40, 50)
