@@ -16,6 +16,7 @@ import os
 import sys
 import glob
 import shutil
+import inspect
 
 import m2r
 
@@ -274,7 +275,7 @@ with open(os.path.join(PATH_ROOT, 'requirements.txt'), 'r') as fp:
             MOCK_MODULES.append(pkg.rstrip())
 
 # TODO: better parse from package since the import name and package name may differ
-autodoc_mock_imports = MOCK_MODULES + ['sklearn', 'skimage', 'gco']
+autodoc_mock_imports = MOCK_MODULES + ['sklearn', 'skimage', 'gco', 'yaml']
 
 
 # Options for the linkcode extension
@@ -292,12 +293,16 @@ def linkcode_resolve(domain, info):
         obj = sys.modules[info['module']]
         for part in info['fullname'].split('.'):
             obj = getattr(obj, part)
-        import inspect
-        import os
-        fn = inspect.getsourcefile(obj)
-        fn = os.path.relpath(fn, start=os.path.abspath('..'))
+        fname = inspect.getsourcefile(obj)
+        # https://github.com/rtfd/readthedocs.org/issues/5735
+        if any([s in fname for s in ('readthedocs', 'checkouts')]):
+            path_top = os.path.abspath(os.path.join('..', '..', '..'))
+            fname = os.path.relpath(fname, start=path_top)
+        else:
+            # Local build, imitate master
+            fname = 'master/' + os.path.relpath(fname, start=os.path.abspath('..'))
         source, lineno = inspect.getsourcelines(obj)
-        return fn, lineno, lineno + len(source) - 1
+        return fname, lineno, lineno + len(source) - 1
 
     if domain != 'py' or not info['module']:
         return None
@@ -308,7 +313,7 @@ def linkcode_resolve(domain, info):
     # import subprocess
     # tag = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE,
     #                        universal_newlines=True).communicate()[0][:-1]
-    return "https://github.com/%s/%s/blob/master/%s" \
+    return "https://github.com/%s/%s/blob/%s" \
            % (github_user, github_repo, filename)
 
 

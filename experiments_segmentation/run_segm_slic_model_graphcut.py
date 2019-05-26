@@ -37,7 +37,6 @@ if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import yaml
 from PIL import Image
 import numpy as np
 import pandas as pd
@@ -162,8 +161,7 @@ def arg_parse_params(params):
     # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
     if os.path.isfile(args.get('path_config', '')):
-        with open(args['path_config'], 'r') as fd:
-            config = yaml.load(fd)
+        config = tl_expt.load_config_yaml(args['path_config'])
         params.update(config)
     params.update(args)
     return params

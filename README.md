@@ -211,8 +211,8 @@ We utilise (un)supervised segmentation according to given training examples or s
 
 The previous two (un)segmentation accept [configuration file](experiments_segmentation/sample_config.yml) (YAML) by parameter `-cfg` with some extra parameters which was not passed in arguments, for instance:
 ```yaml
-slic_size: 35,
-slic_regul: 0.2,
+slic_size: 35
+slic_regul: 0.2
 features: 
   color_hsv: ['mean', 'std', 'eng']
 classif: 'SVM'

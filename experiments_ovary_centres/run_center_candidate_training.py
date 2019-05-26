@@ -31,7 +31,6 @@ import argparse
 import multiprocessing as mproc
 from functools import partial
 
-import yaml
 import tqdm
 import pandas as pd
 import numpy as np
@@ -170,8 +169,7 @@ def arg_parse_params(params):
         ext = os.path.splitext(params['path_config'])[-1]
         assert (ext == '.yaml' or ext == '.yml'), \
             'wrong extension for %s' % params['path_config']
-        with open(params['path_config'], 'r') as fd:
-            data = yaml.load(fd)
+        data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
     params.update(paths)
     logging.info('ARG PARAMETERS: \n %r', params)
@@ -711,10 +709,7 @@ def main_train(params):
 
     tl_expt.set_experiment_logger(params['path_expt'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
-
-    with open(os.path.join(params['path_expt'], NAME_YAML_PARAMS), 'w') as fp:
-        yaml.dump(params, fp, default_flow_style=False)
-
+    tl_expt.save_config_yaml(os.path.join(params['path_expt'], NAME_YAML_PARAMS), params)
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 
     df_paths, _ = load_df_paths(params)

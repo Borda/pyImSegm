@@ -37,7 +37,6 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import yaml
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -158,8 +157,7 @@ def arg_parse_params(params):
         ext = os.path.splitext(params['path_config'])[-1]
         assert (ext == '.yaml' or ext == '.yml'), \
             '"%s" should be YAML file' % os.path.basename(params['path_config'])
-        with open(params['path_config'], 'r') as fd:
-            data = yaml.load(fd)
+        data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
         params.update(arg_params)
     for k in (k for k in arg_params if 'path' in k):

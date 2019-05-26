@@ -45,51 +45,67 @@ class Experiment(object):
     >>> shutil.rmtree(params['path_out'], ignore_errors=True)
     """
 
-    def __init__(self, dict_params, time_stamp=True):
-        self.params = copy.deepcopy(dict_params)
+    def __init__(self, params, time_stamp=True):
+        """ constructor
+
+        :param dict params: define experimenatl parameters
+        :param bool time_stamp: add to experiment unique time stamp
+        """
+        self.params = copy.deepcopy(params)
         self.params['class'] = self.__class__.__name__
-        self.__check_exist_path()
-        self.__create_folder(time_stamp)
+        self._check_exist_paths()
+        self._create_folder(time_stamp)
         set_experiment_logger(self.params['path_exp'])
         logging.info(string_dict(self.params, desc='PARAMETERS'))
 
     def run(self, gt=True):
+        """ run the main Experimental body
+
+        :param bool gt: try to load Ground Truth
+        """
         self._load_data(gt)
         self._perform()
         self._evaluate()
         self._summarise()
         logging.getLogger().handlers = []
 
-    def _load_data(self, gt):
-        pass
+    def _load_data(self, gt=True):
+        """ loading the experiment data
+
+        :param bool gt: try to load ground truth
+        """
+        logging.warning('Not implemented yet...')
 
     def _perform(self):
-        pass
+        logging.warning('Not implemented yet...')
 
     def _evaluate(self):
-        pass
+        logging.warning('Not implemented yet...')
 
     def _summarise(self):
-        pass
+        logging.warning('Not implemented yet...')
 
-    def __check_exist_path(self):
-        for p in [self.params[n] for n in self.params
-                  if 'dir_name' in n.lower() or 'path' in n.lower()]:
+    def _check_exist_paths(self):
+        """ Check all required paths in parameters whether they exist """
+        for p in (self.params[n] for n in self.params
+                  if 'dir' in n.lower() or 'path' in n.lower()):
             if not os.path.exists(p):
-                raise Exception('given folder "{}" does not exist!'.format(p))
-        for p in [self.params[n] for n in self.params if 'file' in n.lower()]:
+                raise Exception('given folder "%s" does not exist!' % p)
+        for p in (self.params[n] for n in self.params if 'file' in n.lower()):
             if not os.path.exists(p):
-                raise Exception('given file "{}" does not exist!'.format(p))
+                raise Exception('given folder "%s" does not exist!' % p)
 
-    def __create_folder(self, time_stamp):
-        """ create the experiment folder and iterate while there is no available
+    def _create_folder(self, time_stamp=True):
+        """ Create the experiment folder and iterate while there is no available
+
+        :param bool time_stamp: mark if you want an unique folder per experiment
         """
         # create results folder for experiments
-        assert os.path.isdir(self.params.get('path_out')), \
-            'missing %s' % self.params.get('path_out')
+        if not os.path.exists(self.params.get('path_out', 'NONE')):
+            raise ValueError('no results folder "%r"' % self.params.get('path_out', None))
         self.params = create_experiment_folder(self.params,
                                                self.__class__.__name__,
-                                               stamp_unique=time_stamp)
+                                               time_stamp)
 
 
 # def check_exist_dirs_files(params):
@@ -146,15 +162,13 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     if os.path.exists(path_config) and not skip_load:
         params_in = params
         logging.debug('loading saved params from file "%s"', CONFIG_YAML)
-        with open(path_config, 'r') as fp:
-            params = yaml.load(fp)
+        params = load_config_yaml(path_config)
         params.update({k: params_in[k] for k in params_in if 'path' in k})
         logging.info('loaded following PARAMETERS: %s', string_dict(params))
     params.update({'computer': os.uname(),
                    'path_exp': path_expt})
     logging.debug('saving params to file "%s"', CONFIG_YAML)
-    with open(path_config, 'w') as fp:
-        yaml.dump(params, fp, default_flow_style=False)
+    save_config_yaml(path_config, params)
     return params
 
 
@@ -404,3 +418,30 @@ class WrapExecuteSequence:
 #         for out in map(wrap_func, iterate_vals):
 #             yield out
 #             tqdm_bar.update()
+
+
+def load_config_yaml(path_config):
+    """ loading the
+
+    :param str path_config:
+    :return dict:
+
+    >>> p_conf = './testing-congif.yaml'
+    >>> save_config_yaml(p_conf, {'a': 2})
+    >>> load_config_yaml(p_conf)
+    {'a': 2}
+    >>> os.remove(p_conf)
+    """
+    with open(path_config, 'r') as fp:
+        config = yaml.load(fp)
+    return config
+
+
+def save_config_yaml(path_config, config):
+    """ exporting configuration as YAML file
+
+    :param str path_config:
+    :param dict config:
+    """
+    with open(path_config, 'w') as fp:
+        yaml.dump(config, fp, default_flow_style=False)

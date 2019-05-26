@@ -12,7 +12,6 @@ import logging
 # import multiprocessing as mproc
 from functools import partial
 
-import yaml
 import pandas as pd
 import numpy as np
 from sklearn import cluster
@@ -195,9 +194,7 @@ def main(params):
     """
     params['path_expt'] = os.path.join(params['path_output'],
                                        FOLDER_EXPERIMENT % params['name'])
-    with open(os.path.join(params['path_expt'], NAME_YAML_PARAMS), 'w') as fp:
-        yaml.dump(params, fp, default_flow_style=False)
-
+    tl_expt.save_config_yaml(os.path.join(params['path_expt'], NAME_YAML_PARAMS), params)
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 
     list_paths = [params[k] for k in ['path_images', 'path_segms', 'path_centers']]

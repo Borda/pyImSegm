@@ -11,7 +11,7 @@ import copy
 import unittest
 
 import matplotlib.pyplot as plt
-from scipy.misc import imresize
+from skimage.transform import resize
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 import imsegm.descriptors
@@ -111,7 +111,7 @@ class TestPipelinesGMM(unittest.TestCase):
     # img3d = get_image_path(IMAGE_DROSOPHILA_OVARY_3D)
 
     def test_segm_gmm_gc_objects(self):
-        img = imresize(self.img_obj, (256, 256))
+        img = resize(self.img_obj, output_shape=(256, 256))
         logging.debug('dimension: {}'.format(img.shape))
 
         dict_imgs = dict()
@@ -137,28 +137,28 @@ class TestPipelinesGMM(unittest.TestCase):
         run_segm2d_gmm_gc(img, 'temp_segm-gmm-gc-stars', params=params)
 
     # def sample_segm_gmm_gc_langer(self):
-    #     img = imresize(self.img_islet, (512, 512))
+    #     img = resize(self.img_islet, (512, 512))
     #     params = copy.deepcopy(DEFAULT_SEGM_PARAMS)
     #     params.update(dict(sp_regul=0.15, sp_size=5))
     #     run_segm2d_gmm_gc(img, 'temp_segm-gmm-gc-langer', types_edge=['model_lT'],
     #                       list_regul=[0, 1], params=params)
 
     # def sample_segm_gmm_gc_histo(self):
-    #     img = imresize(self.img_histo, (512, 512))
+    #     img = resize(self.img_histo, (512, 512))
     #     params = copy.deepcopy(DEFAULT_SEGM_PARAMS)
     #     params.update(dict(sp_regul=0.15, sp_size=15, pca_coef=0.98))
     #     run_segm2d_gmm_gc(img, 'temp_segm-gmm-gc-histology', types_edge=['model'],
     #                       list_regul=[0, 1, 5], params=params)
 
     # def sample_segm_gmm_gc_disc(self):
-    #     img = imresize(self.img_disc, (512, 512))
+    #     img = resize(self.img_disc, (512, 512))
     #     params = copy.deepcopy(DEFAULT_SEGM_PARAMS)
     #     params.update(dict(sp_regul=0.2, sp_size=15, pca_coef=0.98))
     #     run_segm2d_gmm_gc(img, 'temp_segm-gmm-gc-disc', types_edge=['model_l2'],
     #                       list_regul=[0, 1, 5], params=params)
 
     # def sample_segm_gmm_gc_ovary_2d(self):
-    #     img = imresize(self.img_ovary[:, :, 0], (512, 512))
+    #     img = resize(self.img_ovary[:, :, 0], (512, 512))
     #     # img = np.rollaxis(np.tile(img[:, :, 0], (3, 1, 1)), 0, 3)
     #     params = copy.deepcopy(DEFAULT_SEGM_PARAMS)
     #     params.update(dict(nb_classes=4, pca_coef=0.95, sp_regul=0.3, sp_size=10,
@@ -180,9 +180,10 @@ class TestPipelinesClassif(unittest.TestCase):
     img2 = load_sample_image(IMAGE_DROSOPHILA_OVARY_2D)[:, :, 0]
 
     def test_segm_supervised(self):
-        img = imresize(self.img, (256, 256))
-        annot = imresize(self.annot, (256, 256), interp='nearest')
-        img2 = imresize(self.img2, (256, 256))
+        img = resize(self.img, output_shape=(256, 256))
+        annot = resize(self.annot, output_shape=(256, 256), order=0,
+                       preserve_range=True).astype(int)
+        img2 = resize(self.img2, output_shape=(256, 256))
 
         path_dir = os.path.join(PATH_OUTPUT, 'temp_segm-supervised_gc')
         if not os.path.exists(path_dir):
