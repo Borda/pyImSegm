@@ -14,7 +14,6 @@ import os
 import sys
 import logging
 import argparse
-import multiprocessing as mproc
 from functools import partial
 
 import numpy as np
@@ -23,7 +22,7 @@ sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+NB_WORKERS = tl_expt.nb_workers(0.9)
 PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 PATHS = {
@@ -54,7 +53,7 @@ def arg_parse_params(dict_paths):
                         help='mask by the segmentation', default=1)
     parser.add_argument('-bg', '--background', type=int, required=False,
                         help='using background color', default=None, nargs='+')
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
                         help='number of processes in parallel')
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %r', args)
@@ -92,7 +91,7 @@ def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
 
 
 def main(dict_paths, padding=0, use_mask=False, bg_color=None,
-         nb_workers=NB_THREADS):
+         nb_workers=NB_WORKERS):
     """ the main executable
 
     :param dict_paths:

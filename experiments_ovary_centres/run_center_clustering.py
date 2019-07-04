@@ -9,7 +9,6 @@ Copyright (C) 2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import os
 import sys
 import logging
-# import multiprocessing as mproc
 from functools import partial
 
 import pandas as pd

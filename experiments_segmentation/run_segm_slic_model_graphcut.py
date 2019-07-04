@@ -29,7 +29,6 @@ import argparse
 import logging
 import time
 import gc
-import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
@@ -55,7 +54,7 @@ import imsegm.descriptors as seg_fts
 # sometimes it freeze in "Cython: computing Colour means for image"
 seg_fts.USE_CYTHON = False
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+NB_WORKERS = tl_expt.nb_workers(0.9)
 TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_DUMP_MODEL = 'estimated_model.npz'
 NAME_CSV_ARS_CORES = 'metric_ARS.csv'
@@ -144,7 +143,7 @@ def arg_parse_params(params):
                         default=params.get('nb_classes', 2))
     parser.add_argument('--nb_workers', type=int, required=False,
                         help='number of processes in parallel',
-                        default=NB_THREADS)
+                        default=NB_WORKERS)
     parser.add_argument('--visual', required=False, action='store_true',
                         help='export debug visualisations', default=False)
     parser.add_argument('--unique', required=False, action='store_true',

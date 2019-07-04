@@ -33,6 +33,10 @@ import imsegm
 # extensions = [Extension("*", "*.pyx")]
 
 
+TEMP_EGG = '#egg='
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+
 class BuildExt(build_ext):
     """ build_ext command for use when numpy headers are needed.
     SEE tutorial: https://stackoverflow.com/questions/2379898
@@ -50,11 +54,12 @@ class BuildExt(build_ext):
 def _parse_requirements(file_path):
     with open(file_path) as fp:
         reqs = [r.rstrip() for r in fp.readlines() if not r.startswith('#')]
+        # parse egg names if there are paths
+        reqs = [r[r.index(TEMP_EGG) + len(TEMP_EGG):] if TEMP_EGG in r else r for r in reqs]
         return reqs
 
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-setup_reqs = ['Cython', 'numpy']
+setup_reqs = ['Cython', 'numpy<1.17']  # numpy v1.17 drops support for py2
 install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
 

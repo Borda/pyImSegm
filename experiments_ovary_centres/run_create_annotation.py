@@ -25,7 +25,6 @@ import os
 import sys
 import glob
 import logging
-# import multiprocessing as mproc
 from functools import partial
 
 import numpy as np

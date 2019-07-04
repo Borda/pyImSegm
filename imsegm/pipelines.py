@@ -5,14 +5,13 @@ Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
-import multiprocessing as mproc
 from functools import partial
 
 import numpy as np
 import skimage.color as sk_color
 # from sklearn import mixture
 
-from imsegm.utilities.experiments import WrapExecuteSequence
+from imsegm.utilities.experiments import WrapExecuteSequence, nb_workers
 from imsegm.graph_cuts import segment_graph_cut_general, estim_class_model
 from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
 from imsegm.descriptors import (
@@ -28,7 +27,7 @@ FTS_SET_SIMPLE = FEATURES_SET_COLOR
 CLASSIF_NAME = DEFAULT_CLASSIF_NAME
 CLUSTER_METHOD = DEFAULT_CLUSTERING
 CROSS_VAL_LEAVE_OUT = 2
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.6))
+NB_WORKERS = nb_workers(0.6)
 
 
 def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
@@ -98,7 +97,7 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
 def estim_model_classes_group(list_images, nb_classes, dict_features,
                               sp_size=30, sp_regul=0.2,
                               use_scaler=True, pca_coef=None, model_type='GMM',
-                              nb_workers=NB_THREADS):
+                              nb_workers=NB_WORKERS):
     """ estimate a model from sequence of input images and return it as result
 
     :param [ndarray] list_images:

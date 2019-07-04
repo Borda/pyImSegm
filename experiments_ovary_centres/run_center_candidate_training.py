@@ -28,7 +28,6 @@ import os
 import sys
 import logging
 import argparse
-import multiprocessing as mproc
 from functools import partial
 
 import tqdm
@@ -73,7 +72,7 @@ NAME_CSV_STAT_TRAIN = 'statistic_train_centers.csv'
 NAME_YAML_PARAMS = 'configuration.yaml'
 NAME_DUMP_TRAIN_DATA = 'dump_training_data.npz'
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+NB_WORKERS = tl_expt.nb_workers(0.9)
 # position is label in loaded segm and nb are out labels
 LUT_ANNOT_CENTER_RELABEL = [0, 0, -1, 1]
 CROSS_VAL_LEAVE_OUT_SEARCH = 0.2
@@ -149,7 +148,7 @@ def arg_parse_params(params):
                         help='name of the experiment', default='ovary')
     parser.add_argument('-cfg', '--path_config', type=str, required=False,
                         help='path to the configuration', default=None)
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
                         help='number of processes in parallel')
     params.update(vars(parser.parse_args()))
     paths = {}
@@ -445,7 +444,7 @@ def wrapper_draw_export_slic_centers(args):
     return export_show_image_points_labels(*args)
 
 
-def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_THREADS):
+def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_WORKERS):
     """ create whole dataset composed from loading input data, computing features
     and label points by label whether its positive or negative center candidate
 
@@ -502,7 +501,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_T
 
 
 def export_dataset_visual(path_output, dict_imgs, dict_segms, dict_slics,
-                          dict_points, dict_labels, nb_workers=NB_THREADS):
+                          dict_points, dict_labels, nb_workers=NB_WORKERS):
     """ visualise complete training dataset by marking labeld points
     over image and input segmentation
 

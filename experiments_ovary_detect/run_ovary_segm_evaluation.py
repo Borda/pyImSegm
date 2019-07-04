@@ -18,7 +18,6 @@ import sys
 import glob
 import logging
 import argparse
-import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
@@ -38,7 +37,7 @@ import imsegm.utilities.drawing as tl_visu
 import imsegm.labeling as seg_lbs
 
 EXPORT_VUSIALISATION = False
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+NB_WORKERS = tl_expt.nb_workers(0.9)
 
 NAME_DIR_VISUAL_1 = 'ALL_visualisation-1'
 NAME_DIR_VISUAL_2 = 'ALL_visualisation-2'
@@ -85,7 +84,7 @@ def arg_parse_params(paths):
                         help='path to the result directory',
                         default=paths['results'])
     parser.add_argument('--nb_workers', type=int, required=False,
-                        default=NB_THREADS, help='number of processes in parallel')
+                        default=NB_WORKERS, help='number of processes in parallel')
     parser.add_argument('--visual', required=False, action='store_true',
                         default=False, help='export visualisations')
     arg_params = vars(parser.parse_args())
@@ -251,7 +250,7 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
     return dict_eval
 
 
-def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_workers=NB_THREADS):
+def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_workers=NB_WORKERS):
     """ evaluate all segmentations in experiment folder
 
     :param {str: str} paths: path to all required directories

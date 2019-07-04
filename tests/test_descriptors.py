@@ -47,7 +47,8 @@ def export_ray_results(seg, center, points, ray_dist_raw, ray_dist, name):
     :param str name: name of particular figure
     """
     fig = figure_ray_feature(seg, center, ray_dist_raw=ray_dist_raw,
-                             ray_dist=ray_dist, points_reconst=points)
+                             ray_dist=ray_dist, points_reconst=points,
+                             title=os.path.splitext(name)[0])
     fig_path = os.path.join(PATH_FIGURES_RAY, name)
     fig.savefig(fig_path)
     if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
@@ -132,11 +133,12 @@ class TestFeatures(unittest.TestCase):
             ray_dist_raw = compute_ray_features_segm_2d(seg, point, edge='down',
                                                         angle_step=ANGULAR_STEP)
             ray_dist, shift = shift_ray_features(ray_dist_raw)
-            points = reconstruct_ray_features_2d(point, ray_dist, shift)
-            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
-                                       'circle_e-down-A-%i.png' % i)
+            points_rt = reconstruct_ray_features_2d(point, ray_dist, shift)
+            p_fig = export_ray_results(seg, point, points_rt, ray_dist_raw, ray_dist,
+                                       'circle-full_edge-down-%i.png' % i)
             self.assertTrue(os.path.exists(p_fig))
 
+        # insert white interior
         x, y = draw.circle(200, 250, 120, shape=seg.shape)
         seg[x, y] = False
 
@@ -144,9 +146,9 @@ class TestFeatures(unittest.TestCase):
             ray_dist_raw = compute_ray_features_segm_2d(seg, point, edge='down',
                                                         angle_step=ANGULAR_STEP)
             ray_dist, shift = shift_ray_features(ray_dist_raw)
-            points = reconstruct_ray_features_2d(point, ray_dist, shift)
-            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
-                                       'circle_e-down-B-%i.png' % i)
+            points_rt = reconstruct_ray_features_2d(point, ray_dist, shift)
+            p_fig = export_ray_results(seg, point, points_rt, ray_dist_raw, ray_dist,
+                                       'circle-inter_edge-down-%i.png' % i)
             self.assertTrue(os.path.exists(p_fig))
 
     def test_ray_features_polygon(self):

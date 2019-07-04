@@ -18,7 +18,6 @@ import sys
 import time
 import logging
 import gc
-# import multiprocessing as mproc
 from functools import partial
 
 import pandas as pd
@@ -83,7 +82,7 @@ def estimate_eggs_from_info(row_slice, mask_shape):
     pos_ant, pos_lat, pos_post = tl_visu.parse_annot_rectangles(row_slice)
     list_masks = tl_visu.draw_eggs_rectangle(mask_shape, pos_ant, pos_lat,
                                              pos_post)
-    mask_eggs = tl_visu.merge_object_masks(list_masks, thr_overlap=0.5)
+    mask_eggs = tl_visu.merge_object_masks(list_masks, overlap_thr=0.5)
 
     return mask_eggs
 

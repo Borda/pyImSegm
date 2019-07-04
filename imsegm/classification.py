@@ -11,7 +11,6 @@ import logging
 import random
 import collections
 import itertools
-import multiprocessing as mproc
 from functools import partial
 
 import numpy as np
@@ -33,7 +32,7 @@ except Exception:
     from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 from imsegm.labeling import relabel_max_overlap_unique
-from imsegm.utilities.experiments import WrapExecuteSequence
+from imsegm.utilities.experiments import WrapExecuteSequence, nb_workers
 
 # NAME_FILE_RESULTS = 'results.csv'
 TEMPLATE_NAME_CLF = 'classifier_{}.pkl'
@@ -50,7 +49,7 @@ METRIC_AVERAGES = ('macro', 'weighted')
 METRIC_SCORING = ('f1_macro', 'accuracy', 'precision_macro', 'recall_macro')
 # rounding unique features, in case to detail precision
 ROUND_UNIQUE_FTS_DIGITS = 3
-NB_THREADS_SERACH = min(1, mproc.cpu_count() * 0.5)
+NB_WORKERS_SERACH = nb_workers(0.5)
 
 
 DICT_SCORING = {
@@ -425,7 +424,7 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
     >>> img_pred = np.random.randint(0, 2, (50, 100))
     >>> df = compute_stat_per_image([img_true], [img_true], nb_workers=2,
     ...                             relabel=True)
-    >>> df.iloc[0]  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ARS                                                         1
     accuracy                                                    1
     confusion          [[1672, 0, 0], [0, 1682, 0], [0, 0, 1646]]
@@ -435,7 +434,7 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
     support_macro                                            None
     Name: 0, dtype: object
     >>> df = compute_stat_per_image([img_true], [img_pred], drop_labels=[-1])
-    >>> df.iloc[0]  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ARS                                                       0.0...
     accuracy                                                  0.3384
     confusion          [[836, 826, 770], [836, 856, 876], [0, 0, 0]]
@@ -647,7 +646,7 @@ def relabel_sequential(labels, uq_labels=None):
 
 def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
                                        nb_search_iter=100, search_type='random',
-                                       eval_metric='f1', nb_workers=NB_THREADS_SERACH,
+                                       eval_metric='f1', nb_workers=NB_WORKERS_SERACH,
                                        path_out=None, params=None, pca_coef=0.98,
                                        feature_names=None, label_names=None):
     """ create classifier and train it once or find best parameters.

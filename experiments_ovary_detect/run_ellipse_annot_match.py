@@ -17,7 +17,6 @@ import sys
 import glob
 import logging
 import argparse
-import multiprocessing as mproc
 from functools import partial
 
 import pandas as pd
@@ -33,7 +32,7 @@ import imsegm.ellipse_fitting as ell_fit
 NAME_CSV_RESULTS = 'info_ovary_images_ellipses.csv'
 OVERLAP_THRESHOLD = 0.
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
+NB_WORKERS = tl_expt.nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 
 DEFAULT_PARAMS = {
@@ -61,7 +60,7 @@ def arg_parse_params(params):
     parser.add_argument('-out', '--path_output', type=str, required=False,
                         help='path to the output directory',
                         default=params.get('path_output', None))
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
                         help='number of processes in parallel')
     arg_params = vars(parser.parse_args())
     params.update(arg_params)

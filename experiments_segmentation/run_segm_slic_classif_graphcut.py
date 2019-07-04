@@ -34,7 +34,6 @@ import logging
 import glob
 import time
 import gc
-import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
@@ -66,7 +65,7 @@ from run_segm_slic_model_graphcut import (arg_parse_params, load_image,
                                           write_skip_file)
 
 NAME_EXPERIMENT = 'experiment_segm-Supervised'
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+NB_WORKERS = tl_expt.nb_workers(0.9)
 
 TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_FIG_LABEL_HISTO = 'fig_histogram_annot_segments.png'
@@ -604,7 +603,7 @@ def wrapper_filter_labels(name_img_labels_slic_label_hist, label_purity,
 
 def filter_train_with_purity(dict_imgs, dict_labels, dict_label_hist,
                              label_purity, dict_slics, drop_labels=None,
-                             path_visu=None, nb_workers=NB_THREADS):
+                             path_visu=None, nb_workers=NB_WORKERS):
     _w_filter = partial(wrapper_filter_labels, label_purity=label_purity,
                         drop_labels=drop_labels, path_visu=path_visu)
     iter_vals = ((n, dict_imgs[n], dict_labels[n], dict_slics[n],

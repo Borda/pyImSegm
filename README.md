@@ -178,7 +178,7 @@ We utilise (un)supervised segmentation according to given training examples or s
     ```bash
     python experiments_segmentation/run_segm_slic_model_graphcut.py \
        -l ./data_images/langerhans_islets/list_lang-isl_imgs-annot.csv -i "" \
-       --cdf experiments_segmentation/sample_config.yml \
+       -cfg experiments_segmentation/sample_config.yml \
        -o ./results -n langIsl --nb_classes 3 --visual --nb_workers 2
     ```
     OR specified on particular path:

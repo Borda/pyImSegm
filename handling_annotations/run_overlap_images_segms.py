@@ -18,7 +18,6 @@ import sys
 import glob
 import logging
 import argparse
-import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
@@ -35,7 +34,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
 import imsegm.utilities.drawing as tl_visu
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+NB_WORKERS = tl_expt.nb_workers(0.9)
 BOOL_IMAGE_RESCALE_INTENSITY = False
 BOOL_SAVE_IMAGE_CONTOUR = False
 BOOL_SHOW_SEGM_BINARY = False
@@ -61,7 +60,7 @@ def parse_arg_params():
     parser.add_argument('--overlap', type=float, required=False,
                         help='alpha for segmentation', default=0.)
     parser.add_argument('--nb_workers', type=int, required=False,
-                        help='number of jobs in parallel', default=NB_THREADS)
+                        help='number of jobs in parallel', default=NB_WORKERS)
     args = parser.parse_args()
     paths = dict(zip(['images', 'segms', 'output'],
                      [args.path_images, args.path_segms, args.path_output]))
@@ -132,7 +131,7 @@ def perform_visu_overlap(path_img, paths, segm_alpha=MIDDLE_ALPHA_OVERLAP):
     return True
 
 
-def main(paths, nb_workers=NB_THREADS, segm_alpha=MIDDLE_ALPHA_OVERLAP):
+def main(paths, nb_workers=NB_WORKERS, segm_alpha=MIDDLE_ALPHA_OVERLAP):
     logging.info('running...')
     assert paths['segms'] != paths['output'], 'overwriting segmentation dir'
     assert os.path.basename(paths['images']) != paths['output'], \

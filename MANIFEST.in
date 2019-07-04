@@ -23,6 +23,8 @@ include setup.*
 exclude *.yml
 # Exclude testing
 exclude pytest.*
+recursive-exclude tests *
+exclude tests
 
 # Exclude experiments
 exclude */*.sh

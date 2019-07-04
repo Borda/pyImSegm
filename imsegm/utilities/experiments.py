@@ -9,21 +9,33 @@ import copy
 import time
 import types
 import logging
+import uuid
 import multiprocessing as mproc
 from functools import wraps
 
 import yaml
 import tqdm
-import numpy as np
 from sklearn import metrics
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+CPU_COUNT = mproc.cpu_count()
 FILE_RESULTS = 'resultStat.txt'
 FORMAT_DT = '%Y%m%d-%H%M%S'
 CONFIG_YAML = 'config.yml'
 RESULTS_TXT = FILE_RESULTS
 RESULTS_CSV = 'results.csv'
 FILE_LOGS = 'logging.txt'
+
+
+def nb_workers(ratio):
+    """get fraction of of available CPUs
+
+    :param float ratio: range (0, 1)
+    :return int: number of workers with lower bound 1
+
+    >>> nb_workers(0)
+    1
+    """
+    return max(1, int(CPU_COUNT * ratio))
 
 
 class Experiment(object):
@@ -125,39 +137,44 @@ class Experiment(object):
 def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True):
     """ create the experiment folder and iterate while there is no available
 
-    :param dict params:
+    :param dict params: configuration
     :param str dir_name: folder name
     :param bool stamp_unique: use unique timestamp
     :param bool skip_load: skip loading folder params
     :return dict:
 
     >>> import shutil
+    >>> import pandas as pd
     >>> p = {'path_out': '.'}
     >>> p = create_experiment_folder(p, 'my_test', False, skip_load=True)
-    >>> 'computer' in p
-    True
-    >>> p['path_exp']
-    './my_test_EXAMPLE'
+    >>> pd.Series(p).sort_index()  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    computer                   (...
+    path_exp      ./my_test_EXAMPLE
+    path_out                      .
+    dtype: object
     >>> p = create_experiment_folder(p, 'my_test', False, skip_load=False)
-    >>> p['path_exp']
-    './my_test_EXAMPLE'
+    >>> shutil.rmtree(p['path_exp'], ignore_errors=True)
+    >>> p = create_experiment_folder(p, 'my_test', stamp_unique=True)
+    >>> pd.Series(p).sort_index()  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    computer                         (...
+    path_exp    ./my_test_EXAMPLE_...-...
+    path_out                            .
+    dtype: object
     >>> shutil.rmtree(p['path_exp'], ignore_errors=True)
     """
     date = time.gmtime()
-    name = params.get('name', 'EXAMPLE')
-    if isinstance(name, str) and name:
-        dir_name = '{}_{}'.format(dir_name, name)
-    # if self.params.get('date_time') is None:
-    #     self.params.set('date_time', time.gmtime())
-    if stamp_unique:
-        dir_name += '_' + time.strftime(FORMAT_DT, date)
+    dir_name = '%s_%s' % (dir_name, str(params.get('name', 'EXAMPLE')))
     path_expt = os.path.join(params.get('path_out'), dir_name)
-    while stamp_unique and os.path.exists(path_expt):
-        logging.warning('particular out folder already exists')
-        path_expt += ':' + str(np.random.randint(0, 9))
+    # if unique folder is required
+    if stamp_unique:
+        path_expt += '_' + time.strftime(FORMAT_DT, date)
+        if os.path.isdir(path_expt):
+            logging.warning('particular out folder already exists')
+            path_expt += ':' + str(uuid.uuid4().hex)
     logging.info('creating experiment folder "{}"'.format(path_expt))
     if not os.path.exists(path_expt):
         os.mkdir(path_expt)
+    # loading confing if it exists
     path_config = os.path.join(path_expt, CONFIG_YAML)
     if os.path.exists(path_config) and not skip_load:
         params_in = params
@@ -165,8 +182,9 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
         params = load_config_yaml(path_config)
         params.update({k: params_in[k] for k in params_in if 'path' in k})
         logging.info('loaded following PARAMETERS: %s', string_dict(params))
-    params.update({'computer': os.uname(),
-                   'path_exp': path_expt})
+    # extending parameters bu this run
+    params.update({'computer': os.uname(), 'path_exp': path_expt})
+    # export experiment config
     logging.debug('saving params to file "%s"', CONFIG_YAML)
     save_config_yaml(path_config, params)
     return params
@@ -214,6 +232,7 @@ def append_final_stat(out_dir, y_true, y_pred, time_sec,
     :param str file_name:
     :return str:
 
+    >>> import numpy as np
     >>> np.random.seed(0)
     >>> y_true = np.random.randint(0, 2, 25)
     >>> y_pred = np.random.randint(0, 2, 25)
@@ -262,12 +281,12 @@ def extend_list_params(params, name_param, options):
 
     >>> import pandas as pd
     >>> params = extend_list_params([{'a': 1}], 'a', [3, 4])
-    >>> pd.DataFrame(params)  # doctest: +NORMALIZE_WHITESPACE
+    >>> pd.DataFrame(params)[sorted(pd.DataFrame(params))]  # doctest: +NORMALIZE_WHITESPACE
        a param_idx
     0  3     a-2#1
     1  4     a-2#2
     >>> params = extend_list_params([{'a': 1}], 'b', 5)
-    >>> pd.DataFrame(params)  # doctest: +NORMALIZE_WHITESPACE
+    >>> pd.DataFrame(params)[sorted(pd.DataFrame(params))]  # doctest: +NORMALIZE_WHITESPACE
        a  b param_idx
     0  1  5     b-1#1
     """
@@ -346,7 +365,7 @@ class WrapExecuteSequence:
     [0, 0, 0, 0, 0]
     """
 
-    def __init__(self, wrap_func, iterate_vals, nb_workers=NB_THREADS, desc='',
+    def __init__(self, wrap_func, iterate_vals, nb_workers=CPU_COUNT, desc='',
                  ordered=False):
         """ the init of this wrapper fro parallelism
 
@@ -392,7 +411,7 @@ class WrapExecuteSequence:
 
 
 # def wrap_execute_parallel(wrap_func, iterate_vals,
-#                           nb_workers=NB_THREADS, desc=''):
+#                           nb_workers=NB_WORKERS, desc=''):
 #     """ wrapper for execution paralle of single thread as for...
 #
 #     :param func wrap_func:

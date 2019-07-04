@@ -19,7 +19,6 @@ import os
 import sys
 import logging
 import argparse
-import multiprocessing as mproc
 from functools import partial
 
 
@@ -38,7 +37,7 @@ import imsegm.utilities.experiments as tl_expt
 import imsegm.utilities.drawing as tl_visu
 import imsegm.annotation as seg_annot
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
+NB_WORKERS = tl_expt.nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 DEFAULT_PARAMS = {
@@ -77,7 +76,7 @@ def arg_parse_params(params):
     parser.add_argument('-out', '--path_output', type=str, required=False,
                         help='path to the output directory',
                         default=params['path_output'])
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
                         help='number of processes in parallel')
     arg_params = vars(parser.parse_args())
     params.update(arg_params)

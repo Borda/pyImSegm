@@ -17,7 +17,6 @@ import sys
 import glob
 import logging
 import argparse
-import multiprocessing as mproc
 from functools import partial
 
 import numpy as np
@@ -28,7 +27,7 @@ import imsegm.utilities.experiments as tl_expt
 
 PATH_IMAGES = os.path.join('data_images', 'drosophila_ovary_slice', 'center_levels', '*.png')
 PATH_OUTPUT = os.path.join('results', 'relabel_center_levels')
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+NB_WORKERS = tl_expt.nb_workers(0.9)
 
 
 def parse_arg_params():
@@ -46,7 +45,7 @@ def parse_arg_params():
     parser.add_argument('--label_new', type=int, required=False, nargs='+',
                         help='new labels after replacing', default=[0])
     parser.add_argument('--nb_workers', type=int, required=False,
-                        help='number of jobs in parallel', default=NB_THREADS)
+                        help='number of jobs in parallel', default=NB_WORKERS)
     args = vars(parser.parse_args())
     for k in ['path_images', 'path_output']:
         p_dir = tl_data.update_path(os.path.dirname(args[k]))

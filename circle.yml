@@ -9,7 +9,7 @@ references:
         sudo apt-get update
         sudo apt-get install tk-dev pkg-config python-dev python-tk
         sudo pip install --upgrade pip setuptools
-        sudo pip install -r requirements-dev.txt
+        sudo pip install -r ./tests/requirements.txt
         sudo pip install -U backports.functools_lru_cache  # required for matplotlib @py2
         pip install -r requirements.txt --user
         pip list
@@ -19,7 +19,7 @@ references:
       name: Testing and Formating
       command: |
         unset DISPLAY
-        coverage run --source imsegm -m py.test imsegm -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
+        coverage run --source imsegm -m py.test imsegm tests -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
         python setup.py check -m -s
         flake8 . --ignore=E402,E731 --max-line-length=100
 
@@ -38,7 +38,7 @@ references:
      command: |
        sudo apt-get install pandoc
        sudo pip install -r docs/requirements.txt
-       # sphinx-apidoc -o ./docs/source ./imsegm **/tests/* --force --follow-links
+       # sphinx-apidoc -o ./docs/source ./imsegm ./tests/* --force --follow-links
        cd docs; make html
 
 jobs:

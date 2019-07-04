@@ -238,7 +238,7 @@ PACKAGES = [imsegm.__name__]
 def run_apidoc(_):
     for pkg in PACKAGES:
         argv = ['-e', '-o', PATH_HERE, os.path.join(PATH_HERE, PATH_ROOT, pkg),
-                '**/tests/*', '--force']
+                'tests/*', '--force']
         try:
             # Sphinx 1.7+
             from sphinx.ext import apidoc

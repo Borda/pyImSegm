@@ -233,7 +233,7 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
     and clean result segmentation...
     it turns the sequence in vertical / horizontal according major image dim
 
-    :param ndarray img: image
+    :param ndarray img: image as background
     :param ndarray seg: segmentation
     :param int subfig_size: max image size
     :param fool mid_image_gray: used color image as bacround in middele
@@ -284,7 +284,7 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9,
     :param ndarray annot: user annotation
     :param ndarray segm: segmentation
     :param ndarray img: original image
-    :param int subfig_size:
+    :param int subfig_size: maximal sub-figure size
     :param float segm_alpha: use transparency
     :param list(int) drop_labels: labels to be ignored
     :return Figure:
@@ -342,15 +342,15 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9,
     return fig
 
 
-def figure_segm_graphcut_debug(dict_imgs, subfig_size=9):
+def figure_segm_graphcut_debug(images, subfig_size=9):
     """ creating subfigure with slic, graph edges and results in the first row
     and individual class unary terms in the second row
 
-    :param dict_imgs:
-    :param int subfig_size:
+    :param dict images: dictionary composed from name and image array
+    :param int subfig_size: maximal sub-figure size
     :return Figure:
 
-    >>> dict_imgs = {
+    >>> images = {
     ...     'image': np.random.random((100, 150, 3)),
     ...     'slic': np.random.randint(0, 2, (100, 150)),
     ...     'slic_mean': np.random.random((100, 150, 3)),
@@ -358,15 +358,15 @@ def figure_segm_graphcut_debug(dict_imgs, subfig_size=9):
     ...     'img_graph_segm': np.random.random((100, 150, 3)),
     ...     'imgs_unary_cost': [np.random.random((100, 150, 3))],
     ... }
-    >>> fig = figure_segm_graphcut_debug(dict_imgs)
+    >>> fig = figure_segm_graphcut_debug(images)
     >>> isinstance(fig, matplotlib.figure.Figure)
     True
     """
-    assert all(n in dict_imgs for n in ['image', 'slic', 'slic_mean',
-                                        'img_graph_edges', 'img_graph_segm',
-                                        'imgs_unary_cost']), 'missing keys'
-    nb_cols = max(3, len(dict_imgs['imgs_unary_cost']))
-    img = dict_imgs['image']
+    assert all(n in images for n in [
+        'image', 'slic', 'slic_mean', 'img_graph_edges', 'img_graph_segm', 'imgs_unary_cost'
+    ]), 'missing keys in debug structure %r' % tuple(images.keys())
+    nb_cols = max(3, len(images['imgs_unary_cost']))
+    img = images['image']
     if img.ndim == 2:  # for gray images of ovary
         img = color.gray2rgb(img)
     norm_size = np.array(img.shape[:2]) / float(np.max(img.shape))
@@ -374,14 +374,14 @@ def figure_segm_graphcut_debug(dict_imgs, subfig_size=9):
     fig_size = norm_size[::-1] * subfig_size * np.array([nb_cols, 2])
     fig, axarr = plt.subplots(2, nb_cols, figsize=fig_size)
 
-    img_slic = segmentation.mark_boundaries(img, dict_imgs['slic'],
+    img_slic = segmentation.mark_boundaries(img, images['slic'],
                                             mode='subpixel')
     axarr[0, 0].set_title('SLIC')
     axarr[0, 0].imshow(img_slic)
     for i, k in enumerate(['img_graph_edges', 'img_graph_segm']):
         axarr[0, i + 1].set_title(k)
-        axarr[0, i + 1].imshow(dict_imgs[k])
-    for i, im_uc in enumerate(dict_imgs['imgs_unary_cost']):
+        axarr[0, i + 1].imshow(images[k])
+    for i, im_uc in enumerate(images['imgs_unary_cost']):
         axarr[1, i].set_title('unary cost #%i' % i)
         axarr[1, i].imshow(im_uc)
 
@@ -396,6 +396,14 @@ def figure_segm_graphcut_debug(dict_imgs, subfig_size=9):
 
 
 def create_figure_by_image(img_size, subfig_size, nb_subfigs=1, extend=0.):
+    """ crearting image according backround_image
+
+    :param tuple(int,int) img_size: image size
+    :param float subfig_size: maximal sub-figure size
+    :param int nb_subfigs: number of sub-figure
+    :param float extend: extension
+    :return tuple(Figure,list):
+    """
     norm_size = np.array(img_size) / float(np.max(img_size))
     # reverse dimensions and scale by fig size
     if norm_size[0] >= norm_size[1]:  # horizontal
@@ -412,12 +420,13 @@ def create_figure_by_image(img_size, subfig_size, nb_subfigs=1, extend=0.):
 def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
     """ show figure with result of the ellipse fitting
 
-    :param ndarray img:
-    :param ndarray seg:
-    :param list(tuple(int,int,int,int,float)) ellipses:
-    :param list(tuple(int,int)) centers:
+    :param ndarray img: image
+    :param ndarray seg: segmentation
+    :param list(tuple(int,int,int,int,float)) ellipses: collection of ellipse parameters
+        ell. parameters: (x, y, height, width, orientation)
+    :param list(tuple(int,int)) centers: points
     :param list(float) crits:
-    :param float fig_size:
+    :param float fig_size: maximal figure size
     :return Figure:
 
     >>> img = np.random.random((100, 150, 3))
@@ -458,9 +467,9 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
 def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1, slic_regul=-1):
     """ plot ration of labels  assigned to each superpixel
 
-    :param dict_label_hist:
-    :param int slic_size:
-    :param float slic_regul:
+    :param dict_label_hist: dictionary of label name and histogram
+    :param int slic_size: used for figure title
+    :param float slic_regul: used for figure title
     :return Figure:
 
     >>> np.random.seed(0)
@@ -492,14 +501,16 @@ def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1, slic_regul
     return fig
 
 
-def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None, points_reconst=None):
+def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None,
+                       points_reconst=None, title=''):
     """ visualise the segmentation with specific point and estimated ray dist.
 
-    :param ndarray segm:
-    :param [(float, float)] points:
+    :param ndarray segm: segmentation
+    :param [(float, float)] points: collection of points
     :param list(float) ray_dist_raw:
-    :param list(float) ray_dist:
-    :param ndarray points_reconst:
+    :param list(float) ray_dist: Ray feature distances
+    :param ndarray points_reconst: collection of reconstructed points
+    :param str title: figure title
     :return Figure:
 
     .. note:: for more examples, see unittests
@@ -507,7 +518,9 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None, points_re
     ray_dist_raw = ray_dist_raw if ray_dist_raw is not None else []
     ray_dist = ray_dist if ray_dist is not None else []
 
-    fig, axarr = plt.subplots(2, 1)
+    fig, axarr = plt.subplots(nrows=2, ncols=1)
+    if title:
+        axarr[0].set_title(title)
     axarr[0].imshow(1 - segm, cmap='gray', interpolation='nearest')
     axarr[0].plot(points[1], points[0], 'bo')
     axarr[0].set(xlim=[0, segm.shape[1]], ylim=[segm.shape[0], 0])
@@ -526,11 +539,11 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None, points_re
 def figure_used_samples(img, labels, slic, used_samples, fig_size=12):
     """ draw used examples (superpixels)
 
-    :param ndarray img:
-    :param list(int) labels:
-    :param ndarray slic:
-    :param list(bool) used_samples:
-    :param int fig_size:
+    :param ndarray img: input image for background
+    :param list(int) labels: labels associated for superpixels
+    :param ndarray slic: superpixel segmentation
+    :param list(bool) used_samples: used samples for training
+    :param int fig_size: figure size
     :return Figure:
 
     >>> img = np.random.random((50, 75, 3))
@@ -544,8 +557,8 @@ def figure_used_samples(img, labels, slic, used_samples, fig_size=12):
     w_samples = np.asarray(used_samples)[slic]
     img = color.gray2rgb(img) if img.ndim == 2 else img
 
-    fig, axarr = create_figure_by_image(img.shape[:2], fig_size, nb_subfigs=2,
-                                        extend=0.15)
+    fig, axarr = create_figure_by_image(img.shape[:2], fig_size,
+                                        nb_subfigs=2, extend=0.15)
     axarr[0].imshow(np.asarray(labels)[slic], cmap=plt.cm.jet)
     axarr[0].contour(slic, levels=np.unique(slic), colors='w', linewidths=0.5)
     axarr[0].axis('off')
@@ -603,10 +616,10 @@ def draw_graphcut_unary_cost_segments(segments, unary_cost):
 def closest_point_on_line(start, end, point):
     """ projection of the point to the line
 
-    :param list(int) start:
-    :param list(int) end:
-    :param list(int) point:
-    :return list(int):
+    :param list(int) start: line starting point
+    :param list(int) end: line ending point
+    :param list(int) point: point for extimation
+    :return list(int): point on the line
 
     >>> closest_point_on_line([0, 0], [1, 2], [0, 2])
     array([ 0.8,  1.6])
@@ -622,9 +635,9 @@ def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
     """ from given 3 point estimate the ellipse
 
     :param tuple(int,int) mask_shape:
-    :param [[int, int]] pos_ant:
-    :param [[int, int]] pos_lat:
-    :param [[int, int]] pos_post:
+    :param [tuple(int,int)] pos_ant: anterior
+    :param [tuple(int,int)] pos_lat: latitude
+    :param [tuple(int,int)] pos_post: postlude
     :param float threshold_overlap:
     :return ndarray:
 
@@ -670,8 +683,8 @@ def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
 def parse_annot_rectangles(rows_slice):
     """ parse annotation fromDF to lists
 
-    :param rows_slice:
-    :return:
+    :param rows_slice: a row from a table
+    :return tuple: the three points
 
     >>> import pandas as pd
     >>> dict_row = dict(ant_x=1, ant_y=2, lat_x=3, lat_y=4, post_x=5, post_y=6)
@@ -701,10 +714,10 @@ def parse_annot_rectangles(rows_slice):
 def draw_eggs_rectangle(mask_shape, pos_ant, pos_lat, pos_post):
     """ from given 3 point estimate the ellipse
 
-    :param tuple(int,int) mask_shape:
-    :param [[int, int]] pos_ant:
-    :param [[int, int]] pos_lat:
-    :param [[int, int]] pos_post:
+    :param tuple(int,int) mask_shape: segmentation size
+    :param [tuple(int,int)] pos_ant: points
+    :param [tuple(int,int)] pos_lat: points
+    :param [tuple(int,int)] pos_post: points
     :return [ndarray]:
 
     >>> pos_ant, pos_lat, pos_post = [10, 10], [20, 20], [35, 20]
@@ -738,11 +751,11 @@ def draw_eggs_rectangle(mask_shape, pos_ant, pos_lat, pos_post):
     return list_masks
 
 
-def merge_object_masks(list_masks, thr_overlap=0.7):
+def merge_object_masks(masks, overlap_thr=0.7):
     """ merge several mask into one multi-class segmentation
 
-    :param [ndarray] list_masks:
-    :param float thr_overlap:
+    :param [ndarray] masks: collection of masks
+    :param float overlap_thr: threshold for overlap
     :return ndarray:
 
     >>> m1 = np.zeros((5, 6), dtype=int)
@@ -762,19 +775,19 @@ def merge_object_masks(list_masks, thr_overlap=0.7):
            [1, 1, 2, 2, 2, 2],
            [0, 0, 2, 2, 2, 2]])
     """
-    assert len(list_masks) > 0, 'no masks are given'
-    mask = np.array(list_masks[0])
+    assert len(masks) > 0, 'no masks are given'
+    mask = np.array(masks[0])
 
-    for i in range(1, len(list_masks)):
+    for i in range(1, len(masks)):
         overlap_ratios = []
         for j in range(1, int(np.max(mask) + 1)):
-            overlap = np.sum(np.logical_and(mask == j, list_masks[i] == 1))
-            union = np.sum(np.logical_or(mask == j, list_masks[i] == 1))
+            overlap = np.sum(np.logical_and(mask == j, masks[i] == 1))
+            union = np.sum(np.logical_or(mask == j, masks[i] == 1))
             overlap_ratios.append(float(overlap) / float(union))
-        if any(r > thr_overlap for r in overlap_ratios):
+        if any(r > overlap_thr for r in overlap_ratios):
             logging.debug('skip egg drawing while it overlap by %r', overlap_ratios)
             continue
-        mask[list_masks[i] == 1] = np.max(mask) + 1
+        mask[masks[i] == 1] = np.max(mask) + 1
 
     return mask
 
@@ -788,12 +801,12 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
 
     :param ax: figure axis
     :param ndarray img: image
-    :param [(int, int)] points:
-    :param list(int) labels:
-    :param ndarray slic:
-    :param str color_slic:
-    :param {int: (str, str)} lut_label_marker:
-    :param seg_contour: np.array
+    :param list(tuple(int,int)) points:collection of points
+    :param list(int) labels: LUT labels for superpixels
+    :param ndarray slic: superpixel segmentation
+    :param str color_slic: color dor superpixels
+    :param dict lut_label_marker: dictionary {int: (str, str)} of label and markers
+    :param ndarray seg_contour: segmentation contour
 
     >>> img = np.random.randint(0, 256, (100, 100))
     >>> points = np.random.randint(0, 100, (25, 2))
@@ -833,7 +846,7 @@ def figure_image_segm_centres(img, segm, centers=None, cmap_contour=plt.cm.Blues
 
     :param ndarray img: image
     :param ndarray segm: segmentation
-    :param [(int, int)]|ndarray centers: or np.array
+    :param [tuple(int,int)]|ndarray centers: or np.array
     :param obj cmap_contour:
     :return Figure:
 
@@ -870,7 +883,7 @@ def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights,
                                  img_bg=None, img_alpha=0.5):
     """ visualise the edges on the overlapping a background image
 
-    :param [(int, int)] centers: list of centers
+    :param [tuple(int,int)] centers: list of centers
     :param ndarray segments: np.array<height, width>
     :param ndarray edges: list of edges of shape <nb_edges, 2>
     :param ndarray edge_weights: weight per edge <nb_edges, 1>
@@ -928,18 +941,27 @@ def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights,
     return img
 
 
-def draw_rg2sp_results(ax, seg, slic, dict_rg2sp_debug, iter_index=-1):
-    ax.imshow(dict_rg2sp_debug['labels'][iter_index][slic], cmap=plt.cm.jet)
+def draw_rg2sp_results(ax, seg, slic, debug_rg2sp, iter_index=-1):
+    """ drawing Region Growing with shape prior
+
+    :param ax: figure axis
+    :param ndarray seg: segmentation
+    :param ndarray slic: superpixels
+    :param dict debug_rg2sp: dictionary with debug results
+    :param int iter_index: iteration index
+    :return: ax
+    """
+    ax.imshow(debug_rg2sp['labels'][iter_index][slic], cmap=plt.cm.jet)
     ax.contour(seg, levels=np.unique(seg), colors='#bfbfbf')
-    for centre, shift in zip(dict_rg2sp_debug['centres'][iter_index],
-                             dict_rg2sp_debug['shifts'][iter_index]):
+    for centre, shift in zip(debug_rg2sp['centres'][iter_index],
+                             debug_rg2sp['shifts'][iter_index]):
         rot = np.deg2rad(shift)
         ax.plot(centre[1], centre[0], 'ow')
         ax.arrow(centre[1], centre[0], np.cos(rot) * 50., np.sin(rot) * 50.,
                  fc='w', ec='w', head_width=20., head_length=30.)
     ax.set(xlim=[0, seg.shape[1]], ylim=[seg.shape[0], 0],
            title='Iteration #%i with E=%.0f'
-                 % (iter_index, round(dict_rg2sp_debug['criteria'][iter_index])))
+                 % (iter_index, round(debug_rg2sp['criteria'][iter_index])))
     return ax
 
 
@@ -1007,8 +1029,8 @@ def figure_rg2sp_debug_complete(seg, slic, debug_rg2sp, iter_index=-1, max_size=
 def make_overlap_images_optical(images):
     """ overlap images and show them
 
-    :param [ndarray] images:
-    :return ndarray:
+    :param [ndarray] images: collection of images
+    :return ndarray: combined image
 
     >>> im1 = np.zeros((5, 8), dtype=float)
     >>> im2 = np.ones((5, 8), dtype=float)
@@ -1039,9 +1061,9 @@ def make_overlap_images_optical(images):
 def make_overlap_images_chess(images, chess_field=SIZE_CHESS_FIELD):
     """ overlap images and show them
 
-    :param [ndarray] images:
-    :param int chess_field:
-    :return ndarray:
+    :param [ndarray] images: collection of images
+    :param int chess_field: size of chess field size
+    :return ndarray: combined image
 
     >>> im1 = np.zeros((5, 10), dtype=int)
     >>> im2 = np.ones((5, 10), dtype=int)
@@ -1130,9 +1152,9 @@ def draw_image_clusters_centers(ax, img, centres, points=None, labels_centre=Non
 def figure_segm_boundary_dist(segm_ref, segm, subfig_size=9):
     """ visualise the boundary distances between two segmentation
 
-    :param ndarray segm_ref:
-    :param ndarray segm:
-    :param int subfig_size:
+    :param ndarray segm_ref: reference segmentation
+    :param ndarray segm: estimated segmentation
+    :param int subfig_size: maximal sub-figure size
     :return Figure:
 
     >>> seg = np.zeros((100, 100))

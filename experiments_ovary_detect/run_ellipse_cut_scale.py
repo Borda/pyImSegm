@@ -15,7 +15,6 @@ import os
 import sys
 import glob
 import logging
-import multiprocessing as mproc
 from functools import partial
 
 import pandas as pd
@@ -34,7 +33,7 @@ COLUMNS_ELLIPSE = ['ellipse_xc', 'ellipse_yc',
 OVERLAP_THRESHOLD = 0.45
 NORM_FUNC = np.median  # other options - mean, max, ...
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.8))
+NB_WORKERS = tl_expt.nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 

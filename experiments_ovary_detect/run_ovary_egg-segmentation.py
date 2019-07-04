@@ -29,7 +29,6 @@ import time
 import argparse
 import logging
 import pickle
-import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
@@ -57,7 +56,7 @@ import imsegm.ellipse_fitting as ell_fit
 from morphsnakes import morphsnakes, multi_snakes
 # from libs import chanvese
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+NB_WORKERS = tl_expt.nb_workers(0.8)
 NAME_EXPERIMENT = 'experiment_egg-segment'
 TYPE_LOAD_IMAGE = '2d_struct'
 DIR_VISUAL_POSIX = '___visu'
@@ -141,7 +140,7 @@ def arg_parse_params(params):
                         help='name of the experiment', default='ovary')
     parser.add_argument('-cfg', '--path_config', type=str, required=False,
                         help='path to the configuration', default=None)
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_THREADS,
+    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
                         help='number of processes in parallel')
     parser.add_argument('-m', '--methods', type=str, required=False, nargs='+',
                         help='list of segment. methods', default=None)

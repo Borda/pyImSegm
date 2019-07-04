@@ -12,5 +12,5 @@ tqdm>=4.7.4,<=4.30  # higher fails ascii for py2
 olefile==0.44  # new version - ImportError: No module named OleFileIO_PL
 nibabel>=2.1.0
 planar>=0.4
-gco-wrapper>=3.0.3
+https://github.com/Borda/pyGCO/archive/master.zip#egg=gco-wrapper>=3.0.3
 pyyaml

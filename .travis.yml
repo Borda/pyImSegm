@@ -32,7 +32,7 @@ before_install:
 install:
   - mkdir libs
   - pip install -r requirements.txt
-  - pip install -r requirements-dev.txt
+  - pip install -r ./tests/requirements.txt
   - pip list
 
 before_script:
@@ -44,7 +44,7 @@ before_script:
 script:
   - python setup.py build_ext --inplace
   # - pytest imsegm -v --doctest-modules
-  - nosetests imsegm -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
+  - nosetests imsegm tests -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
   - flake8 . --ignore=E402,E731 --max-line-length=100
   - python setup.py install
 

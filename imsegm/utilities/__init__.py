@@ -17,5 +17,4 @@ if np_version >= [1, 14]:
     np.set_printoptions(legacy='1.13')
 
 # default display size was changed in pandas v0.23
-if 'display.max_columns' in pd.core.config._registered_options:
-    pd.set_option('display.max_columns', 20)
+pd.set_option('display.max_columns', 20)

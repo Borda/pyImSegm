@@ -17,7 +17,6 @@ import os
 import sys
 import logging
 import argparse
-import multiprocessing as mproc
 from functools import partial
 
 import matplotlib
@@ -36,7 +35,7 @@ import imsegm.utilities.experiments as tl_expt
 import imsegm.utilities.drawing as tl_visu
 import imsegm.classification as seg_clf
 
-NB_THREADS = max(1, int(mproc.cpu_count() * 0.9))
+NB_WORKERS = tl_expt.nb_workers(0.9)
 NAME_CVS_OVERALL = 'STATISTIC__%s___Overall.csv'
 NAME_CVS_PER_IMAGE = 'STATISTIC__%s___per-Image.csv'
 PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
@@ -73,7 +72,7 @@ def aparse_params(dict_paths):
                         help='list of skipped labels from statistic')
     parser.add_argument('--nb_workers', type=int, required=False,
                         help='number of processes in parallel',
-                        default=NB_THREADS)
+                        default=NB_WORKERS)
     parser.add_argument('--overlap', type=float, required=False,
                         help='alpha for segmentation', default=0.2)
     parser.add_argument('--relabel', required=False, action='store_true',
@@ -166,7 +165,7 @@ def stat_single_set(idx_row, drop_labels=None, relabel=False, path_visu='',
 
 
 def main(dict_paths, visual=True, drop_labels=None, relabel=True,
-         segm_alpha=1., nb_workers=NB_THREADS):
+         segm_alpha=1., nb_workers=NB_WORKERS):
     """ main evaluation
 
     :param {str: str} dict_paths:

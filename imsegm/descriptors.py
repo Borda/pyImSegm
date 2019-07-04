@@ -206,6 +206,8 @@ def cython_img2d_color_mean(img, seg):
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
+    .. seealso:: :func:`imsegm.descriptors.numpy_img2d_color_mean`
+
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
     >>> image[:, 3:7, 1] = 3
@@ -231,6 +233,8 @@ def cython_img2d_color_energy(img, seg):
     :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
+
+    .. seealso:: :func:`imsegm.descriptors.numpy_img2d_color_energy`
 
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
@@ -258,6 +262,8 @@ def cython_img2d_color_std(img, seg, means=None):
     :param ndarray seg: segmentation og the image
     :param ndarray means: precomputed feature means
     :return: np.array<nb_lbs, 3> matrix features per segment
+
+    .. seealso:: :func:`imsegm.descriptors.numpy_img2d_color_std`
 
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
@@ -288,6 +294,8 @@ def numpy_img2d_color_mean(img, seg):
     :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
+
+    .. seealso:: :func:`imsegm.descriptors.cython_img2d_color_mean`
 
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
@@ -326,6 +334,8 @@ def numpy_img2d_color_std(img, seg, means=None):
     :param ndarray seg: segmentation og the image
     :param ndarray means: precomputed feature means
     :return: np.array<nb_lbs, 3> matrix features per segment
+
+    .. seealso:: :func:`imsegm.descriptors.cython_img2d_color_std`
 
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
@@ -371,6 +381,8 @@ def numpy_img2d_color_energy(img, seg):
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
+    .. seealso:: :func:`imsegm.descriptors.cython_img2d_color_energy`
+
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
     >>> image[:, 3:8, 1] = 3
@@ -407,6 +419,8 @@ def numpy_img2d_color_median(img, seg):
     :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
+
+    .. seealso:: :func:`imsegm.descriptors.cython_img2d_color_median`
 
     >>> image = np.zeros((2, 10, 3))
     >>> image[:, 2:6, 0] = 1
@@ -448,6 +462,8 @@ def cython_img3d_gray_mean(img, seg):
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 1> vector of mean colour per segment
 
+    .. seealso:: :func:`imsegm.descriptors.numpy_img3d_gray_mean`
+
     >>> image = np.zeros((2, 3, 8))
     >>> image[0, :, 2:6] = 1
     >>> image[1, :, 3:7] = 3
@@ -477,6 +493,8 @@ def cython_img3d_gray_energy(img, seg):
     :param ndarray seg: segmentation og the image
     :return:np.array<nb_lbs, 1> vector of mean colour per segment
 
+    .. seealso:: :func:`imsegm.descriptors.numpy_img3d_gray_energy`
+
     >>> image = np.zeros((2, 3, 8))
     >>> image[0, :, 2:6] = 1
     >>> image[1, :, 3:7] = 3
@@ -505,6 +523,8 @@ def cython_img3d_gray_std(img, seg, mean=None):
     :param ndarray mean: precomputed feature means
     :return:np.array<nb_lbs, 1> vector of mean colour per segment
 
+    .. seealso:: :func:`imsegm.descriptors.numpy_img3d_gray_std`
+
     >>> image = np.zeros((2, 3, 8))
     >>> image[0, :, 2:6] = 1
     >>> image[1, :, 3:7] = 3
@@ -532,6 +552,8 @@ def numpy_img3d_gray_mean(img, seg):
     :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
+
+    .. seealso:: :func:`imsegm.descriptors.cython_img3d_gray_mean`
 
     >>> image = np.zeros((2, 3, 8))
     >>> image[0, :, 2:6] = 1
@@ -568,6 +590,8 @@ def numpy_img3d_gray_std(img, seg, means=None):
     :param ndarray seg: segmentation og the image
     :param ndarray means: precomputed feature means
     :return: np.array<nb_lbs, 3> matrix features per segment
+
+    .. seealso:: :func:`imsegm.descriptors.cython_img3d_gray_std`
 
     >>> image = np.zeros((2, 3, 8))
     >>> image[0, :, 2:6] = 1
@@ -611,6 +635,8 @@ def numpy_img3d_gray_energy(img, seg):
     :param seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
 
+    .. seealso:: :func:`imsegm.descriptors.cython_img3d_gray_energy`
+
     >>> image = np.zeros((2, 3, 8))
     >>> image[0, :, 2:6] = 1
     >>> image[1, :, 3:7] = 3
@@ -645,6 +671,8 @@ def numpy_img3d_gray_median(img, seg):
     :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :return: np.array<nb_lbs, 3> matrix features per segment
+
+    .. seealso:: :func:`imsegm.descriptors.cython_img3d_gray_median`
 
     >>> image = np.zeros((2, 3, 8))
     >>> image[0, :, 2:6] = 1
@@ -977,6 +1005,8 @@ def compute_texture_desc_lm_img3d_val(img, seg, feature_flags, bank_type='normal
     :param list(str) feature_flags: list of feature flags
     :param str bank_type: define used LM filter bank ['short', 'normal']
     :return tuple(ndarray,list(str)): np.ndarray<nb_samples, nb_features>, names
+
+    .. seealso:: :func:`imsegm.descriptors.compute_texture_desc_lm_img2d_clr`
     """
     _check_gray_image_segm(img, seg)
 
@@ -1020,6 +1050,8 @@ def compute_texture_desc_lm_img2d_clr(img, seg, feature_flags, bank_type='normal
     :param list(str) feature_flags:
     :param str bank_type: define used LM filter bank ['short', 'normal']
     :return tuple(np.ndarray<nb_samples, nb_features>, list(str)):
+
+    .. seealso:: :func:`imsegm.descriptors.compute_texture_desc_lm_img3d_val`
 
     >>> h, w, step = 30, 20, 5
     >>> np.random.seed(0)
@@ -1400,6 +1432,8 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
     :param int nb_labels: total number of labels in the segmentation
     :return list(float):
 
+    .. seealso:: :func:`imsegm.descriptors.cython_label_hist_seg2d`
+
     >>> segm = np.zeros((10, 10), dtype=int)
     >>> segm[1:9, 2:8] = 1
     >>> segm[3:7, 4:6] = 2
@@ -1447,6 +1481,8 @@ def cython_label_hist_seg2d(segm_select, struc_elem, nb_labels):
     :param ndarray struc_elem: np.array<height, width>
     :param int nb_labels: total number of labels in the segmentation
     :return list(float):
+
+    .. seealso:: :func:`imsegm.descriptors.compute_label_hist_segm`
 
     .. note:: output of this function should be equal to
     ```
@@ -1535,6 +1571,8 @@ def compute_ray_features_segm_2d_vectors(seg_binary, position, angle_step=5.,
     :param float angle_step:
     :return list(float):
 
+    .. seealso:: :func:`imsegm.descriptors.compute_ray_features_segm_2d`
+
     .. note:: for more examples, see unittests
 
     >>> from skimage import draw
@@ -1616,7 +1654,7 @@ def cython_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
     :param str edge: pointing to the up of down edge of an boundary
     :return list(float): ray distances
 
-    .. note:: this test should be equal to the `numpy_ray_features_segm_2d`
+    .. seealso:: :func:`imsegm.descriptors.numpy_ray_features_seg2d`
 
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
     >>> cython_ray_features_seg2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
@@ -1639,7 +1677,7 @@ def cython_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
     return np.array(ray_dist)
 
 
-def numpy_ray_features_segm_2d(seg_binary, position, angle_step=5., edge='up'):
+def numpy_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
     """ computing the Ray features from a segmentation and given position
 
     :param ndarray seg_binary: np.array<height, width>
@@ -1648,20 +1686,20 @@ def numpy_ray_features_segm_2d(seg_binary, position, angle_step=5., edge='up'):
     :param str edge: pointing to the up of down edge of an boundary
     :return list(float): ray distances
 
-    .. note:: this test should be equal to the `cython_ray_features_seg2d`
+    .. seealso:: :func:`imsegm.descriptors.cython_ray_features_seg2d`
 
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
-    >>> numpy_ray_features_segm_2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
+    >>> numpy_ray_features_seg2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
     array([-1., -1., -1., -1.]...)
     >>> from skimage import draw
     >>> seg = np.ones((100, 150), dtype=bool)
     >>> x, y = draw.circle(50, 75, 40, shape=seg.shape)
     >>> seg[x, y] = False
-    >>> numpy_ray_features_segm_2d(seg, (50, 75), 45).astype(int)  # doctest: +ELLIPSIS
+    >>> numpy_ray_features_seg2d(seg, (50, 75), 45).astype(int)  # doctest: +ELLIPSIS
     array([40, 41, 40, 41, 40, 41, 40, 41]...)
-    >>> numpy_ray_features_segm_2d(seg, (60, 40), 30).astype(int).tolist()
+    >>> numpy_ray_features_seg2d(seg, (60, 40), 30).astype(int).tolist()
     [74, 55, 28, 10, 5, 4, 4, 5, 9, 30, 57, 75]
-    >>> numpy_ray_features_segm_2d(seg, (40, 60), 20).astype(int).tolist()
+    >>> numpy_ray_features_seg2d(seg, (40, 60), 20).astype(int).tolist()
     [54, 57, 58, 55, 50, 43, 38, 31, 26, 24, 22, 22, 23, 26, 29, 34, 41, 48]
     """
     angles = np.arange(0, 360, angle_step)
@@ -1706,6 +1744,8 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
     :param int smooth_coef: smoothing the final ray features
     :return list(float): ray distances
 
+    .. seealso:: :func:`imsegm.descriptors.compute_ray_features_segm_2d_vectors`
+
     .. note:: for more examples, see unittests
 
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
@@ -1730,7 +1770,7 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5.,
     seg_binary = seg_binary.astype(bool)
     position = tuple(map(int, position))
 
-    fn_compute = cython_ray_features_seg2d if USE_CYTHON else numpy_ray_features_segm_2d
+    fn_compute = cython_ray_features_seg2d if USE_CYTHON else numpy_ray_features_seg2d
     ray_dist = fn_compute(seg_binary, position, angle_step, edge)
 
     if smooth_coef is not None and smooth_coef > 0:
