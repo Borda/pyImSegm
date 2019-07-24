@@ -11,22 +11,26 @@ import numpy as np
 import skimage.color as sk_color
 # from sklearn import mixture
 
-from imsegm.utilities.experiments import WrapExecuteSequence, nb_workers
-from imsegm.graph_cuts import segment_graph_cut_general, estim_class_model
-from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
-from imsegm.descriptors import (
+from .utilities.experiments import WrapExecuteSequence, nb_workers
+from .graph_cuts import segment_graph_cut_general, estim_class_model
+from .superpixels import segment_slic_img2d, segment_slic_img3d_gray
+from .descriptors import (
     FEATURES_SET_COLOR, norm_features, compute_selected_features_img2d,
     compute_selected_features_gray3d)
-from imsegm.labeling import histogram_regions_labels_norm
-from imsegm.classification import (
+from .labeling import histogram_regions_labels_norm
+from .classification import (
     DEFAULT_CLASSIF_NAME, DEFAULT_CLUSTERING, convert_set_features_labels_2_dataset,
     CrossValidateGroups, create_classif_search_train_export)
 
-CLASSIF_PARAMS = {'method': 'kNN', 'nb': 10}
+#: select basic features extracted from superpixels
 FTS_SET_SIMPLE = FEATURES_SET_COLOR
+#: select default Classifier for supervised segmentation
 CLASSIF_NAME = DEFAULT_CLASSIF_NAME
+#: select default Modeling/clustering for unsupervised segmentation
 CLUSTER_METHOD = DEFAULT_CLUSTERING
+#: define how many images will be left out during cross-validation training
 CROSS_VAL_LEAVE_OUT = 2
+#: default number of workers
 NB_WORKERS = nb_workers(0.6)
 
 

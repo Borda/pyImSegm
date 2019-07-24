@@ -9,13 +9,13 @@ SEE:
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-
 import logging
 
 import numpy as np
 import skimage.segmentation as ski_segm
 from skimage import measure
 
+#: spacing among neighboring pixels in axies X, Y, Z
 IMAGE_SPACING = (1, 1, 1)
 
 

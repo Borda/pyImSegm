@@ -29,16 +29,24 @@ except Exception:
     print('descriptors: using pure python libraries')
     USE_CYTHON = False
 
+#: define all available statistic computed on superpixels
 NAMES_FEATURE_FLAGS = ('mean', 'std', 'energy', 'median', 'meanGrad')
+#: define sigmas for Lewen-Malik filter bank
 DEFAULT_FILTERS_SIGMAS = (np.sqrt(2), 2, 2 * np.sqrt(2), 4)
+#: define small list/range of sigmas for Lewen-Malik filter bank
 SHORT_FILTERS_SIGMAS = (np.sqrt(2), 2, 4)
+#: define the richest version of computed superpixel features
 FEATURES_SET_ALL = {'color': ('mean', 'std', 'energy', 'median', 'meanGrad'),
                     'tLM': ('mean', 'std', 'energy', 'median', 'meanGrad')}
+#: define basic color features for supepixels
 FEATURES_SET_COLOR = {'color': ('mean', 'std', 'energy')}
+#: define basic texture features (complete LM filter bank) for supepixels
 FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
+#: define basic color features for (small LM filter bank) supepixels
 FEATURES_SET_TEXTURE_SHORT = {'tLM_short': ('mean', 'std', 'energy')}
+#: define circular diamters for computing label histogram
 HIST_CIRCLE_DIAGONALS = (10, 20, 30, 40, 50)
-# maxila reposnse is bounded by fix number to preven overflowing
+#: maximal response is bounded by fix number to prevent overflowing (for LM filer bank)
 MAX_SIGNAL_RESPONSE = 1.e6
 
 # Wavelets:

@@ -3,6 +3,7 @@ Framework for handling input/output
 
 Copyright (C) 2015-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
+from __future__ import absolute_import
 
 import os
 import re
@@ -19,10 +20,11 @@ from scipy import ndimage
 from skimage import exposure, io, color, measure
 import nibabel
 
-from imsegm.utilities import read_zvi
+from . import read_zvi
 
+#: position columns
 COLUMNS_COORDS = ['X', 'Y']
-DEFAULT_PATTERN_SET_LIST_FILE = '*.txt'
+#: conversion function from RGB color space
 DICT_CONVERT_COLOR_FROM_RGB = {
     'hsv': color.rgb2hsv,
     'luv': color.rgb2luv,
@@ -30,6 +32,7 @@ DICT_CONVERT_COLOR_FROM_RGB = {
     'hed': color.rgb2hed,
     'xyz': color.rgb2xyz
 }
+#: conversion function to RGB color space
 DICT_CONVERT_COLOR_TO_RGB = {
     'hsv': color.hsv2rgb,
     'luv': color.luv2rgb,

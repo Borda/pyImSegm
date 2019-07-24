@@ -83,7 +83,7 @@ def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD)
     path_csv = os.path.join(path_dir_csv, row['image_name'] + '.csv')
     df_ellipses = pd.read_csv(path_csv, index_col=0)
 
-    pos = row[tl_visu.COLUMNS_POSITION_EGG_ANNOT]
+    pos = row[list[tl_visu.COLUMNS_POSITION_EGG_ANNOT]]
     max_size = 2 * max(pos) + min(pos)
 
     pos_ant = [[row['ant_x'], row['ant_y']]]

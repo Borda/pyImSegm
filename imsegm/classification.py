@@ -31,27 +31,37 @@ try:  # due to some chnages in between versions
 except Exception:
     from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
-from imsegm.labeling import relabel_max_overlap_unique
-from imsegm.utilities.experiments import WrapExecuteSequence, nb_workers
+from .labeling import relabel_max_overlap_unique
+from .utilities.experiments import WrapExecuteSequence, nb_workers
 
 # NAME_FILE_RESULTS = 'results.csv'
+#: name template forexporting trained classifier (adding classifier name and version)
 TEMPLATE_NAME_CLF = 'classifier_{}.pkl'
+#: default (recommended) classifier for supervised segmentation
 DEFAULT_CLASSIF_NAME = 'RandForest'
+#: default (recommended) clustering for unsupervised segmentation
 DEFAULT_CLUSTERING = 'kMeans'
 # DEFAULT_MIN_NB_SPL = 25
 # nb_workers_CLASSIF_SEARCH = 5
 # NB_CLASSIF_SEARCH_ITER = 250
+#: file name of exported evaluation on feature quality
 NAME_CSV_FEATURES_SELECT = 'feature_selection.csv'
+#: exporting partial results about trained classifier
 NAME_CSV_CLASSIF_CV_SCORES = 'classif_{}_cross-val_scores-{}.csv'
+#: exporting partial results about trained classifier - Receiver Operating Characteristics
 NAME_CSV_CLASSIF_CV_ROC = 'classif_{}_cross-val_ROC-{}.csv'
+#: exporting partial results about trained classifier - Area Under Curve
 NAME_TXT_CLASSIF_CV_AUC = 'classif_{}_cross-val_AUC-{}.txt'
+#: default types of computed metrics
 METRIC_AVERAGES = ('macro', 'weighted')
+#: default computed metrics
 METRIC_SCORING = ('f1_macro', 'accuracy', 'precision_macro', 'recall_macro')
-# rounding unique features, in case to detail precision
+#: rounding unique features, in case to detail precision
 ROUND_UNIQUE_FTS_DIGITS = 3
+#: default number of workers
 NB_WORKERS_SERACH = nb_workers(0.5)
 
-
+#: mapping of metrics names to used functions
 DICT_SCORING = {
     'f1': metrics.f1_score,
     'accuracy': metrics.accuracy_score,

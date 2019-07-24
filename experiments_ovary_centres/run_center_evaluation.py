@@ -156,7 +156,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
         return dict_row
 
     assert all(c in df_annot.columns for c in tl_visu.COLUMNS_POSITION_EGG_ANNOT), \
-        'some required columns %s are missing for %s' % \
+        'some required columns %r are missing for %s' % \
         (tl_visu.COLUMNS_POSITION_EGG_ANNOT, df_annot.columns)
     mask_eggs = estimate_eggs_from_info(df_annot.loc[idx], img.shape[:2])
 

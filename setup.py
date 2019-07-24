@@ -20,10 +20,10 @@ Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 
 import os
 try:
-    from setuptools import setup, Extension, find_packages  # , Command
+    from setuptools import setup, Extension  # , find_packages, Command
     from setuptools.command.build_ext import build_ext
 except ImportError:
-    from distutils.core import setup, Extension, find_packages  # , Command
+    from distutils.core import setup, Extension  # , find_packages, Command
     from distutils.command.build_ext import build_ext
 
 import imsegm
@@ -77,8 +77,7 @@ setup(
     long_description=imsegm.__doc__,
     long_description_content_type='text/markdown',
 
-    packages=find_packages(
-        exclude=['docs', 'notebooks', 'handling_annotations', 'experiments_*']),
+    packages=['imsegm'],
     cmdclass={'build_ext': BuildExt},
     ext_modules=[
         Extension('imsegm.features_cython',

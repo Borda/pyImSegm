@@ -12,18 +12,21 @@ from skimage import filters
 from sklearn import metrics, preprocessing
 from sklearn import pipeline, cluster, mixture, decomposition
 
-from imsegm.utilities.drawing import (
+from .utilities.drawing import (
     draw_graphcut_unary_cost_segments, draw_graphcut_weighted_edges, draw_color_labeling)
-from imsegm.superpixels import (
+from .superpixels import (
     make_graph_segm_connect_grid2d_conn4, make_graph_segm_connect_grid3d_conn6, superpixel_centers)
-from imsegm.descriptors import compute_selected_features_img2d
+from .descriptors import compute_selected_features_img2d
 
+#: define munber of iteration in Grap-Cut optimization
 DEFAULT_GC_ITERATIONS = 25
-COEF_INT_CONVERSION = 1e6
-DEBUG_NB_SHOW_SAMPLES = 15
+# COEF_INT_CONVERSION = 1e6
+# DEBUG_NB_SHOW_SAMPLES = 15
+#: define minimal value of unary (being a class) term in Graph-Cut
 MIN_UNARY_PROB = 0.01
+#: define maximal value of parwise (smoothness) term in Graph-Cut
 MAX_PAIRWISE_COST = 1e5
-# max is this value and min is inverse (1 / val)
+#: max is this value and min is inverse (1 / val)
 MIN_MAX_EDGE_WEIGHT = 1e3
 
 

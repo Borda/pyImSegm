@@ -11,7 +11,6 @@ include LICENSE
 
 # Include the Requirements
 include requirements.txt
-exclude requirements-*.txt
 
 # Include package
 recursive-include imsegm *.py *.pyx

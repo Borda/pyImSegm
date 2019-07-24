@@ -10,17 +10,21 @@ from skimage import morphology
 
 from skimage.measure import fit as sk_fit
 # from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
-from imsegm.utilities.drawing import ellipse
-from imsegm.descriptors import (reduce_close_points, compute_ray_features_segm_2d,
-                                reconstruct_ray_features_2d)
-from imsegm.superpixels import (segment_slic_img2d, superpixel_centers,
-                                make_graph_segm_connect_grid2d_conn4)
+from .utilities.drawing import ellipse
+from .descriptors import (
+    reduce_close_points, compute_ray_features_segm_2d, reconstruct_ray_features_2d)
+from .superpixels import (
+    segment_slic_img2d, superpixel_centers, make_graph_segm_connect_grid2d_conn4)
 
-INIT_MASK_BORDER = 50.
+# INIT_MASK_BORDER = 50.
+#: define minimal size of estimated ellipse
 MIN_ELLIPSE_DAIM = 25.
+#: define maximal Figure size in larger dimension
 MAX_FIGURE_SIZE = 14
-SEGM_OVERLAP = 0.5
+# SEGM_OVERLAP = 0.5  # define transparency for overlapping two images
+#: smoothing background with morphological operation
 STRUC_ELEM_BG = 15
+#: smoothing foreground with morphological operation
 STRUC_ELEM_FG = 5
 
 
@@ -207,21 +211,21 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
     best_inliers = None
 
     if isinstance(min_samples, float):
-        if not (0 <= min_samples <= 1):
-            raise ValueError("`min_samples` as ration must be in range (0, 1)")
+        if not (0 < min_samples <= 1):
+            raise ValueError("`min_samples` as ration must be in range (0, 1]")
         min_samples = int(min_samples * len(points))
-    if min_samples < 0:
-        raise ValueError("`min_samples` must be greater than zero")
+    if not (0 < min_samples <= len(points)):
+        raise ValueError("`min_samples` must be in range (0, <nb-samples>]")
 
     if max_trials < 0:
         raise ValueError("`max_trials` must be greater than zero")
 
-    # make sure points is list and not tuple, so it can be modified below
+    # make sure points is ndarray and not tuple/list, so it can be modified below
     points = np.array(points)
 
     for _ in range(max_trials):
         # choose random sample set
-        random_idxs = np.random.randint(0, len(points), min_samples)
+        random_idxs = np.random.choice(len(points), min_samples, replace=False)
         samples = points[random_idxs]
         # for d in points:
         #     samples.append(d[random_idxs])

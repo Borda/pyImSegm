@@ -5,8 +5,8 @@ before satisfying install requirements
 """
 
 try:
-    import imsegm.utilities
-    imsegm.utilities
+    from . import utilities
+    utilities
 except ImportError:
     import traceback
     traceback.print_exc()

@@ -10,7 +10,7 @@ import numpy as np
 from scipy import ndimage
 import skimage.segmentation as sk_segm
 
-from imsegm.utilities.data_io import get_image2d_boundary_color
+from .utilities.data_io import get_image2d_boundary_color
 
 
 def neighbour_connect4(seg, label, pos):

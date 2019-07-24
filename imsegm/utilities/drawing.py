@@ -18,11 +18,14 @@ from scipy import ndimage
 from skimage import draw, color, segmentation
 from planar import line as pl_line
 
+#: for blending two images define chess field size in pixels
 SIZE_CHESS_FIELD = 50
-# columns from description files which marks the egg annotation by expert
-COLUMNS_POSITION_EGG_ANNOT = ['ant_x', 'ant_y',
-                              'post_x', 'post_y',
-                              'lat_x', 'lat_y']
+#: columns from description files which marks the egg annotation by expert
+COLUMNS_POSITION_EGG_ANNOT = (
+    'ant_x', 'ant_y',
+    'post_x', 'post_y',
+    'lat_x', 'lat_y'
+)
 # http://matplotlib.org/examples/color/colormaps_reference.html
 # http://htmlcolorcodes.com/
 COLOR_ORANGE = '#FF5733'
@@ -33,6 +36,7 @@ COLOR_PINK = '#FF00FF'
 COLOR_BLUE = '#00AAFF'
 COLORS = 'bgrmyck'
 
+#: define markers for labels of positive (+1) neutral (0) and negative (-1) class
 DICT_LABEL_MARKER = {
     -1: ('.', COLOR_GRAY),
     0: ('x', COLOR_GRAY),

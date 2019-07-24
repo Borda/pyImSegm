@@ -14,21 +14,25 @@ from sklearn import cluster, mixture
 from skimage import morphology
 from gco import cut_general_graph, cut_grid_graph
 
-from imsegm.graph_cuts import MAX_PAIRWISE_COST, get_vertexes_edges, compute_spatial_dist
-from imsegm.labeling import histogram_regions_labels_norm
-from imsegm.descriptors import (compute_ray_features_segm_2d, interpolate_ray_dist,
-                                shift_ray_features)
-from imsegm.superpixels import (superpixel_centers, get_neighboring_segments,
-                                make_graph_segm_connect_grid2d_conn4)
+from .graph_cuts import MAX_PAIRWISE_COST, get_vertexes_edges, compute_spatial_dist
+from .labeling import histogram_regions_labels_norm
+from .descriptors import (
+    compute_ray_features_segm_2d, interpolate_ray_dist, shift_ray_features)
+from .superpixels import (
+    superpixel_centers, get_neighboring_segments, make_graph_segm_connect_grid2d_conn4)
 
+#: all infinty values in Grah-Cut terms replace by this value
 GC_REPLACE_INF = 1e5
+#: define minimal value for any vodel of shape prior term
 MIN_SHAPE_PROB = 0.01
+#: define maximal value of unary (being a class) term in Graph-Cut
 MAX_UNARY_PROB = 1 - 0.01
+#: define thresholds parameters for iterative Region Growing
 RG2SP_THRESHOLDS = {
-    'centre': 30,
-    'shift': 15,
-    'volume': 0.1,
-    'centre_init': 50
+    'centre': 30,  # min center displacement since last iteration
+    'shift': 15,  # min rotation change since last iteration
+    'volume': 0.1,  # min volume change since last iteration
+    'centre_init': 50,  # maximal move from original estimate
 }
 
 
@@ -801,8 +805,8 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
     for i, centre in enumerate(centres):
         # segm_binary = (segm_obj == i + 1)
         # centre_new = ndimage.measurements.center_of_mass(segm_binary)
-        # ray = seg_fts.compute_ray_features_segm_2d(segm_binary, centre_new,
-        #                                           edge='down', angle_step=10)
+        # ray = seg_fts.compute_ray_features_segm_2d(
+        #     segm_binary, centre_new, edge='down', angle_step=10)
         # _, shift = seg_fts.shift_ray_features(ray)
         centre_new, shift = compute_centre_moment_points(points[labels == i + 1])
         centre_new = np.round(centre_new).astype(int)

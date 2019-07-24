@@ -15,11 +15,12 @@ from PIL import Image
 from scipy import interpolate
 
 # sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-from imsegm.utilities.data_io import io_imread
+from .utilities.data_io import io_imread
 
+#: names of annotated columns
 COLUMNS_POSITION = ('ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y')
 SLICE_NAME_GROUPING = 'stack_path'
-# set distance in Z axis whether near sliuce may still belong to the same egg
+#: set distance in Z axis whether near slice may still belong to the same egg
 ANNOT_SLICE_DIST_TOL = {  # stage : distance in z-axis
     1: 1,
     2: 2,
@@ -28,11 +29,11 @@ ANNOT_SLICE_DIST_TOL = {  # stage : distance in z-axis
     5: 3,
     6: 0,
 }
-# default colors for particular label
+#: default colors for particular label
 DICT_COLOURS = {
-    0: (0, 0, 255),
-    1: (255, 0, 0),
-    2: (0, 255, 0),
+    0: (0, 0, 255),  # blue
+    1: (255, 0, 0),  # red
+    2: (0, 255, 0),  # green
     3: (255, 229, 0),  # yellow
     4: (142, 68, 173),  # purple
     5: (127, 140, 141),  # gray

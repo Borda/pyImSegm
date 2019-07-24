@@ -17,12 +17,16 @@ import yaml
 import tqdm
 from sklearn import metrics
 
+#: total number of avalaible CPUs/treads
 CPU_COUNT = mproc.cpu_count()
-FILE_RESULTS = 'resultStat.txt'
+#: default date-time format
 FORMAT_DT = '%Y%m%d-%H%M%S'
+#: default file for loading/exporting experiment configuration
 CONFIG_YAML = 'config.yml'
-RESULTS_TXT = FILE_RESULTS
+#: default name of file for exporting  statistics
+RESULTS_TXT = 'resultStat.txt'
 RESULTS_CSV = 'results.csv'
+#: default file for streaming experimeny messages
 FILE_LOGS = 'logging.txt'
 
 
@@ -222,7 +226,7 @@ def string_dict(d, offset=30, desc='DICTIONARY'):
 
 
 def append_final_stat(out_dir, y_true, y_pred, time_sec,
-                      file_name=FILE_RESULTS):
+                      file_name=RESULTS_TXT):
     """ append (export) statistic to existing default file
 
     :param str out_dir:

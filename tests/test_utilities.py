@@ -12,6 +12,15 @@ import logging
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 from imsegm.utilities.experiments import try_decorator
+from imsegm.utilities.data_samples import LIST_ALL_IMAGES, PATH_IMAGES
+
+
+class TestDataSamples(unittest.TestCase):
+
+    def test_existing_images(self):
+        for p in LIST_ALL_IMAGES:
+            p = os.path.join(PATH_IMAGES, p)
+            assert os.path.exists(p), 'missing: %s' % p
 
 
 class TestUtilities(unittest.TestCase):
