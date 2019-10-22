@@ -77,7 +77,7 @@ setup(
     long_description=imsegm.__doc__,
     long_description_content_type='text/markdown',
 
-    packages=['imsegm'],
+    packages=['imsegm', 'imsegm.utilities'],
     cmdclass={'build_ext': BuildExt},
     ext_modules=[
         Extension('imsegm.features_cython',

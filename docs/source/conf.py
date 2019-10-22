@@ -30,7 +30,7 @@ import imsegm  # noqa: E402
 
 # export the documentation
 with open('intro.rst', 'w') as fp:
-    intro = imsegm.__doc__.replace(os.linesep + ' ', '')
+    intro = imsegm.__long_doc__.replace(os.linesep + ' ', '')
     fp.write(m2r.convert(intro))
     # fp.write(imsegm.__doc__)
 

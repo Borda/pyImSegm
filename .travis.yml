@@ -54,12 +54,12 @@ after_success:
   - python-codacy-coverage -r coverage.xml
   - coverage report
   # ANNOTATION section
-  - bash handling_annotations/test_annotations.sh
+  #- bash handling_annotations/test_annotations.sh
   # SEGMENTATION section
-  - bash experiments_segmentation/test_segmentations.sh
+  #- bash experiments_segmentation/test_segmentations.sh
   # CENTER DETECT. section
-  - bash experiments_ovary_centres/test_ovary_centers.sh
+  #- bash experiments_ovary_centres/test_ovary_centers.sh
   # REGION GROWING section
-  - bash experiments_ovary_detect/test_ovary_detect.sh
+  #- bash experiments_ovary_detect/test_ovary_detect.sh
   # test installed package
-  - cd .. && python -c "import imsegm.descriptors"
+  #- cd .. && python -c "import imsegm.descriptors"

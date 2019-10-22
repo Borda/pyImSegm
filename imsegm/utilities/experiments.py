@@ -152,7 +152,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     >>> p = {'path_out': '.'}
     >>> p = create_experiment_folder(p, 'my_test', False, skip_load=True)
     >>> pd.Series(p).sort_index()  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    computer                   (...
+    computer                   [...
     path_exp      ./my_test_EXAMPLE
     path_out                      .
     dtype: object
@@ -160,7 +160,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     >>> shutil.rmtree(p['path_exp'], ignore_errors=True)
     >>> p = create_experiment_folder(p, 'my_test', stamp_unique=True)
     >>> pd.Series(p).sort_index()  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    computer                         (...
+    computer                         [...
     path_exp    ./my_test_EXAMPLE_...-...
     path_out                            .
     dtype: object
@@ -175,9 +175,11 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
         if os.path.isdir(path_expt):
             logging.warning('particular out folder already exists')
             path_expt += ':' + str(uuid.uuid4().hex)
+
     logging.info('creating experiment folder "{}"'.format(path_expt))
     if not os.path.exists(path_expt):
         os.mkdir(path_expt)
+
     # loading confing if it exists
     path_config = os.path.join(path_expt, CONFIG_YAML)
     if os.path.exists(path_config) and not skip_load:
@@ -186,8 +188,9 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
         params = load_config_yaml(path_config)
         params.update({k: params_in[k] for k in params_in if 'path' in k})
         logging.info('loaded following PARAMETERS: %s', string_dict(params))
+
     # extending parameters bu this run
-    params.update({'computer': os.uname(), 'path_exp': path_expt})
+    params.update({'computer': list(os.uname()), 'path_exp': path_expt})
     # export experiment config
     logging.debug('saving params to file "%s"', CONFIG_YAML)
     save_config_yaml(path_config, params)
@@ -456,7 +459,7 @@ def load_config_yaml(path_config):
     >>> os.remove(p_conf)
     """
     with open(path_config, 'r') as fp:
-        config = yaml.load(fp)
+        config = yaml.safe_load(fp)
     return config
 
 

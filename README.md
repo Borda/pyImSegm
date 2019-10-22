@@ -4,11 +4,11 @@
 [![codecov](https://codecov.io/gh/Borda/pyImSegm/branch/master/graph/badge.svg?token=BCvf6F5sFP)](https://codecov.io/gh/Borda/pyImSegm)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/48b7976bbe9d42bc8452f6f9e573ee70)](https://www.codacy.com/app/Borda/pyImSegm?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Borda/pyImSegm&amp;utm_campaign=Badge_Grade)
 [![CircleCI](https://circleci.com/gh/Borda/pyImSegm.svg?style=svg&circle-token=a30180a28ae7e490c0c0829d1549fcec9a5c59d0)](https://circleci.com/gh/Borda/pyImSegm)
-[![Run Status](https://api.shippable.com/projects/5962ea48a125960700c197f8/badge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
 [![CodeFactor](https://www.codefactor.io/repository/github/borda/pyimsegm/badge)](https://www.codefactor.io/repository/github/borda/pyimsegm)
 [![Documentation Status](https://readthedocs.org/projects/pyimsegm/badge/?version=latest)](https://pyimsegm.readthedocs.io/en/latest/?badge=latest)
 [![Gitter](https://badges.gitter.im/pyImSegm/community.svg)](https://gitter.im/pyImSegm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 <!--
+[![Run Status](https://api.shippable.com/projects/5962ea48a125960700c197f8/badge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
 [![Coverage Badge](https://api.shippable.com/projects/5962ea48a125960700c197f8/coverageBadge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Borda/pyImSegm/master?filepath=notebooks)
 -->

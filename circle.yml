@@ -6,19 +6,21 @@ references:
     run:
       name: Install PyPI dependences
       command: |
-        sudo apt-get update
+        sudo apt-get update -qq
+        sudo apt-get install git-lfs
         sudo apt-get install tk-dev pkg-config python-dev python-tk
         sudo pip install --upgrade pip setuptools
         sudo pip install -r ./tests/requirements.txt
         sudo pip install -U backports.functools_lru_cache  # required for matplotlib @py2
         pip install -r requirements.txt --user
-        pip list
+        pip --version ; pip list
 
   test_coverage: &test_coverage
     run:
       name: Testing and Formating
       command: |
         unset DISPLAY
+        mkdir output && mkdir results && mkdir test-reports
         coverage run --source imsegm -m py.test imsegm tests -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
         python setup.py check -m -s
         flake8 . --ignore=E402,E731 --max-line-length=100
@@ -27,10 +29,15 @@ references:
    run:
      name: Building project
      command: |
-       mkdir libs && mkdir output && mkdir results && mkdir test-reports
        gcc --version ; python --version ; pwd ; ls -l
-       pip --version ; pip freeze
        python setup.py build_ext --inplace
+
+  install_project: &install_project
+   run:
+     name: Insatlling project
+     command: |
+       python setup.py install --user
+       rm -rf imsegm
 
   make_docs: &make_docs
    run:
@@ -42,28 +49,20 @@ references:
        cd docs; make html
 
 jobs:
-  Py2:
+  Py3-Tests:
     docker:
-      - image: circleci/python:2.7
-    steps: &steps
+      - image: circleci/python:3.6
+    steps: &steps_test
       - checkout
       # INSTALLATION
       - *install_pips
+      #- run: git lfs pull
       # BUILDING
       - *build_project
       # TESTING
       - *test_coverage
       # DOCUMENTATION
       - *make_docs
-
-      # ANNOTATION section
-      - run: bash handling_annotations/test_annotations.sh
-      # SEGMENTATION section
-      - run: bash experiments_segmentation/test_segmentations.sh
-      # CENTER DETECT. section
-      - run: bash experiments_ovary_centres/test_ovary_centers.sh
-      # REGION GROWING section
-      - run: bash experiments_ovary_detect/test_ovary_detect.sh
 
       # PASSING
       - run:
@@ -77,14 +76,41 @@ jobs:
       - store_artifacts:
           path: test-reports
 
-  Py3:
+  Py3-Experiments:
     docker:
-      - image: circleci/python:3.6
-    steps: *steps
+        - image: circleci/python:3.6
+    steps: &steps_expt
+      - checkout
+      # INSTALLATION
+      - *install_pips
+      #- run: git lfs pull
+      - *install_project
+
+      - run: mkdir libs && mkdir output && mkdir results
+      # ANNOTATION section
+      - run: bash handling_annotations/test_annotations.sh
+      # SEGMENTATION section
+      - run: bash experiments_segmentation/test_segmentations.sh
+      # CENTER DETECT. section
+      - run: bash experiments_ovary_centres/test_ovary_centers.sh
+      # REGION GROWING section
+      - run: bash experiments_ovary_detect/test_ovary_detect.sh
+
+  Py2-Tests:
+    docker:
+      - image: circleci/python:2.7
+    steps: *steps_test
+
+  Py2-Experiments:
+    docker:
+      - image: circleci/python:2.7
+    steps: *steps_expt
 
 workflows:
   version: 2
   build:
     jobs:
-      - Py2
-      - Py3
+      - Py2-Tests
+      - Py3-Tests
+      - Py2-Experiments
+      - Py3-Experiments

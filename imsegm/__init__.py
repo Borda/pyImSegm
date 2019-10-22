@@ -16,8 +16,9 @@ __author__ = 'Jiri Borovec'
 __author_email__ = 'jiri.borovec@fel.cvut.cz'
 __license__ = 'BSD 3-clause'
 __homepage__ = 'https://borda.github.io/pyImSegm'
-__copyright__ = 'Copyright (c) 2014-2019, Jiri Borovec.'
-__doc__ = """# Image segmentation - general superpixel segmentation & region growing
+__copyright__ = 'Copyright (c) 2014-2019, %s.' % __author__
+__doc__ = 'Image segmentation - general superpixel segmentation & region growing'
+__long_doc__ = "# %s" % __doc__ + """
 
 This package is aiming at (un/semi)supervised segmentation on superpixels with
  computing some basic colour and texture features. This general segmentation
