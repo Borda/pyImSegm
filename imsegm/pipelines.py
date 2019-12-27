@@ -11,14 +11,14 @@ import numpy as np
 import skimage.color as sk_color
 # from sklearn import mixture
 
-from .utilities.experiments import WrapExecuteSequence, nb_workers
-from .graph_cuts import segment_graph_cut_general, estim_class_model
-from .superpixels import segment_slic_img2d, segment_slic_img3d_gray
-from .descriptors import (
+from imsegm.utilities.experiments import WrapExecuteSequence, nb_workers
+from imsegm.graph_cuts import segment_graph_cut_general, estim_class_model
+from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
+from imsegm.descriptors import (
     FEATURES_SET_COLOR, norm_features, compute_selected_features_img2d,
     compute_selected_features_gray3d)
-from .labeling import histogram_regions_labels_norm
-from .classification import (
+from imsegm.labeling import histogram_regions_labels_norm
+from imsegm.classification import (
     DEFAULT_CLASSIF_NAME, DEFAULT_CLUSTERING, convert_set_features_labels_2_dataset,
     CrossValidateGroups, create_classif_search_train_export)
 

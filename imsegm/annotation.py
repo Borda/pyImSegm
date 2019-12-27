@@ -15,7 +15,7 @@ from PIL import Image
 from scipy import interpolate
 
 # sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-from .utilities.data_io import io_imread
+from imsegm.utilities.data_io import io_imread
 
 #: names of annotated columns
 COLUMNS_POSITION = ('ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y')

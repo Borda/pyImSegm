@@ -3,7 +3,6 @@ Framework for handling input/output
 
 Copyright (C) 2015-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
-from __future__ import absolute_import
 
 import os
 import re
@@ -20,7 +19,7 @@ from scipy import ndimage
 from skimage import exposure, io, color, measure
 import nibabel
 
-from . import read_zvi
+from imsegm.utilities.read_zvi import load_image as load_zvi
 
 #: position columns
 COLUMNS_COORDS = ['X', 'Y']
@@ -733,7 +732,7 @@ def load_zvi_volume_double_band_split(path_img):
     (2, 488, 648)
     """
     assert os.path.isfile(path_img), 'missing: %s' % path_img
-    img = read_zvi.load_image(path_img)
+    img = load_zvi(path_img)
     nb_half = img.shape[0] / 2
     img_b1 = img[:int(nb_half)]
     img_b2 = img[int(nb_half):]
@@ -1058,14 +1057,21 @@ def add_padding(img_size, padding, min_row, min_col, max_row, max_col):
     return min_row, min_col, max_row, max_col
 
 
-def cut_object(img, mask, padding, use_mask=False, bg_color=None):
-    """ cut an object fro image according binary object segmentation
+# prepare a simple mask with one horizontal segment
+prop = measure.regionprops(np.array([[0] * 20, [1] * 20, [0] * 20], dtype=int))[0]
+#: according to skimage version the major axis are swapped
+PROP_ROTATION_OFFSET = prop.orientation
 
-    :param ndarray img:
-    :param ndarray mask:
+
+def cut_object(img, mask, padding, use_mask=False, bg_color=None, allow_rotate=True):
+    """ cut an object from image according binary object segmentation
+
+    :param ndarray img: inout image
+    :param ndarray mask: segmentation
     :param int padding: set padding around segmented object
-    :param use_mask: fill BG values also outside the mask
+    :param bool use_mask: fill BG values also outside the mask
     :param bg_color: set as default values outside bounding box
+    :param bool allow_rotate: allowing rotate object to get minimal bbox
     :return:
 
     >>> img = np.ones((10, 20), dtype=int)
@@ -1079,7 +1085,7 @@ def cut_object(img, mask, padding, use_mask=False, bg_color=None):
            [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
            [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
-    >>> cut_object(img, mask, 2, use_mask=True)
+    >>> cut_object(img, mask, 2, use_mask=True, allow_rotate=False)
     array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
            [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1],
@@ -1096,15 +1102,18 @@ def cut_object(img, mask, padding, use_mask=False, bg_color=None):
     if not bg_color:
         bg_color = get_image2d_boundary_color(img)
 
-    rotate = np.rad2deg(prop.orientation)
-    shift = prop.centroid - (np.array(mask.shape) / 2.)
-    shift = np.append(shift, np.zeros(img.ndim - mask.ndim))
+    if allow_rotate:
+        rotate = np.rad2deg(prop.orientation - PROP_ROTATION_OFFSET)
+        shift = prop.centroid - (np.array(mask.shape) / 2.)
+        shift = np.append(shift, np.zeros(img.ndim - mask.ndim))
 
-    mask = ndimage.interpolation.shift(mask, -shift[:mask.ndim], order=0)
-    mask = ndimage.rotate(mask, -rotate, order=0, mode='constant', cval=np.nan)
+        mask = ndimage.interpolation.shift(mask, -shift[:mask.ndim], order=0)
+        mask = ndimage.rotate(mask, -rotate, order=0, mode='constant', cval=np.nan)
 
-    img_cut = ndimage.interpolation.shift(img, -shift[:img.ndim], order=0)
-    img_cut = ndimage.rotate(img_cut, -rotate, order=0, mode='constant', cval=np.nan)
+        img = ndimage.interpolation.shift(img, -shift[:img.ndim], order=0)
+        img = ndimage.rotate(img, -rotate, order=0, mode='constant', cval=np.nan)
+
+    img_cut = img.copy()
     img_cut[np.isnan(mask), ...] = bg_color
     mask[np.isnan(mask)] = bg_mask
 

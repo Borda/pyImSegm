@@ -249,7 +249,7 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
 
     seg_ext = os.path.splitext(os.path.basename(row_path['path_segm']))[-1]
     if seg_ext == '.npz':
-        with np.load(row_path['path_segm']) as npzfile:
+        with np.load(row_path['path_segm'], allow_pickle=True) as npzfile:
             segm = npzfile[npzfile.files[0]]
         if dict_relabel is not None:
             segm = seg_lbs.merge_probab_labeling_2d(segm, dict_relabel)
@@ -620,7 +620,7 @@ def load_dump_data(path_dump_data):
     logging.info('loading dumped data "%s"', path_dump_data)
     # with open(os.path.join(path_out, NAME_DUMP_TRAIN_DATA), 'r') as f:
     #     dict_data = pickle.load(f)
-    npz_file = np.load(path_dump_data, encoding='bytes')
+    npz_file = np.load(path_dump_data, encoding='bytes', allow_pickle=True)
     dict_imgs = dict(npz_file['dict_images'].tolist())
     dict_segms = dict(npz_file['dict_segms'].tolist())
     dict_slics = dict(npz_file['dict_slics'].tolist())

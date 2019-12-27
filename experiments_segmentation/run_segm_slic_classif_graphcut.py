@@ -270,7 +270,7 @@ def load_dump_data(path_dump_data):
     logging.info('loading dumped data "%s"', path_dump_data)
     # with open(os.path.join(path_out, NAME_DUMP_TRAIN_DATA), 'r') as f:
     #     dict_data = pickle.load(f)
-    npz_file = np.load(path_dump_data)
+    npz_file = np.load(path_dump_data, allow_pickle=True)
     dict_imgs = dict(npz_file['dict_images'].tolist())
     dict_annot = dict(npz_file['dict_annot'].tolist())
     dict_slics = dict(npz_file['dict_slics'].tolist())

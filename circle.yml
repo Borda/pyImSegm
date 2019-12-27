@@ -22,8 +22,8 @@ references:
         unset DISPLAY
         mkdir output && mkdir results && mkdir test-reports
         coverage run --source imsegm -m py.test imsegm tests -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
-        python setup.py check -m -s
-        flake8 . --ignore=E402,E731 --max-line-length=100
+        python setup.py check --metadata --strict
+        flake8 .
 
   build_project: &build_project
    run:

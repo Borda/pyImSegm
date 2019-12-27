@@ -521,7 +521,7 @@ def segment_rg2sp_greedy(slic, seg, centers, labels_fg_prob, path_model,
                          dict_thresholds=RG2SP_THRESHOLDS, debug_export=''):
     """ wrapper for region growing method with some debug exporting """
     if os.path.splitext(path_model)[-1] == '.npz':
-        shape_model = np.load(path_model)
+        shape_model = np.load(path_model, allow_pickle=True)
     else:
         shape_model = pickle.load(open(path_model, 'rb'))
     dict_debug = dict() if os.path.isdir(debug_export) else None
@@ -550,7 +550,7 @@ def segment_rg2sp_graphcut(slic, seg, centers, labels_fg_prob, path_model,
                            dict_thresholds=RG2SP_THRESHOLDS, debug_export=''):
     """ wrapper for region growing method with some debug exporting """
     if os.path.splitext(path_model)[-1] == '.npz':
-        shape_model = np.load(path_model)
+        shape_model = np.load(path_model, allow_pickle=True)
     else:
         shape_model = pickle.load(open(path_model, 'rb'))
     dict_debug = dict() if os.path.isdir(debug_export) else None

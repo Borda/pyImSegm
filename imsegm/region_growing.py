@@ -12,13 +12,17 @@ import numpy as np
 from scipy import stats, ndimage, interpolate
 from sklearn import cluster, mixture
 from skimage import morphology
-from gco import cut_general_graph, cut_grid_graph
+try:
+    from gco import cut_general_graph, cut_grid_graph
+except Exception:
+    print('WARNING: Missing Grah-Cut (GCO) library,'
+          ' please install it from https://github.com/Borda/pyGCO.')
 
-from .graph_cuts import MAX_PAIRWISE_COST, get_vertexes_edges, compute_spatial_dist
-from .labeling import histogram_regions_labels_norm
-from .descriptors import (
+from imsegm.graph_cuts import MAX_PAIRWISE_COST, get_vertexes_edges, compute_spatial_dist
+from imsegm.labeling import histogram_regions_labels_norm
+from imsegm.descriptors import (
     compute_ray_features_segm_2d, interpolate_ray_dist, shift_ray_features)
-from .superpixels import (
+from imsegm.superpixels import (
     superpixel_centers, get_neighboring_segments, make_graph_segm_connect_grid2d_conn4)
 
 #: all infinty values in Grah-Cut terms replace by this value
@@ -364,10 +368,11 @@ def transform_rays_model_cdf_mixture(list_rays, coef_components=1):
     >>> list_rays = [[9, 4, 9], [4, 9, 7], [9, 7, 11], [10, 8, 10],
     ...              [9, 11, 8], [4, 8, 5], [8, 10, 6], [9, 7, 11]]
     >>> mm, cdist = transform_rays_model_cdf_mixture(list_rays)
-    >>> np.round(cdist, 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
-    [[1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.8, 0.8, 0.6, 0.2, 0.0],
-     [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.8, 0.5, 0.2, 0.0],
-     [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.7, 0.5, 0.2, 0.0]]
+    >>> # the rounding variate a bit according GMM estimated model
+    >>> np.round(np.array(cdist) * 4) / 4.  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([[ 1. , 1. , 1. , 1. , 1. , 1. , 0.75, 0.75, 0.5 , 0.25, 0. ],
+           [ 1. , 1. , 1. , 1. , 1. , 1. , 1.  , 0.75, 0.5 , 0.25, 0. ],
+           [ 1. , 1. , 1. , 1. , 1. , 1. , ...,  0.75, 0.5 , 0.25, 0. ]])
     """
     rays = np.array(list_rays)
     ms = cluster.MeanShift()
@@ -481,7 +486,7 @@ def transform_rays_model_cdf_spectral(list_rays, nb_components=5):
     >>> np.round(cdist, 1).tolist()  # doctest: +NORMALIZE_WHITESPACE
     [[1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.8, 0.6, 0.5, 0.2, 0.0],
      [1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.9, 0.7, 0.5, 0.2, 0.0],
-      [1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.8, 0.7, 0.5, 0.3, 0.0]]
+     [1.0, 1.0, 1.0, 1.0, 1.0, 0.9, 0.8, 0.7, 0.5, 0.3, 0.0]]
     """
     rays = np.array(list_rays)
     sc = cluster.SpectralClustering(nb_components)

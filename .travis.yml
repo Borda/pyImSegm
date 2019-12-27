@@ -5,8 +5,6 @@
 
 # See doc/travis_notes.txt for some guidelines
 
-dist: xenial  # Ubuntu 16.04
-
 env:
   global:
     - CODACY_PROJECT_TOKEN=ea6533a96dfb4b6a9b6b45fc134fabdf
@@ -14,39 +12,57 @@ env:
 
 language: python
 
-sudo: false
-
-python:
-  - 2.7
-  # - 3.4  # will be deprecated for pandas
-  - 3.5
-  - 3.6
-  - 3.7
+matrix:
+  include:
+    - dist: xenial  # Ubuntu 16.04
+      python: 2.7
+    - dist: xenial  # Ubuntu 16.04
+      python: 3.5
+    - dist: xenial  # Ubuntu 16.04
+      python: 3.6
+      env: MIN_REQUIREMENTS=1
+    #- dist: xenial  # Ubuntu 16.04
+    #  python: 3.7
+    #  env: MIN_REQUIREMENTS=1
+    - dist: bionic  # Ubuntu 18.04
+      python: 3.6
+    - dist: bionic  # Ubuntu 18.04
+      python: 3.7
 
 # See http://docs.travis-ci.com/user/caching/#pip-cache
 cache: pip
 
 before_install:
   - pip install --upgrade pip
+  # rewrite all minimal requirements as strict
+  - if [ "$TRAVIS_PYTHON_VERSION" == "2.7" ]; then
+      cp requirements-py27.txt requirements-ci.txt ;
+    else if [[ "${MIN_REQUIREMENTS}" == "1" ]]; then
+        python -c "req = open('requirements.txt').read().replace('>', '=') ; open('requirements-ci.txt', 'w').write(req)" ;
+      else
+        cp requirements.txt requirements-ci.txt ;
+      fi
+    fi
 
 install:
   - mkdir libs
-  - pip install -r requirements.txt
+  - pip install -r requirements-ci.txt -U
   - pip install -r ./tests/requirements.txt
   - pip list
 
 before_script:
+  - rm requirements-ci.txt
   - mkdir output && mkdir results
   - gcc --version ; python --version ; pip --version ; pwd ; ls -l
   - check-manifest
-  - python setup.py check -m -s
+  - python setup.py check --metadata --strict
 
 script:
   - python setup.py build_ext --inplace
   # - pytest imsegm -v --doctest-modules
-  - nosetests imsegm tests -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
-  - flake8 . --ignore=E402,E731 --max-line-length=100
-  - python setup.py install
+  - coverage run -m py.test imsegm tests --doctest-modules --flake8
+  # - nosetests imsegm tests -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
+  - python setup.py install --dry-run
 
 after_success:
   - codecov  # public repository on Travis CI

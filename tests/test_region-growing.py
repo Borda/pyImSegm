@@ -127,7 +127,7 @@ class TestRegionGrowing(unittest.TestCase):
             self.test_shape_modeling()
 
         # file_model = pickle.load(open(PATH_PKL_MODEL, 'r'))
-        npz_file = np.load(PATH_PKL_MODEL)
+        npz_file = np.load(PATH_PKL_MODEL, allow_pickle=True)
         file_model = dict(npz_file[npz_file.files[0]].tolist())
         logging.info('loaded model: %r', file_model.keys())
         list_mean_cdf = file_model['cdfs']
@@ -167,7 +167,7 @@ class TestRegionGrowing(unittest.TestCase):
             self.test_shape_modeling()
 
         # file_model = pickle.load(open(PATH_PKL_MODEL, 'r'))
-        npz_file = np.load(PATH_PKL_MODEL)
+        npz_file = np.load(PATH_PKL_MODEL, allow_pickle=True)
         file_model = dict(npz_file[npz_file.files[0]].tolist())
         logging.info('loaded model: %r', file_model.keys())
         list_mean_cdf = file_model['cdfs']

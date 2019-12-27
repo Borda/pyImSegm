@@ -7,16 +7,20 @@ Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import logging
 
 import numpy as np
-from gco import cut_general_graph
+try:
+    from gco import cut_general_graph
+except Exception:
+    print('WARNING: Missing Grah-Cut (GCO) library,'
+          ' please install it from https://github.com/Borda/pyGCO.')
 from skimage import filters
 from sklearn import metrics, preprocessing
 from sklearn import pipeline, cluster, mixture, decomposition
 
-from .utilities.drawing import (
+from imsegm.utilities.drawing import (
     draw_graphcut_unary_cost_segments, draw_graphcut_weighted_edges, draw_color_labeling)
-from .superpixels import (
+from imsegm.superpixels import (
     make_graph_segm_connect_grid2d_conn4, make_graph_segm_connect_grid3d_conn6, superpixel_centers)
-from .descriptors import compute_selected_features_img2d
+from imsegm.descriptors import compute_selected_features_img2d
 
 #: define munber of iteration in Grap-Cut optimization
 DEFAULT_GC_ITERATIONS = 25

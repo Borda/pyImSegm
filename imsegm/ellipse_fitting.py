@@ -10,10 +10,10 @@ from skimage import morphology
 
 from skimage.measure import fit as sk_fit
 # from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
-from .utilities.drawing import ellipse
-from .descriptors import (
+from imsegm.utilities.drawing import ellipse
+from imsegm.descriptors import (
     reduce_close_points, compute_ray_features_segm_2d, reconstruct_ray_features_2d)
-from .superpixels import (
+from imsegm.superpixels import (
     segment_slic_img2d, superpixel_centers, make_graph_segm_connect_grid2d_conn4)
 
 # INIT_MASK_BORDER = 50.

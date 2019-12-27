@@ -31,8 +31,8 @@ try:  # due to some chnages in between versions
 except Exception:
     from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
-from .labeling import relabel_max_overlap_unique
-from .utilities.experiments import WrapExecuteSequence, nb_workers
+from imsegm.labeling import relabel_max_overlap_unique
+from imsegm.utilities.experiments import WrapExecuteSequence, nb_workers
 
 # NAME_FILE_RESULTS = 'results.csv'
 #: name template forexporting trained classifier (adding classifier name and version)
