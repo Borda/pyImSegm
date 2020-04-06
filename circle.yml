@@ -46,6 +46,7 @@ references:
        sudo apt-get install pandoc
        sudo pip install -r docs/requirements.txt
        # sphinx-apidoc -o ./docs/source ./imsegm **/test_* --force --follow-links
+       python setup.py build_ext --inplace
        cd docs
        make html --debug --jobs 2 SPHINXOPTS="-W"
        make latexpdf
