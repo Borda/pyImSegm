@@ -24,18 +24,18 @@ Sample usage::
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import argparse
+import logging
 import os
 import sys
-import logging
-import argparse
 from functools import partial
 
-import tqdm
-import pandas as pd
+import matplotlib
 import numpy as np
+import pandas as pd
+import tqdm
 from scipy import spatial
 
-import matplotlib
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')

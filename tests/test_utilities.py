@@ -5,10 +5,10 @@ Unit testing for particular segmentation module
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import logging
 import os
 import sys
 import unittest
-import logging
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 from imsegm.utilities.experiments import try_decorator

@@ -26,18 +26,19 @@ Sample usage::
 Copyright (C) 2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
-import sys
+import argparse
 import glob
 import logging
-import argparse
+import os
+import sys
 
-import numpy as np
-import pandas as pd
-import matplotlib.pylab as plt
-from scipy import ndimage, spatial
 # from planar import line as pl_line
 import matplotlib
+import matplotlib.pylab as plt
+import numpy as np
+import pandas as pd
+from scipy import ndimage, spatial
+
 matplotlib.use('GTKAgg')  # or >> matplotlib.rcsetup.all_backends
 
 

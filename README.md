@@ -19,7 +19,7 @@
 
 Image segmentation is widely used as an initial phase of many image processing tasks in computer vision and image analysis. Many recent segmentation methods use superpixels because they reduce the size of the segmentation problem by order of magnitude. Also,  features on superpixels are much more robust than features on pixels only. We use spatial regularisation on superpixels to make segmented regions more compact. The segmentation pipeline comprises (i) computation of superpixels; (ii) extraction of descriptors such as colour and texture; (iii) soft classification, using a standard classifier for supervised learning, or the Gaussian Mixture Model for unsupervised learning; (iv) final segmentation using Graph Cut. We use this segmentation pipeline on real-world applications in medical imaging (see a sample [images](./data_images)). We also show that [unsupervised segmentation](notebooks/segment-2d_slic-fts-clust-gc.ipynb) is sufficient for some situations, and provides similar results to those obtained using [trained segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb).
 
-![schema](figures/schema_slic-fts-clf-gc.jpg)
+![schema](docs/source/_figures/schema_slic-fts-clf-gc.jpg)
 
 **Sample ipython notebooks:**
 * [Supervised segmentation](notebooks/segment-2d_slic-fts-classif-gc.ipynb) requires training annotation
@@ -28,8 +28,8 @@ Image segmentation is widely used as an initial phase of many image processing t
 
 **Illustration**
 
-![input image](figures/insitu7545.jpg)
-![segmentation](figures/insitu7545_gc.png)
+![input image](docs/source/_figures/insitu7545.jpg)
+![segmentation](docs/source/_figures/insitu7545_gc.png)
 
 Reference: _Borovec J., Svihlik J., Kybic J., Habart D. (2017). **Supervised and unsupervised segmentation using superpixels, model estimation, and Graph Cut.** In: Journal of Electronic Imaging._
 
@@ -44,8 +44,8 @@ An image processing pipeline to detect and localize Drosophila egg chambers that
 
 **Illustration**
 
-![estimated centres](figures/insitu7545_center_clusters.jpg)
-![ellipse fitting](figures/insitu7545_ellipse_fit.png)
+![estimated centres](docs/source/_figures/insitu7545_center_clusters.jpg)
+![ellipse fitting](docs/source/_figures/insitu7545_ellipse_fit.png)
 
 Reference: _Borovec J., Kybic J., Nava R. (2017) **Detection and Localization of Drosophila Egg Chambers in Microscopy Images.** In: Machine Learning in Medical Imaging._
 
@@ -60,8 +60,8 @@ Region growing is a classical image segmentation method based on hierarchical re
 
 **Illustration**
 
-![growing RG](figures/insitu7545_RG2SP_animation.gif)
-![ellipse fitting](figures/insitu7545_RG2SP-gc-mm.png)
+![growing RG](docs/source/_figures/insitu7545_RG2SP_animation.gif)
+![ellipse fitting](docs/source/_figures/insitu7545_RG2SP-gc-mm.png)
 
 Reference: _Borovec J., Kybic J., Sugimoto, A. (2017). **Region growing using superpixels with learned shape prior.** In: Journal of Electronic Imaging._
 
@@ -164,7 +164,7 @@ We introduce some useful tools for work with image annotation and segmentation.
 ### Semantic (un/semi)supervised segmentation
 
 We utilise (un)supervised segmentation according to given training examples or some expectations.
-![vusial debug](figures/visual_img_43_debug.jpg)
+![vusial debug](docs/source/_figures/visual_img_43_debug.jpg)
 
 * Evaluate superpixels (with given SLIC parameters) quality against given segmentation. It helps to find out the best SLIC configuration.
     ```bash
@@ -188,7 +188,7 @@ We utilise (un)supervised segmentation according to given training examples or s
        -cfg ./experiments_segmentation/sample_config.yml \
        -o ./results -n langIsl --nb_classes 3 --visual --nb_workers 2
     ```
-    ![unsupervised](figures/imag-disk-20_gmm.jpg)
+    ![unsupervised](docs/source/_figures/imag-disk-20_gmm.jpg)
 * Perform **Supervised** segmentation with afterwards evaluation.
     ```bash
     python experiments_segmentation/run_segm_slic_classif_graphcut.py \
@@ -197,7 +197,7 @@ We utilise (un)supervised segmentation according to given training examples or s
         --path_config ./experiments_segmentation/sample_config.yml \
         -o ./results -n Ovary --img_type 2d_split --visual --nb_workers 2
     ```
-    ![supervised](figures/imag-disk-20_train.jpg)
+    ![supervised](docs/source/_figures/imag-disk-20_train.jpg)
 * Perform **Semi-Supervised** is using the the supervised pipeline with not fully annotated images.
 * For both experiment you can evaluate segmentation results.
     ```bash
@@ -207,7 +207,7 @@ We utilise (un)supervised segmentation according to given training examples or s
         -i "./data_images/drosophila_ovary_slice/image/*.jpg" \
         -o ./results/evaluation --visual
     ```
-    ![vusial](figures/segm-visual_D03_sy04_100x.jpg)
+    ![vusial](docs/source/_figures/segm-visual_D03_sy04_100x.jpg)
 
 The previous two (un)segmentation accept [configuration file](experiments_segmentation/sample_config.yml) (YAML) by parameter `-cfg` with some extra parameters which was not passed in arguments, for instance:
 ```yaml
@@ -283,7 +283,7 @@ In general, the input is a formatted list (CSV file) of input images and annotat
         -out ~/Medical-drosophila/RESULTS/atlas_datasets/ovary_images/stage_3
     ```
 
-![ellipse fitting](figures/insitu7544_ellipses.jpg)
+![ellipse fitting](docs/source/_figures/insitu7544_ellipses.jpg)
 
 ### Region growing with a shape prior
 
@@ -333,7 +333,7 @@ pip install --user git+https://github.com/Borda/morph-snakes.git
     ```bash
     python experiments_ovary_detect/run_export_user-annot-segm.py
     ```
-    ![user-annnot](figures/insitu7545_user-annot-segm.jpg)
+    ![user-annnot](docs/source/_figures/insitu7545_user-annot-segm.jpg)
 
 ---
 

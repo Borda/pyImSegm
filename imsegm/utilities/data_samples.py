@@ -10,8 +10,8 @@ Some images are taken from following sources:
 Copyright (C) 2015-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
 import logging
+import os
 
 # from PIL import Image
 import numpy as np

@@ -5,12 +5,12 @@ and some prepossessing functions that support classification
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
-import pickle
-import logging
-import random
 import collections
 import itertools
+import logging
+import os
+import pickle
+import random
 from functools import partial
 
 import numpy as np
@@ -20,12 +20,13 @@ import pandas as pd
 from scipy import interp
 from scipy.stats import randint as sp_randint
 from scipy.stats import uniform as sp_random
-from sklearn.base import clone
-from sklearn import preprocessing, feature_selection, decomposition
 from sklearn import cluster, metrics
 from sklearn import ensemble, neighbors, svm, tree
-from sklearn import pipeline, linear_model, neural_network
 from sklearn import model_selection
+from sklearn import pipeline, linear_model, neural_network
+from sklearn import preprocessing, feature_selection, decomposition
+from sklearn.base import clone
+
 try:  # due to some chnages in between versions
     from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 except Exception:

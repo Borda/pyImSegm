@@ -12,15 +12,15 @@ Sample usage::
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
-import sys
+import argparse
 import glob
 import logging
-import argparse
+import os
+import sys
 from functools import partial
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utilities.data_io as tl_data

@@ -14,12 +14,13 @@ import logging
 import numpy as np
 from scipy import ndimage, interpolate, optimize, spatial
 from scipy.ndimage.filters import gaussian_filter, gaussian_filter1d, gaussian_laplace
-from sklearn import preprocessing
 from skimage import morphology
-# from numba.decorators import jit
-# from numba import int32, int64, float32
+from sklearn import preprocessing
 
 from imsegm.utilities.data_io import convert_img_color_from_rgb
+
+# from numba.decorators import jit
+# from numba import int32, int64, float32
 try:
     import imsegm.features_cython as fts_cython
     # logging.debug('try to load Cython implementation')  # CRASH logger
@@ -499,7 +500,7 @@ def cython_img3d_gray_energy(img, seg):
 
     :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
-    :return:np.array<nb_lbs, 1> vector of mean colour per segment
+    :return: np.array<nb_lbs, 1> vector of mean colour per segment
 
     .. seealso:: :func:`imsegm.descriptors.numpy_img3d_gray_energy`
 
@@ -529,7 +530,7 @@ def cython_img3d_gray_std(img, seg, mean=None):
     :param ndarray img: input RGB image
     :param ndarray seg: segmentation og the image
     :param ndarray mean: precomputed feature means
-    :return:np.array<nb_lbs, 1> vector of mean colour per segment
+    :return: np.array<nb_lbs, 1> vector of mean colour per segment
 
     .. seealso:: :func:`imsegm.descriptors.numpy_img3d_gray_std`
 
@@ -1484,8 +1485,7 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
 def cython_label_hist_seg2d(segm_select, struc_elem, nb_labels):
     """ compute histogram of labels for set of centric annulus
 
-    :param ndarray segm: np.array<height, width>
-    :param tuple(float,float) position: position in the segmentation
+    :param ndarray segm_select: np.array<height, width>
     :param ndarray struc_elem: np.array<height, width>
     :param int nb_labels: total number of labels in the segmentation
     :return list(float):
@@ -1493,10 +1493,11 @@ def cython_label_hist_seg2d(segm_select, struc_elem, nb_labels):
     .. seealso:: :func:`imsegm.descriptors.compute_label_hist_segm`
 
     .. note:: output of this function should be equal to
-    ```
-    for lb in range(nb_labels):
-        hist[lb] = np.sum(np.logical_and(segm_select == lb, struc_elem == 1))
-    ```
+        ::
+
+            for lb in range(nb_labels):
+                hist[lb] = np.sum(np.logical_and(segm_select == lb, struc_elem == 1))
+
 
     >>> segm = np.zeros((10, 10), dtype=int)
     >>> segm[1:9, 2:8] = 1

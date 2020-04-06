@@ -13,11 +13,11 @@ Sample usage::
 Copyright (C) 2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import gc
+import logging
 import os
 import sys
 import time
-import gc
-import logging
 from functools import partial
 
 import pandas as pd

@@ -4,15 +4,15 @@ Unit testing for particular segmentation module
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import logging
 import os
 import sys
 import time
-import logging
 import unittest
 
+import matplotlib.pyplot as plt
 import numpy as np
 from skimage import draw, transform
-import matplotlib.pyplot as plt
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 from imsegm.utilities.data_samples import (IMAGE_LENNA, load_sample_image,

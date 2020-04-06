@@ -11,14 +11,14 @@ Sample usage::
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
-import sys
 import glob
 import logging
+import os
+import sys
 from functools import partial
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from skimage import transform
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root

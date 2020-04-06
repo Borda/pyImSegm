@@ -4,14 +4,14 @@ Unit testing for particular segmentation module
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import logging
 import os
 import sys
-import logging
 import unittest
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.metrics import adjusted_rand_score
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root

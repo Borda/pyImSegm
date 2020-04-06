@@ -13,14 +13,15 @@ Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 
-import os
-import sys
+import argparse
 import glob
 import logging
-import argparse
+import os
+import sys
 from functools import partial
 
 import matplotlib
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')

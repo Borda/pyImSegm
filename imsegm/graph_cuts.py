@@ -7,6 +7,7 @@ Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import logging
 
 import numpy as np
+
 try:
     from gco import cut_general_graph
 except Exception:
@@ -256,7 +257,7 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++', max_it
     """ from all features estimate Gaussian from k-means clustering
 
     :param [[float]] features: list of features per segment
-    :param int nb_classes:, number of classes
+    :param int nb_classes: number of classes
     :param str init_type: initialization
     :param int max_iter: maximal number of iterations
     :return [[float]]: probabilities that each feature belongs to each class
@@ -388,16 +389,16 @@ def compute_edge_model(edges, proba, metric='l_T'):
     """ compute the edge weight from the feature space
 
     small differences are large weights, diff close 0 appears to be 1
-    setting min weight ~ max difference in proba as weight
-    meaning if two vertexes have same proba to all classes the diff is 0
+     setting min weight ~ max difference in proba as weight
+     meaning if two vertexes have same proba to all classes the diff is 0
      and weights are 1 on the other hand if there is [0.7, 0.1, 0.2]
      and [0.2, 0.7, 0.1] gives large diff [0.5, 0.6, 0.1] in 1.
      and 2. diff and zero in 3 leading to weights [0.5, 0.4, 0.9]
-     and so we take the min valus
+     and so we take the min values
 
-    :param [(int, int)] edges:
-    :param [[float]] proba:
-    :param str metric:
+    :param [(int, int)] edges: edges
+    :param [[float]] proba: probablilitirs
+    :param str metric: define metric
     :return list(float):
 
 

@@ -5,13 +5,13 @@ Unit testing for particular segmentation module
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import logging
 import os
 import sys
 import unittest
-import logging
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 from imsegm.utilities.data_samples import sample_segment_vertical_2d

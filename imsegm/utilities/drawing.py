@@ -4,10 +4,11 @@ Framework for visualisations
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
 import logging
+import os
 
 import matplotlib
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -799,13 +800,13 @@ def merge_object_masks(masks, overlap_thr=0.7):
 def draw_image_segm_points(ax, img, points, labels=None, slic=None,
                            color_slic='w', lut_label_marker=DICT_LABEL_MARKER,
                            seg_contour=None):
-    """ on plane draw background image or segmentation, overlap with slic
-    contours, add contour of adative segmentation like annot. for centers
-    plot point with specific property (shape and colour) according label
+    """ on plane draw background image or segmentation, overlap with SLIC
+     contours, add contour of adative segmentation like annot. for centers
+     plot point with specific property (shape and colour) according label
 
     :param ax: figure axis
     :param ndarray img: image
-    :param list(tuple(int,int)) points:collection of points
+    :param list(tuple(int,int)) points: collection of points
     :param list(int) labels: LUT labels for superpixels
     :param ndarray slic: superpixel segmentation
     :param str color_slic: color dor superpixels

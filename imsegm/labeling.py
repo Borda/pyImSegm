@@ -7,8 +7,8 @@ Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import logging
 
 import numpy as np
-from scipy import ndimage
 import skimage.segmentation as sk_segm
+from scipy import ndimage
 
 from imsegm.utilities.data_io import get_image2d_boundary_color
 

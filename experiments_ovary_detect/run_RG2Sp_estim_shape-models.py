@@ -10,12 +10,12 @@ Sample usage::
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
-import sys
+import argparse
 import glob
 import logging
+import os
 import pickle
-import argparse
+import sys
 
 import numpy as np
 import pandas as pd
