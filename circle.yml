@@ -130,3 +130,4 @@ workflows:
       - Py3-Tests
       - Py2-Experiments
       - Py3-Experiments
+      - Build-Docs
