@@ -17,6 +17,7 @@ import inspect
 import os
 import shutil
 import sys
+import re
 
 import m2r
 
@@ -39,10 +40,12 @@ with open(os.path.join(PATH_ROOT, 'README.md'), 'r') as fp:
     readme = fp.read()
 # replace all paths to relative
 readme = readme.replace('](docs/source/', '](')
-readme = readme.replace('](notebooks/', '](_notebooks/')
-for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
-                 if os.path.isdir(p)):
-    readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_ROOT, dir_name))
+readme = re.sub(r' \[(.*)\]\((?!http)(.*)\)',
+                r' [\1](%s/blob/master/\2)' % imsegm.__homepage__,
+                readme)
+# for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
+#                  if os.path.isdir(p)):
+#     readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_ROOT, dir_name))
 with open('readme.md', 'w') as fp:
     fp.write(readme)
 
@@ -139,7 +142,7 @@ html_theme = 'nature'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_figures', '_notebooks']  # , '_static'
+html_static_path = ['_figures']  # , '_static', 'notebooks'
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -263,12 +266,12 @@ def setup(app):
 
 
 # copy all notebooks to local folder
-path_nbs = os.path.join(PATH_HERE, '_notebooks')
-if not os.path.isdir(path_nbs):
-    os.mkdir(path_nbs)
-for path_ipynb in glob.glob(os.path.join(PATH_ROOT, 'notebooks', '*.ipynb')):
-    path_ipynb2 = os.path.join(path_nbs, os.path.basename(path_ipynb))
-    shutil.copy(path_ipynb, path_ipynb2)
+path_docs_nbs = os.path.join(PATH_HERE, 'notebooks')
+if not os.path.isdir(path_docs_nbs):
+    os.mkdir(path_docs_nbs)
+for path_ipynb_in in glob.glob(os.path.join(PATH_ROOT, 'notebooks', '*.ipynb')):
+    path_ipynb_new = os.path.join(path_docs_nbs, os.path.basename(path_ipynb_in))
+    shutil.copy(path_ipynb_in, path_ipynb_new)
 
 
 # Ignoring Third-party packages
