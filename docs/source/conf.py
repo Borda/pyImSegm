@@ -59,8 +59,9 @@ readme = readme.replace('](docs/source/', '](')
 readme = re.sub(r' \[(.*)\]\((?!http)(.*)\)',
                 r' [\1](https://github.com/%s/%s/blob/master/\2)' % (github_user, github_repo),
                 readme)
-# TODO: temp fix removing SVG badges, because PDF cannot show them
+# TODO: temp fix removing SVG badges and GIF, because PDF cannot show them
 readme = re.sub(r'(\[!\[.*\))', '', readme)
+readme = re.sub(r'(!\[.*.gif\))', '', readme)
 # for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
 #                  if os.path.isdir(p)):
 #     readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_ROOT, dir_name))
