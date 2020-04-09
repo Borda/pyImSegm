@@ -27,6 +27,22 @@ sys.path.insert(0, os.path.abspath(PATH_ROOT))
 
 import imsegm  # noqa: E402
 
+# -- Project information -----------------------------------------------------
+
+project = 'ImSegm'
+copyright = imsegm.__copyright__
+author = imsegm.__author__
+
+# The short X.Y version
+version = imsegm.__version__
+# The full version, including alpha/beta/rc tags
+release = imsegm.__version__
+
+# Options for the linkcode extension
+# ----------------------------------
+github_user = 'Borda'
+github_repo = 'pyImSegm'
+
 # -- Project documents -------------------------------------------------------
 
 # export the documentation
@@ -41,24 +57,13 @@ with open(os.path.join(PATH_ROOT, 'README.md'), 'r') as fp:
 # replace all paths to relative
 readme = readme.replace('](docs/source/', '](')
 readme = re.sub(r' \[(.*)\]\((?!http)(.*)\)',
-                r' [\1](%s/blob/master/\2)' % imsegm.__homepage__,
+                r' [\1](https://github.com/%s/%s/blob/master/\2)' % (github_user, github_repo),
                 readme)
 # for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
 #                  if os.path.isdir(p)):
 #     readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_ROOT, dir_name))
 with open('readme.md', 'w') as fp:
     fp.write(readme)
-
-# -- Project information -----------------------------------------------------
-
-project = 'ImSegm'
-copyright = imsegm.__copyright__
-author = imsegm.__author__
-
-# The short X.Y version
-version = imsegm.__version__
-# The full version, including alpha/beta/rc tags
-release = imsegm.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -287,12 +292,6 @@ with open(os.path.join(PATH_ROOT, 'requirements.txt'), 'r') as fp:
 
 # TODO: better parse from package since the import name and package name may differ
 autodoc_mock_imports = MOCK_MODULES + ['sklearn', 'skimage', 'gco', 'yaml']
-
-
-# Options for the linkcode extension
-# ----------------------------------
-github_user = 'Borda'
-github_repo = 'pyImSegm'
 
 
 # Resolve function
