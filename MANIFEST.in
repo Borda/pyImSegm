@@ -34,7 +34,7 @@ recursive-include experiments_* *.py *.yml
 recursive-include handling_annotations *.py
 
 # Include the figures
-recursive-include figures *.gif *.jpg *.png
+recursive-include docs/source/_figures *.gif *.jpg *.png
 
 # Include the sample images
 include data_images/others/lena.png

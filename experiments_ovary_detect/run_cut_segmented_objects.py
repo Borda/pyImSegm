@@ -10,10 +10,10 @@ Sample usage::
 
 """
 
+import argparse
+import logging
 import os
 import sys
-import logging
-import argparse
 from functools import partial
 
 import numpy as np

@@ -4,17 +4,17 @@ Framework for general experiments
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
 import copy
+import logging
+import multiprocessing as mproc
+import os
 import time
 import types
-import logging
 import uuid
-import multiprocessing as mproc
 from functools import wraps
 
-import yaml
 import tqdm
+import yaml
 from sklearn import metrics
 
 #: total number of avalaible CPUs/treads

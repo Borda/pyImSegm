@@ -7,14 +7,14 @@ Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import numpy as np
 from scipy import ndimage, spatial
 from skimage import morphology
-
 from skimage.measure import fit as sk_fit
-# from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
-from imsegm.utilities.drawing import ellipse
+
 from imsegm.descriptors import (
     reduce_close_points, compute_ray_features_segm_2d, reconstruct_ray_features_2d)
 from imsegm.superpixels import (
     segment_slic_img2d, superpixel_centers, make_graph_segm_connect_grid2d_conn4)
+# from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
+from imsegm.utilities.drawing import ellipse
 
 # INIT_MASK_BORDER = 50.
 #: define minimal size of estimated ellipse
@@ -185,10 +185,8 @@ def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
     inliers : (N, ) array
         Boolean mask of inliers classified as ``True``.
 
-    References
-    ----------
-    .. [1] "RANSAC", Wikipedia, http://en.wikipedia.org/wiki/RANSAC
-
+    Examples
+    --------
     >>> seg = np.zeros((120, 150), dtype=int)
     >>> ell_params = 60, 75, 40, 65, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)

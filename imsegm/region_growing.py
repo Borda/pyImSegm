@@ -10,8 +10,9 @@ import logging
 
 import numpy as np
 from scipy import stats, ndimage, interpolate
-from sklearn import cluster, mixture
 from skimage import morphology
+from sklearn import cluster, mixture
+
 try:
     from gco import cut_general_graph, cut_grid_graph
 except Exception:

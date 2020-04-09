@@ -4,20 +4,20 @@ Framework for handling input/output
 Copyright (C) 2015-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
-import re
 import glob
 import logging
+import os
+import re
 import warnings
 from functools import wraps
 
+import nibabel
 import numpy as np
 import pandas as pd
 from PIL import Image
 # import libtiff, nibabel
 from scipy import ndimage
 from skimage import exposure, io, color, measure
-import nibabel
 
 from imsegm.utilities.read_zvi import load_image as load_zvi
 
@@ -347,8 +347,7 @@ def load_image_2d(path_img):
     :param str path_img: path to the input image
     :return str, ndarray: image name, image as matrix
 
-    PNG image
-    ---------
+    >>> # PNG image
     >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(20, 20, 3))
     >>> path_img = export_image(os.path.join('.', img_name), img,
@@ -370,8 +369,7 @@ def load_image_2d(path_img):
     (65, 50)
     >>> os.remove(path_img)
 
-    TIFF image
-    ----------
+    >>> # TIFF image
     >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(5, 20, 20))
     >>> path_img = export_image(os.path.join('.', img_name), img,
@@ -419,8 +417,7 @@ def export_image(path_img, img, stretch_range=True):
     :param bool stretch_range:
     :return str: path to the image
 
-    PNG image
-    ---------
+    >>> # PNG image
     >>> np.random.seed(0)
     >>> img = np.random.random([5, 10])
     >>> path_img = export_image(os.path.join('.', 'testing-image'), img)
@@ -439,8 +436,7 @@ def export_image(path_img, img, stretch_range=True):
            [ 93, 113, 181,  15, 173, 174,  54,  33,  82,  94]], dtype=uint8)
     >>> os.remove(path_img)
 
-    TIFF image
-    ----------
+    >>> # TIFF image
     >>> img = np.random.random([5, 20, 25])
     >>> path_img = export_image(os.path.join('.', 'testing-image'), img)
     >>> path_img
@@ -1057,12 +1053,6 @@ def add_padding(img_size, padding, min_row, min_col, max_row, max_col):
     return min_row, min_col, max_row, max_col
 
 
-# prepare a simple mask with one horizontal segment
-prop = measure.regionprops(np.array([[0] * 20, [1] * 20, [0] * 20], dtype=int))[0]
-#: according to skimage version the major axis are swapped
-PROP_ROTATION_OFFSET = prop.orientation
-
-
 def cut_object(img, mask, padding, use_mask=False, bg_color=None, allow_rotate=True):
     """ cut an object from image according binary object segmentation
 
@@ -1094,6 +1084,11 @@ def cut_object(img, mask, padding, use_mask=False, bg_color=None, allow_rotate=T
            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
     """
     assert mask.shape[:2] == img.shape[:2]
+
+    # prepare a simple mask with one horizontal segment
+    prop = measure.regionprops(np.array([[0] * 20, [1] * 20, [0] * 20], dtype=int))[0]
+    #: according to skimage version the major axis are swapped
+    PROP_ROTATION_OFFSET = prop.orientation
 
     prop = measure.regionprops(mask.astype(int))[0]
     bg_pixels = np.hstack([mask[0, :], mask[:, 0], mask[-1, :], mask[:, -1]])

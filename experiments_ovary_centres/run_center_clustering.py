@@ -6,16 +6,16 @@ for the own clustering they are not needed.
 Copyright (C) 2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import logging
 import os
 import sys
-import logging
 from functools import partial
 
-import pandas as pd
+import matplotlib
 import numpy as np
+import pandas as pd
 from sklearn import cluster
 
-import matplotlib
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')

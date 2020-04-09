@@ -28,15 +28,16 @@ Sample usage::
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import gc
+import glob
+import logging
 import os
 import sys
-import logging
-import glob
 import time
-import gc
 from functools import partial
 
 import matplotlib
+
 if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')

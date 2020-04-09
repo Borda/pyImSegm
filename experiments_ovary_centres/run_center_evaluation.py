@@ -13,18 +13,18 @@ Sample usage::
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import gc
+import logging
 import os
 import sys
 import time
-import logging
-import gc
 from functools import partial
 
-import pandas as pd
+import matplotlib
 import numpy as np
+import pandas as pd
 from scipy import ndimage
 
-import matplotlib
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')

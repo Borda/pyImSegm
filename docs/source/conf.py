@@ -12,11 +12,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
-import os
-import sys
 import glob
-import shutil
 import inspect
+import os
+import shutil
+import sys
+import re
 
 import m2r
 
@@ -25,6 +26,22 @@ PATH_HERE = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.abspath(PATH_ROOT))
 
 import imsegm  # noqa: E402
+
+# -- Project information -----------------------------------------------------
+
+project = 'ImSegm'
+copyright = imsegm.__copyright__
+author = imsegm.__author__
+
+# The short X.Y version
+version = imsegm.__version__
+# The full version, including alpha/beta/rc tags
+release = imsegm.__version__
+
+# Options for the linkcode extension
+# ----------------------------------
+github_user = 'Borda'
+github_repo = 'pyImSegm'
 
 # -- Project documents -------------------------------------------------------
 
@@ -38,29 +55,25 @@ with open('intro.rst', 'w') as fp:
 with open(os.path.join(PATH_ROOT, 'README.md'), 'r') as fp:
     readme = fp.read()
 # replace all paths to relative
-for ndir in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
-             if os.path.isdir(p)):
-    readme = readme.replace('](%s/' % ndir, '](%s/%s/' % (PATH_ROOT, ndir))
+readme = readme.replace('](docs/source/', '](')
+readme = re.sub(r' \[(.*)\]\((?!http)(.*)\)',
+                r' [\1](https://github.com/%s/%s/blob/master/\2)' % (github_user, github_repo),
+                readme)
+# TODO: temp fix removing SVG badges and GIF, because PDF cannot show them
+readme = re.sub(r'(\[!\[.*\))', '', readme)
+readme = re.sub(r'(!\[.*.gif\))', '', readme)
+# for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
+#                  if os.path.isdir(p)):
+#     readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_ROOT, dir_name))
 with open('readme.md', 'w') as fp:
     fp.write(readme)
-
-# -- Project information -----------------------------------------------------
-
-project = 'ImSegm'
-copyright = imsegm.__copyright__
-author = imsegm.__author__
-
-# The short X.Y version
-version = imsegm.__version__
-# The full version, including alpha/beta/rc tags
-release = imsegm.__version__
 
 
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 
-needs_sphinx = '1.4'
+needs_sphinx = '2.2'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -75,6 +88,7 @@ extensions = [
     'sphinx.ext.linkcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
+    # 'sphinxcontrib.rsvgconverter'
     'recommonmark',
     # 'm2r',
     'nbsphinx',
@@ -109,7 +123,13 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['*tests.*', '*.test_*']
+exclude_patterns = [
+    'data_images',
+    '*tests.*', '*.test_*',
+    '*.so', '*.dll',
+    'modules.rst',
+    '*/transform-img-plane_inter-circle.ipynb'
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -131,7 +151,7 @@ html_theme = 'nature'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['_figures']  # , '_static', 'notebooks'
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -255,12 +275,12 @@ def setup(app):
 
 
 # copy all notebooks to local folder
-path_nbs = os.path.join(PATH_HERE, 'notebooks')
-if not os.path.isdir(path_nbs):
-    os.mkdir(path_nbs)
-for path_ipynb in glob.glob(os.path.join(PATH_ROOT, 'notebooks', '*.ipynb')):
-    path_ipynb2 = os.path.join(path_nbs, os.path.basename(path_ipynb))
-    shutil.copy(path_ipynb, path_ipynb2)
+path_docs_nbs = os.path.join(PATH_HERE, 'notebooks')
+if not os.path.isdir(path_docs_nbs):
+    os.mkdir(path_docs_nbs)
+for path_ipynb_in in glob.glob(os.path.join(PATH_ROOT, 'notebooks', '*.ipynb')):
+    path_ipynb_new = os.path.join(path_docs_nbs, os.path.basename(path_ipynb_in))
+    shutil.copy(path_ipynb_in, path_ipynb_new)
 
 
 # Ignoring Third-party packages
@@ -276,12 +296,6 @@ with open(os.path.join(PATH_ROOT, 'requirements.txt'), 'r') as fp:
 
 # TODO: better parse from package since the import name and package name may differ
 autodoc_mock_imports = MOCK_MODULES + ['sklearn', 'skimage', 'gco', 'yaml']
-
-
-# Options for the linkcode extension
-# ----------------------------------
-github_user = 'Borda'
-github_repo = 'pyImSegm'
 
 
 # Resolve function

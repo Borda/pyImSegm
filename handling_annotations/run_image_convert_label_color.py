@@ -12,12 +12,12 @@ Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 
-import os
-import sys
+import argparse
 import glob
 import json
 import logging
-import argparse
+import os
+import sys
 from functools import partial
 
 import numpy as np

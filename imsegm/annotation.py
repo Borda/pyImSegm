@@ -4,12 +4,12 @@ Framework for handling annotations
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
 import logging
+import os
 
-import tqdm
 import numpy as np
 import pandas as pd
+import tqdm
 from PIL import Image
 # from skimage import io
 from scipy import interpolate

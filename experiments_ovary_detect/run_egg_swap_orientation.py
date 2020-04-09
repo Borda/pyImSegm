@@ -10,10 +10,10 @@ Sample usage::
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
-import sys
 import glob
 import logging
+import os
+import sys
 from functools import partial
 
 import numpy as np

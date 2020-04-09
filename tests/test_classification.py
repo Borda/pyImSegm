@@ -4,10 +4,10 @@ Unit testing for particular segmentation module
 Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
+import logging
 import os
 import sys
 import unittest
-import logging
 
 import numpy as np
 from sklearn import metrics

@@ -21,17 +21,16 @@ Visualize::
 Copyright (C) 2015-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-import os
-import sys
 import glob
 import logging
+import os
+import sys
 from functools import partial
 
 import numpy as np
 import pandas as pd
 from scipy import ndimage
 from skimage import morphology, measure, draw
-
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utilities.data_io as tl_data
