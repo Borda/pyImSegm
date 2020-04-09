@@ -4,3 +4,4 @@ m2r  # fails with multi-line text
 nbsphinx
 pandoc
 docutils<0.15  # higher version breaks py2
+ipython
