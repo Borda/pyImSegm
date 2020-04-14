@@ -5,8 +5,8 @@ The output is list of potential center candidates
 Sample usage::
 
     python run_center_evaluation.py -list none \
-        -segs "data_images/drosophila_ovary_slice/segm/*.png" \
-        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -segs "data-images/drosophila_ovary_slice/segm/*.png" \
+        -imgs "data-images/drosophila_ovary_slice/image/*.jpg" \
         -centers "results/detect-centers-predict_ovary/centers/*.csv" \
         -out results/detect-centers-predict_ovary
 

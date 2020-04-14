@@ -24,15 +24,15 @@ from imsegm.superpixels import segment_slic_img2d
 from imsegm.region_growing import (
     RG2SP_THRESHOLDS, compute_shape_prior_table_cdf, compute_object_shapes,
     transform_rays_model_sets_mean_cdf_mixture, compute_segm_prob_fg,
-    region_growing_shape_slic_greedy, region_growing_shape_slic_graphcut)
+    region_growing_shape_slic_greedy, region_growing_shape_slic_graphcut
+)
+from tests import PATH_OUTPUT
 
-PATH_OVARY = os.path.join(update_path('data_images', absolute=True),
-                          'drosophila_ovary_slice')
+PATH_OVARY = os.path.join(update_path('data-images', absolute=True), 'drosophila_ovary_slice')
 PATH_IMAGE = os.path.join(PATH_OVARY, 'image')
 PATH_SEGM = os.path.join(PATH_OVARY, 'segm')
 PATH_ANNOT = os.path.join(PATH_OVARY, 'annot_eggs')
 PATH_CENTRE = os.path.join(PATH_OVARY, 'center_levels')
-PATH_OUTPUT = update_path('output', absolute=True)
 NAME_RG2SP_MODEL = 'RG2SP_multi-model_mixture.npz'
 PATH_PKL_MODEL = os.path.join(PATH_OUTPUT, NAME_RG2SP_MODEL)
 LABELS_FG_PROB = (0.05, 0.7, 0.9, 0.9)

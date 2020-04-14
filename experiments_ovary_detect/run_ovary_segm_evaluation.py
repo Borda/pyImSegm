@@ -46,7 +46,7 @@ NAME_DIR_VISUAL_3 = 'ALL_visualisation-3'
 SKIP_DIRS = ['input', 'simple',
              NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3]
 NAME_CSV_STAT = 'segmented-eggs_%s.csv'
-PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 PATHS = {
     'images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),

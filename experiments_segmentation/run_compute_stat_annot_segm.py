@@ -5,9 +5,9 @@ Specify the segmentation and annotation folder and optionaly the image folder
 Sample usage::
 
     python run_compute_stat_annot_segm.py \
-        -a "data_images/drosophila_ovary_slice/annot_struct/*.png" \
+        -a "data-images/drosophila_ovary_slice/annot_struct/*.png" \
         -s "results/experiment_segm-supervise_ovary/*.png" \
-        -i "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -i "data-images/drosophila_ovary_slice/image/*.jpg" \
         -o results/evaluation --drop_labels -1 --overlap 0.2 --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -39,7 +39,7 @@ import imsegm.classification as seg_clf
 NB_WORKERS = tl_expt.nb_workers(0.9)
 NAME_CVS_OVERALL = 'STATISTIC__%s___Overall.csv'
 NAME_CVS_PER_IMAGE = 'STATISTIC__%s___per-Image.csv'
-PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
+PATH_IMAGES = os.path.join(tl_data.update_path('data-images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SUFFIX_VISUAL = '___STAT-visual'

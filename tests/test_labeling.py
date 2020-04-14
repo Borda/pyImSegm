@@ -15,11 +15,8 @@ import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 from imsegm.utilities.data_samples import sample_segment_vertical_2d
-from imsegm.utilities.data_io import update_path
 from imsegm.labeling import binary_image_from_coords, contour_coords, compute_distance_map
-
-# set the output put directory
-PATH_OUTPUT = update_path('output', absolute=True)
+from tests import PATH_OUTPUT
 
 
 class TestLabels(unittest.TestCase):

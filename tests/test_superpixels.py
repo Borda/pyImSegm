@@ -13,15 +13,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-from imsegm.utilities.data_samples import (IMAGE_LENNA, load_sample_image,
-                                           sample_segment_vertical_2d,
-                                           sample_segment_vertical_3d)
-from imsegm.utilities.data_io import update_path
-from imsegm.superpixels import (segment_slic_img2d, make_graph_segm_connect_grid2d_conn4,
-                                make_graph_segm_connect_grid3d_conn6)
-
-# set default output path
-PATH_OUTPUT = update_path('output', absolute=True)
+from imsegm.utilities.data_samples import (
+    IMAGE_LENNA, load_sample_image, sample_segment_vertical_2d, sample_segment_vertical_3d)
+from imsegm.superpixels import (
+    segment_slic_img2d, make_graph_segm_connect_grid2d_conn4,
+    make_graph_segm_connect_grid3d_conn6)
+from tests import PATH_OUTPUT
 
 
 class TestSuperpixels(unittest.TestCase):

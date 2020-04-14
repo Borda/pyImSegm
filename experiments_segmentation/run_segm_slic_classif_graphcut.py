@@ -20,8 +20,8 @@ The output is set of segmented images.
 Sample usage::
 
     python run_segm_slic_classif_graphcut.py \
-        -l data_images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
-        -i "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -l data-images/drosophila_ovary_slice/list_imgs-annot-struct.csv \
+        -i "data-images/drosophila_ovary_slice/image/*.jpg" \
        --path_config experiments_segmentation/sample_config.yml \
         -o results -n Ovary --img_type 2d_split --visual
 
@@ -136,7 +136,7 @@ SEGM_PARAMS = {
     'gc_edge_type': 'model',
     'gc_use_trans': False,
 }
-PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
+PATH_IMAGES = os.path.join(tl_data.update_path('data-images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SEGM_PARAMS.update({

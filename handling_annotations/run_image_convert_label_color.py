@@ -4,9 +4,9 @@ Convert label image to colors and other way around
 SAMPLE run::
 
     python run_image_convert_label_color.py \
-        -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
-        -out data_images/drosophila_ovary_slice/segm_rgb \
-        -clrs data_images/drosophila_ovary_slice/segm_rgb/dict_label-color.json
+        -imgs "data-images/drosophila_ovary_slice/segm/*.png" \
+        -out data-images/drosophila_ovary_slice/segm_rgb \
+        -clrs data-images/drosophila_ovary_slice/segm_rgb/dict_label-color.json
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
@@ -27,8 +27,8 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
-PATH_INPUT = os.path.join('data_images', 'drosophila_ovary_slice', 'segm', '*.png')
-PATH_OUTPUT = os.path.join('data_images', 'drosophila_ovary_slice', 'segm_rgb')
+PATH_INPUT = os.path.join('data-images', 'drosophila_ovary_slice', 'segm', '*.png')
+PATH_OUTPUT = os.path.join('data-images', 'drosophila_ovary_slice', 'segm_rgb')
 NAME_JSON_DICT = 'dictionary_label-color.json'
 NB_WORKERS = tl_expt.nb_workers(0.9)
 

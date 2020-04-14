@@ -6,8 +6,8 @@ per image if the output path is given
 Sample usage::
 
     python run_eval_superpixels.py \
-        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
-        -segm "data_images/drosophila_ovary_slice/annot_eggs/*.png" \
+        -imgs "data-images/drosophila_ovary_slice/image/*.jpg" \
+        -segm "data-images/drosophila_ovary_slice/annot_eggs/*.png" \
         --img_type 2d_split \
         --slic_size 20 --slic_regul 0.25 --slico
 
@@ -41,7 +41,7 @@ from run_segm_slic_model_graphcut import TYPES_LOAD_IMAGE
 
 
 NB_WORKERS = tl_expt.nb_workers(0.9)
-PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
+PATH_IMAGES = os.path.join(tl_data.update_path('data-images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_CSV_DISTANCES = 'measured_boundary_distances' \

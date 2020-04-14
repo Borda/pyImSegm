@@ -28,7 +28,7 @@ SAMPLE_SEG_NB_CLASSES = 3
 SAMPLE_SEG_SIZE_3D_SMALL = (10, 5, 6)
 
 #: path to the folder with all sample image/data
-PATH_IMAGES = update_path('data_images')
+PATH_IMAGES = update_path('data-images')
 #: sample Lenna image
 IMAGE_LENNA = os.path.join('others', 'lena.png')
 #: sample image with three color objects of different shape

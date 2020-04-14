@@ -13,17 +13,14 @@ import numpy as np
 import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-from imsegm.utilities.data_samples import (load_sample_image, IMAGE_DROSOPHILA_OVARY_2D,
-                                           ANNOT_DROSOPHILA_OVARY_2D)
-from imsegm.utilities.data_io import update_path
+from imsegm.utilities.data_samples import (
+    load_sample_image, IMAGE_DROSOPHILA_OVARY_2D, ANNOT_DROSOPHILA_OVARY_2D)
 from imsegm.superpixels import segment_slic_img2d
-from imsegm.graph_cuts import (count_label_transitions_connected_segments,
-                               compute_pairwise_cost_from_transitions,
-                               estim_class_model_gmm, segment_graph_cut_general)
+from imsegm.graph_cuts import (
+    count_label_transitions_connected_segments, compute_pairwise_cost_from_transitions,
+    estim_class_model_gmm, segment_graph_cut_general)
 from imsegm.labeling import histogram_regions_labels_norm
-
-# set the output put directory
-PATH_OUTPUT = update_path('output', absolute=True)
+from tests import PATH_OUTPUT
 
 
 class TestGraphCut(unittest.TestCase):

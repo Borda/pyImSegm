@@ -8,7 +8,7 @@ Require installation of Morph. Snakes - https://github.com/Borda/morph-snakes ::
 Sample usage::
 
     python run_ovary_egg-segmentation.py \
-        -list data_images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
+        -list data-images/drosophila_ovary_slice/list_imgs-segm-center-points.csv \
         -out results -n ovary_slices --nb_workers 1 \
         -m ellipse_moments \
            ellipse_ransac_mmt \
@@ -92,7 +92,7 @@ RG2SP_THRESHOLDS = {  # thresholds for updating between iterations
 }
 COLUMNS_ELLIPSE = ('xc', 'yc', 'a', 'b', 'theta')
 
-PATH_DATA = tl_data.update_path('data_images', absolute=True)
+PATH_DATA = tl_data.update_path('data-images', absolute=True)
 PATH_IMAGES = os.path.join(PATH_DATA, 'drosophila_ovary_slice')
 # sample segmentation methods
 LIST_SAMPLE_METHODS = (

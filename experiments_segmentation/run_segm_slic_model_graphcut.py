@@ -14,8 +14,8 @@ Pipeline:
 Sample usage::
 
     python run_segm_slic_model_graphcut.py \
-       -l data_images/langerhans_islets/list_lang-isl_imgs-annot.csv \
-       -i "data_images/langerhans_islets/image/*.jpg" \
+       -l data-images/langerhans_islets/list_lang-isl_imgs-annot.csv \
+       -i "data-images/langerhans_islets/image/*.jpg" \
        -o results -n LangIsl --nb_classes 3 --nb_workers 2 --visual
 
 Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -103,8 +103,8 @@ SEGM_PARAMS = {
     'gc_edge_type': 'model',
     'gc_use_trans': False,
 }
-PATH_IMAGES = os.path.join(tl_data.update_path('data_images'), 'drosophila_disc')
-# PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'langerhans_islets'))
+PATH_IMAGES = os.path.join(tl_data.update_path('data-images'), 'drosophila_disc')
+# PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'langerhans_islets'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_EXPERIMENT = 'experiment_segm-unSupervised'
 SEGM_PARAMS.update({

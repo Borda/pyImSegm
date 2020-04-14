@@ -16,9 +16,9 @@ The output is list of potential center candidates
 Sample usage::
 
     python run_center_candidate_training.py -list none \
-        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
-        -segs "data_images/drosophila_ovary_slice/segm/*.png" \
-        -centers "data_images/drosophila_ovary_slice/center_levels/*.png" \
+        -imgs "data-images/drosophila_ovary_slice/image/*.jpg" \
+        -segs "data-images/drosophila_ovary_slice/segm/*.png" \
+        -centers "data-images/drosophila_ovary_slice/center_levels/*.png" \
         -out results -n ovary
 
 Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -102,7 +102,7 @@ CENTER_PARAMS = {
     'center_dist_thr': 50,  # distance to from annotated center as a point
 }
 
-PATH_IMAGES = os.path.join(tl_data.update_path('data_images'),
+PATH_IMAGES = os.path.join(tl_data.update_path('data-images'),
                            'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 CENTER_PARAMS.update({

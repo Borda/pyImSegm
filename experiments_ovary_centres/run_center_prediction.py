@@ -5,8 +5,8 @@ The output is list of potential center candidates.
 Sample usage::
 
     python run_center_prediction.py -list none \
-        -segs "data_images/drosophila_ovary_slice/segm/*.png" \
-        -imgs "data_images/drosophila_ovary_slice/image/*.jpg" \
+        -segs "data-images/drosophila_ovary_slice/segm/*.png" \
+        -imgs "data-images/drosophila_ovary_slice/image/*.jpg" \
         -centers results/detect-centers-train_ovary/classifier_RandForest.pkl \
         -out results -n ovary
 

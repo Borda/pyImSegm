@@ -9,7 +9,7 @@ Quantize annotation, common application:
 SAMPLE run::
 
     python run_image_color_quantization.py \
-        -imgs "data_images/drosophila_ovary_slice/segm_rgb/*.png" \
+        -imgs "data-images/drosophila_ovary_slice/segm_rgb/*.png" \
         -m position
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -30,7 +30,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
-PATH_IMAGES = os.path.join('data_images', 'drosophila_ovary_slice', 'segm_rgb', '*.png')
+PATH_IMAGES = os.path.join('data-images', 'drosophila_ovary_slice', 'segm_rgb', '*.png')
 NB_WORKERS = tl_expt.nb_workers(0.9)
 THRESHOLD_INVALID_PIXELS = 5e-3
 

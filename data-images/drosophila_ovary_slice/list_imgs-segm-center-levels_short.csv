@@ -1,0 +1,3 @@
+,path_image,path_centers,path_annot,path_segm
+1,data-images/drosophila_ovary_slice/image/insitu4358.jpg,data-images/drosophila_ovary_slice/center_levels/insitu4358.png,data-images/drosophila_ovary_slice/annot_eggs/insitu4358.png,data-images/drosophila_ovary_slice/segm/insitu4358.png
+2,data-images/drosophila_ovary_slice/image/insitu7545.tif,data-images/drosophila_ovary_slice/center_levels/insitu7545.png,data-images/drosophila_ovary_slice/annot_eggs/insitu7545.png,data-images/drosophila_ovary_slice/segm/insitu7545.png

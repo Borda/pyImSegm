@@ -4,7 +4,7 @@ Remove a label a inpant these pixels
 SAMPLE run::
 
     python run_image_annot_inpaint.py \
-        -imgs "data_images/drosophila_ovary_slice/segm/*.png" \
+        -imgs "data-images/drosophila_ovary_slice/segm/*.png" \
         --label 4 --nb_workers 2
 
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
@@ -25,7 +25,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
 import imsegm.annotation as seg_annot
 
-PATH_IMAGES = os.path.join('data_images', 'drosophila_ovary_slice', 'segm', '*.png')
+PATH_IMAGES = os.path.join('data-images', 'drosophila_ovary_slice', 'segm', '*.png')
 NB_WORKERS = tl_expt.nb_workers(0.9)
 
 

@@ -1,6 +1,0 @@
-,path_image,path_centers,path_annot,path_segm
-1,data_images/drosophila_ovary_slice/image/insitu4174.tif,data_images/drosophila_ovary_slice/center_levels/insitu4174.png,data_images/drosophila_ovary_slice/annot_eggs/insitu4174.png,data_images/drosophila_ovary_slice/segm/insitu4174.png
-2,data_images/drosophila_ovary_slice/image/insitu4358.tif,data_images/drosophila_ovary_slice/center_levels/insitu4358.png,data_images/drosophila_ovary_slice/annot_eggs/insitu4358.png,data_images/drosophila_ovary_slice/segm/insitu4358.png
-3,data_images/drosophila_ovary_slice/image/insitu7331.tif,data_images/drosophila_ovary_slice/center_levels/insitu7331.png,data_images/drosophila_ovary_slice/annot_eggs/insitu7331.png,data_images/drosophila_ovary_slice/segm/insitu7331.png
-4,data_images/drosophila_ovary_slice/image/insitu7544.tif,data_images/drosophila_ovary_slice/center_levels/insitu7544.png,data_images/drosophila_ovary_slice/annot_eggs/insitu7544.png,data_images/drosophila_ovary_slice/segm/insitu7544.png
-5,data_images/drosophila_ovary_slice/image/insitu7545.tif,data_images/drosophila_ovary_slice/center_levels/insitu7545.png,data_images/drosophila_ovary_slice/annot_eggs/insitu7545.png,data_images/drosophila_ovary_slice/segm/insitu7545.png

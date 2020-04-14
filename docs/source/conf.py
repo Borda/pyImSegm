@@ -56,15 +56,16 @@ with open(os.path.join(PATH_ROOT, 'README.md'), 'r') as fp:
     readme = fp.read()
 # replace all paths to relative
 readme = readme.replace('](docs/source/', '](')
+# Todo: this seems to replace only once per line
 readme = re.sub(r' \[(.*)\]\((?!http)(.*)\)',
                 r' [\1](https://github.com/%s/%s/blob/master/\2)' % (github_user, github_repo),
                 readme)
 # TODO: temp fix removing SVG badges and GIF, because PDF cannot show them
 readme = re.sub(r'(\[!\[.*\))', '', readme)
 readme = re.sub(r'(!\[.*.gif\))', '', readme)
-# for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
-#                  if os.path.isdir(p)):
-#     readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_ROOT, dir_name))
+for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
+                 if os.path.isdir(p)):
+    readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_ROOT, dir_name))
 with open('readme.md', 'w') as fp:
     fp.write(readme)
 
@@ -124,7 +125,7 @@ language = None
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
-    'data_images',
+    'data-images',
     '*tests.*', '*.test_*',
     '*.so', '*.dll',
     'modules.rst',
@@ -151,7 +152,7 @@ html_theme = 'nature'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_figures']  # , '_static', 'notebooks'
+html_static_path = []  # , '_static', 'notebooks'
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

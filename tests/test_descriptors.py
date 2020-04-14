@@ -15,21 +15,20 @@ import numpy as np
 from skimage import draw, transform
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-from imsegm.utilities.data_samples import (IMAGE_LENNA, load_sample_image,
-                                           sample_color_image_rand_segment)
-from imsegm.utilities.data_io import update_path
+from imsegm.utilities.data_samples import (
+    IMAGE_LENNA, load_sample_image, sample_color_image_rand_segment)
 from imsegm.utilities.drawing import figure_ray_feature
-from imsegm.descriptors import (cython_img2d_color_mean, create_filter_bank_lm_2d,
-                                compute_ray_features_segm_2d, shift_ray_features,
-                                reconstruct_ray_features_2d, FEATURES_SET_ALL,
-                                compute_selected_features_color2d)
+from imsegm.descriptors import (
+    cython_img2d_color_mean, create_filter_bank_lm_2d, compute_ray_features_segm_2d,
+    shift_ray_features, reconstruct_ray_features_2d, FEATURES_SET_ALL,
+    compute_selected_features_color2d)
 from imsegm.superpixels import segment_slic_img2d
+from tests import PATH_OUTPUT
 
 # angular step for Ray features
 ANGULAR_STEP = 15
 # size of subfigure for visualise the Filter bank
 SUBPLOT_SIZE_FILTER_BANK = 3
-PATH_OUTPUT = update_path('output', absolute=True)
 PATH_FIGURES_RAY = os.path.join(PATH_OUTPUT, 'temp_ray-features')
 # create the folder for visualisations
 if not os.path.exists(PATH_FIGURES_RAY):

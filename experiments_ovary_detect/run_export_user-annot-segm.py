@@ -38,7 +38,7 @@ import imsegm.utilities.drawing as tl_visu
 import imsegm.annotation as seg_annot
 
 NB_WORKERS = tl_expt.nb_workers(0.8)
-PATH_IMAGES = tl_data.update_path(os.path.join('data_images', 'drosophila_ovary_slice'))
+PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 DEFAULT_PARAMS = {
     'path_images': os.path.join(PATH_IMAGES, 'image', '*.jpg'),

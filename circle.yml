@@ -122,6 +122,11 @@ jobs:
       - *install_pips
       # DOCUMENTATION
       - *make_docs
+      # PREVIEW
+      - store_artifacts:
+          # allows us to preview the generated html pages
+          path: docs/build/html/
+          destination: html
 
 workflows:
   version: 2

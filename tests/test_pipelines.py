@@ -15,16 +15,16 @@ from skimage.transform import resize
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 import imsegm.descriptors
-from imsegm.utilities.data_samples import (load_sample_image, IMAGE_OBJECTS, IMAGE_STAR,
-                                           IMAGE_DROSOPHILA_OVARY_2D, ANNOT_DROSOPHILA_OVARY_2D)
-from imsegm.utilities.data_io import update_path
+from imsegm.utilities.data_samples import (
+    load_sample_image, IMAGE_OBJECTS, IMAGE_STAR,
+    IMAGE_DROSOPHILA_OVARY_2D, ANNOT_DROSOPHILA_OVARY_2D)
 from imsegm.utilities.drawing import figure_image_segm_results, figure_segm_graphcut_debug
 from imsegm.pipelines import (
     estim_model_classes_group, pipe_color2d_slic_features_model_graphcut,
     train_classif_color2d_slic_features, segment_color2d_slic_features_model_graphcut)
 from imsegm.descriptors import FEATURES_SET_TEXTURE_SHORT
+from tests import PATH_OUTPUT
 
-PATH_OUTPUT = update_path('output', absolute=True)
 # set default feature extracted from image
 FEATURES_TEXTURE = FEATURES_SET_TEXTURE_SHORT
 DEFAULT_SEGM_PARAMS = {'nb_classes': 2,

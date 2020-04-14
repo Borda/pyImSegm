@@ -17,12 +17,12 @@ from sklearn.metrics import adjusted_rand_score
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 from imsegm.utilities.data_io import update_path, load_image_2d
 from imsegm.utilities.drawing import ellipse, figure_ellipse_fitting
-from imsegm.ellipse_fitting import (get_slic_points_labels, ransac_segm, EllipseModelSegm,
-                                    prepare_boundary_points_ray_edge)
+from imsegm.ellipse_fitting import (
+    get_slic_points_labels, ransac_segm, EllipseModelSegm, prepare_boundary_points_ray_edge)
+from tests import PATH_OUTPUT
 
 # set some default paths
-PATH_OUTPUT = update_path('output', absolute=True)
-PATH_OVARY = os.path.join(update_path('data_images', absolute=True), 'drosophila_ovary_slice')
+PATH_OVARY = os.path.join(update_path('data-images', absolute=True), 'drosophila_ovary_slice')
 PATH_IMAGES = os.path.join(PATH_OVARY, 'image')
 PATH_SEGM = os.path.join(PATH_OVARY, 'segm')
 PATH_ANNOT = os.path.join(PATH_OVARY, 'annot_eggs')
