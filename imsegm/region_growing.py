@@ -1371,7 +1371,7 @@ def prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
     assert np.max(candidates) < len(slic_points), \
         'max candidate idx: %d for %d centres' \
         % (np.max(candidates), len(slic_points))
-    max_slic_neighbours = max(max(l) for l in slic_neighbours)
+    max_slic_neighbours = max(max(lb) for lb in slic_neighbours)
     assert max_slic_neighbours < len(slic_points), \
         'max slic neighbours idx: %d for %d centres' \
         % (max_slic_neighbours, len(slic_points))

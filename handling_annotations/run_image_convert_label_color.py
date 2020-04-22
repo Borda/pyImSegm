@@ -72,10 +72,10 @@ def load_dict_colours(path_json):
 def convert_labels_2_colors(img, dict_colors, path_out):
     img_labels = np.unique(img)
     if not all(lb in dict_colors.keys() for lb in img_labels):
-        for lb in (l for l in img_labels if l not in dict_colors.keys()):
+        for lb in (ll for ll in img_labels if ll not in dict_colors.keys()):
             dict_colors[lb] = tuple(np.random.randint(255, size=3))
-        with open(os.path.join(path_out, NAME_JSON_DICT), 'w') as f:
-            json.dump(dict_colors, f)
+        with open(os.path.join(path_out, NAME_JSON_DICT), 'w') as fp:
+            json.dump(dict_colors, fp)
     img_labels = seg_annot.convert_img_labels_to_colors(img, dict_colors)
     return img_labels
 

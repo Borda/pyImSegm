@@ -30,15 +30,15 @@ class TestLabels(unittest.TestCase):
         path_dir = os.path.join(PATH_OUTPUT, 'temp_labels')
         if not os.path.exists(path_dir):
             os.mkdir(path_dir)
-        for l in labs:
+        for lb in labs:
             fig, axarr = plt.subplots(nrows=2)
-            cnt = 1 - binary_image_from_coords(contour_coords(seg, l), seg.shape)
+            cnt = 1 - binary_image_from_coords(contour_coords(seg, lb), seg.shape)
             axarr[0].imshow(cnt, interpolation='nearest', cmap=plt.cm.Greys)
-            dist = compute_distance_map(seg, l)
+            dist = compute_distance_map(seg, lb)
             im = axarr[1].imshow(dist, cmap=plt.cm.jet)
             plt.colorbar(im, ax=axarr[1])
             fig.tight_layout()
-            fig.savefig(os.path.join(path_dir, 'contours_%i.png' % l))
+            fig.savefig(os.path.join(path_dir, 'contours_%i.png' % lb))
             if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
                 plt.show()
             plt.close(fig)

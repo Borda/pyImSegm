@@ -54,11 +54,11 @@ class BuildExt(build_ext):
 def _parse_requirements(file_path):
     with open(file_path) as fp:
         reqs = [r.rstrip() for r in fp.readlines() if not r.startswith('#')]
-        # drop all proprietary packages missing from PiPy
-        reqs = filter(lambda r: not r.startswith('http'), reqs)
-        # parse egg names if there are paths
-        reqs = [r[r.index(TEMP_EGG) + len(TEMP_EGG):] if TEMP_EGG in r else r for r in reqs]
-        return reqs
+    # drop all proprietary packages missing from PiPy
+    reqs = filter(lambda r: not r.startswith('http'), reqs)
+    # parse egg names if there are paths
+    reqs = [r[r.index(TEMP_EGG) + len(TEMP_EGG):] if TEMP_EGG in r else r for r in reqs]
+    return reqs
 
 
 setup_reqs = ['Cython', 'numpy']  # numpy v1.17 drops support for py2

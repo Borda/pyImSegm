@@ -8,7 +8,7 @@ Contents
    :maxdepth: 2
 
    readme
-   imsegm
+   api/imsegm
    examples
 
 Indices and tables

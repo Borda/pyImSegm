@@ -386,8 +386,8 @@ def mask_segm_labels(img_labeling, labels, mask_init=None):
         mask = np.full(img_labeling.shape, False, dtype=bool)
     else:
         mask = mask_init.copy()
-    for l in labels:
-        mask = np.logical_or(mask, (img_labeling == l))
+    for lb in labels:
+        mask = np.logical_or(mask, (img_labeling == lb))
     return mask
 
 
@@ -422,7 +422,7 @@ def sequence_labels_merge(labels_stack, dict_colors, labels_free, change_label=-
     im_labels = np.full(labels_stack.shape[1:], change_label, dtype=np.int)
     labels_used = [lb for lb in dict_colors if lb not in labels_free]
     lb_all = labels_used + labels_free + [change_label]
-    assert all(l in lb_all for l in np.unique(labels_stack)), 'some extra labels in image stack'
+    assert all(lb in lb_all for lb in np.unique(labels_stack)), 'some extra labels in image stack'
     # generate mask of free labels
     mask_free = mask_segm_labels(labels_stack, labels_free)
     for lb in labels_used:

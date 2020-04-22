@@ -128,7 +128,7 @@ exclude_patterns = [
     'data-images',
     '*tests.*', '*.test_*',
     '*.so', '*.dll',
-    'modules.rst',
+    'api/modules.rst',
     '*/transform-img-plane_inter-circle.ipynb'
 ]
 
@@ -258,8 +258,11 @@ PACKAGES = [imsegm.__name__]
 
 def run_apidoc(_):
     for pkg in PACKAGES:
-        argv = ['-e', '-o', PATH_HERE, os.path.join(PATH_HERE, PATH_ROOT, pkg),
-                'tests/*', '--force']
+        argv = ['-e',
+                '-o', os.path.join(PATH_HERE, 'api'),
+                os.path.join(PATH_HERE, PATH_ROOT, pkg),
+                'tests/*',
+                '--force']
         try:
             # Sphinx 1.7+
             from sphinx.ext import apidoc

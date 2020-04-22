@@ -335,8 +335,8 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     eval_str = 'EVALUATION: {:<2} PRE: {:.3f} REC: {:.3f} F1: {:.3f} S: {:>6}'
     try:
         p, r, f, s = metrics.precision_recall_fscore_support(y_true, y_pred)
-        for l, _ in enumerate(p):
-            logging.debug(eval_str.format(l, p[l], r[l], f[l], s[l]))
+        for lb, _ in enumerate(p):
+            logging.debug(eval_str.format(lb, p[lb], r[lb], f[lb], s[lb]))
     except Exception:
         logging.exception('metrics.precision_recall_fscore_support')
 

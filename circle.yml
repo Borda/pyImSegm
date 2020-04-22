@@ -17,12 +17,19 @@ references:
 
   test_coverage: &test_coverage
     run:
-      name: Testing and Formating
+      name: Testing and coverage
       command: |
         unset DISPLAY
         mkdir output && mkdir results && mkdir test-reports
         coverage run --source imsegm -m py.test imsegm tests -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
+        coverage report
         python setup.py check --metadata --strict
+
+  formatting: &formatting
+    run:
+      name: Formatting
+      command: |
+        pip install flake8 -q
         flake8 .
 
   build_project: &build_project
@@ -53,6 +60,13 @@ references:
 
 
 jobs:
+  Formatting:
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - *formatting
+
   Py3-Tests:
     docker:
       - image: circleci/python:3.6
@@ -132,6 +146,7 @@ workflows:
   version: 2
   build:
     jobs:
+      - Formatting
       - Py2-Tests
       - Py3-Tests
       - Py2-Experiments

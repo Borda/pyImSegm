@@ -603,7 +603,7 @@ def filter_boundary_points(segm, slic):
 
     # border point nex to foreground
     filter_bg = np.logical_and(labels == 0, neighbour_labels[:, 0] < 1)
-    # fulucul cels next to backround
+    # fulicul cells next to background
     filter_fc = np.logical_and(labels == 1, neighbour_labels[:, 0] > 0)
     points = slic_centers[np.logical_or(filter_bg, filter_fc)]
 
@@ -622,9 +622,11 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, relative_compact=0.3
     >>> ell_params = 50, 100, 40, 60, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)
     >>> pts = prepare_boundary_points_close(seg, [(40, 90)])
-    >>> sorted(np.round(pts).tolist())  # doctest: +NORMALIZE_WHITESPACE
-    [[[6, 85], [8, 150], [16, 109], [27, 139], [32, 77], [36, 41], [34, 177],
-    [59, 161], [54, 135], [67, 62], [64, 33], [84, 150], [91, 48], [92, 118]]]
+    >>> pts  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    [array([[  6,  85],
+            [  8, 150],
+            ...
+            [ 92, 118]])]
     """
     slic = segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
                               relative_compact=relative_compact)

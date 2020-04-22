@@ -82,8 +82,8 @@ def sample_segment_vertical_2d(seg_size=SAMPLE_SEG_SIZE_2D_SMALL,
     """
     cls_vals = []
     cls_size = (seg_size[1], int(seg_size[0] / nb_labels))
-    for l in range(nb_labels):
-        cls_vals.append(l * np.ones(cls_size))
+    for lb in range(nb_labels):
+        cls_vals.append(lb * np.ones(cls_size))
     seg = np.hstack(tuple(cls_vals))
     seg = np.array(seg, dtype=np.int)
     return seg
@@ -108,10 +108,10 @@ def sample_segment_vertical_3d(seg_size=SAMPLE_SEG_SIZE_3D_SMALL,
            [4, 4, 4, 4, 4]])
     """
     seg = []
-    for l in range(int(levels)):
+    for lb in range(int(levels)):
         seg_2d = sample_segment_vertical_2d(seg_size[:2], nb_labels)
         for _ in range(int(seg_size[2] / levels)):
-            seg.append(seg_2d.copy() + l * nb_labels)
+            seg.append(seg_2d.copy() + lb * nb_labels)
     seg = np.array(seg, dtype=np.int)
     return seg
 
