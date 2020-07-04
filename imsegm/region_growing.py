@@ -747,7 +747,7 @@ def compute_centre_moment_points(points):
         theta = 0
 
     theta = (360 + round(np.rad2deg(theta))) % 360
-    return centre, theta
+    return centre, float(theta)
 
 
 def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
@@ -845,7 +845,7 @@ def compute_update_shape_costs_points_table_cdf(lut_shape_cost, points, labels,
         lut_shape_cost[:, i + 1] = - np.log(shape_proba + MIN_SHAPE_PROB)
 
     lut_shape_cost[np.isinf(lut_shape_cost)] = GC_REPLACE_INF
-    return lut_shape_cost, np.array(centres), np.array(shifts), volumes
+    return lut_shape_cost, np.array(centres), np.array(shifts, dtype=float), volumes
 
 
 def compute_update_shape_costs_points_close_mean_cdf(
@@ -975,7 +975,7 @@ def compute_update_shape_costs_points_close_mean_cdf(
         lut_shape_cost[:, i + 1] = - np.log(shape_proba + MIN_SHAPE_PROB)
 
     lut_shape_cost[np.isinf(lut_shape_cost)] = GC_REPLACE_INF
-    return lut_shape_cost, np.array(centres), np.array(shifts), volumes
+    return lut_shape_cost, np.array(centres), np.array(shifts, dtype=float), volumes
 
 
 def compute_data_costs_points(slic, slic_prob_fg, centres, labels):

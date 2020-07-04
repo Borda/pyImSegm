@@ -1,4 +1,4 @@
-six >= 1.7.3
+six >= 1.10
 Cython >= 0.28  # 0.27 fails with python 3.7
 numpy >= 1.13.3  # version 1.16 breaks skimage 0.14
 scipy >= 1.0

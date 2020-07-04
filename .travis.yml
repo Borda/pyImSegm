@@ -16,8 +16,8 @@ matrix:
   include:
     - dist: xenial  # Ubuntu 16.04
       python: 2.7
-    - dist: xenial  # Ubuntu 16.04
-      python: 3.5
+    #- dist: xenial  # Ubuntu 16.04
+    #  python: 3.5
     - dist: xenial  # Ubuntu 16.04
       python: 3.6
       env: MIN_REQUIREMENTS=1
@@ -26,8 +26,11 @@ matrix:
     #  env: MIN_REQUIREMENTS=1
     - dist: bionic  # Ubuntu 18.04
       python: 3.6
+      env: MIN_REQUIREMENTS=1
     - dist: bionic  # Ubuntu 18.04
       python: 3.7
+    - dist: bionic  # Ubuntu 18.04
+      python: 3.8
 
 # See http://docs.travis-ci.com/user/caching/#pip-cache
 cache: pip
