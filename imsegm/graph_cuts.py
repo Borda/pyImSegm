@@ -5,14 +5,15 @@ Copyright (C) 2014-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
+from warnings import warn
 
 import numpy as np
 
 try:
     from gco import cut_general_graph
-except Exception:
-    print('WARNING: Missing Grah-Cut (GCO) library,'
-          ' please install it from https://github.com/Borda/pyGCO.')
+except ImportError:
+    warn('Missing Grah-Cut (GCO) library,'
+         ' please install it from https://github.com/Borda/pyGCO.')
 from skimage import filters
 from sklearn import metrics, preprocessing
 from sklearn import pipeline, cluster, mixture, decomposition

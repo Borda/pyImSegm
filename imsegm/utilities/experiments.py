@@ -392,7 +392,7 @@ class WrapExecuteSequence:
     def __iter__(self):
         tqdm_bar = None
         if self.desc is not None:
-            desc = '%r @%i-threads' % (self.desc, self.nb_workers)
+            desc = '%s @%i-threads' % (self.desc, self.nb_workers)
             tqdm_bar = tqdm.tqdm(total=len(self), desc=desc)
 
         if self.nb_workers > 1:

@@ -87,7 +87,7 @@ def perform_stage(df_group, stage, path_images, path_out):
     stat_a = NORM_FUNC(df_group['ellipse_a'])
     stat_b = NORM_FUNC(df_group['ellipse_b'])
     norm_size = (int(stat_b), int(stat_a))
-    logging.info('normal dimension is %r' % norm_size)
+    logging.info('normal dimension is {}'.format(norm_size))
 
     path_out_stage = os.path.join(path_out, str(stage))
     if not os.path.isdir(path_out_stage):

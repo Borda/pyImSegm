@@ -84,7 +84,7 @@ def visualise_overlap(path_img, path_seg, path_out,
     segm_alpha = tl_visu.norm_aplha(segm_alpha)
 
     if b_relabel:
-        seg, _, _ = segmentation.relabel_sequential(seg)
+        seg, _, _ = segmentation.relabel_sequential(seg.copy())
 
     if img.ndim == 2:  # for gray images of ovary
         img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)

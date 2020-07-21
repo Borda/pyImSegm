@@ -173,8 +173,8 @@ def load_landmarks_csv(path_file):
     assert os.path.exists(path_file), 'missing "%s"' % path_file
     df = pd.read_csv(path_file, index_col=0)
     landmarks = df[COLUMNS_COORDS].values.tolist()
-    logging.debug(' load_landmarks_csv (%i): \n%r', len(landmarks),
-                  np.asarray(landmarks).astype(int).tolist())
+    logging.debug(' load_landmarks_csv (%i): \n%r',
+                  len(landmarks), np.asarray(landmarks).astype(int).tolist())
     return landmarks
 
 

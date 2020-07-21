@@ -7,6 +7,7 @@ Copyright (C) 2016-2018 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import logging
+from warnings import warn
 
 import numpy as np
 from scipy import stats, ndimage, interpolate
@@ -15,9 +16,9 @@ from sklearn import cluster, mixture
 
 try:
     from gco import cut_general_graph, cut_grid_graph
-except Exception:
-    print('WARNING: Missing Grah-Cut (GCO) library,'
-          ' please install it from https://github.com/Borda/pyGCO.')
+except ImportError:
+    warn('Missing Grah-Cut (GCO) library,'
+         ' please install it from https://github.com/Borda/pyGCO.')
 
 from imsegm.graph_cuts import MAX_PAIRWISE_COST, get_vertexes_edges, compute_spatial_dist
 from imsegm.labeling import histogram_regions_labels_norm

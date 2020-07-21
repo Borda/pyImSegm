@@ -279,8 +279,7 @@ def quantize_image_nearest_color(img, colors):
 
 def image_inpaint_pixels(img, valid_mask):
     assert img.shape == valid_mask.shape, \
-        'image size %r and mask size %r should be equal' \
-        % (img.shape, valid_mask.shape)
+        'image size %r and mask size %r should be equal' % (img.shape, valid_mask.shape)
     coords = np.array(np.nonzero(valid_mask)).T
     values = img[valid_mask]
     it = interpolate.NearestNDInterpolator(coords, values)

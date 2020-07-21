@@ -7,7 +7,7 @@ references:
       name: Install PyPI dependences
       command: |
         sudo apt-get update -qq
-        sudo apt-get install git-lfs
+        #sudo apt-get install git-lfs
         sudo apt-get install tk-dev pkg-config python-dev python-tk
         sudo pip install --upgrade pip setuptools
         sudo pip install -r ./tests/requirements.txt
@@ -21,7 +21,7 @@ references:
       command: |
         unset DISPLAY
         mkdir output && mkdir results && mkdir test-reports
-        coverage run --source imsegm -m py.test imsegm tests -v --doctest-modules --junitxml=test-reports/pytest_junit.xml
+        coverage run --source imsegm -m py.test imsegm tests -v --junitxml=test-reports/pytest_junit.xml
         coverage report
         python setup.py check --metadata --strict
 
@@ -149,6 +149,6 @@ workflows:
       - Formatting
       - Py2-Tests
       - Py3-Tests
-      - Py2-Experiments
-      - Py3-Experiments
+      #- Py2-Experiments
+      #- Py3-Experiments
       - Build-Docs

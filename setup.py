@@ -19,6 +19,8 @@ Copyright (C) 2014-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
 import os
+import sys
+
 try:
     from setuptools import setup, Extension  # , find_packages, Command
     from setuptools.command.build_ext import build_ext
@@ -61,7 +63,11 @@ def _parse_requirements(file_path):
     return reqs
 
 
-setup_reqs = ['Cython', 'numpy']  # numpy v1.17 drops support for py2
+if sys.version_info.major == 2:
+    # numpy v1.17 drops support for py2
+    setup_reqs = ['Cython', 'numpy<1.17']
+else:
+    setup_reqs = ['Cython', 'numpy']
 install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
 

@@ -1,0 +1,88 @@
+name: CI experiments
+
+# see: https://help.github.com/en/actions/reference/events-that-trigger-workflows
+on:  # Trigger the workflow on push or pull request, but only for the master branch
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  pytest:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04]
+        python-version: [2.7, 3.6, 3.7, 3.8]
+
+    # Timeout: https://stackoverflow.com/a/59076067/4521646
+    timeout-minutes: 35
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    # Note: This uses an internal pip API and may not always work
+    # https://github.com/actions/cache/blob/master/examples.md#multiple-oss-in-a-workflow
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-py${{ matrix.python-version }}-
+
+    - name: Set py2.7 dependencies
+      if: matrix.python-version == 2.7
+      run: |
+        cp -r requirements-py27.txt requirements.txt
+
+    - name: install ImSegm
+      run: |
+        python --version
+        pip --version
+        pip install wheel --quiet
+        pip install https://github.com/Borda/pyGCO/archive/master.zip
+        pip install . --user
+        rm -rf imsegm
+        pip list
+        # create filders
+        mkdir libs
+        mkdir output
+        mkdir results
+
+    - name: ANNOTATION section
+      env:
+        DISPLAY: ""
+      run: |
+        bash handling_annotations/test_annotations.sh
+
+    - name: SEGMENTATION section
+      env:
+        DISPLAY: ""
+      run: |
+        bash experiments_segmentation/test_segmentations.sh
+
+    - name: CENTER DETECT. section
+      env:
+        DISPLAY: ""
+      run: |
+        bash experiments_ovary_centres/test_ovary_centers.sh
+
+    - name: REGION GROWING section
+      env:
+        DISPLAY: ""
+      run: |
+        bash experiments_ovary_detect/test_ovary_detect.sh
+
+    - name: remove ImSegm
+      env:
+        DISPLAY: ""
+      run: |
+        # just to not being cached
+        pip uninstall -y imsegm

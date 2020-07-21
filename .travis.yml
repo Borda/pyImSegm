@@ -27,8 +27,8 @@ matrix:
     - dist: bionic  # Ubuntu 18.04
       python: 3.6
       env: MIN_REQUIREMENTS=1
-    - dist: bionic  # Ubuntu 18.04
-      python: 3.7
+    #- dist: bionic  # Ubuntu 18.04
+    #  python: 3.7
     - dist: bionic  # Ubuntu 18.04
       python: 3.8
 
@@ -63,7 +63,7 @@ before_script:
 script:
   - python setup.py build_ext --inplace
   # - pytest imsegm -v --doctest-modules
-  - coverage run -m py.test imsegm tests --doctest-modules --flake8
+  - coverage run --source imsegm -m py.test imsegm tests  # --flake8
   # - nosetests imsegm tests -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
   - python setup.py install --dry-run
 
@@ -72,13 +72,3 @@ after_success:
   - coverage xml
   - python-codacy-coverage -r coverage.xml
   - coverage report
-  # ANNOTATION section
-  #- bash handling_annotations/test_annotations.sh
-  # SEGMENTATION section
-  #- bash experiments_segmentation/test_segmentations.sh
-  # CENTER DETECT. section
-  #- bash experiments_ovary_centres/test_ovary_centers.sh
-  # REGION GROWING section
-  #- bash experiments_ovary_detect/test_ovary_detect.sh
-  # test installed package
-  #- cd .. && python -c "import imsegm.descriptors"

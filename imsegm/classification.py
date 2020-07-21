@@ -508,7 +508,7 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     >>> import shutil
     >>> shutil.rmtree(path_out, ignore_errors=True)
     """
-    logging.info('Feature selection for %r', names)
+    logging.info('Feature selection for %s', names)
     features = np.array(features) if not isinstance(features, np.ndarray) else features
     labels = np.array(labels) if not isinstance(labels, np.ndarray) else labels
     logging.debug('Features: %r and labels: %r', features.shape, labels.shape)
@@ -571,7 +571,7 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None,
     'TESTINNG'
     >>> os.remove(p_clf)
     """
-    assert os.path.isdir(path_out), 'missing folder: %r' % path_out
+    assert os.path.isdir(path_out), 'missing folder: %s' % path_out
     dict_classif = {
         'params': params,
         'name': clf_name,
