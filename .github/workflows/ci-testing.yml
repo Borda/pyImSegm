@@ -81,7 +81,7 @@ jobs:
         python setup.py check --metadata --strict
         python setup.py install --dry-run --user
         python setup.py build_ext --inplace
-        coverage run --source imsegm -m py.test imsegm tests --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
+        coverage run --source imsegm -m pytest imsegm tests --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
         flake8 .
 
     - name: Upload pytest test results

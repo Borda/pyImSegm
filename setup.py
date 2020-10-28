@@ -66,9 +66,10 @@ def _parse_requirements(file_path):
 if sys.version_info.major == 2:
     # numpy v1.17 drops support for py2
     setup_reqs = ['Cython', 'numpy<1.17']
+    install_reqs = _parse_requirements(os.path.join(HERE, 'requirements-py27.txt'))
 else:
     setup_reqs = ['Cython', 'numpy']
-install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
+    install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
 
 setup(

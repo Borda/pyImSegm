@@ -21,7 +21,7 @@ references:
       command: |
         unset DISPLAY
         mkdir output && mkdir results && mkdir test-reports
-        coverage run --source imsegm -m py.test imsegm tests -v --junitxml=test-reports/pytest_junit.xml
+        coverage run --source imsegm -m pytest imsegm tests -v --junitxml=test-reports/pytest_junit.xml
         coverage report
         python setup.py check --metadata --strict
 

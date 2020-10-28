@@ -1,6 +1,6 @@
 # Image segmentation toolbox
 
-[![Build Status](https://travis-ci.org/Borda/pyImSegm.svg?branch=master)](https://travis-ci.org/Borda/pyImSegm)
+[![Build Status](https://travis-ci.com/Borda/pyImSegm.svg?branch=master)](https://travis-ci.com/Borda/pyImSegm)
 [![codecov](https://codecov.io/gh/Borda/pyImSegm/branch/master/graph/badge.svg?token=BCvf6F5sFP)](https://codecov.io/gh/Borda/pyImSegm)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/48b7976bbe9d42bc8452f6f9e573ee70)](https://www.codacy.com/app/Borda/pyImSegm?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Borda/pyImSegm&amp;utm_campaign=Badge_Grade)
 [![CircleCI](https://circleci.com/gh/Borda/pyImSegm.svg?style=svg&circle-token=a30180a28ae7e490c0c0829d1549fcec9a5c59d0)](https://circleci.com/gh/Borda/pyImSegm)

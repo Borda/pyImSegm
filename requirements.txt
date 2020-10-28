@@ -2,8 +2,8 @@ six >= 1.10
 Cython >= 0.28  # 0.27 fails with python 3.7
 numpy >= 1.13.3  # version 1.16 breaks skimage 0.14
 scipy >= 1.0
-pandas >= 0.19
-pillow >= 4.0, < 7  # fail loading JPG images
+pandas >= 0.21
+pillow >= 4.0, != 7  # fail loading JPG images
 matplotlib >= 2.0.2
 scikit-learn >= 0.18.1
 scikit-image >= 0.13.0

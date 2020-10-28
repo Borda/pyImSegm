@@ -63,7 +63,7 @@ before_script:
 script:
   - python setup.py build_ext --inplace
   # - pytest imsegm -v --doctest-modules
-  - coverage run --source imsegm -m py.test imsegm tests  # --flake8
+  - coverage run --source imsegm -m pytest imsegm tests  # --flake8
   # - nosetests imsegm tests -v --exe --with-doctest --with-xunit --with-coverage --cover-package=imsegm
   - python setup.py install --dry-run
 

@@ -21,8 +21,9 @@ import re
 
 import m2r
 
-PATH_ROOT = os.path.join('..', '..')
+PATH_UP = os.path.join('..', '..')
 PATH_HERE = os.path.abspath(os.path.dirname(__file__))
+PATH_ROOT = os.path.realpath(os.path.join(PATH_HERE, PATH_UP))
 sys.path.insert(0, os.path.abspath(PATH_ROOT))
 
 import imsegm  # noqa: E402
@@ -65,7 +66,7 @@ readme = re.sub(r'(\[!\[.*\))', '', readme)
 readme = re.sub(r'(!\[.*.gif\))', '', readme)
 for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
                  if os.path.isdir(p)):
-    readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_ROOT, dir_name))
+    readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_UP, dir_name))
 with open('readme.md', 'w') as fp:
     fp.write(readme)
 
@@ -74,7 +75,7 @@ with open('readme.md', 'w') as fp:
 
 # If your documentation needs a minimal Sphinx version, state it here.
 
-needs_sphinx = '2.2'
+needs_sphinx = '2.4'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -260,7 +261,7 @@ def run_apidoc(_):
     for pkg in PACKAGES:
         argv = ['-e',
                 '-o', os.path.join(PATH_HERE, 'api'),
-                os.path.join(PATH_HERE, PATH_ROOT, pkg),
+                os.path.join(PATH_ROOT, pkg),
                 'tests/*',
                 '--force']
         try:
