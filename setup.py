@@ -79,11 +79,10 @@ setup(
     author=imsegm.__author__,
     author_email=imsegm.__author_email__,
     license=imsegm.__license__,
-    description='General superpixel image segmentation:'
-                ' (un)supervised, center detection, region growing',
+    description=imsegm.__doc__,
     keywords='image segmentation region-growing center-detection ellipse-fitting',
 
-    long_description=imsegm.__doc__,
+    long_description=imsegm.__long_doc__,
     long_description_content_type='text/markdown',
 
     packages=['imsegm', 'imsegm.utilities'],

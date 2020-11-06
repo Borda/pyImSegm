@@ -82,7 +82,6 @@ jobs:
         python setup.py install --dry-run --user
         python setup.py build_ext --inplace
         coverage run --source imsegm -m pytest imsegm tests --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
-        flake8 .
 
     - name: Upload pytest test results
       uses: actions/upload-artifact@master

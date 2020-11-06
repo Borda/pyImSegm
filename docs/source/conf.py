@@ -290,6 +290,22 @@ for path_ipynb_in in glob.glob(os.path.join(PATH_ROOT, 'notebooks', '*.ipynb')):
 
 # Ignoring Third-party packages
 # https://stackoverflow.com/questions/15889621/sphinx-how-to-exclude-imports-in-automodule
+PACKAGE_MAPPING = {
+    'scikit-learn': 'sklearn',
+    'scikit-image': 'skimage',
+    'pillow': 'PIL',
+    'pygco': 'gco',
+    'pyyaml': 'yaml',
+}
+
+
+def _map_pkg(pypi_name):
+    name = pypi_name
+    for k in PACKAGE_MAPPING:
+        if pypi_name.lower() in k:
+            name = PACKAGE_MAPPING[k]
+    return name
+
 
 MOCK_MODULES = []
 with open(os.path.join(PATH_ROOT, 'requirements.txt'), 'r') as fp:
@@ -298,9 +314,9 @@ with open(os.path.join(PATH_ROOT, 'requirements.txt'), 'r') as fp:
         pkg = ln[:min(found)] if found else ln
         if pkg.rstrip():
             MOCK_MODULES.append(pkg.rstrip())
-
-# TODO: better parse from package since the import name and package name may differ
-autodoc_mock_imports = MOCK_MODULES + ['sklearn', 'skimage', 'gco', 'yaml']
+# map PyPI packages to python imports
+# autodoc_mock_imports = [PACKAGE_MAPPING.get(pkg.lower(), pkg) for pkg in MOCK_MODULES]
+autodoc_mock_imports = [_map_pkg(pkg) for pkg in MOCK_MODULES]
 
 
 # Resolve function
