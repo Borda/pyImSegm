@@ -433,25 +433,25 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
     >>> np.random.seed(0)
     >>> img_true = np.random.randint(0, 3, (50, 100))
     >>> img_pred = np.random.randint(0, 2, (50, 100))
-    >>> df = compute_stat_per_image([img_true], [img_true], nb_workers=2,
-    ...                             relabel=True)
-    >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    ARS                                                         1
-    accuracy                                                    1
+    >>> df = compute_stat_per_image([img_true], [img_true], nb_workers=2, relabel=True)
+    >>> out = pd.to_numeric(df.iloc[0], downcast='float', errors='ignore').sort_index()
+    >>> out  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    ARS                                                       1.0
+    accuracy                                                  1.0
     confusion          [[1672, 0, 0], [0, 1682, 0], [0, 0, 1646]]
-    f1_macro                                                    1
-    precision_macro                                             1
-    recall_macro                                                1
+    f1_macro                                                  1.0
+    precision_macro                                           1.0
+    recall_macro                                              1.0
     support_macro                                            None
     Name: 0, dtype: object
     >>> df = compute_stat_per_image([img_true], [img_pred], drop_labels=[-1])
     >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ARS                                                       0.0...
-    accuracy                                                  0.3384
+    accuracy                                                0.338...
     confusion          [[836, 826, 770], [836, 856, 876], [0, 0, 0]]
-    f1_macro                                                0.270077
-    precision_macro                                         0.336306
-    recall_macro                                            0.225694
+    f1_macro                                                0.270...
+    precision_macro                                         0.336...
+    recall_macro                                            0.225...
     support_macro                                               None
     Name: 0, dtype: object
     """
