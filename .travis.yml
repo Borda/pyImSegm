@@ -49,6 +49,7 @@ before_install:
 
 install:
   - mkdir libs
+  - pip install "pip<20.3"  # some tests failing on 3.8
   - pip install -r requirements-ci.txt -U
   - pip install -r ./tests/requirements.txt
   - pip list
