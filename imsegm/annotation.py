@@ -143,8 +143,7 @@ def convert_img_labels_to_colors(segm, lut_label_colors):
            [ 0.9,  0.2,  0.9,  0.2,  0.9,  0.2,  0.9]])
     """
     assert all(lb in lut_label_colors.keys() for lb in np.unique(segm)), \
-        'some labels %r are missing in dictionary %r' \
-        % (np.unique(segm), lut_label_colors.keys())
+        'some labels %r are missing in dictionary %r' % (np.unique(segm), lut_label_colors.keys())
     # init Look-Up-Table
     min_label = np.min(segm)
     nb_labels = np.max(segm) - min_label + 1

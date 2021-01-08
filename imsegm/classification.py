@@ -433,6 +433,7 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
     >>> img_true = np.random.randint(0, 3, (50, 100))
     >>> img_pred = np.random.randint(0, 2, (50, 100))
     >>> df = compute_stat_per_image([img_true], [img_true], nb_workers=2, relabel=True)
+    >>> _org_float_format = pd.options.display.float_format
     >>> pd.options.display.float_format = '{:,.3f}'.format
     >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     ARS                                                     1.000
@@ -453,10 +454,10 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
     recall_macro                                               0.226
     support_macro                                               None
     Name: 0, dtype: object
+    >>> pd.options.display.float_format = _org_float_format
     """
     assert len(segms) == len(annots), \
-        'size of segment. (%i) amd annot. (%i) should be equal' \
-        % (len(segms), len(annots))
+        'size of segment. (%i) amd annot. (%i) should be equal' % (len(segms), len(annots))
     if not names:
         names = map(str, range(len(segms)))
     _compute_stat = partial(compute_classif_stat_segm_annot, drop_labels=drop_labels, relabel=relabel)
@@ -716,13 +717,15 @@ def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
         # find the best params for the classif.
         logging.debug('Performing param search...')
         nb_labels = len(np.unique(labels))
-        clf_search = create_classif_search(clf_name, clf_pipeline,
-                                           nb_labels=nb_labels,
-                                           search_type=search_type,
-                                           cross_val=cross_val,
-                                           eval_metric=eval_metric,
-                                           nb_iter=nb_search_iter,
-                                           nb_workers=nb_workers)
+        clf_search = create_classif_search(
+            clf_name, clf_pipeline,
+            nb_labels=nb_labels,
+            search_type=search_type,
+            cross_val=cross_val,
+            eval_metric=eval_metric,
+            nb_iter=nb_search_iter,
+            nb_workers=nb_workers,
+        )
 
         # NOTE, this is temporal just for purposes of computing statistic
         clf_search.fit(features, relabel_sequential(labels))
@@ -803,9 +806,9 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
             if len(uq_labels) <= 2:
                 # NOTE, this is temporal just for purposes of computing stat.
                 labels = relabel_sequential(labels, uq_labels)
-            scores = model_selection.cross_val_score(classif, features, labels,
-                                                     cv=cross_val,
-                                                     scoring=scoring)
+            scores = model_selection.cross_val_score(
+                classif, features, labels, cv=cross_val, scoring=scoring,
+            )
             logging.info('Cross-Val score (%s = %f):\n %r',
                          scoring, np.mean(scores), scores)
             df_scoring[scoring] = scores
@@ -1013,8 +1016,7 @@ def shuffle_features_labels(features, labels):
     False
     """
     assert len(features) == len(labels), \
-        'features (%i) and labels (%i) should have equal length' \
-        % (len(features), len(labels))
+        'features (%i) and labels (%i) should have equal length' % (len(features), len(labels))
     idx = list(range(len(labels)))
     logging.debug('shuffle indexes - %i', len(labels))
     np.random.shuffle(idx)
@@ -1099,8 +1101,7 @@ def down_sample_dict_features_kmean(dict_features, nb_samples):
         if len(features) <= nb_samples:
             dict_features_new[label] = features.copy()
             continue
-        kmeans = cluster.KMeans(n_clusters=nb_samples, init='random', n_init=3,
-                                max_iter=5, n_jobs=-1)
+        kmeans = cluster.KMeans(n_clusters=nb_samples, init='random', n_init=3, max_iter=5, n_jobs=-1)
         dist = kmeans.fit_transform(features)
         find_min = np.argmin(dist, axis=0)
         dict_features_new[label] = features[find_min, :]
@@ -1229,8 +1230,9 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
 
         if balance_type is not None:
             # balance_type dataset to have comparable nb of samples
-            features, labels = balance_dataset_by_(features, labels,
-                                                   balance_type=balance_type)
+            features, labels = balance_dataset_by_(
+                features, labels, balance_type=balance_type,
+            )
         features_all += features.tolist()
         labels_all += np.asarray(labels).tolist()
         sizes.append(len(labels))
@@ -1279,14 +1281,10 @@ def compute_tp_tn_fp_fn(annot, segm, label_positive=None):
     uq_labels.remove(label_positive)
     label_negative = uq_labels[0]
 
-    tp = np.sum(
-        np.logical_and(y_true == label_positive, y_pred == label_positive))
-    tn = np.sum(
-        np.logical_and(y_true == label_negative, y_pred == label_negative))
-    fp = np.sum(
-        np.logical_and(y_true == label_positive, y_pred == label_negative))
-    fn = np.sum(
-        np.logical_and(y_true == label_negative, y_pred == label_positive))
+    tp = np.sum(np.logical_and(y_true == label_positive, y_pred == label_positive))
+    tn = np.sum(np.logical_and(y_true == label_negative, y_pred == label_negative))
+    fp = np.sum(np.logical_and(y_true == label_positive, y_pred == label_negative))
+    fn = np.sum(np.logical_and(y_true == label_negative, y_pred == label_positive))
     return tp, tn, fp, fn
 
 
@@ -1513,8 +1511,7 @@ class CrossValidate(object):
             if ignore_overflow < 1 else ignore_overflow
         assert self._nb_hold_out > self._ignore_overflow, \
             'The tolerance of overflowing (%i) the split has to be larger than' \
-            ' the number of hold out samples (%i).' % (self._ignore_overflow,
-                                                       self._nb_hold_out)
+            ' the number of hold out samples (%i).' % (self._ignore_overflow, self._nb_hold_out)
 
         self._revert = False  # sets the sizes
         if self._nb_hold_out > (self._nb_samples / 2.):
