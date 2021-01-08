@@ -9,7 +9,7 @@ on:
 
 jobs:
   pkg-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@master
@@ -22,6 +22,8 @@ jobs:
           pip install check-manifest
           check-manifest
           python setup.py check --metadata --strict
+          python setup.py build_ext --inplace
+          python setup.py install --dry-run --user
 
       - name: Create package
         run: |
@@ -40,7 +42,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, macOS-10.15]  # , windows-2019
-        python-version: [3.7, 3.8]
+        python-version: [3.7]
 
     steps:
       - uses: actions/checkout@master

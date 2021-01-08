@@ -392,8 +392,8 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
     [[13, 17], [0, 0]]
     """
     annot, segm, name = annot_segm_name
-    assert segm.shape == annot.shape, 'dimension do not match for segm: %r - annot: %r' \
-                                      % (segm.shape, annot.shape)
+    assert segm.shape == annot.shape, \
+        'dimension do not match for segm: %r - annot: %r' % (segm.shape, annot.shape)
     y_true, y_pred = annot.ravel(), segm.ravel()
     # filter particular labels
     if drop_labels is not None:
@@ -406,8 +406,7 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
     # relabel such that the classes maximaly match
     if relabel:
         y_pred = relabel_max_overlap_unique(y_true, y_pred, keep_bg=False)
-    dict_stat = compute_classif_metrics(y_true, y_pred,
-                                        metric_averages=['macro'])
+    dict_stat = compute_classif_metrics(y_true, y_pred, metric_averages=['macro'])
     # add binary metric
     if len(np.unique(y_pred)) == 2:
         dict_stat['(FP+FN)/(TP+FN)'] = compute_metric_fpfn_tpfn(y_true, y_pred)
@@ -434,24 +433,24 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
     >>> img_true = np.random.randint(0, 3, (50, 100))
     >>> img_pred = np.random.randint(0, 2, (50, 100))
     >>> df = compute_stat_per_image([img_true], [img_true], nb_workers=2, relabel=True)
-    >>> out = pd.to_numeric(df.iloc[0], downcast='float', errors='ignore').sort_index()
-    >>> out  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    ARS                                                       1.0
-    accuracy                                                  1.0
+    >>> pd.options.display.float_format = '{:,.3f}'.format
+    >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    ARS                                                     1.000
+    accuracy                                                1.000
     confusion          [[1672, 0, 0], [0, 1682, 0], [0, 0, 1646]]
-    f1_macro                                                  1.0
-    precision_macro                                           1.0
-    recall_macro                                              1.0
+    f1_macro                                                1.000
+    precision_macro                                         1.000
+    recall_macro                                            1.000
     support_macro                                            None
     Name: 0, dtype: object
     >>> df = compute_stat_per_image([img_true], [img_pred], drop_labels=[-1])
     >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    ARS                                                       0.0...
-    accuracy                                                0.338...
+    ARS                                                        0.000
+    accuracy                                                   0.338
     confusion          [[836, 826, 770], [836, 856, 876], [0, 0, 0]]
-    f1_macro                                                0.270...
-    precision_macro                                         0.336...
-    recall_macro                                            0.225...
+    f1_macro                                                   0.270
+    precision_macro                                            0.336
+    recall_macro                                               0.226
     support_macro                                               None
     Name: 0, dtype: object
     """
@@ -460,11 +459,9 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
         % (len(segms), len(annots))
     if not names:
         names = map(str, range(len(segms)))
-    _compute_stat = partial(compute_classif_stat_segm_annot,
-                            drop_labels=drop_labels, relabel=relabel)
+    _compute_stat = partial(compute_classif_stat_segm_annot, drop_labels=drop_labels, relabel=relabel)
     iterate = WrapExecuteSequence(_compute_stat, zip(annots, segms, names),
-                                  nb_workers=nb_workers,
-                                  desc='statistic per image')
+                                  nb_workers=nb_workers, desc='statistic per image')
     list_stat = list(iterate)
     df_stat = pd.DataFrame(list_stat)
     df_stat.set_index('name', inplace=True)

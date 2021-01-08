@@ -77,10 +77,8 @@ jobs:
       env:
         DISPLAY: ""
       run: |
-        check-manifest
-        python setup.py check --metadata --strict
-        python setup.py install --dry-run --user
         python setup.py build_ext --inplace
+        # run tests with coverage
         coverage run --source imsegm -m pytest imsegm tests --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
 
     - name: Upload pytest test results
