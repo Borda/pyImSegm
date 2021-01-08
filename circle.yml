@@ -112,16 +112,6 @@ jobs:
       # REGION GROWING section
       - run: bash experiments_ovary_detect/test_ovary_detect.sh
 
-  Py2-Tests:
-    docker:
-      - image: circleci/python:2.7
-    steps: *steps_test
-
-  Py2-Experiments:
-    docker:
-      - image: circleci/python:2.7
-    steps: *steps_expt
-
   Build-Docs:
     docker:
       - image: circleci/python:3.6
@@ -147,7 +137,6 @@ workflows:
   build:
     jobs:
       - Formatting
-      - Py2-Tests
       - Py3-Tests
       #- Py2-Experiments
       #- Py3-Experiments

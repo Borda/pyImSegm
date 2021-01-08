@@ -772,7 +772,7 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     >>> data.shape
     (300, 6)
     >>> from sklearn.model_selection import StratifiedKFold
-    >>> cv = StratifiedKFold(n_splits=5, random_state=0)
+    >>> cv = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
     >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
     ...                               data, labels, cv)
@@ -783,7 +783,7 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     3       1.0       1.0              1.0           1.0
     4       1.0       1.0              1.0           1.0
     >>> labels[labels == 1] = 2
-    >>> cv = StratifiedKFold(n_splits=3, random_state=0)
+    >>> cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=True)
     >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
     ...                               data, labels, cv, path_out='.')
        f1_macro  accuracy  precision_macro  recall_macro
@@ -856,7 +856,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     >>> data.shape
     (300, 6)
     >>> from sklearn.model_selection import StratifiedKFold
-    >>> cv = StratifiedKFold(n_splits=5, random_state=0)
+    >>> cv = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
     >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif,
     ...                                         data, labels, cv, nb_steps=10)
