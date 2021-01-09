@@ -296,17 +296,8 @@ PACKAGE_MAPPING = {
     'pillow': 'PIL',
     'pygco': 'gco',
     'pyyaml': 'yaml',
+    'olefile': 'OleFileIO_PL',
 }
-
-
-def _map_pkg(pypi_name):
-    name = pypi_name
-    for k in PACKAGE_MAPPING:
-        if pypi_name.lower() in k:
-            name = PACKAGE_MAPPING[k]
-    return name
-
-
 MOCK_MODULES = []
 with open(os.path.join(PATH_ROOT, 'requirements.txt'), 'r') as fp:
     for ln in fp.readlines():
@@ -314,9 +305,8 @@ with open(os.path.join(PATH_ROOT, 'requirements.txt'), 'r') as fp:
         pkg = ln[:min(found)] if found else ln
         if pkg.rstrip():
             MOCK_MODULES.append(pkg.rstrip())
-# map PyPI packages to python imports
-# autodoc_mock_imports = [PACKAGE_MAPPING.get(pkg.lower(), pkg) for pkg in MOCK_MODULES]
-autodoc_mock_imports = [_map_pkg(pkg) for pkg in MOCK_MODULES]
+
+autodoc_mock_imports = [PACKAGE_MAPPING.get(pkg.lower(), pkg) for pkg in MOCK_MODULES]
 
 
 # Resolve function

@@ -433,28 +433,25 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
     >>> img_true = np.random.randint(0, 3, (50, 100))
     >>> img_pred = np.random.randint(0, 2, (50, 100))
     >>> df = compute_stat_per_image([img_true], [img_true], nb_workers=2, relabel=True)
-    >>> _org_float_format = pd.options.display.float_format
-    >>> pd.options.display.float_format = '{:,.3f}'.format
-    >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    ARS                                                     1.000
-    accuracy                                                1.000
-    confusion          [[1672, 0, 0], [0, 1682, 0], [0, 0, 1646]]
-    f1_macro                                                1.000
-    precision_macro                                         1.000
-    recall_macro                                            1.000
-    support_macro                                            None
-    Name: 0, dtype: object
+    >>> from pprint import pprint
+    >>> pprint(pd.Series(df.iloc[0]).sort_index().to_dict())  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    {'ARS': 1.0,
+     'accuracy': 1.0,
+     'confusion': [[1672, 0, 0], [0, 1682, 0], [0, 0, 1646]],
+     'f1_macro': 1.0,
+     'precision_macro': 1.0,
+     'recall_macro': 1.0,
+     'support_macro': None}
     >>> df = compute_stat_per_image([img_true], [img_pred], drop_labels=[-1])
-    >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    ARS                                                        0.000
-    accuracy                                                   0.338
+    >>> pd.Series(df.round(4).iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    ARS                                                       0.0002
+    accuracy                                                  0.3384
     confusion          [[836, 826, 770], [836, 856, 876], [0, 0, 0]]
-    f1_macro                                                   0.270
-    precision_macro                                            0.336
-    recall_macro                                               0.226
+    f1_macro                                                  0.2701
+    precision_macro                                           0.3363
+    recall_macro                                              0.2257
     support_macro                                               None
     Name: 0, dtype: object
-    >>> pd.options.display.float_format = _org_float_format
     """
     assert len(segms) == len(annots), \
         'size of segment. (%i) amd annot. (%i) should be equal' % (len(segms), len(annots))
@@ -488,19 +485,18 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     >>> indices, df_scoring = feature_scoring_selection(features, labels)
     >>> indices
     array([1, 0, 2, 3, 4])
-    >>> df_scoring  # doctest: +NORMALIZE_WHITESPACE
-              ExtTree     F-test     k-Best  variance
+    >>> df_scoring  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+             ExtTree    F-test    k-Best variance
     feature
-    1        0.248465   0.755881   0.755881  2.495970
-    2        0.330818  58.944450  58.944450  1.851036
-    3        0.221636   2.242583   2.242583  1.541042
-    4        0.106441   4.022076   4.022076  0.965971
-    5        0.092639   0.022651   0.022651  1.016170
+    1        0.24...   0.75...   0.75...  2.49...
+    2        0.33...  58.94...  58.94...  1.85...
+    3        0.22...   2.24...   2.24...  1.54...
+    4        0.10...   4.02...   4.02...  0.96...
+    5        0.09...   0.02...   0.02...  1.01...
     >>> features[:, 2] = 1
     >>> path_out = 'test_fts-select'
     >>> os.mkdir(path_out)
-    >>> indices, df_scoring = feature_scoring_selection(features.tolist(), labels.tolist(),
-    ...                                                 path_out=path_out)
+    >>> indices, df_scoring = feature_scoring_selection(features.tolist(), labels.tolist(), path_out=path_out)
     >>> indices
     array([1, 0, 3, 4, 2])
     >>> import shutil
@@ -774,8 +770,8 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     >>> from sklearn.model_selection import StratifiedKFold
     >>> cv = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
-    >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
-    ...                               data, labels, cv)
+    >>> df = eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif, data, labels, cv)
+    >>> df.round(decimals=1)
        f1_macro  accuracy  precision_macro  recall_macro
     0       1.0       1.0              1.0           1.0
     1       1.0       1.0              1.0           1.0
@@ -784,8 +780,8 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     4       1.0       1.0              1.0           1.0
     >>> labels[labels == 1] = 2
     >>> cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=True)
-    >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
-    ...                               data, labels, cv, path_out='.')
+    >>> df = eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif, data, labels, cv, path_out='.')
+    >>> df.round(decimals=1)
        f1_macro  accuracy  precision_macro  recall_macro
     0       1.0       1.0              1.0           1.0
     1       1.0       1.0              1.0           1.0
@@ -858,28 +854,28 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     >>> from sklearn.model_selection import StratifiedKFold
     >>> cv = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
-    >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif,
-    ...                                         data, labels, cv, nb_steps=10)
+    >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif, data, labels, cv, nb_steps=11)
     >>> fp_tp
-             FP   TP
-    0  0.000000  0.0
-    1  0.111111  1.0
-    2  0.222222  1.0
-    3  0.333333  1.0
-    4  0.444444  1.0
-    5  0.555556  1.0
-    6  0.666667  1.0
-    7  0.777778  1.0
-    8  0.888889  1.0
-    9  1.000000  1.0
-    >>> auc
-    0.94444444444444442
+         FP   TP
+    0   0.0  0.0
+    1   0.1  1.0
+    2   0.2  1.0
+    3   0.3  1.0
+    4   0.4  1.0
+    5   0.5  1.0
+    6   0.6  1.0
+    7   0.7  1.0
+    8   0.8  1.0
+    9   0.9  1.0
+    10  1.0  1.0
+    >>> auc  # doctest: +ELLIPSIS
+    0.94...
     >>> labels[-50:] -= 1
     >>> data[-50:, :] -= 1
     >>> path_out = 'temp_eval-cv-roc'
     >>> os.mkdir(path_out)
-    >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif,
-    ...                           data, labels, cv, nb_steps=5, path_out=path_out)
+    >>> fp_tp, auc = eval_classif_cross_val_roc(
+    ...     DEFAULT_CLASSIF_NAME, classif, data, labels, cv, nb_steps=5, path_out=path_out)
     >>> fp_tp
          FP   TP
     0  0.00  0.0

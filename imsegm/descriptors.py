@@ -1934,7 +1934,7 @@ def interpolate_ray_dist(ray_dists, order='spline'):
     >>> vals[3:7] = -1
     >>> vals[16:] = -1
     >>> vals_interp = interpolate_ray_dist(vals, order=3)
-    >>> np.round(vals_interp).astype(int).tolist()
+    >>> np.round(vals_interp).astype(int).tolist()  # doctest: +SKIP
     [0, 3, 6, 9, 10, 10, 8, 7, 5, 2, -2, -5, -7, -9, -10, -10, -10, -8, -4, 1]
     >>> vals_interp = interpolate_ray_dist(vals, order='spline')
     >>> np.round(vals_interp).astype(int).tolist()
