@@ -58,14 +58,15 @@ with open(os.path.join(PATH_ROOT, 'README.md'), 'r') as fp:
 # replace all paths to relative
 readme = readme.replace('](docs/source/', '](')
 # Todo: this seems to replace only once per line
-readme = re.sub(r' \[(.*)\]\((?!http)(.*)\)',
-                r' [\1](https://github.com/%s/%s/blob/master/\2)' % (github_user, github_repo),
-                readme)
+readme = re.sub(
+    r' \[(.*)\]\((?!http)(.*)\)',
+    r' [\1](https://github.com/%s/%s/blob/master/\2)' % (github_user, github_repo),
+    readme
+)
 # TODO: temp fix removing SVG badges and GIF, because PDF cannot show them
 readme = re.sub(r'(\[!\[.*\))', '', readme)
-readme = re.sub(r'(!\[.*.gif\))', '', readme)
-for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*'))
-                 if os.path.isdir(p)):
+readme = re.sub(r'(!\[.+\.[gif|svg|pdf].*\))', '', readme)
+for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, '*')) if os.path.isdir(p)):
     readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_UP, dir_name))
 with open('readme.md', 'w') as fp:
     fp.write(readme)
