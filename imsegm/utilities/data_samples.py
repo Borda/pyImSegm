@@ -46,27 +46,31 @@ IMAGE_DROSOPHILA_DISC = os.path.join('drosophila_disc', 'image', 'img_6.jpg')
 #: three class tissue annotation of microscopy image of Drosophila imaginal disc
 ANNOT_DROSOPHILA_DISC = os.path.join('drosophila_disc', 'annot', 'img_6.png')
 #: sample microscopy image of Drosophila ovary
-IMAGE_DROSOPHILA_OVARY_2D = os.path.join(
-    'drosophila_ovary_slice', 'image', 'insitu7545.jpg')
+IMAGE_DROSOPHILA_OVARY_2D = os.path.join('drosophila_ovary_slice', 'image', 'insitu7545.jpg')
 #: four class tissue annotation of microscopy image of Drosophila ovary
-ANNOT_DROSOPHILA_OVARY_2D = os.path.join(
-    'drosophila_ovary_slice', 'annot_struct', 'insitu7545.png')
+ANNOT_DROSOPHILA_OVARY_2D = os.path.join('drosophila_ovary_slice', 'annot_struct', 'insitu7545.png')
 #: sample 3D microscopy image of Drosophila ovary
 IMAGE_DROSOPHILA_OVARY_3D = os.path.join('drosophila_ovary_3D', 'AU10-13_f0011.tif')
 #: sample microscopy image of Langernat islets
 IMAGE_LANGER_ISLET = os.path.join('langerhans_islets', 'image', 'gtExoIsl_21.jpg')
 #: list of all default images
 LIST_ALL_IMAGES = [
-    IMAGE_LENNA, IMAGE_3CLS, IMAGE_OBJECTS, IMAGE_STAR,
-    IMAGE_HISTOL_CIMA, IMAGE_HISTOL_FLAGSHIP, IMAGE_LANGER_ISLET,
-    IMAGE_DROSOPHILA_DISC, ANNOT_DROSOPHILA_DISC,
-    IMAGE_DROSOPHILA_OVARY_2D, ANNOT_DROSOPHILA_OVARY_2D,
+    IMAGE_LENNA,
+    IMAGE_3CLS,
+    IMAGE_OBJECTS,
+    IMAGE_STAR,
+    IMAGE_HISTOL_CIMA,
+    IMAGE_HISTOL_FLAGSHIP,
+    IMAGE_LANGER_ISLET,
+    IMAGE_DROSOPHILA_DISC,
+    ANNOT_DROSOPHILA_DISC,
+    IMAGE_DROSOPHILA_OVARY_2D,
+    ANNOT_DROSOPHILA_OVARY_2D,
     IMAGE_DROSOPHILA_OVARY_3D,
 ]
 
 
-def sample_segment_vertical_2d(seg_size=SAMPLE_SEG_SIZE_2D_SMALL,
-                               nb_labels=SAMPLE_SEG_NB_CLASSES):
+def sample_segment_vertical_2d(seg_size=SAMPLE_SEG_SIZE_2D_SMALL, nb_labels=SAMPLE_SEG_NB_CLASSES):
     """ create sample segmentation with vertical stripes
 
     :param tuple(int,int) seg_size:
@@ -89,8 +93,7 @@ def sample_segment_vertical_2d(seg_size=SAMPLE_SEG_SIZE_2D_SMALL,
     return seg
 
 
-def sample_segment_vertical_3d(seg_size=SAMPLE_SEG_SIZE_3D_SMALL,
-                               nb_labels=SAMPLE_SEG_NB_CLASSES, levels=2):
+def sample_segment_vertical_3d(seg_size=SAMPLE_SEG_SIZE_3D_SMALL, nb_labels=SAMPLE_SEG_NB_CLASSES, levels=2):
     """ create sample regular 3D segmentation
 
     :param tuple(int,int)|(int, int, int) seg_size:
@@ -116,9 +119,7 @@ def sample_segment_vertical_3d(seg_size=SAMPLE_SEG_SIZE_3D_SMALL,
     return seg
 
 
-def sample_color_image_rand_segment(im_size=SAMPLE_SEG_SIZE_2D_NORM,
-                                    nb_classes=SAMPLE_SEG_NB_CLASSES,
-                                    rand_seed=None):
+def sample_color_image_rand_segment(im_size=SAMPLE_SEG_SIZE_2D_NORM, nb_classes=SAMPLE_SEG_NB_CLASSES, rand_seed=None):
     """ create samoe image and segmentation
 
     :param tuple(int,int) im_size:
@@ -144,9 +145,7 @@ def sample_color_image_rand_segment(im_size=SAMPLE_SEG_SIZE_2D_NORM,
     seg = np.random.random_integers(0, nb_classes - 1, im_size)
     for lb in range(int(nb_classes)):
         val_step = 255 / nb_classes
-        im = np.random.random_integers(int(val_step * lb),
-                                       int(val_step * (lb + 1)),
-                                       im_size_rgb)
+        im = np.random.random_integers(int(val_step * lb), int(val_step * (lb + 1)), im_size_rgb)
         img[seg == lb] = im[seg == lb]
     # img = Image.fromarray(np.array(im, dtype=np.uint8), 'RGB')
     return img, seg

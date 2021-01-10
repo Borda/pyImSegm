@@ -17,7 +17,6 @@ else:
         print('Problem with display. Using non-interactive Agg backend')
         matplotlib.use('Agg')
 
-
 try:
     import numpy as np
 except ImportError:
@@ -27,7 +26,6 @@ else:
     if LooseVersion(np.version.full_version) >= LooseVersion('1.14'):
         # np.set_printoptions(sign='legacy')
         np.set_printoptions(legacy='1.13')
-
 
 try:
     import pandas as pd

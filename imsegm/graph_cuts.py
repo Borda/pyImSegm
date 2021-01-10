@@ -12,16 +12,21 @@ import numpy as np
 try:
     from gco import cut_general_graph
 except ImportError:
-    warn('Missing Grah-Cut (GCO) library,'
-         ' please install it from https://github.com/Borda/pyGCO.')
+    warn('Missing Grah-Cut (GCO) library,' ' please install it from https://github.com/Borda/pyGCO.')
 from skimage import filters
 from sklearn import metrics, preprocessing
 from sklearn import pipeline, cluster, mixture, decomposition
 
 from imsegm.utilities.drawing import (
-    draw_graphcut_unary_cost_segments, draw_graphcut_weighted_edges, draw_color_labeling)
+    draw_graphcut_unary_cost_segments,
+    draw_graphcut_weighted_edges,
+    draw_color_labeling,
+)
 from imsegm.superpixels import (
-    make_graph_segm_connect_grid2d_conn4, make_graph_segm_connect_grid3d_conn6, superpixel_centers)
+    make_graph_segm_connect_grid2d_conn4,
+    make_graph_segm_connect_grid3d_conn6,
+    superpixel_centers,
+)
 from imsegm.descriptors import compute_selected_features_img2d
 
 #: define munber of iteration in Grap-Cut optimization
@@ -66,8 +71,7 @@ def estim_gmm_params(features, prob):
     return gmm_params
 
 
-def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
-                      use_scaler=True, max_iter=99):
+def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None, use_scaler=True, max_iter=99):
     """ create pipeline (scaler, PCA, model) over several options how
     to cluster samples and fit it on data
 
@@ -111,8 +115,7 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
 
     nb_inits = max(1, int(np.sqrt(max_iter)))
     # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
-    mm = mixture.GaussianMixture(n_components=nb_classes, covariance_type='full',
-                                 n_init=nb_inits, max_iter=max_iter)
+    mm = mixture.GaussianMixture(n_components=nb_classes, covariance_type='full', n_init=nb_inits, max_iter=max_iter)
 
     # split the model and used initilaisation
     if '_' in estim_model:
@@ -127,8 +130,7 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
         if init_type == 'kmeans':
             mm.set_params(n_init=1)
             # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-            kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++',
-                                    n_jobs=-1)
+            kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
             y = kmeans.fit_predict(features)
         elif init_type == 'Otsu':
             mm.set_params(n_init=1)
@@ -138,15 +140,14 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None,
         # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
         mm.set_params(max_iter=1)
         init_type = 'quantiles' if init_type == 'quantiles' else 'k-means++'
-        _, y = estim_class_model_kmeans(features, nb_classes,
-                                        init_type=init_type, max_iter=max_iter)
+        _, y = estim_class_model_kmeans(features, nb_classes, init_type=init_type, max_iter=max_iter)
 
         logging.info('compute probability of each feature to all component')
 
     elif estim_model == 'BGM':
-        mm = mixture.BayesianGaussianMixture(n_components=nb_classes,
-                                             covariance_type='full',
-                                             n_init=nb_inits, max_iter=max_iter)
+        mm = mixture.BayesianGaussianMixture(
+            n_components=nb_classes, covariance_type='full', n_init=nb_inits, max_iter=max_iter
+        )
 
     elif estim_model == 'Otsu' and nb_classes == 2:
         mm.set_params(max_iter=1, n_init=1)
@@ -237,15 +238,12 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     >>> mm.predict_proba(fts).shape
     (100, 2)
     """
-    logging.debug('estimate GMM for all given features %r and %i component',
-                  features.shape, nb_classes)
+    logging.debug('estimate GMM for all given features %r and %i component', features.shape, nb_classes)
     # http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GMM.html
-    gmm = mixture.GaussianMixture(n_components=nb_classes,
-                                  covariance_type='full', max_iter=99)
+    gmm = mixture.GaussianMixture(n_components=nb_classes, covariance_type='full', max_iter=99)
     if init == 'kmeans':
         # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-        kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++',
-                                n_jobs=-1)
+        kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
         y = kmeans.fit_predict(features)
         gmm.fit(features, y)
     else:
@@ -272,8 +270,10 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++', max_it
     >>> mm.predict_proba(fts).shape
     (100, 2)
     """
-    logging.debug('estimate Gaussian from k-means clustering for all given '
-                  'features %r and %i components', features.shape, nb_classes)
+    logging.debug(
+        'estimate Gaussian from k-means clustering for all given features %r and %i components', features.shape,
+        nb_classes
+    )
     # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
     if init_type == 'quantiles':
         quntiles = np.linspace(5, 95, nb_classes).tolist()
@@ -281,11 +281,9 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++', max_it
         kmeans = cluster.KMeans(nb_classes, init=init_perc, max_iter=2, n_jobs=-1)
     else:
         nb_inits = max(1, int(np.sqrt(max_iter)))
-        kmeans = cluster.KMeans(nb_classes, init=init_type, max_iter=max_iter,
-                                n_init=nb_inits, n_jobs=-1)
+        kmeans = cluster.KMeans(nb_classes, init=init_type, max_iter=max_iter, n_init=nb_inits, n_jobs=-1)
     y = kmeans.fit_predict(features)
-    gmm = mixture.GaussianMixture(n_components=nb_classes,
-                                  covariance_type='full', max_iter=1)
+    gmm = mixture.GaussianMixture(n_components=nb_classes, covariance_type='full', max_iter=1)
     gmm.fit(features, y)
     return gmm, y
 
@@ -427,17 +425,17 @@ def compute_edge_model(edges, proba, metric='l_T'):
 
     if metric == 'l1':
         dist = metrics.pairwise.paired_manhattan_distances(vertex_1, vertex_2)
-        edge_weights = np.exp(- dist / (2 * np.std(dist) ** 2))
+        edge_weights = np.exp(-dist / (2 * np.std(dist)**2))
     elif metric == 'l2':
         dist = metrics.pairwise.paired_euclidean_distances(vertex_1, vertex_2)
-        edge_weights = np.exp(- dist / (2 * np.std(dist) ** 2))
+        edge_weights = np.exp(-dist / (2 * np.std(dist)**2))
     elif metric == 'lT':
         # exp(- norm value diff) * (geom dist vertex)**-1
-        diff = (vertex_1 - vertex_2) ** 2
+        diff = (vertex_1 - vertex_2)**2
         # small differences are large weights, diff close 0 appears to be 1
         # setting min weight ~ max difference in proba as weight
         dist = np.max(diff, axis=1)
-        edge_weights = np.exp(- dist / (2 * np.std(dist) ** 2))
+        edge_weights = np.exp(-dist / (2 * np.std(dist)**2))
     else:
         logging.error('not implemented for: %s', metric)
         edge_weights = np.ones(len(edges))
@@ -544,8 +542,7 @@ def compute_unary_cost(proba, min_prob=MIN_UNARY_PROB):
     return unary_cost
 
 
-def compute_pairwise_cost(gc_regul, proba_shape,
-                          max_pairwise_cost=MAX_PAIRWISE_COST):
+def compute_pairwise_cost(gc_regul, proba_shape, max_pairwise_cost=MAX_PAIRWISE_COST):
     """ wrapper for creating GC pairwise cost
 
     :param gc_regul:
@@ -560,16 +557,14 @@ def compute_pairwise_cost(gc_regul, proba_shape,
     return pairwise_cost
 
 
-def insert_gc_debug_images(debug_visual, segments, graph_labels, unary_cost,
-                           edges, edge_weights):
+def insert_gc_debug_images(debug_visual, segments, graph_labels, unary_cost, edges, edge_weights):
     """ wrapper for placing intermediate variable to a dictionary """
     if debug_visual is None:
         return
     debug_visual['segments'] = segments
     debug_visual['edges'] = edges
     debug_visual['edge_weights'] = edge_weights
-    debug_visual['imgs_unary_cost'] = draw_graphcut_unary_cost_segments(segments,
-                                                                        unary_cost)
+    debug_visual['imgs_unary_cost'] = draw_graphcut_unary_cost_segments(segments, unary_cost)
     img = debug_visual.get('slic_mean', None)
     list_centres = superpixel_centers(segments)
     debug_visual['img_graph_edges'] = \
@@ -578,8 +573,7 @@ def insert_gc_debug_images(debug_visual, segments, graph_labels, unary_cost,
     debug_visual['img_graph_segm'] = draw_color_labeling(segments, graph_labels)
 
 
-def compute_edge_weights(segments, image=None, features=None, proba=None,
-                         edge_type=''):
+def compute_edge_weights(segments, image=None, features=None, proba=None, edge_type=''):
     """
     pp 32, http://www.coe.utah.edu/~cs7640/readings/graph_cuts_intro.pdf
     exp(- norm value diff) * (geom dist vertex)**-1
@@ -635,21 +629,20 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
         image_float = np.array(image, dtype=float)
         if np.max(image) > 1:
             image_float /= 255.
-        color, _ = compute_selected_features_img2d(image_float, segments,
-                                                   {'color': ['mean']})
+        color, _ = compute_selected_features_img2d(image_float, segments, {'color': ['mean']})
         vertex_1 = color[edges[:, 0]]
         vertex_2 = color[edges[:, 1]]
         dist = metrics.pairwise.paired_manhattan_distances(vertex_1, vertex_2)
-        weights = dist.astype(float) / (2 * np.std(dist) ** 2)
-        edge_weights = np.exp(- weights)
+        weights = dist.astype(float) / (2 * np.std(dist)**2)
+        edge_weights = np.exp(-weights)
     elif edge_type == 'features':
         assert features is not None, '"features" is required'
         features_norm = preprocessing.StandardScaler().fit_transform(features)
         vertex_1 = features_norm[edges[:, 0]]
         vertex_2 = features_norm[edges[:, 1]]
         dist = metrics.pairwise.paired_euclidean_distances(vertex_1, vertex_2)
-        weights = dist.astype(float) / (2 * np.std(dist) ** 2)
-        edge_weights = np.exp(- weights)
+        weights = dist.astype(float) / (2 * np.std(dist)**2)
+        edge_weights = np.exp(-weights)
     else:
         edge_weights = np.ones(len(edges))
 
@@ -667,9 +660,16 @@ def compute_edge_weights(segments, image=None, features=None, proba=None,
     return edges, edge_weights
 
 
-def segment_graph_cut_general(segments, proba, image=None, features=None,
-                              gc_regul=1., edge_type='model', edge_cost=1.,
-                              debug_visual=None):
+def segment_graph_cut_general(
+    segments,
+    proba,
+    image=None,
+    features=None,
+    gc_regul=1.,
+    edge_type='model',
+    edge_cost=1.,
+    debug_visual=None,
+):
     """ segment the image segmented via superpixels and estimated features
 
     :param ndarray features: features sor each instance
@@ -722,8 +722,7 @@ def segment_graph_cut_general(segments, proba, image=None, features=None,
     """
     logging.debug('convert variables and run GraphCut on created graph.')
 
-    edges, edge_weights = compute_edge_weights(segments, image, features,
-                                               proba, edge_type)
+    edges, edge_weights = compute_edge_weights(segments, image, features, proba, edge_type)
     edge_weights *= edge_cost
     logging.debug('graph edges weights %r', edge_weights.shape)
 
@@ -738,19 +737,22 @@ def segment_graph_cut_general(segments, proba, image=None, features=None,
     else:
         # run GraphCut
         logging.debug('perform GraphCut')
-        graph_labels = cut_general_graph(edges, edge_weights, unary_cost,
-                                         pairwise_cost, algorithm='expansion',
-                                         # down_weight_factor=np.abs(unary_cost).max(),
-                                         # init_labels=np.argmax(proba, axis=1),
-                                         n_iter=-1)
+        graph_labels = cut_general_graph(
+            edges,
+            edge_weights,
+            unary_cost,
+            pairwise_cost,
+            algorithm='expansion',
+            # down_weight_factor=np.abs(unary_cost).max(),
+            # init_labels=np.argmax(proba, axis=1),
+            n_iter=-1
+        )
 
-    insert_gc_debug_images(debug_visual, segments, graph_labels,
-                           compute_unary_cost(proba), edges, edge_weights)
+    insert_gc_debug_images(debug_visual, segments, graph_labels, compute_unary_cost(proba), edges, edge_weights)
     return graph_labels
 
 
-def count_label_transitions_connected_segments(dict_slics, dict_labels,
-                                               nb_labels=None):
+def count_label_transitions_connected_segments(dict_slics, dict_labels, nb_labels=None):
     """ count transitions among labeled segment in between connected segments
 
     :param dict(list(list(int))) dict_slics: image name: ndarray
@@ -774,8 +776,7 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels,
            [ 1.,  1.,  1.]])
     """
     if not nb_labels:
-        uq_img_labels = [np.unique(lbs).tolist()
-                         for lbs in dict_labels.values()]
+        uq_img_labels = [np.unique(lbs).tolist() for lbs in dict_labels.values()]
         uq_labels = np.unique(np.hstack(tuple(uq_img_labels)))
         nb_labels = np.max(uq_labels) + 1
     transitions = np.zeros((nb_labels, nb_labels))

@@ -38,28 +38,37 @@ def arg_parse_params(dict_paths):
     :return ({str: str}, int):
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-annot', '--path_annot', type=str, required=False,
-                        help='annotations',
-                        default=dict_paths['annot'])
-    parser.add_argument('-imgs', '--path_image', type=str, required=False,
-                        help='path to directory & name pattern for images',
-                        default=dict_paths['image'])
-    parser.add_argument('-out', '--path_output', type=str, required=False,
-                        help='path to the output directory',
-                        default=dict_paths['output'])
-    parser.add_argument('--padding', type=int, required=False,
-                        help='crop padding [px]', default=25)
-    parser.add_argument('--mask', type=int, required=False,
-                        help='mask by the segmentation', default=1)
-    parser.add_argument('-bg', '--background', type=int, required=False,
-                        help='using background color', default=None, nargs='+')
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
-                        help='number of processes in parallel')
+    parser.add_argument(
+        '-annot', '--path_annot', type=str, required=False, help='annotations', default=dict_paths['annot']
+    )
+    parser.add_argument(
+        '-imgs',
+        '--path_image',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for images',
+        default=dict_paths['image']
+    )
+    parser.add_argument(
+        '-out',
+        '--path_output',
+        type=str,
+        required=False,
+        help='path to the output directory',
+        default=dict_paths['output']
+    )
+    parser.add_argument('--padding', type=int, required=False, help='crop padding [px]', default=25)
+    parser.add_argument('--mask', type=int, required=False, help='mask by the segmentation', default=1)
+    parser.add_argument(
+        '-bg', '--background', type=int, required=False, help='using background color', default=None, nargs='+'
+    )
+    parser.add_argument(
+        '--nb_workers', type=int, required=False, default=NB_WORKERS, help='number of processes in parallel'
+    )
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %r', args)
 
-    _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])),
-                                      os.path.basename(args[k]))
+    _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])), os.path.basename(args[k]))
     dict_paths = {k.split('_')[-1]: _fn_path(k) for k in args if k.startswith('path_')}
     for k in dict_paths:
         assert os.path.exists(os.path.dirname(dict_paths[k])), \
@@ -90,8 +99,7 @@ def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
         tl_data.io_imsave(path_img, img_new)
 
 
-def main(dict_paths, padding=0, use_mask=False, bg_color=None,
-         nb_workers=NB_WORKERS):
+def main(dict_paths, padding=0, use_mask=False, bg_color=None, nb_workers=NB_WORKERS):
     """ the main executable
 
     :param dict_paths:
@@ -108,11 +116,18 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None,
     df_paths = tl_data.find_files_match_names_across_dirs(list_dirs)
 
     logging.info('start cutting images')
-    _wrapper_cutting = partial(export_cut_objects, path_out=dict_paths['output'],
-                               padding=padding, use_mask=use_mask, bg_color=bg_color)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_cutting,
-                                          (row for idx, row in df_paths.iterrows()),
-                                          nb_workers=nb_workers)
+    _wrapper_cutting = partial(
+        export_cut_objects,
+        path_out=dict_paths['output'],
+        padding=padding,
+        use_mask=use_mask,
+        bg_color=bg_color,
+    )
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_cutting,
+        (row for idx, row in df_paths.iterrows()),
+        nb_workers=nb_workers,
+    )
     list(iterate)
 
 
@@ -121,7 +136,6 @@ if __name__ == '__main__':
     logging.info('running...')
 
     dict_paths, args = arg_parse_params(PATHS)
-    main(dict_paths, args['padding'], args['mask'],
-         args['background'], args['nb_workers'])
+    main(dict_paths, args['padding'], args['mask'], args['background'], args['nb_workers'])
 
     logging.info('DONE')

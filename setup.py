@@ -34,7 +34,6 @@ import imsegm
 # from Cython.Build import cythonize
 # extensions = [Extension("*", "*.pyx")]
 
-
 TEMP_EGG = '#egg='
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -71,7 +70,6 @@ else:
     setup_reqs = ['Cython', 'numpy']
     install_reqs = _parse_requirements(os.path.join(HERE, 'requirements.txt'))
 
-
 setup(
     name='ImSegm',
     version=imsegm.__version__,
@@ -81,26 +79,23 @@ setup(
     license=imsegm.__license__,
     description=imsegm.__doc__,
     keywords='image segmentation region-growing center-detection ellipse-fitting',
-
     long_description=imsegm.__long_doc__,
     long_description_content_type='text/markdown',
-
     packages=['imsegm', 'imsegm.utilities'],
     cmdclass={'build_ext': BuildExt},
     ext_modules=[
-        Extension('imsegm.features_cython',
-                  language='c++',
-                  sources=['imsegm/features_cython.pyx'],
-                  extra_compile_args=['-O3', '-ffast-math', '-march=native'],
-                  # extra_link_args=['-fopenmp'],
-                  )
+        Extension(
+            'imsegm.features_cython',
+            language='c++',
+            sources=['imsegm/features_cython.pyx'],
+            extra_compile_args=['-O3', '-ffast-math', '-march=native'],
+            # extra_link_args=['-fopenmp'],
+        )
     ],
-
     setup_requires=setup_reqs,
     install_requires=install_reqs,
     # include_dirs = [np.get_include()],
     include_package_data=True,
-
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",

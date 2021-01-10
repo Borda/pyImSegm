@@ -96,10 +96,16 @@ PATH_DATA = tl_data.update_path('data-images', absolute=True)
 PATH_IMAGES = os.path.join(PATH_DATA, 'drosophila_ovary_slice')
 # sample segmentation methods
 LIST_SAMPLE_METHODS = (
-    'ellipse_moments', 'ellipse_ransac_mmt', 'ellipse_ransac_crit',
-    'GC_pixels-large', 'GC_pixels-shape', 'GC_slic-large', 'GC_slic-shape',
-    'rg2sp_greedy-mixture', 'rg2sp_GC-mixture',
-    'watershed_morph'
+    'ellipse_moments',
+    'ellipse_ransac_mmt',
+    'ellipse_ransac_crit',
+    'GC_pixels-large',
+    'GC_pixels-shape',
+    'GC_slic-large',
+    'GC_slic-shape',
+    'rg2sp_greedy-mixture',
+    'rg2sp_GC-mixture',
+    'watershed_morph',
 )
 # default segmentation configuration
 SEGM_PARAMS = {
@@ -119,8 +125,7 @@ SEGM_PARAMS = {
     'RG2SP_theshold': RG2SP_THRESHOLDS,
     'slic_size': SLIC_SIZE,
     'slic_regul': SLIC_REGUL,
-    'path_list': os.path.join(PATH_IMAGES,
-                              'list_imgs-segm-center-points_short.csv'),
+    'path_list': os.path.join(PATH_IMAGES, 'list_imgs-segm-center-points_short.csv'),
     'path_out': tl_data.update_path('results', absolute=True)
 }
 
@@ -131,20 +136,22 @@ def arg_parse_params(params):
     :return {str: str}:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-list', '--path_list', type=str, required=False,
-                        help='path to the list of image',
-                        default=params['path_list'])
-    parser.add_argument('-out', '--path_out', type=str, required=False,
-                        help='path to the output directory',
-                        default=params['path_out'])
-    parser.add_argument('-n', '--name', type=str, required=False,
-                        help='name of the experiment', default='ovary')
-    parser.add_argument('-cfg', '--path_config', type=str, required=False,
-                        help='path to the configuration', default=None)
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
-                        help='number of processes in parallel')
-    parser.add_argument('-m', '--methods', type=str, required=False, nargs='+',
-                        help='list of segment. methods', default=None)
+    parser.add_argument(
+        '-list', '--path_list', type=str, required=False, help='path to the list of image', default=params['path_list']
+    )
+    parser.add_argument(
+        '-out', '--path_out', type=str, required=False, help='path to the output directory', default=params['path_out']
+    )
+    parser.add_argument('-n', '--name', type=str, required=False, help='name of the experiment', default='ovary')
+    parser.add_argument(
+        '-cfg', '--path_config', type=str, required=False, help='path to the configuration', default=None
+    )
+    parser.add_argument(
+        '--nb_workers', type=int, required=False, default=NB_WORKERS, help='number of processes in parallel'
+    )
+    parser.add_argument(
+        '-m', '--methods', type=str, required=False, nargs='+', help='list of segment. methods', default=None
+    )
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
     if not isinstance(arg_params['path_config'], str) \
@@ -187,8 +194,7 @@ def load_image(path_img, img_type=TYPE_LOAD_IMAGE):
     else:
         logging.error('not supported loading img_type: %s', img_type)
         img = tl_data.io_imread(path_img)
-    logging.debug('image shape: %r, value range %f - %f', img.shape,
-                  img.min(), img.max())
+    logging.debug('image shape: %r, value range %f - %f', img.shape, img.min(), img.max())
     return img
 
 
@@ -214,8 +220,7 @@ def export_draw_image_segm(path_fig, img, segm=None, segm_obj=None, centers=None
         ax.imshow(segm_obj, alpha=0.1)
         assert len(np.unique(segm_obj)) < 1e2, \
             'too many labeled objects - %i' % len(np.unique(segm_obj))
-        ax.contour(segm_obj, levels=np.unique(segm_obj).tolist(),
-                   cmap=plt.cm.jet_r, linewidths=(10, ))
+        ax.contour(segm_obj, levels=np.unique(segm_obj).tolist(), cmap=plt.cm.jet_r, linewidths=(10, ))
     if centers is not None:
         ax.plot(np.array(centers)[:, 1], np.array(centers)[:, 0], 'o', color='r')
 
@@ -274,11 +279,9 @@ def create_circle_center(img_shape, centers, radius=10):
     mask_perimeter = np.zeros(img_shape, dtype=int)
     center_circles = list()
     for i, pos in enumerate(centers):
-        rr, cc = draw.circle(int(pos[0]), int(pos[1]), radius,
-                             shape=img_shape[:2])
+        rr, cc = draw.circle(int(pos[0]), int(pos[1]), radius, shape=img_shape[:2])
         mask_circle[rr, cc] = i + 1
-        rr, cc = draw.circle_perimeter(int(pos[0]), int(pos[1]), radius,
-                                       shape=img_shape[:2])
+        rr, cc = draw.circle_perimeter(int(pos[0]), int(pos[1]), radius, shape=img_shape[:2])
         mask_perimeter[rr, cc] = i + 1
         center_circles.append(np.array([rr, cc]).transpose())
     return center_circles, mask_circle, mask_perimeter
@@ -297,12 +300,18 @@ def segment_active_contour(img, centers):
     img_smooth = ndimage.filters.gaussian_filter(img, 5)
     center_circles, _, _ = create_circle_center(img.shape[:2], centers)
     for i, snake in enumerate(center_circles):
-        snake = segmentation.active_contour(img_smooth, snake.astype(float),
-                                            alpha=0.015, beta=10, gamma=0.001,
-                                            w_line=0.0, w_edge=1.0,
-                                            max_px_move=1.0,
-                                            max_iterations=2500,
-                                            convergence=0.2)
+        snake = segmentation.active_contour(
+            img_smooth,
+            snake.astype(float),
+            alpha=0.015,
+            beta=10,
+            gamma=0.001,
+            w_line=0.0,
+            w_edge=1.0,
+            max_px_move=1.0,
+            max_iterations=2500,
+            convergence=0.2
+        )
         seg = np.zeros(segm.shape, dtype=bool)
         x, y = np.array(snake).transpose().tolist()
         # rr, cc = draw.polygon(x, y)
@@ -315,8 +324,7 @@ def segment_active_contour(img, centers):
     return segm, centers, None
 
 
-def segment_morphsnakes(img, centers, init_center=True, smoothing=5,
-                        lambdas=(3, 3), bb_dist=INIT_MASK_BORDER):
+def segment_morphsnakes(img, centers, init_center=True, smoothing=5, lambdas=(3, 3), bb_dist=INIT_MASK_BORDER):
     """ segmentation using morphological snakes with some parameters
 
     :param ndarray img: input image / segmentation
@@ -339,7 +347,7 @@ def segment_morphsnakes(img, centers, init_center=True, smoothing=5,
     params = dict(smoothing=smoothing, lambda1=lambdas[0], lambda2=lambdas[1])
     ms = multi_snakes.MultiMorphSnakes(img, mask, morphsnakes.MorphACWE, params)
 
-    diag = np.sqrt(img.shape[0] ** 2 + img.shape[1] ** 2)
+    diag = np.sqrt(img.shape[0]**2 + img.shape[1]**2)
     ms.run(int(diag / 2.))
     segm = ms.levelset
     return segm, centers, None
@@ -362,8 +370,7 @@ def segment_morphsnakes(img, centers, init_center=True, smoothing=5,
 #     return segm, centers, None
 
 
-def segment_fit_ellipse(seg, centers, fn_preproc_points,
-                        thr_overlap=SEGM_OVERLAP):
+def segment_fit_ellipse(seg, centers, fn_preproc_points, thr_overlap=SEGM_OVERLAP):
     """ segment eggs using ellipse fitting
 
     :param ndarray seg: input image / segmentation
@@ -393,8 +400,7 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points,
     return segm, np.array(centres_new), dict_export
 
 
-def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
-                               thr_overlap=SEGM_OVERLAP):
+def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6, thr_overlap=SEGM_OVERLAP):
     """ segment eggs using ellipse fitting and RANDSAC strategy
 
     :param ndarray seg: input image / segmentation
@@ -411,15 +417,13 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
     for i, points in enumerate(points_centers):
         lb = i + 1
         nb_min = int(len(points) * nb_inliers)
-        ransac_model, _ = measure.ransac(points, EllipseModel,
-                                         min_samples=nb_min,
-                                         residual_threshold=15,
-                                         max_trials=250)
+        ransac_model, _ = measure.ransac(
+            points, EllipseModel, min_samples=nb_min, residual_threshold=15, max_trials=250
+        )
         if not ransac_model:
             continue
         logging.debug('ellipse params: %r', ransac_model.params)
-        segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb,
-                                           thr_overlap)
+        segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb, thr_overlap)
 
         if np.any(segm == lb):
             centres_new.append(centers[i])
@@ -429,9 +433,9 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6,
     return segm, np.array(centres_new), dict_export
 
 
-def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
-                                    table_p, nb_inliers=0.35,
-                                    thr_overlap=SEGM_OVERLAP):
+def segment_fit_ellipse_ransac_segm(
+    seg, centers, fn_preproc_points, table_p, nb_inliers=0.35, thr_overlap=SEGM_OVERLAP
+):
     """ segment eggs using ellipse fitting and RANDSAC strategy on segmentation
 
     :param ndarray seg: input image / segmentation
@@ -442,8 +446,7 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
     :param float thr_overlap: threshold for removing overlapping segmentations
     :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
-    slic, points_all, labels = ell_fit.get_slic_points_labels(seg, slic_size=15,
-                                                              slic_regul=0.1)
+    slic, points_all, labels = ell_fit.get_slic_points_labels(seg, slic_size=15, slic_regul=0.1)
     points_centers = fn_preproc_points(seg, centers)
     weights = np.bincount(slic.ravel())
 
@@ -451,18 +454,21 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
     segm = np.zeros_like(seg)
     for i, points in enumerate(points_centers):
         lb = i + 1
-        ransac_model, _ = ell_fit.ransac_segm(points,
-                                              ell_fit.EllipseModelSegm,
-                                              points_all, weights,
-                                              labels, table_p,
-                                              min_samples=nb_inliers,
-                                              residual_threshold=25,
-                                              max_trials=250)
+        ransac_model, _ = ell_fit.ransac_segm(
+            points=points,
+            model_class=ell_fit.EllipseModelSegm,
+            points_all=points_all,
+            weights=weights,
+            labels=labels,
+            table_prob=table_p,
+            min_samples=nb_inliers,
+            residual_threshold=25,
+            max_trials=250
+        )
         if not ransac_model:
             continue
         logging.debug('ellipse params: %r', ransac_model.params)
-        segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb,
-                                           thr_overlap)
+        segm = ell_fit.add_overlap_ellipse(segm, ransac_model.params, lb, thr_overlap)
 
         if np.any(segm == lb):
             centres_new.append(centers[i])
@@ -472,9 +478,9 @@ def segment_fit_ellipse_ransac_segm(seg, centers, fn_preproc_points,
     return segm, np.array(centres_new), dict_export
 
 
-def segment_graphcut_pixels(seg, centers, labels_fg_prob, gc_regul=1.,
-                            seed_size=10, coef_shape=0.,
-                            shape_mean_std=(50., 10.)):
+def segment_graphcut_pixels(
+    seg, centers, labels_fg_prob, gc_regul=1., seed_size=10, coef_shape=0., shape_mean_std=(50., 10.)
+):
     """ wrapper for segment global GraphCut optimisations
 
     :param ndarray seg: input image / segmentation
@@ -487,14 +493,22 @@ def segment_graphcut_pixels(seg, centers, labels_fg_prob, gc_regul=1.,
     :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     segm_obj = seg_rg.object_segmentation_graphcut_pixels(
-        seg, centers, labels_fg_prob, gc_regul, seed_size, coef_shape,
-        shape_mean_std=shape_mean_std)
+        seg, centers, labels_fg_prob, gc_regul, seed_size, coef_shape, shape_mean_std=shape_mean_std
+    )
     return segm_obj, centers, None
 
 
-def segment_graphcut_slic(slic, seg, centers, labels_fg_prob, gc_regul=1.,
-                          multi_seed=True, coef_shape=0., edge_weight=1.,
-                          shape_mean_std=(50., 10.)):
+def segment_graphcut_slic(
+    slic,
+    seg,
+    centers,
+    labels_fg_prob,
+    gc_regul=1.,
+    multi_seed=True,
+    coef_shape=0.,
+    edge_weight=1.,
+    shape_mean_std=(50., 10.),
+):
     """ wrapper for segment global GraphCut optimisations on superpixels
 
     :param ndarray slic:
@@ -509,17 +523,33 @@ def segment_graphcut_slic(slic, seg, centers, labels_fg_prob, gc_regul=1.,
     :return (ndarray, [[int, int]]): resulting segmentation, updated centres
     """
     gc_labels = seg_rg.object_segmentation_graphcut_slic(
-        slic, seg, centers, labels_fg_prob, gc_regul, edge_weight,
-        add_neighbours=multi_seed, coef_shape=coef_shape,
-        shape_mean_std=shape_mean_std)
+        slic,
+        seg,
+        centers,
+        labels_fg_prob,
+        gc_regul,
+        edge_weight,
+        add_neighbours=multi_seed,
+        coef_shape=coef_shape,
+        shape_mean_std=shape_mean_std
+    )
     segm_obj = np.array(gc_labels)[slic]
     return segm_obj, centers, None
 
 
-def segment_rg2sp_greedy(slic, seg, centers, labels_fg_prob, path_model,
-                         coef_shape, coef_pairwise=5, allow_obj_swap=True,
-                         prob_label_trans=(0.1, 0.03),
-                         dict_thresholds=RG2SP_THRESHOLDS, debug_export=''):
+def segment_rg2sp_greedy(
+    slic,
+    seg,
+    centers,
+    labels_fg_prob,
+    path_model,
+    coef_shape,
+    coef_pairwise=5,
+    allow_obj_swap=True,
+    prob_label_trans=(0.1, 0.03),
+    dict_thresholds=RG2SP_THRESHOLDS,
+    debug_export='',
+):
     """ wrapper for region growing method with some debug exporting """
     if os.path.splitext(path_model)[-1] == '.npz':
         shape_model = np.load(path_model, allow_pickle=True)
@@ -529,10 +559,19 @@ def segment_rg2sp_greedy(slic, seg, centers, labels_fg_prob, path_model,
 
     slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, labels_fg_prob)
     labels_greedy = seg_rg.region_growing_shape_slic_greedy(
-        slic, slic_prob_fg, centers, (shape_model['mix_model'], shape_model['cdfs']),
-        shape_model['name'], coef_shape=coef_shape, coef_pairwise=coef_pairwise,
-        prob_label_trans=prob_label_trans, greedy_tol=1e-1, allow_obj_swap=allow_obj_swap,
-        dict_thresholds=dict_thresholds, nb_iter=1000, debug_history=dict_debug)
+        slic,
+        slic_prob_fg,
+        centers, (shape_model['mix_model'], shape_model['cdfs']),
+        shape_model['name'],
+        coef_shape=coef_shape,
+        coef_pairwise=coef_pairwise,
+        prob_label_trans=prob_label_trans,
+        greedy_tol=1e-1,
+        allow_obj_swap=allow_obj_swap,
+        dict_thresholds=dict_thresholds,
+        nb_iter=1000,
+        debug_history=dict_debug
+    )
 
     if dict_debug is not None:
         nb_iter = len(dict_debug['energy'])
@@ -545,10 +584,19 @@ def segment_rg2sp_greedy(slic, seg, centers, labels_fg_prob, path_model,
     return segm_obj, centers, None
 
 
-def segment_rg2sp_graphcut(slic, seg, centers, labels_fg_prob, path_model,
-                           coef_shape, coef_pairwise=5, allow_obj_swap=True,
-                           prob_label_trans=(0.1, 0.03),
-                           dict_thresholds=RG2SP_THRESHOLDS, debug_export=''):
+def segment_rg2sp_graphcut(
+    slic,
+    seg,
+    centers,
+    labels_fg_prob,
+    path_model,
+    coef_shape,
+    coef_pairwise=5,
+    allow_obj_swap=True,
+    prob_label_trans=(0.1, 0.03),
+    dict_thresholds=RG2SP_THRESHOLDS,
+    debug_export='',
+):
     """ wrapper for region growing method with some debug exporting """
     if os.path.splitext(path_model)[-1] == '.npz':
         shape_model = np.load(path_model, allow_pickle=True)
@@ -558,10 +606,19 @@ def segment_rg2sp_graphcut(slic, seg, centers, labels_fg_prob, path_model,
 
     slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, labels_fg_prob)
     labels_gc = seg_rg.region_growing_shape_slic_graphcut(
-        slic, slic_prob_fg, centers, (shape_model['mix_model'], shape_model['cdfs']),
-        shape_model['name'], coef_shape=coef_shape, coef_pairwise=coef_pairwise,
-        prob_label_trans=prob_label_trans, optim_global=True, allow_obj_swap=allow_obj_swap,
-        dict_thresholds=dict_thresholds, nb_iter=250, debug_history=dict_debug)
+        slic,
+        slic_prob_fg,
+        centers, (shape_model['mix_model'], shape_model['cdfs']),
+        shape_model['name'],
+        coef_shape=coef_shape,
+        coef_pairwise=coef_pairwise,
+        prob_label_trans=prob_label_trans,
+        optim_global=True,
+        allow_obj_swap=allow_obj_swap,
+        dict_thresholds=dict_thresholds,
+        nb_iter=250,
+        debug_history=dict_debug
+    )
 
     if dict_debug is not None:
         nb_iter = len(dict_debug['energy'])
@@ -603,70 +660,54 @@ def create_dict_segmentation(params, slic, segm, img, centers):
     :return {str: (function, (...))}:
     """
     # parameters for Region Growing
-    params_rg_single = (slic, segm, centers, params['tab-proba_RG2SP'],
-                        params['path_single-model'], params['RG2SP-shape'],
-                        params['RG2SP-pairwise'], params['RG2SP-swap'],
-                        params['label_trans'], params['RG2SP_theshold'])
-    params_rg_multi = (slic, segm, centers, params['tab-proba_RG2SP'],
-                       params['path_multi-models'], params['RG2SP-shape'],
-                       params['RG2SP-pairwise'], params['RG2SP-swap'],
-                       params['label_trans'], params['RG2SP_theshold'])
+    params_rg_single = (
+        slic, segm, centers, params['tab-proba_RG2SP'], params['path_single-model'], params['RG2SP-shape'],
+        params['RG2SP-pairwise'], params['RG2SP-swap'], params['label_trans'], params['RG2SP_theshold']
+    )
+    params_rg_multi = (
+        slic, segm, centers, params['tab-proba_RG2SP'], params['path_multi-models'], params['RG2SP-shape'],
+        params['RG2SP-pairwise'], params['RG2SP-swap'], params['label_trans'], params['RG2SP_theshold']
+    )
     tab_proba_gc = params['tab-proba_graphcut']
     gc_regul_px = params['gc-pixel_regul']
     gc_regul_slic = params['gc-slic_regul']
     seg_simple = simplify_segm_3cls(segm) if segm is not None else None
 
     dict_segment = {
-        'ellipse_moments': (segment_fit_ellipse,
-                            (segm, centers,
-                             ell_fit.prepare_boundary_points_ray_dist)),
-        'ellipse_ransac_mmt': (segment_fit_ellipse_ransac,
-                               (segm, centers,
-                                ell_fit.prepare_boundary_points_ray_dist)),
-        'ellipse_ransac_crit': (segment_fit_ellipse_ransac_segm,
-                                (segm, centers,
-                                 ell_fit.prepare_boundary_points_ray_edge,
-                                 params['tab-proba_ellipse'])),
-
-        'ellipse_ransac_crit2': (segment_fit_ellipse_ransac_segm,
-                                 (segm, centers,
-                                  ell_fit.prepare_boundary_points_ray_join,
-                                  params['tab-proba_ellipse'])),
-        'ellipse_ransac_crit3': (segment_fit_ellipse_ransac_segm,
-                                 (segm, centers,
-                                  ell_fit.prepare_boundary_points_ray_mean,
-                                  params['tab-proba_ellipse'])),
-
-        'GC_pixels-small': (segment_graphcut_pixels,
-                            (segm, centers, tab_proba_gc, gc_regul_px, 10)),
-        'GC_pixels-large': (segment_graphcut_pixels,
-                            (segm, centers, tab_proba_gc, gc_regul_px, 30)),
-        'GC_pixels-shape': (segment_graphcut_pixels, (segm, centers,
-                            tab_proba_gc, gc_regul_px, 10, 0.1)),
-        'GC_slic-small': (segment_graphcut_slic, (slic, segm, centers,
-                          tab_proba_gc, gc_regul_slic, False)),
-        'GC_slic-large': (segment_graphcut_slic, (slic, segm, centers,
-                          tab_proba_gc, gc_regul_slic, True)),
-        'GC_slic-shape': (segment_graphcut_slic,
-                          (slic, segm, centers, tab_proba_gc, 1., False, 0.1)),
-
+        'ellipse_moments': (segment_fit_ellipse, (segm, centers, ell_fit.prepare_boundary_points_ray_dist)),
+        'ellipse_ransac_mmt': (segment_fit_ellipse_ransac, (segm, centers, ell_fit.prepare_boundary_points_ray_dist)),
+        'ellipse_ransac_crit': (
+            segment_fit_ellipse_ransac_segm,
+            (segm, centers, ell_fit.prepare_boundary_points_ray_edge, params['tab-proba_ellipse'])
+        ),
+        'ellipse_ransac_crit2': (
+            segment_fit_ellipse_ransac_segm,
+            (segm, centers, ell_fit.prepare_boundary_points_ray_join, params['tab-proba_ellipse'])
+        ),
+        'ellipse_ransac_crit3': (
+            segment_fit_ellipse_ransac_segm,
+            (segm, centers, ell_fit.prepare_boundary_points_ray_mean, params['tab-proba_ellipse'])
+        ),
+        'GC_pixels-small': (segment_graphcut_pixels, (segm, centers, tab_proba_gc, gc_regul_px, 10)),
+        'GC_pixels-large': (segment_graphcut_pixels, (segm, centers, tab_proba_gc, gc_regul_px, 30)),
+        'GC_pixels-shape': (segment_graphcut_pixels, (segm, centers, tab_proba_gc, gc_regul_px, 10, 0.1)),
+        'GC_slic-small': (segment_graphcut_slic, (slic, segm, centers, tab_proba_gc, gc_regul_slic, False)),
+        'GC_slic-large': (segment_graphcut_slic, (slic, segm, centers, tab_proba_gc, gc_regul_slic, True)),
+        'GC_slic-shape': (segment_graphcut_slic, (slic, segm, centers, tab_proba_gc, 1., False, 0.1)),
         'RG2SP_greedy-single': (segment_rg2sp_greedy, params_rg_single),
         'RG2SP_greedy-mixture': (segment_rg2sp_greedy, params_rg_multi),
         'RG2SP_GC-single': (segment_rg2sp_graphcut, params_rg_single),
         'RG2SP_GC-mixture': (segment_rg2sp_graphcut, params_rg_multi),
-
         'watershed': (segment_watershed, (segm, centers)),
         'watershed_morph': (segment_watershed, (segm, centers, True)),
 
         # NOTE, this method takes to long for run in CI
-        'morph-snakes_seg': (segment_morphsnakes,
-                             (seg_simple, centers, True, 3, [2, 1])),
+        'morph-snakes_seg': (segment_morphsnakes, (seg_simple, centers, True, 3, [2, 1])),
         'morph-snakes_img': (segment_morphsnakes, (img, centers)),
     }
     if params['methods'] is not None:
         params['methods'] = [n.lower() for n in params['methods']]
-        dict_segment_filter = {n: dict_segment[n] for n in dict_segment
-                               if n.lower() in params['methods']}
+        dict_segment_filter = {n: dict_segment[n] for n in dict_segment if n.lower() in params['methods']}
     else:
         dict_segment_filter = dict_segment
     return dict_segment_filter
@@ -702,8 +743,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
         logging.warning('no center was detected for "%s"', name)
         return name
     # img = seg / float(seg.max())
-    slic = seg_spx.segment_slic_img2d(img_rgb, sp_size=params['slic_size'],
-                                      relative_compact=params['slic_regul'])
+    slic = seg_spx.segment_slic_img2d(img_rgb, sp_size=params['slic_size'], relative_compact=params['slic_regul'])
 
     path_segm = os.path.join(params['path_exp'], 'input', name + '.png')
     export_draw_image_segm(path_segm, img_rgb, segm_obj=seg, centers=centers)
@@ -731,8 +771,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
             t = time.time()
             if debug_export and 'rg2sp' in method:
                 os.mkdir(path_debug)
-                segm_obj, centers, dict_export = fn(*args,
-                                                    debug_export=path_debug)
+                segm_obj, centers, dict_export = fn(*args, debug_export=path_debug)
             else:
                 segm_obj, centers, dict_export = fn(*args)
 
@@ -741,8 +780,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
                 for k in dict_export:
                     export_partial(k, dict_export[k], path_dir, name)
 
-            logging.info('running time of %r on image "%s" is %d s',
-                         fn.__name__, image_name, time.time() - t)
+            logging.info('running time of %r on image "%s" is %d s', fn.__name__, image_name, time.time() - t)
             tl_data.io_imsave(path_segm, segm_obj.astype(np.uint8))
             export_draw_image_segm(path_fig, img_rgb, seg, segm_obj, centers)
             # export also centers
@@ -773,15 +811,13 @@ def main(params, debug_export=DEBUG_EXPORT):
     """
     logging.getLogger().setLevel(logging.DEBUG)
 
-    params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
-                                              stamp_unique=EACH_UNIQUE_EXPERIMENT)
+    params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT, stamp_unique=EACH_UNIQUE_EXPERIMENT)
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     # tl_expt.create_subfolders(params['path_exp'], [FOLDER_IMAGE])
 
     df_paths = pd.read_csv(params['path_list'], index_col=0)
-    logging.info('loaded %i items with columns: %r', len(df_paths),
-                 df_paths.columns.tolist())
+    logging.info('loaded %i items with columns: %r', len(df_paths), df_paths.columns.tolist())
     df_paths.dropna(how='any', inplace=True)
 
     # create sub-folders if required
@@ -789,15 +825,17 @@ def main(params, debug_export=DEBUG_EXPORT):
     dict_segment = create_dict_segmentation(params, None, None, None, None)
     dirs_center = [n + DIR_CENTRE_POSIX for n in dict_segment]
     dirs_visu = [n + DIR_VISUAL_POSIX for n in dict_segment]
-    tl_expt.create_subfolders(params['path_exp'],
-                              [n for n in dict_segment] + dirs_center + dirs_visu)
+    tl_expt.create_subfolders(params['path_exp'], [n for n in dict_segment] + dirs_center + dirs_visu)
     if debug_export:
         list_dirs = [n + DIR_DEBUG_POSIX for n in dict_segment if 'rg2sp' in n]
         tl_expt.create_subfolders(params['path_exp'], list_dirs)
 
     _wrapper_segment = partial(image_segmentation, params=params)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, df_paths.iterrows(),
-                                          nb_workers=params['nb_workers'])
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_segment,
+        df_paths.iterrows(),
+        nb_workers=params['nb_workers'],
+    )
     list(iterate)
 
 

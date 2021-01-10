@@ -173,8 +173,7 @@ def load_landmarks_csv(path_file):
     assert os.path.exists(path_file), 'missing "%s"' % path_file
     df = pd.read_csv(path_file, index_col=0)
     landmarks = df[COLUMNS_COORDS].values.tolist()
-    logging.debug(' load_landmarks_csv (%i): \n%r',
-                  len(landmarks), np.asarray(landmarks).astype(int).tolist())
+    logging.debug(' load_landmarks_csv (%i): \n%r', len(landmarks), np.asarray(landmarks).astype(int).tolist())
     return landmarks
 
 
@@ -284,8 +283,7 @@ def scale_image_intensity(img, im_range=1., quantiles=(2, 98)):
     """
     p_low = np.percentile(img, quantiles[0])
     p_high = np.percentile(img, quantiles[1])
-    img = exposure.rescale_intensity(img.astype(float), in_range=(p_low, p_high),
-                                     out_range='float')
+    img = exposure.rescale_intensity(img.astype(float), in_range=(p_low, p_high), out_range='float')
     if im_range == 255:
         img = np.array(img * im_range).astype(np.uint8)
     return img
@@ -299,6 +297,7 @@ def io_image_decorate(func):
     :param func:
     :return:
     """
+
     @wraps(func)
     def wrap(*args, **kwargs):
         log_level = logging.getLogger().getEffectiveLevel()
@@ -308,6 +307,7 @@ def io_image_decorate(func):
             response = func(*args, **kwargs)
         logging.getLogger().setLevel(log_level)
         return response
+
     return wrap
 
 
@@ -451,8 +451,7 @@ def export_image(path_img, img, stretch_range=True):
     assert img.ndim >= 2, 'wrong image dim: %r' % img.shape
     if not os.path.isdir(os.path.dirname(path_img)):
         return ''
-    logging.debug(' .. saving image %r with %r to "%s"',
-                  img.shape, np.unique(img), path_img)
+    logging.debug(' .. saving image %r with %r to "%s"', img.shape, np.unique(img), path_img)
     if img.ndim == 2 or (img.ndim == 3 and img.shape[2] == 3):
         if stretch_range and img.max() > 0:
             img = img / float(img.max()) * 255
@@ -460,7 +459,7 @@ def export_image(path_img, img, stretch_range=True):
         io_imsave(path_img, img.astype(np.uint8))
     elif img.ndim == 3:
         if stretch_range and img.max() > 0:
-            img = img / float(img.max()) * 255 ** 2
+            img = img / float(img.max()) * 255**2
         path_img = os.path.splitext(path_img)[0] + '.tiff'
         io_imsave(path_img, img)
         # tif = libtiff.TIFF.open(path_img, mode='w')
@@ -524,8 +523,7 @@ def convert_img_2_nifti_gray(path_img, path_out):
     assert os.path.exists(path_out), 'missing output: %s' % path_out
     name_img_out = os.path.splitext(os.path.basename(path_img))[0] + '.nii'
     path_img_out = os.path.join(os.path.dirname(path_out), name_img_out)
-    logging.debug('Convert image to Nifti format "%s" ->  "%s"',
-                  path_img, path_img_out)
+    logging.debug('Convert image to Nifti format "%s" ->  "%s"', path_img, path_img_out)
 
     img = io_imread(path_img)
     img = color.rgb2gray(img)
@@ -559,8 +557,7 @@ def convert_img_2_nifti_rgb(path_img, path_out):
     assert os.path.exists(path_out), 'missing output: %s' % path_out
     name_img_out = os.path.splitext(os.path.basename(path_img))[0] + '.nii'
     path_img_out = os.path.join(os.path.dirname(path_out), name_img_out)
-    logging.debug('Convert image to Nifti format "%s" ->  "%s"',
-                  path_img, path_img_out)
+    logging.debug('Convert image to Nifti format "%s" ->  "%s"', path_img, path_img_out)
 
     img = io_imread(path_img)
     dims = img.shape
@@ -803,8 +800,7 @@ def scale_image_size(path_img, size, path_out=None):
     return path_out
 
 
-def load_complete_image_folder(path_dir, img_name_pattern='*.png',
-                               nb_sample=None, im_range=255, skip=None):
+def load_complete_image_folder(path_dir, img_name_pattern='*.png', nb_sample=None, im_range=255, skip=None):
     """ load complete image folder with specific name pattern
 
     :param str path_dir: loading dictionary
@@ -1017,12 +1013,10 @@ def get_image2d_boundary_color(image, size=1):
     """
     size = int(size)
     if image.ndim == 2:
-        bg_pixels = np.hstack([image[:size, :], image[:, :size].T,
-                               image[-size:, :], image[:, -size:].T])
+        bg_pixels = np.hstack([image[:size, :], image[:, :size].T, image[-size:, :], image[:, -size:].T])
         bg_color = np.argmax(np.bincount(bg_pixels.ravel()))
     elif image.ndim == 3:
-        bounds = [image[:size, :, ...], image[:, :size, ...],
-                  image[-size:, :, ...], image[:, -size:, ...]]
+        bounds = [image[:size, :, ...], image[:, :size, ...], image[-size:, :, ...], image[:, -size:, ...]]
         bg_pixels = np.vstack([b.reshape(-1, image.shape[-1]) for b in bounds])
         bg_color = np.median(bg_pixels, axis=0)
     else:

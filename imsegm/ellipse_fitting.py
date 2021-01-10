@@ -9,10 +9,8 @@ from scipy import ndimage, spatial
 from skimage import morphology
 from skimage.measure import fit as sk_fit
 
-from imsegm.descriptors import (
-    reduce_close_points, compute_ray_features_segm_2d, reconstruct_ray_features_2d)
-from imsegm.superpixels import (
-    segment_slic_img2d, superpixel_centers, make_graph_segm_connect_grid2d_conn4)
+from imsegm.descriptors import reduce_close_points, compute_ray_features_segm_2d, reconstruct_ray_features_2d
+from imsegm.superpixels import segment_slic_img2d, superpixel_centers, make_graph_segm_connect_grid2d_conn4
 # from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
 from imsegm.utilities.drawing import ellipse
 
@@ -125,15 +123,15 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         r_org, c_org, r_rad, c_rad, phi = self.params
         sin_phi, cos_phi = np.sin(phi), np.cos(phi)
         r, c = (r_pos - r_org), (c_pos - c_org)
-        dist_1 = ((r * cos_phi + c * sin_phi) / r_rad) ** 2
-        dist_2 = ((r * sin_phi - c * cos_phi) / c_rad) ** 2
+        dist_1 = ((r * cos_phi + c * sin_phi) / r_rad)**2
+        dist_2 = ((r * sin_phi - c * cos_phi) / c_rad)**2
         inside = ((dist_1 + dist_2) <= 1)
 
         # import matplotlib.pyplot as plt
         # plt.imshow(labels.reshape((10, 15)), interpolation='nearest')
         # plt.contour(inside.reshape((10, 15)))
 
-        table_q = - np.log(table_prob)
+        table_q = -np.log(table_prob)
         labels_in = labels[inside].astype(int)
 
         diff = table_q[0, labels_in] - table_q[1, labels_in]
@@ -142,8 +140,17 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         return residual
 
 
-def ransac_segm(points, model_class, points_all, weights, labels, table_prob,
-                min_samples, residual_threshold=1, max_trials=100):
+def ransac_segm(
+    points,
+    model_class,
+    points_all,
+    weights,
+    labels,
+    table_prob,
+    min_samples,
+    residual_threshold=1,
+    max_trials=100,
+):
     """ Fit a model to points with the RANSAC (random sample consensus).
 
     Parameters
@@ -270,8 +277,7 @@ def get_slic_points_labels(segm, img=None, slic_size=20, slic_regul=0.1):
     """
     if not img:
         img = segm / float(segm.max())
-    slic = segment_slic_img2d(img, sp_size=slic_size,
-                              relative_compact=slic_regul)
+    slic = segment_slic_img2d(img, sp_size=slic_size, relative_compact=slic_regul)
     slic_centers = np.array(superpixel_centers(slic)).astype(int)
     labels = segm[slic_centers[:, 0], slic_centers[:, 1]]
     return slic, slic_centers, labels
@@ -347,10 +353,14 @@ def add_overlap_ellipse(segm, ellipse_params, label, thr_overlap=1.):
     return segm
 
 
-def prepare_boundary_points_ray_join(seg, centers, close_points=5,
-                                     min_diam=MIN_ELLIPSE_DAIM,
-                                     sel_bg=STRUC_ELEM_BG,
-                                     sel_fg=STRUC_ELEM_FG):
+def prepare_boundary_points_ray_join(
+    seg,
+    centers,
+    close_points=5,
+    min_diam=MIN_ELLIPSE_DAIM,
+    sel_bg=STRUC_ELEM_BG,
+    sel_fg=STRUC_ELEM_FG,
+):
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
@@ -391,8 +401,7 @@ def prepare_boundary_points_ray_join(seg, centers, close_points=5,
     return points_centers
 
 
-def split_segm_background_foreground(seg, sel_bg=STRUC_ELEM_BG,
-                                     sel_fg=STRUC_ELEM_FG):
+def split_segm_background_foreground(seg, sel_bg=STRUC_ELEM_BG, sel_fg=STRUC_ELEM_FG):
     """ smoothing segmentation with morphological operation
 
     :param ndarray seg: input segmentation
@@ -438,10 +447,14 @@ def split_segm_background_foreground(seg, sel_bg=STRUC_ELEM_BG,
     return seg_bg, seg_fg
 
 
-def prepare_boundary_points_ray_edge(seg, centers, close_points=5,
-                                     min_diam=MIN_ELLIPSE_DAIM,
-                                     sel_bg=STRUC_ELEM_BG,
-                                     sel_fg=STRUC_ELEM_FG):
+def prepare_boundary_points_ray_edge(
+    seg,
+    centers,
+    close_points=5,
+    min_diam=MIN_ELLIPSE_DAIM,
+    sel_bg=STRUC_ELEM_BG,
+    sel_fg=STRUC_ELEM_FG,
+):
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
@@ -485,10 +498,14 @@ def prepare_boundary_points_ray_edge(seg, centers, close_points=5,
     return points_centers
 
 
-def prepare_boundary_points_ray_mean(seg, centers, close_points=5,
-                                     min_diam=MIN_ELLIPSE_DAIM,
-                                     sel_bg=STRUC_ELEM_BG,
-                                     sel_fg=STRUC_ELEM_FG):
+def prepare_boundary_points_ray_mean(
+    seg,
+    centers,
+    close_points=5,
+    min_diam=MIN_ELLIPSE_DAIM,
+    sel_bg=STRUC_ELEM_BG,
+    sel_fg=STRUC_ELEM_FG,
+):
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
@@ -536,9 +553,7 @@ def prepare_boundary_points_ray_mean(seg, centers, close_points=5,
     return points_centers
 
 
-def prepare_boundary_points_ray_dist(seg, centers, close_points=1,
-                                     sel_bg=STRUC_ELEM_BG,
-                                     sel_fg=STRUC_ELEM_FG):
+def prepare_boundary_points_ray_dist(seg, centers, close_points=1, sel_bg=STRUC_ELEM_BG, sel_fg=STRUC_ELEM_FG):
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
@@ -628,8 +643,7 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, relative_compact=0.3
             ...
             [ 92, 118]])]
     """
-    slic = segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size,
-                              relative_compact=relative_compact)
+    slic = segment_slic_img2d(seg / float(seg.max()), sp_size=sp_size, relative_compact=relative_compact)
     points_all = filter_boundary_points(seg, slic)
 
     dists = spatial.distance.cdist(points_all, centers, metric='euclidean')
@@ -651,7 +665,6 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, relative_compact=0.3
 #         [len(hist) - 1]]
 #     thr_dist = bin[coord[0][0]]
 #     return thr_dist
-
 
 # def prepare_boundary_points_dist(seg, centers, sp_size=25, rltv_compact=0.3):
 #     """ extract some point around foreground boundaries

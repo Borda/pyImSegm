@@ -58,8 +58,7 @@ def compute_eggs_center(seg_label):
         im_bin = (seg_label == lb)
         if np.sum(im_bin) > 0:
             pos = ndimage.measurements.center_of_mass(seg_label == lb)
-            df_center = df_center.append({'X': pos[1], 'Y': pos[0]},
-                                         ignore_index=True)
+            df_center = df_center.append({'X': pos[1], 'Y': pos[0]}, ignore_index=True)
     return df_center
 
 
@@ -168,12 +167,17 @@ def main(path_segs, path_out, nb_workers):
             'missing: %s' % path_out
         os.mkdir(path_out)
 
-    _wrapper_create_annot_centers = partial(create_annot_centers,
-                                            path_out_seg=path_out,
-                                            path_out_csv=path_out)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_create_annot_centers,
-                                          list_imgs, nb_workers=nb_workers,
-                                          desc='annotating images')
+    _wrapper_create_annot_centers = partial(
+        create_annot_centers,
+        path_out_seg=path_out,
+        path_out_csv=path_out,
+    )
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_create_annot_centers,
+        list_imgs,
+        nb_workers=nb_workers,
+        desc='annotating images',
+    )
     list(iterate)
 
 

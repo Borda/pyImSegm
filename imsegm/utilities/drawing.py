@@ -22,11 +22,7 @@ from planar import line as pl_line
 #: for blending two images define chess field size in pixels
 SIZE_CHESS_FIELD = 50
 #: columns from description files which marks the egg annotation by expert
-COLUMNS_POSITION_EGG_ANNOT = (
-    'ant_x', 'ant_y',
-    'post_x', 'post_y',
-    'lat_x', 'lat_y'
-)
+COLUMNS_POSITION_EGG_ANNOT = ('ant_x', 'ant_y', 'post_x', 'post_y', 'lat_x', 'lat_y')
 # http://matplotlib.org/examples/color/colormaps_reference.html
 # http://htmlcolorcodes.com/
 COLOR_ORANGE = '#FF5733'
@@ -100,13 +96,12 @@ def _ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
     shifted_center = center - upper_left
     bounding_shape = lower_right - upper_left + 1
 
-    r_lim, c_lim = np.ogrid[0:int(bounding_shape[0]),
-                            0:int(bounding_shape[1])]
+    r_lim, c_lim = np.ogrid[0:int(bounding_shape[0]), 0:int(bounding_shape[1])]
     r_org, c_org = shifted_center
     r_rad, c_rad = radii
     r, c = (r_lim - r_org), (c_lim - c_org)
-    dist_1 = ((r * cos_alpha + c * sin_alpha) / r_rad) ** 2
-    dist_2 = ((r * sin_alpha - c * cos_alpha) / c_rad) ** 2
+    dist_1 = ((r * cos_alpha + c * sin_alpha) / r_rad)**2
+    dist_2 = ((r * sin_alpha - c * cos_alpha) / c_rad)**2
     rr, cc = np.nonzero((dist_1 + dist_2) <= 1)
 
     rr.flags.writeable = True
@@ -148,8 +143,7 @@ def ellipse(r, c, r_radius, c_radius, orientation=0., shape=None):
            [0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-    rr, cc = draw.ellipse(r, c, r_radius, c_radius,
-                          rotation=orientation, shape=shape)
+    rr, cc = draw.ellipse(r, c, r_radius, c_radius, rotation=orientation, shape=shape)
     # alternative version
     # rr, cc = _ellipse(r, c, r_radius, c_radius, orientation, shape)
     return rr, cc
@@ -187,8 +181,7 @@ def ellipse_perimeter(r, c, r_radius, c_radius, orientation=0., shape=None):
            [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-    rr, cc = draw.ellipse_perimeter(r, c, r_radius, c_radius,
-                                    orientation=-orientation, shape=shape)
+    rr, cc = draw.ellipse_perimeter(r, c, r_radius, c_radius, orientation=-orientation, shape=shape)
     return rr, cc
 
 
@@ -232,8 +225,7 @@ def figure_image_adjustment(fig, img_size):
     return fig
 
 
-def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
-                              mid_image_gray=True):
+def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2, mid_image_gray=True):
     """ creating subfigure with original image, overlapped segmentation contours
     and clean result segmentation...
     it turns the sequence in vertical / horizontal according major image dim
@@ -257,8 +249,7 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         img = color.gray2rgb(img)
 
-    fig, axarr = create_figure_by_image(img.shape[:2], subfig_size,
-                                        nb_subfigs=3)
+    fig, axarr = create_figure_by_image(img.shape[:2], subfig_size, nb_subfigs=3)
     axarr[0].set_title('original image')
     axarr[0].imshow(img)
 
@@ -282,8 +273,7 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2,
     return fig
 
 
-def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9,
-                                    drop_labels=None, segm_alpha=0.2):
+def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9, drop_labels=None, segm_alpha=0.2):
     """ figure showing overlap annotation - segmentation - image
 
     :param ndarray annot: user annotation
@@ -327,12 +317,13 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9,
     if drop_labels is not None:
         for lb in drop_labels:
             diff[annot == lb] = 0
-    cax = axarr[2].imshow(diff, vmin=-max_val, vmax=max_val, alpha=0.5,
-                          cmap=plt.cm.bwr)
+    cax = axarr[2].imshow(diff, vmin=-max_val, vmax=max_val, alpha=0.5, cmap=plt.cm.bwr)
     # vals = np.linspace(-max_val, max_val, max_val * 2 + 1)
-    plt.colorbar(cax, ticks=np.linspace(-max_val, max_val, max_val * 2 + 1),
-                 boundaries=np.linspace(-max_val - 0.5, max_val + 0.5,
-                                        max_val * 2 + 2))
+    plt.colorbar(
+        cax,
+        ticks=np.linspace(-max_val, max_val, max_val * 2 + 1),
+        boundaries=np.linspace(-max_val - 0.5, max_val + 0.5, max_val * 2 + 2)
+    )
     # plt.clim(-max_val - 0.5, max_val - 0.5)
     # axarr[2].contour(annot, levels=np.unique(annot), linewidths=1, colors='g')
     # axarr[2].contour(segm, levels=np.unique(segm), linewidths=1, colors='b')
@@ -367,9 +358,9 @@ def figure_segm_graphcut_debug(images, subfig_size=9):
     >>> isinstance(fig, matplotlib.figure.Figure)
     True
     """
-    assert all(n in images for n in [
-        'image', 'slic', 'slic_mean', 'img_graph_edges', 'img_graph_segm', 'imgs_unary_cost'
-    ]), 'missing keys in debug structure %r' % tuple(images.keys())
+    assert all(
+        n in images for n in ['image', 'slic', 'slic_mean', 'img_graph_edges', 'img_graph_segm', 'imgs_unary_cost']
+    ), 'missing keys in debug structure %r' % tuple(images.keys())
     nb_cols = max(3, len(images['imgs_unary_cost']))
     img = images['image']
     if img.ndim == 2:  # for gray images of ovary
@@ -379,8 +370,7 @@ def figure_segm_graphcut_debug(images, subfig_size=9):
     fig_size = norm_size[::-1] * subfig_size * np.array([nb_cols, 2])
     fig, axarr = plt.subplots(2, nb_cols, figsize=fig_size)
 
-    img_slic = segmentation.mark_boundaries(img, images['slic'],
-                                            mode='subpixel')
+    img_slic = segmentation.mark_boundaries(img, images['slic'], mode='subpixel')
     axarr[0, 0].set_title('SLIC')
     axarr[0, 0].imshow(img_slic)
     for i, k in enumerate(['img_graph_edges', 'img_graph_segm']):
@@ -395,8 +385,7 @@ def figure_segm_graphcut_debug(images, subfig_size=9):
             axarr[j, i].axis('off')
             axarr[j, i].axes.get_xaxis().set_ticklabels([])
             axarr[j, i].axes.get_yaxis().set_ticklabels([])
-    fig.subplots_adjust(left=0, right=1, top=1, bottom=0,
-                        wspace=0.05, hspace=0.05)
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0.05, hspace=0.05)
     return fig
 
 
@@ -455,14 +444,12 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
     for i, params in enumerate(ellipses):
         c1, c2, h, w, phi = params
         rr, cc = ellipse_perimeter(int(c1), int(c2), int(h), int(w), phi)
-        ax.plot(cc, rr, '.', color=COLORS[i % len(COLORS)],
-                label='#%i with crit=%d' % ((i + 1), int(crits[i])))
+        ax.plot(cc, rr, '.', color=COLORS[i % len(COLORS)], label='#%i with crit=%d' % ((i + 1), int(crits[i])))
     ax.legend(loc='lower right')
 
     # plt.plot(centers[:, 1], centers[:, 0], 'ow')
     for i in range(len(centers)):
-        ax.plot(centers[i, 1], centers[i, 0], 'o',
-                color=COLORS[i % len(COLORS)])
+        ax.plot(centers[i, 1], centers[i, 0], 'o', color=COLORS[i % len(COLORS)])
     ax.set(xlim=[0, seg.shape[1]], ylim=[seg.shape[0], 0])
     ax.axis('off')
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
@@ -492,22 +479,21 @@ def figure_annot_slic_histogram_labels(dict_label_hist, slic_size=-1, slic_regul
     for i, nb in enumerate(lb_sums):
         if nb == 0:
             continue
-        patches, bin_edges = np.histogram(matrix_hist_all[:, i], bins=50,
-                                          density=True)
+        patches, bin_edges = np.histogram(matrix_hist_all[:, i], bins=50, density=True)
         bins = [(a + b) / 2. for a, b in zip(bin_edges[:-1], bin_edges[1:])]
         # ax.plot(bins, patches, label='label: %i' % i)
         ax.semilogy(bins, patches, label='label: %i' % i)
-    ax.set_title('Histogram of labels density in each segments '
-                 'over all annotated images\n (superpixels: size=%i, regul=%f)'
-                 % (slic_size, slic_regul))
+    ax.set_title(
+        'Histogram of labels density in each segments over all annotated images\n'
+        ' (superpixels: size=%i, regul=%f)' % (slic_size, slic_regul)
+    )
     ax.set(xlabel='region densities', ylabel='[%]')
     ax.legend()
     ax.grid()
     return fig
 
 
-def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None,
-                       points_reconst=None, title=''):
+def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None, points_reconst=None, title=''):
     """ visualise the segmentation with specific point and estimated ray dist.
 
     :param ndarray segm: segmentation
@@ -531,10 +517,8 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None,
     axarr[0].set(xlim=[0, segm.shape[1]], ylim=[segm.shape[0], 0])
     if points_reconst is not None:
         axarr[0].plot(points_reconst[:, 1], points_reconst[:, 0], 'g.')
-    axarr[1].plot(np.linspace(0, 360, len(ray_dist_raw)).tolist(),
-                  ray_dist_raw, 'b', label='original')
-    axarr[1].plot(np.linspace(0, 360, len(ray_dist)).tolist(),
-                  ray_dist, 'r', label='final')
+    axarr[1].plot(np.linspace(0, 360, len(ray_dist_raw)).tolist(), ray_dist_raw, 'b', label='original')
+    axarr[1].plot(np.linspace(0, 360, len(ray_dist)).tolist(), ray_dist, 'r', label='final')
     axarr[1].set(xlabel='angles [deg]', xlim=[0, 360])
     axarr[1].legend(loc=0)
     axarr[1].grid()
@@ -562,8 +546,7 @@ def figure_used_samples(img, labels, slic, used_samples, fig_size=12):
     w_samples = np.asarray(used_samples)[slic]
     img = color.gray2rgb(img) if img.ndim == 2 else img
 
-    fig, axarr = create_figure_by_image(img.shape[:2], fig_size,
-                                        nb_subfigs=2, extend=0.15)
+    fig, axarr = create_figure_by_image(img.shape[:2], fig_size, nb_subfigs=2, extend=0.15)
     axarr[0].imshow(np.asarray(labels)[slic], cmap=plt.cm.jet)
     axarr[0].contour(slic, levels=np.unique(slic), colors='w', linewidths=0.5)
     axarr[0].axis('off')
@@ -635,8 +618,7 @@ def closest_point_on_line(start, end, point):
     return proj
 
 
-def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
-                      threshold_overlap=0.6):
+def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post, threshold_overlap=0.6):
     """ from given 3 point estimate the ellipse
 
     :param tuple(int,int) mask_shape:
@@ -665,9 +647,9 @@ def draw_eggs_ellipse(mask_shape, pos_ant, pos_lat, pos_post,
         radius_a = (np.linalg.norm(post - ant) / 2. / np.sqrt(2)) * 1.
         radius_b = (np.linalg.norm(lat - lat_proj) / np.sqrt(2)) * 1.
         angle = np.arctan2(*(post - ant))
-        rr, cc = ellipse(int(center[1]), int(center[0]),
-                         int(radius_a), int(radius_b),
-                         orientation=angle, shape=mask_eggs.shape)
+        rr, cc = ellipse(
+            int(center[1]), int(center[0]), int(radius_a), int(radius_b), orientation=angle, shape=mask_eggs.shape
+        )
         mask = np.zeros(mask_shape)
         mask[rr, cc] = True
 
@@ -706,8 +688,7 @@ def parse_annot_rectangles(rows_slice):
     """
     dict_eggs = {col: rows_slice[col] for col in COLUMNS_POSITION_EGG_ANNOT}
     if all(isinstance(dict_eggs[col], str) for col in dict_eggs):
-        dict_eggs = {col: map(int, dict_eggs[col][1:-1].lstrip().split())
-                     for col in dict_eggs}
+        dict_eggs = {col: map(int, dict_eggs[col][1:-1].lstrip().split()) for col in dict_eggs}
 
     pos_ant = list(zip(dict_eggs['ant_x'], dict_eggs['ant_y']))
     pos_lat = list(zip(dict_eggs['lat_x'], dict_eggs['lat_y']))
@@ -745,9 +726,7 @@ def draw_eggs_rectangle(mask_shape, pos_ant, pos_lat, pos_post):
         # center = ant + (post - ant) / 2.
         # dist = np.linalg.norm(shift)
         # angle = np.arctan2(*(post - ant))
-        points = np.array([ant + shift, ant - shift,
-                           post - shift, post + shift,
-                           ant + shift])
+        points = np.array([ant + shift, ant - shift, post - shift, post + shift, ant + shift])
         rr, cc = draw.polygon(points[:, 1], points[:, 0], shape=mask_shape)
         mask = np.zeros(mask_shape)
         mask[rr, cc] = True
@@ -797,9 +776,16 @@ def merge_object_masks(masks, overlap_thr=0.7):
     return mask
 
 
-def draw_image_segm_points(ax, img, points, labels=None, slic=None,
-                           color_slic='w', lut_label_marker=DICT_LABEL_MARKER,
-                           seg_contour=None):
+def draw_image_segm_points(
+    ax,
+    img,
+    points,
+    labels=None,
+    slic=None,
+    color_slic='w',
+    lut_label_marker=DICT_LABEL_MARKER,
+    seg_contour=None,
+):
     """ on plane draw background image or segmentation, overlap with SLIC
      contours, add contour of adative segmentation like annot. for centers
      plot point with specific property (shape and colour) according label
@@ -826,8 +812,7 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
         ax.imshow(img)
 
     if slic is not None:
-        ax.contour(slic, levels=np.unique(slic), alpha=0.5, colors=color_slic,
-                   linewidths=0.5)
+        ax.contour(slic, levels=np.unique(slic), alpha=0.5, colors=color_slic, linewidths=0.5)
     # fig.gca().imshow(mark_boundaries(img, slic))
     if seg_contour is not None and isinstance(seg_contour, np.ndarray):
         assert img.shape[:2] == seg_contour.shape[:2], \
@@ -839,8 +824,7 @@ def draw_image_segm_points(ax, img, points, labels=None, slic=None,
             % (len(points), len(labels))
         for lb in lut_label_marker:
             marker, clr = lut_label_marker[lb]
-            ax.plot(points[(labels == lb), 1], points[(labels == lb), 0],
-                    marker, color=clr)
+            ax.plot(points[(labels == lb), 1], points[(labels == lb), 0], marker, color=clr)
     else:
         ax.plot(points[:, 1], points[:, 0], 'o', color=COLOR_ORANGE)
     ax.set(xlim=[0, img.shape[1]], ylim=[img.shape[0], 0])
@@ -871,8 +855,7 @@ def figure_image_segm_centres(img, segm, centers=None, cmap_contour=plt.cm.Blues
             segm_show = np.argmax(segm, axis=2)
         ax.contour(segm_show, cmap=cmap_contour, linewidths=0.5)
     if isinstance(centers, list):
-        ax.plot(np.array(centers)[:, 1], np.array(centers)[:, 0], 'o',
-                color=COLOR_ORANGE)
+        ax.plot(np.array(centers)[:, 1], np.array(centers)[:, 0], 'o', color=COLOR_ORANGE)
     elif isinstance(centers, np.ndarray):
         assert img.shape[:2] == centers.shape[:2], \
             'image size %r and centers %r should match' % (img.shape, centers.shape)
@@ -884,8 +867,7 @@ def figure_image_segm_centres(img, segm, centers=None, cmap_contour=plt.cm.Blues
     return fig
 
 
-def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights,
-                                 img_bg=None, img_alpha=0.5):
+def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights, img_bg=None, img_alpha=0.5):
     """ visualise the edges on the overlapping a background image
 
     :param [tuple(int,int)] centers: list of centers
@@ -921,7 +903,7 @@ def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights,
         # make it partialy transparent
         img = (1. - img_alpha) + img * img_alpha
     else:
-        img = np.zeros(segments.shape + (3,))
+        img = np.zeros(segments.shape + (3, ))
     clrs = plt.get_cmap('Greens')
     diff = (edge_weights.max() - edge_weights.min())
     if diff > 0:
@@ -958,15 +940,17 @@ def draw_rg2sp_results(ax, seg, slic, debug_rg2sp, iter_index=-1):
     """
     ax.imshow(debug_rg2sp['labels'][iter_index][slic], cmap=plt.cm.jet)
     ax.contour(seg, levels=np.unique(seg), colors='#bfbfbf')
-    for centre, shift in zip(debug_rg2sp['centres'][iter_index],
-                             debug_rg2sp['shifts'][iter_index]):
+    for centre, shift in zip(debug_rg2sp['centres'][iter_index], debug_rg2sp['shifts'][iter_index]):
         rot = np.deg2rad(shift)
         ax.plot(centre[1], centre[0], 'ow')
-        ax.arrow(centre[1], centre[0], np.cos(rot) * 50., np.sin(rot) * 50.,
-                 fc='w', ec='w', head_width=20., head_length=30.)
-    ax.set(xlim=[0, seg.shape[1]], ylim=[seg.shape[0], 0],
-           title='Iteration #%i with E=%.0f'
-                 % (iter_index, round(debug_rg2sp['criteria'][iter_index])))
+        ax.arrow(
+            centre[1], centre[0], np.cos(rot) * 50., np.sin(rot) * 50., fc='w', ec='w', head_width=20., head_length=30.
+        )
+    ax.set(
+        xlim=[0, seg.shape[1]],
+        ylim=[seg.shape[0], 0],
+        title='Iteration #%i with E=%.0f' % (iter_index, round(debug_rg2sp['criteria'][iter_index]))
+    )
     return ax
 
 
@@ -1022,8 +1006,7 @@ def figure_rg2sp_debug_complete(seg, slic, debug_rg2sp, iter_index=-1, max_size=
         im = axarr[1, i].imshow(lut[slic], cmap=plt.cm.bone)
         fig.colorbar(im, ax=axarr[1, i])
         axarr[1, i].contour(seg, levels=np.unique(seg), cmap=plt.cm.jet)
-        axarr[1, i].plot(debug_rg2sp['centres'][iter_index][i, 1],
-                         debug_rg2sp['centres'][iter_index][i, 0], 'or')
+        axarr[1, i].plot(debug_rg2sp['centres'][iter_index][i, 1], debug_rg2sp['centres'][iter_index][i, 0], 'or')
         axarr[0, i].axis('off')
 
     fig.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.96)
@@ -1148,7 +1131,11 @@ def draw_image_clusters_centers(ax, img, centres, points=None, labels_centre=Non
     if len(centres) == 0:
         return
     centres = np.asarray(centres)
-    for s, clr in [(3e3, '#ccff33'), (1e3, '#ff3333'), (1e2, '#00ffff'), ]:
+    for s, clr in [
+        (3e3, '#ccff33'),
+        (1e3, '#ff3333'),
+        (1e2, '#00ffff'),
+    ]:
         ax.scatter(centres[:, 1], centres[:, 0], s=s, c=clr)
     ax.axes.get_xaxis().set_ticklabels([])
     ax.axes.get_yaxis().set_ticklabels([])

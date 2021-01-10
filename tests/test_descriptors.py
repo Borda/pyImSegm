@@ -15,13 +15,17 @@ import numpy as np
 from skimage import draw, transform
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-from imsegm.utilities.data_samples import (
-    IMAGE_LENNA, load_sample_image, sample_color_image_rand_segment)
+from imsegm.utilities.data_samples import IMAGE_LENNA, load_sample_image, sample_color_image_rand_segment
 from imsegm.utilities.drawing import figure_ray_feature
 from imsegm.descriptors import (
-    cython_img2d_color_mean, create_filter_bank_lm_2d, compute_ray_features_segm_2d,
-    shift_ray_features, reconstruct_ray_features_2d, FEATURES_SET_ALL,
-    compute_selected_features_color2d)
+    cython_img2d_color_mean,
+    create_filter_bank_lm_2d,
+    compute_ray_features_segm_2d,
+    shift_ray_features,
+    reconstruct_ray_features_2d,
+    FEATURES_SET_ALL,
+    compute_selected_features_color2d,
+)
 from imsegm.superpixels import segment_slic_img2d
 from tests import PATH_OUTPUT
 
@@ -45,9 +49,14 @@ def export_ray_results(seg, center, points, ray_dist_raw, ray_dist, name):
     :param list(list(int)) ray_dist: list of normalised Ray distances in regular step
     :param str name: name of particular figure
     """
-    fig = figure_ray_feature(seg, center, ray_dist_raw=ray_dist_raw,
-                             ray_dist=ray_dist, points_reconst=points,
-                             title=os.path.splitext(name)[0])
+    fig = figure_ray_feature(
+        seg,
+        center,
+        ray_dist_raw=ray_dist_raw,
+        ray_dist=ray_dist,
+        points_reconst=points,
+        title=os.path.splitext(name)[0]
+    )
     fig_path = os.path.join(PATH_FIGURES_RAY, name)
     fig.savefig(fig_path)
     if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
@@ -98,28 +107,23 @@ class TestFeatures(unittest.TestCase):
 
         points = [(200, 250), (150, 200), (250, 200), (250, 300)]
         for i, point in enumerate(points):
-            ray_dist_raw = compute_ray_features_segm_2d(seg, point,
-                                                        angle_step=ANGULAR_STEP)
+            ray_dist_raw = compute_ray_features_segm_2d(seg, point, angle_step=ANGULAR_STEP)
             ray_dist, shift = shift_ray_features(ray_dist_raw)
             points = reconstruct_ray_features_2d(point, ray_dist, shift)
-            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
-                                       'circle-%i.png' % i)
+            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist, 'circle-%i.png' % i)
             self.assertTrue(os.path.exists(p_fig))
 
     def test_ray_features_ellipse(self):
         seg = np.ones((400, 600), dtype=bool)
-        x, y = draw.ellipse(200, 250, 120, 200, rotation=np.deg2rad(30),
-                            shape=seg.shape)
+        x, y = draw.ellipse(200, 250, 120, 200, rotation=np.deg2rad(30), shape=seg.shape)
         seg[x, y] = False
 
         points = [(200, 250), (150, 200), (250, 300)]
         for i, point in enumerate(points):
-            ray_dist_raw = compute_ray_features_segm_2d(
-                seg, point, angle_step=ANGULAR_STEP)
+            ray_dist_raw = compute_ray_features_segm_2d(seg, point, angle_step=ANGULAR_STEP)
             # ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = reconstruct_ray_features_2d(point, ray_dist_raw)
-            p_fig = export_ray_results(seg, point, points, ray_dist_raw, [],
-                                       'ellipse-%i.png' % i)
+            p_fig = export_ray_results(seg, point, points, ray_dist_raw, [], 'ellipse-%i.png' % i)
             self.assertTrue(os.path.exists(p_fig))
 
     def test_ray_features_circle_down_edge(self):
@@ -129,12 +133,12 @@ class TestFeatures(unittest.TestCase):
         points = [(200, 250), (150, 200), (250, 200), (250, 300)]
 
         for i, point in enumerate(points):
-            ray_dist_raw = compute_ray_features_segm_2d(seg, point, edge='down',
-                                                        angle_step=ANGULAR_STEP)
+            ray_dist_raw = compute_ray_features_segm_2d(seg, point, edge='down', angle_step=ANGULAR_STEP)
             ray_dist, shift = shift_ray_features(ray_dist_raw)
             points_rt = reconstruct_ray_features_2d(point, ray_dist, shift)
-            p_fig = export_ray_results(seg, point, points_rt, ray_dist_raw, ray_dist,
-                                       'circle-full_edge-down-%i.png' % i)
+            p_fig = export_ray_results(
+                seg, point, points_rt, ray_dist_raw, ray_dist, 'circle-full_edge-down-%i.png' % i
+            )
             self.assertTrue(os.path.exists(p_fig))
 
         # insert white interior
@@ -142,29 +146,27 @@ class TestFeatures(unittest.TestCase):
         seg[x, y] = False
 
         for i, point in enumerate(points):
-            ray_dist_raw = compute_ray_features_segm_2d(seg, point, edge='down',
-                                                        angle_step=ANGULAR_STEP)
+            ray_dist_raw = compute_ray_features_segm_2d(seg, point, edge='down', angle_step=ANGULAR_STEP)
             ray_dist, shift = shift_ray_features(ray_dist_raw)
             points_rt = reconstruct_ray_features_2d(point, ray_dist, shift)
-            p_fig = export_ray_results(seg, point, points_rt, ray_dist_raw, ray_dist,
-                                       'circle-inter_edge-down-%i.png' % i)
+            p_fig = export_ray_results(
+                seg, point, points_rt, ray_dist_raw, ray_dist, 'circle-inter_edge-down-%i.png' % i
+            )
             self.assertTrue(os.path.exists(p_fig))
 
     def test_ray_features_polygon(self):
         seg = np.ones((400, 600), dtype=bool)
-        x, y = draw.polygon(np.array([50, 170, 300, 250, 150, 150, 50]),
-                            np.array([100, 270, 240, 150, 150, 80, 50]),
-                            shape=seg.shape)
+        x, y = draw.polygon(
+            np.array([50, 170, 300, 250, 150, 150, 50]), np.array([100, 270, 240, 150, 150, 80, 50]), shape=seg.shape
+        )
         seg[x, y] = False
 
         centres = [(150, 200), (200, 250), (250, 200), (120, 100)]
         for i, point in enumerate(centres):
-            ray_dist_raw = compute_ray_features_segm_2d(seg, point,
-                                                        angle_step=ANGULAR_STEP)
+            ray_dist_raw = compute_ray_features_segm_2d(seg, point, angle_step=ANGULAR_STEP)
             ray_dist, shift = shift_ray_features(ray_dist_raw)
             points = reconstruct_ray_features_2d(point, ray_dist, shift)
-            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist,
-                                       'polygon-%i.png' % i)
+            p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist, 'polygon-%i.png' % i)
             self.assertTrue(os.path.exists(p_fig))
 
     def test_show_image_features_clr2d(self):

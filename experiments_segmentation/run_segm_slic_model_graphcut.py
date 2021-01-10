@@ -82,12 +82,18 @@ FORCE_RECOMP_DATA = True
 
 FEATURES_SET_COLOR = {'color': ('mean', 'std', 'energy')}
 FEATURES_SET_TEXTURE = {'tLM': ('mean', 'std', 'energy')}
-FEATURES_SET_ALL = {'color': ('mean', 'std', 'median'),
-                    'tLM': ('mean', 'std', 'energy', 'meanGrad')}
-FEATURES_SET_MIN = {'color': ('mean', 'std', 'energy'),
-                    'tLM_short': ('mean', )}
-FEATURES_SET_MIX = {'color': ('mean', 'std', 'energy', 'median'),
-                    'tLM': ('mean', 'std')}
+FEATURES_SET_ALL = {
+    'color': ('mean', 'std', 'median'),
+    'tLM': ('mean', 'std', 'energy', 'meanGrad'),
+}
+FEATURES_SET_MIN = {
+    'color': ('mean', 'std', 'energy'),
+    'tLM_short': ('mean', ),
+}
+FEATURES_SET_MIX = {
+    'color': ('mean', 'std', 'energy', 'median'),
+    'tLM': ('mean', 'std'),
+}
 # Default parameter configuration
 SEGM_PARAMS = {
     'name': 'imgDisk',
@@ -123,33 +129,57 @@ def arg_parse_params(params):
     :return dict:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-l', '--path_train_list', type=str, required=False,
-                        help='path to the list of image',
-                        default=params['path_train_list'])
-    parser.add_argument('-i', '--path_predict_imgs', type=str, required=False,
-                        help='path to folder & name pattern with new image',
-                        default=params['path_predict_imgs'])
-    parser.add_argument('-o', '--path_out', type=str, required=False,
-                        help='path to the output directory',
-                        default=params['path_out'])
-    parser.add_argument('-n', '--name', type=str, required=False,
-                        help='name of the experiment', default=params['name'])
-    parser.add_argument('-cfg', '--path_config', type=str, required=False,
-                        help='path to the segmentation config', default='')
-    parser.add_argument('--img_type', type=str, required=False,
-                        default=params['img_type'], choices=TYPES_LOAD_IMAGE,
-                        help='type of image to be loaded')
-    parser.add_argument('--nb_classes', type=int, required=False,
-                        help='number of classes for segmentation',
-                        default=params.get('nb_classes', 2))
-    parser.add_argument('--nb_workers', type=int, required=False,
-                        help='number of processes in parallel',
-                        default=NB_WORKERS)
-    parser.add_argument('--visual', required=False, action='store_true',
-                        help='export debug visualisations', default=False)
-    parser.add_argument('--unique', required=False, action='store_true',
-                        help='each experiment has uniques stamp',
-                        default=EACH_UNIQUE_EXPERIMENT)
+    parser.add_argument(
+        '-l',
+        '--path_train_list',
+        type=str,
+        required=False,
+        help='path to the list of image',
+        default=params['path_train_list']
+    )
+    parser.add_argument(
+        '-i',
+        '--path_predict_imgs',
+        type=str,
+        required=False,
+        help='path to folder & name pattern with new image',
+        default=params['path_predict_imgs']
+    )
+    parser.add_argument(
+        '-o', '--path_out', type=str, required=False, help='path to the output directory', default=params['path_out']
+    )
+    parser.add_argument('-n', '--name', type=str, required=False, help='name of the experiment', default=params['name'])
+    parser.add_argument(
+        '-cfg', '--path_config', type=str, required=False, help='path to the segmentation config', default=''
+    )
+    parser.add_argument(
+        '--img_type',
+        type=str,
+        required=False,
+        default=params['img_type'],
+        choices=TYPES_LOAD_IMAGE,
+        help='type of image to be loaded'
+    )
+    parser.add_argument(
+        '--nb_classes',
+        type=int,
+        required=False,
+        help='number of classes for segmentation',
+        default=params.get('nb_classes', 2)
+    )
+    parser.add_argument(
+        '--nb_workers', type=int, required=False, help='number of processes in parallel', default=NB_WORKERS
+    )
+    parser.add_argument(
+        '--visual', required=False, action='store_true', help='export debug visualisations', default=False
+    )
+    parser.add_argument(
+        '--unique',
+        required=False,
+        action='store_true',
+        help='each experiment has uniques stamp',
+        default=EACH_UNIQUE_EXPERIMENT
+    )
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %r', args)
     for k in (k for k in args if 'path' in k):
@@ -227,8 +257,7 @@ def save_model(path_model, model, params=None, feature_names=None):
     logging.info('save (dump) model to "%s"', path_model)
     # np.savez_compressed(path_model, scaler=scaler, pca=pca,
     #              model=model, params=params, feature_names=feature_names)
-    dict_data = dict(model=model, params=params,
-                     feature_names=feature_names)
+    dict_data = dict(model=model, params=params, feature_names=feature_names)
     with open(path_model, 'wb') as f:
         pickle.dump(dict_data, f)
 
@@ -263,8 +292,7 @@ def get_idx_name(idx, path_img):
         return im_name
 
 
-def export_visual(idx_name, img, segm, debug_visual=None,
-                  path_out=None, path_visu=None):
+def export_visual(idx_name, img, segm, debug_visual=None, path_out=None, path_visu=None):
     """ export visualisations
 
     :param str idx_name:
@@ -300,8 +328,7 @@ def export_visual(idx_name, img, segm, debug_visual=None,
         plt.close(fig)
 
 
-def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
-                              show_debug_imgs=SHOW_DEBUG_IMAGES):
+def segment_image_independent(img_idx_path, params, path_out, path_visu=None, show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ segment image indecently (estimate model just for this model)
 
     :param (int, str) img_idx_path:
@@ -321,12 +348,17 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
     debug_visual = dict() if show_debug_imgs else None
     try:
         segm, segm_soft = seg_pipe.pipe_color2d_slic_features_model_graphcut(
-            img, nb_classes=params['nb_classes'],
-            sp_size=params['slic_size'], sp_regul=params['slic_regul'],
-            dict_features=params['features'], estim_model=params['estim_model'],
-            pca_coef=params['pca_coef'], gc_regul=params['gc_regul'],
+            img,
+            nb_classes=params['nb_classes'],
+            sp_size=params['slic_size'],
+            sp_regul=params['slic_regul'],
+            dict_features=params['features'],
+            estim_model=params['estim_model'],
+            pca_coef=params['pca_coef'],
+            gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
-            debug_visual=debug_visual)
+            debug_visual=debug_visual
+        )
         path_npz = os.path.join(path_out, idx_name + '.npz')
         np.savez_compressed(path_npz, segm_soft)
     except Exception:
@@ -334,8 +366,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
         segm = np.zeros(img.shape[:2])
 
     boundary_size = int(params['slic_size'] * 3)
-    segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0,
-                                         boundary_size=boundary_size)
+    segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0, boundary_size=boundary_size)
 
     export_visual(idx_name, img, segm, debug_visual, path_out, path_visu)
 
@@ -343,8 +374,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None,
     return idx_name, segm
 
 
-def segment_image_model(imgs_idx_path, params, model, path_out=None,
-                        path_visu=None, show_debug_imgs=SHOW_DEBUG_IMAGES):
+def segment_image_model(imgs_idx_path, params, model, path_out=None, path_visu=None, show_debug_imgs=SHOW_DEBUG_IMAGES):
     """ segment image with already estimated model
 
     :param (int, str) imgs_idx_path:
@@ -369,10 +399,15 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
 
     try:
         segm, segm_soft = seg_pipe.segment_color2d_slic_features_model_graphcut(
-            img, model, sp_size=params['slic_size'], sp_regul=params['slic_regul'],
-            dict_features=params['features'], gc_regul=params['gc_regul'],
+            img,
+            model,
+            sp_size=params['slic_size'],
+            sp_regul=params['slic_regul'],
+            dict_features=params['features'],
+            gc_regul=params['gc_regul'],
             gc_edge_type=params['gc_edge_type'],
-            debug_visual=debug_visual)
+            debug_visual=debug_visual
+        )
         path_npz = os.path.join(path_out, idx_name + '.npz')
         np.savez_compressed(path_npz, segm_soft)
     except Exception:
@@ -380,8 +415,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None,
         segm = np.zeros(img.shape[:2])
 
     boundary_size = int(np.sqrt(np.prod(segm.shape)) * 0.01)
-    segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0,
-                                         boundary_size=boundary_size)
+    segm = seg_lbs.assume_bg_on_boundary(segm, bg_label=0, boundary_size=boundary_size)
 
     export_visual(idx_name, img, segm, debug_visual, path_out, path_visu)
 
@@ -404,23 +438,28 @@ def compare_segms_metric_ars(dict_segm_a, dict_segm_b, suffix=''):
             continue
         y_a = dict_segm_a[n].ravel()
         y_b = dict_segm_b[n].ravel()
-        dict_ars = {'image': n,
-                    'ARS' + suffix: metrics.adjusted_rand_score(y_a, y_b)}
+        dict_ars = {'image': n, 'ARS' + suffix: metrics.adjusted_rand_score(y_a, y_b)}
         df_ars = df_ars.append(dict_ars, ignore_index=True)
     df_ars.set_index(['image'], inplace=True)
     return df_ars
 
 
-def experiment_single_gmm(params, paths_img, path_out, path_visu,
-                          show_debug_imgs=SHOW_DEBUG_IMAGES):
+def experiment_single_gmm(params, paths_img, path_out, path_visu, show_debug_imgs=SHOW_DEBUG_IMAGES):
     imgs_idx_path = list(zip([None] * len(paths_img), paths_img))
     logging.info('Perform image segmentation as single image in each time')
-    _wrapper_segment = partial(segment_image_independent, params=params,
-                               path_out=path_out, path_visu=path_visu,
-                               show_debug_imgs=show_debug_imgs)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
-                                          nb_workers=params['nb_workers'],
-                                          desc='experiment single GMM')
+    _wrapper_segment = partial(
+        segment_image_independent,
+        params=params,
+        path_out=path_out,
+        path_visu=path_visu,
+        show_debug_imgs=show_debug_imgs,
+    )
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_segment,
+        imgs_idx_path,
+        nb_workers=params['nb_workers'],
+        desc='experiment single GMM',
+    )
     # dict_segms_gmm = {}
     # for name, segm in iterate:
     #     dict_segms_gmm[name] = segm
@@ -430,11 +469,9 @@ def experiment_single_gmm(params, paths_img, path_out, path_visu,
     return dict_segms_gmm
 
 
-def experiment_group_gmm(params, paths_img, path_out, path_visu,
-                         show_debug_imgs=SHOW_DEBUG_IMAGES):
+def experiment_group_gmm(params, paths_img, path_out, path_visu, show_debug_imgs=SHOW_DEBUG_IMAGES):
     logging.info('load all images')
-    list_images = [load_image(path_img, params['img_type'])
-                   for path_img in paths_img]
+    list_images = [load_image(path_img, params['img_type']) for path_img in paths_img]
     imgs_idx_path = list(zip([None] * len(paths_img), paths_img))
     logging.info('Estimate image segmentation from whole sequence of images')
     params['path_model'] = os.path.join(params['path_exp'], NAME_DUMP_MODEL)
@@ -442,19 +479,31 @@ def experiment_group_gmm(params, paths_img, path_out, path_visu,
         model, _, _ = load_model(params['path_model'])
     else:
         model, _ = seg_pipe.estim_model_classes_group(
-            list_images, nb_classes=params['nb_classes'],
-            dict_features=params['features'], sp_size=params['slic_size'],
-            sp_regul=params['slic_regul'], pca_coef=params['pca_coef'],
-            model_type=params['estim_model'])
+            list_images,
+            nb_classes=params['nb_classes'],
+            dict_features=params['features'],
+            sp_size=params['slic_size'],
+            sp_regul=params['slic_regul'],
+            pca_coef=params['pca_coef'],
+            model_type=params['estim_model']
+        )
         save_model(params['path_model'], model)
 
     logging.info('Perform image segmentation from group model')
-    _wrapper_segment = partial(segment_image_model, params=params, model=model,
-                               path_out=path_out, path_visu=path_visu,
-                               show_debug_imgs=show_debug_imgs)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_segment, imgs_idx_path,
-                                          nb_workers=params['nb_workers'],
-                                          desc='experiment group GMM')
+    _wrapper_segment = partial(
+        segment_image_model,
+        params=params,
+        model=model,
+        path_out=path_out,
+        path_visu=path_visu,
+        show_debug_imgs=show_debug_imgs,
+    )
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_segment,
+        imgs_idx_path,
+        nb_workers=params['nb_workers'],
+        desc='experiment group GMM',
+    )
     # dict_segms_group = {}
     # for name, segm in iterate:
     #     dict_segms_group[name] = segm
@@ -499,9 +548,9 @@ def main(params):
 
     reload_dir_config = os.path.isfile(params['path_config']) or FORCE_RELOAD
     stamp_unique = params.get('unique', EACH_UNIQUE_EXPERIMENT)
-    params = tl_expt.create_experiment_folder(params, dir_name=NAME_EXPERIMENT,
-                                              stamp_unique=stamp_unique,
-                                              skip_load=reload_dir_config)
+    params = tl_expt.create_experiment_folder(
+        params, dir_name=NAME_EXPERIMENT, stamp_unique=stamp_unique, skip_load=reload_dir_config
+    )
     tl_expt.set_experiment_logger(params['path_exp'])
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
     tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_BASE)
@@ -516,28 +565,25 @@ def main(params):
 
     # Segment as single model per image
     path_visu = _path_expt(FOLDER_SEGM_GMM_VISU) if show_visual else None
-    dict_segms_gmm = experiment_single_gmm(params, paths_img,
-                                           _path_expt(FOLDER_SEGM_GMM),
-                                           path_visu,
-                                           show_debug_imgs=show_visual)
+    dict_segms_gmm = experiment_single_gmm(
+        params, paths_img, _path_expt(FOLDER_SEGM_GMM), path_visu, show_debug_imgs=show_visual
+    )
     gc.collect()
     time.sleep(1)
 
     # Segment as model ober set of images
     if params.get('run_groupGMM', False):
         path_visu = _path_expt(FOLDER_SEGM_GROUP_VISU) if show_visual else None
-        dict_segms_group = experiment_group_gmm(params, paths_img,
-                                                _path_expt(FOLDER_SEGM_GROUP),
-                                                path_visu,
-                                                show_debug_imgs=show_visual)
+        dict_segms_group = experiment_group_gmm(
+            params, paths_img, _path_expt(FOLDER_SEGM_GROUP), path_visu, show_debug_imgs=show_visual
+        )
     else:
         write_skip_file(_path_expt(FOLDER_SEGM_GROUP))
         # write_skip_file(_path_expt(FOLDER_SEGM_GROUP_VISU))
         dict_segms_group = None
 
     if dict_segms_group is not None:
-        df_ars = compare_segms_metric_ars(dict_segms_gmm, dict_segms_group,
-                                          suffix='_gmm-group')
+        df_ars = compare_segms_metric_ars(dict_segms_gmm, dict_segms_group, suffix='_gmm-group')
         df_ars.to_csv(_path_expt(NAME_CSV_ARS_CORES))
         logging.info(df_ars.describe())
 

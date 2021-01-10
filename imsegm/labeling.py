@@ -26,8 +26,7 @@ def neighbour_connect4(seg, label, pos):
     >>> neighbour_connect4(np.ones((5, 5)), 1, (3, 3))
     False
     """
-    neighbour = any(seg[pos[0] + a, pos[1] + b] != label
-                    for a, b in [(-1, 0), (0, -1), (1, 0), (0, 1)])
+    neighbour = any(seg[pos[0] + a, pos[1] + b] != label for a, b in [(-1, 0), (0, -1), (1, 0), (0, 1)])
     return neighbour
 
 
@@ -265,8 +264,7 @@ def histogram_regions_labels_norm(slic, segm):
         'dimension of SLIC %r and segm %r should match' % (slic.shape, segm.shape)
     assert np.sum(np.unique(segm) < 0) == 0, 'only positive labels are allowed'
     matrix_hist = histogram_regions_labels_counts(slic, segm)
-    region_sums = np.tile(np.sum(matrix_hist, axis=1),
-                          (matrix_hist.shape[1], 1)).T
+    region_sums = np.tile(np.sum(matrix_hist, axis=1), (matrix_hist.shape[1], 1)).T
     # prevent dividing by 0
     region_sums[region_sums == 0] = -1.
     matrix_hist = (matrix_hist / region_sums)
@@ -473,7 +471,7 @@ def merge_probab_labeling_2d(proba, dict_labels):
     assert proba.ndim == 3
     assert dict_labels is not None, '"dict_labels" is required'
     max_label = max(dict_labels.keys()) + 1
-    size = proba.shape[:-1] + (max_label,)
+    size = proba.shape[:-1] + (max_label, )
     proba_new = np.zeros(size)
     for lb_new in dict_labels:
         lbs_old = dict_labels[lb_new]
@@ -505,8 +503,7 @@ def compute_labels_overlap_matrix(seg1, seg2):
            [ 2,  0,  0, 12],
            [ 9,  6,  0,  0]])
     """
-    logging.debug('computing overlap of two seg_pipe of shapes %r <-> %r',
-                  seg1.shape, seg2.shape)
+    logging.debug('computing overlap of two seg_pipe of shapes %r <-> %r', seg1.shape, seg2.shape)
     assert seg1.shape == seg2.shape, 'segm %r and segm %r should match' \
                                      % (seg1.shape, seg2.shape)
     maxims = [np.max(seg1) + 1, np.max(seg2) + 1]
@@ -698,11 +695,9 @@ def compute_boundary_distances(segm_ref, segm):
     """
     assert segm_ref.shape == segm.shape, 'Ref. segm %r and segm %r should match' \
                                          % (segm_ref.shape, segm.shape)
-    grid_y, grid_x = np.meshgrid(range(segm_ref.shape[1]),
-                                 range(segm_ref.shape[0]))
+    grid_y, grid_x = np.meshgrid(range(segm_ref.shape[1]), range(segm_ref.shape[0]))
     segr_boundary = sk_segm.find_boundaries(segm_ref, mode='thick')
-    points = np.array([grid_x[segr_boundary].ravel(),
-                       grid_y[segr_boundary].ravel()]).T
+    points = np.array([grid_x[segr_boundary].ravel(), grid_y[segr_boundary].ravel()]).T
     segm_boundary = sk_segm.find_boundaries(segm, mode='thick')
     segm_distance = ndimage.distance_transform_edt(~segm_boundary)
     dist = segm_distance[segr_boundary].ravel()

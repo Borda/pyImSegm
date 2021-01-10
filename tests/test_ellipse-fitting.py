@@ -18,7 +18,11 @@ sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
 from imsegm.utilities.data_io import update_path, load_image_2d
 from imsegm.utilities.drawing import ellipse, figure_ellipse_fitting
 from imsegm.ellipse_fitting import (
-    get_slic_points_labels, ransac_segm, EllipseModelSegm, prepare_boundary_points_ray_edge)
+    get_slic_points_labels,
+    ransac_segm,
+    EllipseModelSegm,
+    prepare_boundary_points_ray_edge,
+)
 from tests import PATH_OUTPUT
 
 # set some default paths
@@ -30,15 +34,13 @@ PATH_CENTRE = os.path.join(PATH_OVARY, 'center_levels')
 # color spaces for visualisations
 COLORS = 'bgrmyck'
 # set probability to be foreground / background
-TABLE_FB_PROBA = [[0.01, 0.7, 0.95, 0.8],
-                  [0.99, 0.3, 0.05, 0.2]]
+TABLE_FB_PROBA = [[0.01, 0.7, 0.95, 0.8], [0.99, 0.3, 0.05, 0.2]]
 MAX_FIGURE_SEIZE = 10
 
 
 class TestEllipseFitting(unittest.TestCase):
 
-    def test_ellipse_fitting(self, name='insitu7545',
-                             table_prob=TABLE_FB_PROBA):
+    def test_ellipse_fitting(self, name='insitu7545', table_prob=TABLE_FB_PROBA):
         """    """
         img, _ = load_image_2d(os.path.join(PATH_IMAGES, name + '.jpg'))
         seg, _ = load_image_2d(os.path.join(PATH_SEGM, name + '.png'))
@@ -46,17 +48,24 @@ class TestEllipseFitting(unittest.TestCase):
         path_center = os.path.join(PATH_CENTRE, name + '.csv')
         centers = pd.read_csv(path_center, index_col=0).values[:, [1, 0]]
 
-        slic, points_all, labels = get_slic_points_labels(seg, slic_size=20,
-                                                          slic_regul=0.3)
+        slic, points_all, labels = get_slic_points_labels(seg, slic_size=20, slic_regul=0.3)
         weights = np.bincount(slic.ravel())
         points_centers = prepare_boundary_points_ray_edge(seg, centers, close_points=5)
 
         segm = np.zeros(seg.shape)
         ellipses, crits = [], []
         for i, points in enumerate(points_centers):
-            model, _ = ransac_segm(points, EllipseModelSegm, points_all,
-                                   weights, labels, table_prob, min_samples=0.6,
-                                   residual_threshold=15, max_trials=50)
+            model, _ = ransac_segm(
+                points,
+                EllipseModelSegm,
+                points_all,
+                weights,
+                labels,
+                table_prob,
+                min_samples=0.6,
+                residual_threshold=15,
+                max_trials=50,
+            )
             if not model:
                 continue
             ellipses.append(model.params)
@@ -72,8 +81,7 @@ class TestEllipseFitting(unittest.TestCase):
             img = img[:, :, 0]
         fig = figure_ellipse_fitting(img, seg, ellipses, centers, crits)
         fig_name = 'ellipse-fitting_%s.pdf' % name
-        fig.savefig(os.path.join(PATH_OUTPUT, fig_name),
-                    bbox_inches='tight', pad_inches=0)
+        fig.savefig(os.path.join(PATH_OUTPUT, fig_name), bbox_inches='tight', pad_inches=0)
         plt.close(fig)
 
         _ = adjusted_rand_score(annot.ravel(), segm.ravel())

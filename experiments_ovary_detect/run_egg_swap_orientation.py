@@ -26,8 +26,7 @@ import run_ellipse_annot_match as r_match
 IMAGE_CHANNEL = 0  # image channel for mass extraction
 
 NB_WORKERS = tl_expt.nb_workers(0.8)
-PATH_IMAGES = os.path.join(tl_data.update_path('data-images'),
-                           'drosophila_ovary_slice')
+PATH_IMAGES = os.path.join(tl_data.update_path('data-images'), 'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SWAP_CONDITION = 'cc'
 DEFAULT_PARAMS = {
@@ -36,8 +35,7 @@ DEFAULT_PARAMS = {
 }
 
 
-def perform_orientation_swap(path_img, path_out, img_template,
-                             swap_type=SWAP_CONDITION):
+def perform_orientation_swap(path_img, path_out, img_template, swap_type=SWAP_CONDITION):
     """ compute the density in front adn back part of the egg rotate eventually
     we split the egg into thirds instead half because the middle part variate
 
@@ -77,8 +75,7 @@ def condition_swap_density(img):
 
 def condition_swap_correl(img, img_template):
     cc = correlation_coefficient(img[:, :, IMAGE_CHANNEL], img_template)
-    cc_swap = correlation_coefficient(img[::-1, ::-1, IMAGE_CHANNEL],
-                                      img_template)
+    cc_swap = correlation_coefficient(img[::-1, ::-1, IMAGE_CHANNEL], img_template)
     return cc < cc_swap
 
 
@@ -93,8 +90,7 @@ def correlation_coefficient(patch1, patch2):
 
 
 def compute_mean_image(list_img_paths):
-    iterate = tl_expt.WrapExecuteSequence(tl_data.load_image_2d, list_img_paths,
-                                          desc='compute mean image')
+    iterate = tl_expt.WrapExecuteSequence(tl_data.load_image_2d, list_img_paths, desc='compute mean image')
     imgs = [im[:, :, IMAGE_CHANNEL] for im, _ in iterate]
     min_size = np.min([img.shape for img in imgs], axis=0)
     imgs = [img[:min_size[0], :min_size[1]] for img in imgs]
@@ -109,8 +105,7 @@ def main(params):
     """
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
-    list_img_paths = sorted([p for p in glob.glob(params['path_images'])
-                             if os.path.isfile(p)])
+    list_img_paths = sorted([p for p in glob.glob(params['path_images']) if os.path.isfile(p)])
     logging.info('found images: %i' % len(list_img_paths))
 
     if not os.path.isdir(params['path_output']):
@@ -118,13 +113,18 @@ def main(params):
 
     img_mean = compute_mean_image(list_img_paths)
 
-    _wrapper_object = partial(perform_orientation_swap,
-                              path_out=params['path_output'],
-                              img_template=img_mean)
+    _wrapper_object = partial(
+        perform_orientation_swap,
+        path_out=params['path_output'],
+        img_template=img_mean,
+    )
     dir_name = os.path.dirname(params['path_images'])
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_object, list_img_paths,
-                                          nb_workers=params['nb_workers'],
-                                          desc=dir_name)
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_object,
+        list_img_paths,
+        nb_workers=params['nb_workers'],
+        desc=dir_name,
+    )
     list(iterate)
 
 

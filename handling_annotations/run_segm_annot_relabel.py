@@ -11,7 +11,6 @@ SAMPLE run::
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-
 import argparse
 import glob
 import logging
@@ -36,16 +35,15 @@ def parse_arg_params():
     :return obj: argparse
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-imgs', '--path_images', type=str, required=True,
-                        help='path to images', default=PATH_IMAGES)
-    parser.add_argument('-out', '--path_output', type=str, required=True,
-                        help='path to output dir', default=PATH_OUTPUT)
-    parser.add_argument('--label_old', type=int, required=False, nargs='+',
-                        help='labels to be replaced', default=[0])
-    parser.add_argument('--label_new', type=int, required=False, nargs='+',
-                        help='new labels after replacing', default=[0])
-    parser.add_argument('--nb_workers', type=int, required=False,
-                        help='number of jobs in parallel', default=NB_WORKERS)
+    parser.add_argument('-imgs', '--path_images', type=str, required=True, help='path to images', default=PATH_IMAGES)
+    parser.add_argument(
+        '-out', '--path_output', type=str, required=True, help='path to output dir', default=PATH_OUTPUT
+    )
+    parser.add_argument('--label_old', type=int, required=False, nargs='+', help='labels to be replaced', default=[0])
+    parser.add_argument(
+        '--label_new', type=int, required=False, nargs='+', help='new labels after replacing', default=[0]
+    )
+    parser.add_argument('--nb_workers', type=int, required=False, help='number of jobs in parallel', default=NB_WORKERS)
     args = vars(parser.parse_args())
     for k in ['path_images', 'path_output']:
         p_dir = tl_data.update_path(os.path.dirname(args[k]))
@@ -66,8 +64,7 @@ def perform_image_relabel(path_img, path_out, labels_old, labels_new):
     :param str labels_new:
     :param str labels_old:
     """
-    logging.debug('repaint labels %r -> %r for image: "%s"',
-                  labels_old, labels_new, path_img)
+    logging.debug('repaint labels %r -> %r for image: "%s"', labels_old, labels_new, path_img)
     img = np.array(tl_data.io.imread(path_img), dtype=int)
 
     max_label = int(max(img.max(), max(labels_old)))
@@ -87,8 +84,7 @@ def perform_image_relabel(path_img, path_out, labels_old, labels_new):
     # plt.show()
 
 
-def relabel_folder_images(path_images, path_out, labels_old, labels_new,
-                          nb_workers=1):
+def relabel_folder_images(path_images, path_out, labels_old, labels_new, nb_workers=1):
     """ perform single or multi thread image quantisation
 
     :param [int] labels_old:
@@ -106,11 +102,18 @@ def relabel_folder_images(path_images, path_out, labels_old, labels_new,
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
 
-    _wrapper_img_relabel = partial(perform_image_relabel, path_out=path_out,
-                                   labels_old=labels_old, labels_new=labels_new)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_img_relabel, path_imgs,
-                                          nb_workers=nb_workers,
-                                          desc='relabel images')
+    _wrapper_img_relabel = partial(
+        perform_image_relabel,
+        path_out=path_out,
+        labels_old=labels_old,
+        labels_new=labels_new,
+    )
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_img_relabel,
+        path_imgs,
+        nb_workers=nb_workers,
+        desc='relabel images',
+    )
     list(iterate)
 
 
@@ -123,9 +126,9 @@ def main(params):
             'missing folder: %s' % os.path.dirname(params['path_output'])
         os.mkdir(params['path_output'])
 
-    relabel_folder_images(params['path_images'], params['path_output'],
-                          params['label_old'], params['label_new'],
-                          params['nb_workers'])
+    relabel_folder_images(
+        params['path_images'], params['path_output'], params['label_old'], params['label_new'], params['nb_workers']
+    )
 
     logging.info('DONE')
 

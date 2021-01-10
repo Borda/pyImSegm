@@ -43,8 +43,7 @@ NB_WORKERS = tl_expt.nb_workers(0.9)
 NAME_DIR_VISUAL_1 = 'ALL_visualisation-1'
 NAME_DIR_VISUAL_2 = 'ALL_visualisation-2'
 NAME_DIR_VISUAL_3 = 'ALL_visualisation-3'
-SKIP_DIRS = ['input', 'simple',
-             NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3]
+SKIP_DIRS = ['input', 'simple', NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3]
 NAME_CSV_STAT = 'segmented-eggs_%s.csv'
 PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
@@ -59,7 +58,7 @@ LUT_COLOR = np.array([
     (1., 1., 1.),
     (0.75, 0.75, 0.75),
     (0.5, 0.5, 0.5),
-    (0.3, 0.3, 0.3)
+    (0.3, 0.3, 0.3),
 ])
 
 
@@ -69,25 +68,41 @@ def arg_parse_params(paths):
     :return ({str: ...}, bool, int):
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--images', type=str, required=False,
-                        help='path to directory & name pattern for images',
-                        default=paths['images'])
-    parser.add_argument('--annots', type=str, required=False,
-                        help='path to directory & name pattern for annotation',
-                        default=paths['annots'])
-    parser.add_argument('--segments', type=str, required=False,
-                        help='path to directory & name pattern for segmentation',
-                        default=paths['segments'])
-    parser.add_argument('--centers', type=str, required=False,
-                        help='path to directory & name pattern for centres',
-                        default=paths['centers'])
-    parser.add_argument('--results', type=str, required=False,
-                        help='path to the result directory',
-                        default=paths['results'])
-    parser.add_argument('--nb_workers', type=int, required=False,
-                        default=NB_WORKERS, help='number of processes in parallel')
-    parser.add_argument('--visual', required=False, action='store_true',
-                        default=False, help='export visualisations')
+    parser.add_argument(
+        '--images',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for images',
+        default=paths['images']
+    )
+    parser.add_argument(
+        '--annots',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for annotation',
+        default=paths['annots']
+    )
+    parser.add_argument(
+        '--segments',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for segmentation',
+        default=paths['segments']
+    )
+    parser.add_argument(
+        '--centers',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for centres',
+        default=paths['centers']
+    )
+    parser.add_argument(
+        '--results', type=str, required=False, help='path to the result directory', default=paths['results']
+    )
+    parser.add_argument(
+        '--nb_workers', type=int, required=False, default=NB_WORKERS, help='number of processes in parallel'
+    )
+    parser.add_argument('--visual', required=False, action='store_true', default=False, help='export visualisations')
     arg_params = vars(parser.parse_args())
     export_visual = arg_params['visual']
     for k in (k for k in arg_params if k != 'nb_workers' and k != 'visual'):
@@ -107,8 +122,7 @@ def compute_metrics(row):
     :param dict row:
     :return {str: float}:
     """
-    logging.debug('loading annot "%s"\n and segm "%s"', row['path_annot'],
-                  row['path_egg-segm'])
+    logging.debug('loading annot "%s"\n and segm "%s"', row['path_annot'], row['path_egg-segm'])
     annot, _ = tl_data.load_image_2d(row['path_annot'])
     segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
     assert annot.shape == segm.shape, 'dimension do mot match %r - %r' % \
@@ -163,7 +177,7 @@ def expert_visual(row, method_name, path_out, max_fig_size=10):
     fig, ax = plt.subplots(figsize=fig_size[::-1])
     ax.imshow(img[:, :, 0], cmap=plt.cm.gray)
     ax.imshow(egg_segm, alpha=0.15)
-    ax.contour(egg_segm, levels=np.unique(egg_segm), linewidths=(3,))
+    ax.contour(egg_segm, levels=np.unique(egg_segm), linewidths=(3, ))
     ax.plot(centers[:, 1], centers[:, 0], 'ob')
     tl_visu.figure_image_adjustment(fig, img.shape)
     path_fig = os.path.join(path_out, NAME_DIR_VISUAL_1, fig_name)
@@ -175,7 +189,7 @@ def expert_visual(row, method_name, path_out, max_fig_size=10):
     ax.imshow(LUT_COLOR[in_segm], vmin=0., vmax=1., alpha=0.5)
     ax.contour(in_segm, levels=np.unique(in_segm), colors='k')
     ax.imshow(egg_segm, alpha=0.3)
-    ax.contour(egg_segm, levels=np.unique(egg_segm), linewidths=(5,))
+    ax.contour(egg_segm, levels=np.unique(egg_segm), linewidths=(5, ))
     ax.plot(centers[:, 1], centers[:, 0], 'or')
     tl_visu.figure_image_adjustment(fig, img.shape)
     path_fig = os.path.join(path_out, NAME_DIR_VISUAL_2, fig_name)
@@ -186,7 +200,7 @@ def expert_visual(row, method_name, path_out, max_fig_size=10):
     ax.imshow(img[:, :, 0], cmap=plt.cm.gray, alpha=1.)
     ax.contour(in_segm, levels=np.unique(in_segm), colors='w')
     ax.imshow(egg_segm, alpha=0.3)
-    ax.contour(egg_segm, levels=np.unique(egg_segm), linewidths=(5,))
+    ax.contour(egg_segm, levels=np.unique(egg_segm), linewidths=(5, ))
     ax.plot(centers[:, 1], centers[:, 0], 'og')
     tl_visu.figure_image_adjustment(fig, img.shape)
     path_fig = os.path.join(path_out, NAME_DIR_VISUAL_3, fig_name)
@@ -206,20 +220,19 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
     logging.info('evaluate folder: %s', path_dir)
     name = os.path.basename(path_dir)
 
-    list_paths = [dict_paths['images'], dict_paths['annots'],
-                  dict_paths['segments'], dict_paths['centers'],
-                  os.path.join(path_dir, '*.png')]
+    list_paths = [
+        dict_paths['images'], dict_paths['annots'], dict_paths['segments'], dict_paths['centers'],
+        os.path.join(path_dir, '*.png')
+    ]
     df_paths = tl_data.find_files_match_names_across_dirs(list_paths)
 
     if df_paths.empty:
         return {'method': name, 'count': 0}
 
     if dict_paths['annots'] is not None:
-        df_paths.columns = ['path_image', 'path_annot', 'path_in-segm',
-                            'path_centers', 'path_egg-segm']
+        df_paths.columns = ['path_image', 'path_annot', 'path_in-segm', 'path_centers', 'path_egg-segm']
     else:
-        df_paths.columns = ['path_image', 'path_in-segm',
-                            'path_centers', 'path_egg-segm']
+        df_paths.columns = ['path_image', 'path_in-segm', 'path_centers', 'path_egg-segm']
     df_paths.index = range(1, len(df_paths) + 1)
     df_paths.to_csv(os.path.join(dict_paths['results'], NAME_CSV_STAT % name))
 
@@ -245,8 +258,7 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
     for n in ['mean', 'std']:
         names = ['%s (%s)' % (c, n) for c in cols]
         dict_eval.update(zip(names, df_summary.T[n].values.tolist()))
-    dict_eval.update(zip(['%s (median)' % c for c in cols],
-                         df_eval.median(axis=0).values.tolist()))
+    dict_eval.update(zip(['%s (median)' % c for c in cols], df_eval.median(axis=0).values.tolist()))
 
     return dict_eval
 
@@ -262,19 +274,22 @@ def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_workers=NB_WORKERS):
     logging.info(tl_expt.string_dict(dict_paths, desc='PATHS'))
 
     list_results = sorted(glob.glob(os.path.join(dict_paths['results'], '*')))
-    _if_path = lambda p: all((os.path.isdir(p),
-                              '___' not in os.path.basename(p),
-                              os.path.basename(p) not in SKIP_DIRS))
+    _if_path = lambda p: all((os.path.isdir(p), '___' not in os.path.basename(p), os.path.basename(p) not in SKIP_DIRS))
     list_results = sorted([p for p in list_results if _if_path(p)])
 
-    tl_expt.create_subfolders(dict_paths['results'],
-                              [NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3])
+    tl_expt.create_subfolders(dict_paths['results'], [NAME_DIR_VISUAL_1, NAME_DIR_VISUAL_2, NAME_DIR_VISUAL_3])
 
     df_all = pd.DataFrame()
-    _wrapper_eval = partial(evaluate_folder, dict_paths=dict_paths,
-                            export_visual=export_visual)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_eval, list_results,
-                                          nb_workers=nb_workers)
+    _wrapper_eval = partial(
+        evaluate_folder,
+        dict_paths=dict_paths,
+        export_visual=export_visual,
+    )
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_eval,
+        list_results,
+        nb_workers=nb_workers,
+    )
     for dict_eval in iterate:
         df_all = df_all.append(dict_eval, ignore_index=True)
 

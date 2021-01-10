@@ -39,10 +39,8 @@ import imsegm.labeling as seg_lbs
 from run_segm_slic_model_graphcut import load_image
 from run_segm_slic_model_graphcut import TYPES_LOAD_IMAGE
 
-
 NB_WORKERS = tl_expt.nb_workers(0.9)
-PATH_IMAGES = os.path.join(tl_data.update_path('data-images'),
-                           'drosophila_ovary_slice')
+PATH_IMAGES = os.path.join(tl_data.update_path('data-images'), 'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 NAME_CSV_DISTANCES = 'measured_boundary_distances' \
                      '_SLIC_size-%i_regul-%.2f_slico-%i.csv'
@@ -60,26 +58,39 @@ def arg_parse_params(params):
     :return dict:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-imgs', '--path_images', type=str, required=False,
-                        help='path to directory & name pattern for image',
-                        default=params['path_images'])
-    parser.add_argument('-segm', '--path_segms', type=str, required=False,
-                        help='path to directory & name pattern for annotation',
-                        default=params['path_segms'])
-    parser.add_argument('-out', '--path_out', type=str, required=False,
-                        help='path to the output directory',
-                        default=params['path_out'])
-    parser.add_argument('--img_type', type=str, required=False,
-                        default=params['img_type'], choices=TYPES_LOAD_IMAGE,
-                        help='type of image to be loaded')
-    parser.add_argument('--slic_size', type=int, required=False,
-                        default=20, help='superpixels size')
-    parser.add_argument('--slic_regul', type=float, required=False,
-                        default=0.25, help='superpixel regularization')
-    parser.add_argument('--slico', action='store_true', required=False,
-                        default=False, help='using SLICO (ASLIC)')
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
-                        help='number of processes in parallel')
+    parser.add_argument(
+        '-imgs',
+        '--path_images',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for image',
+        default=params['path_images']
+    )
+    parser.add_argument(
+        '-segm',
+        '--path_segms',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for annotation',
+        default=params['path_segms']
+    )
+    parser.add_argument(
+        '-out', '--path_out', type=str, required=False, help='path to the output directory', default=params['path_out']
+    )
+    parser.add_argument(
+        '--img_type',
+        type=str,
+        required=False,
+        default=params['img_type'],
+        choices=TYPES_LOAD_IMAGE,
+        help='type of image to be loaded'
+    )
+    parser.add_argument('--slic_size', type=int, required=False, default=20, help='superpixels size')
+    parser.add_argument('--slic_regul', type=float, required=False, default=0.25, help='superpixel regularization')
+    parser.add_argument('--slico', action='store_true', required=False, default=False, help='using SLICO (ASLIC)')
+    parser.add_argument(
+        '--nb_workers', type=int, required=False, default=NB_WORKERS, help='number of processes in parallel'
+    )
     params = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %r', params)
     for k in (k for k in params if 'path' in k):
@@ -107,10 +118,7 @@ def compute_boundary_distance(idx_row, params, path_out=''):
     segm = load_image(row['path_segm'], '2d_segm')
 
     logging.debug('segment SLIC...')
-    slic = seg_spx.segment_slic_img2d(img,
-                                      params['slic_size'],
-                                      params['slic_regul'],
-                                      params['slico'])
+    slic = seg_spx.segment_slic_img2d(img, params['slic_size'], params['slic_regul'], params['slico'])
     _, dists = seg_lbs.compute_boundary_distances(segm, slic)
 
     if os.path.isdir(path_out):
@@ -136,20 +144,16 @@ def main(params):
 
     df_dist = pd.DataFrame()
 
-    _wrapper_eval = partial(compute_boundary_distance, params=params,
-                            path_out=params['path_out'])
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_eval, df_paths.iterrows(),
-                                          nb_workers=params['nb_workers'],
-                                          desc='evaluate SLIC')
+    _wrapper_eval = partial(compute_boundary_distance, params=params, path_out=params['path_out'])
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_eval, df_paths.iterrows(), nb_workers=params['nb_workers'], desc='evaluate SLIC'
+    )
     for name, dist in iterate:
-        df_dist = df_dist.append({'name': name, 'mean boundary distance': dist},
-                                 ignore_index=True)
+        df_dist = df_dist.append({'name': name, 'mean boundary distance': dist}, ignore_index=True)
     df_dist.set_index('name', inplace=True)
 
     if os.path.isdir(params['path_out']):
-        csv_name = NAME_CSV_DISTANCES % (params['slic_size'],
-                                         params['slic_regul'],
-                                         params['slico'])
+        csv_name = NAME_CSV_DISTANCES % (params['slic_size'], params['slic_regul'], params['slico'])
         df_dist.to_csv(os.path.join(params['path_out'], csv_name))
     logging.info('STATISTIC:')
     logging.info(df_dist.describe())

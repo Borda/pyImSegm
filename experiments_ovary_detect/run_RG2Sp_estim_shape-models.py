@@ -42,13 +42,20 @@ def arg_parse_params():
     :return {str: str}:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-annot', '--path_annot', type=str, required=False,
-                        help='path to directory & name pattern for annotations',
-                        default=PATH_ANNOT)
-    parser.add_argument('-out', '--path_out', type=str, required=False,
-                        help='path to the output directory', default=PATH_DATA)
-    parser.add_argument('-nb', '--nb_comp', type=int, required=False,
-                        help='number of component in Mixture model', default=2)
+    parser.add_argument(
+        '-annot',
+        '--path_annot',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for annotations',
+        default=PATH_ANNOT
+    )
+    parser.add_argument(
+        '-out', '--path_out', type=str, required=False, help='path to the output directory', default=PATH_DATA
+    )
+    parser.add_argument(
+        '-nb', '--nb_comp', type=int, required=False, help='number of component in Mixture model', default=2
+    )
     params = vars(parser.parse_args())
     for k in (k for k in params if 'path' in k):
         params[k] = tl_data.update_path(params[k], absolute=True)
@@ -61,16 +68,13 @@ def arg_parse_params():
 
 def main(path_annot, path_out, nb_comp=5):
     list_paths = sorted(glob.glob(path_annot))
-    logging.info('nb images: %i SAMPLES: %r', len(list_paths),
-                 [os.path.basename(p) for p in list_paths[:5]])
+    logging.info('nb images: %i SAMPLES: %r', len(list_paths), [os.path.basename(p) for p in list_paths[:5]])
     list_segms = []
     for path_seg in list_paths:
         seg = tl_data.io_imread(path_seg)
         list_segms.append(seg)
 
-    list_rays, _ = tl_rg.compute_object_shapes(list_segms, ray_step=RAY_STEP,
-                                               interp_order='spline',
-                                               smooth_coef=1)
+    list_rays, _ = tl_rg.compute_object_shapes(list_segms, ray_step=RAY_STEP, interp_order='spline', smooth_coef=1)
     logging.info('nb eggs: %i, nb rays: %i', len(list_rays), len(list_rays[0]))
 
     x_axis = np.linspace(0, 360, len(list_rays[0]), endpoint=False)
@@ -89,13 +93,10 @@ def main(path_annot, path_out, nb_comp=5):
     path_model = os.path.join(path_out, NAME_PKL_MODEL_SINGLE)
     logging.info('exporting model: %s', path_model)
     with open(path_model, 'wb') as fp:
-        pickle.dump({'name': 'cdf',
-                     'cdfs': cdf,
-                     'mix_model': model}, fp)
+        pickle.dump({'name': 'cdf', 'cdfs': cdf, 'mix_model': model}, fp)
 
     # MIXTURE MODEL
-    model, list_mean_cdf = tl_rg.transform_rays_model_sets_mean_cdf_mixture(
-        list_rays, nb_comp)
+    model, list_mean_cdf = tl_rg.transform_rays_model_sets_mean_cdf_mixture(list_rays, nb_comp)
 
     # path_model = os.path.join(path_out, NAME_NPZ_MODEL_MIXTURE)
     # logging.info('exporting model: %s', path_model)
@@ -104,9 +105,7 @@ def main(path_annot, path_out, nb_comp=5):
     path_model = os.path.join(path_out, NAME_PKL_MODEL_MIXTURE)
     logging.info('exporting model: %s', path_model)
     with open(path_model, 'wb') as fp:
-        pickle.dump({'name': 'set_cdfs',
-                     'cdfs': list_mean_cdf,
-                     'mix_model': model}, fp)
+        pickle.dump({'name': 'set_cdfs', 'cdfs': list_mean_cdf, 'mix_model': model}, fp)
 
 
 if __name__ == '__main__':

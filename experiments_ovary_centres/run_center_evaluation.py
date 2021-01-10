@@ -53,14 +53,10 @@ FOLDER_ANNOT = 'annot_user_stage-%s'
 FOLDER_ANNOT_VISUAL = 'annot_user_stage-%s___visual'
 DEFAULT_PARAMS = run_train.CENTER_PARAMS
 DEFAULT_PARAMS.update({
-    'stages': [(1, 2, 3, 4, 5),
-               (2, 3, 4, 5),
-               (1, ), (2, ), (3, ), (4, ), (5, )],
+    'stages': [(1, 2, 3, 4, 5), (2, 3, 4, 5), (1, ), (2, ), (3, ), (4, ), (5, )],
     'path_list': '',
-    'path_centers': os.path.join(os.path.dirname(DEFAULT_PARAMS['path_centers']),
-                                 '*.csv'),
-    'path_infofile': os.path.join(run_train.PATH_IMAGES,
-                                  'info_ovary_images.txt'),
+    'path_centers': os.path.join(os.path.dirname(DEFAULT_PARAMS['path_centers']), '*.csv'),
+    'path_infofile': os.path.join(run_train.PATH_IMAGES, 'info_ovary_images.txt'),
 })
 
 NAME_CSV_TRIPLES = run_train.NAME_CSV_TRIPLES
@@ -80,16 +76,15 @@ def estimate_eggs_from_info(row_slice, mask_shape):
     :return ndarray: ndarray
     """
     pos_ant, pos_lat, pos_post = tl_visu.parse_annot_rectangles(row_slice)
-    list_masks = tl_visu.draw_eggs_rectangle(mask_shape, pos_ant, pos_lat,
-                                             pos_post)
+    list_masks = tl_visu.draw_eggs_rectangle(mask_shape, pos_ant, pos_lat, pos_post)
     mask_eggs = tl_visu.merge_object_masks(list_masks, overlap_thr=0.5)
 
     return mask_eggs
 
 
-def compute_statistic_eggs_centres(dict_case, points, labels, mask_eggs,
-                                   img=None, segm=None, path_out=None,
-                                   col_prefix=''):
+def compute_statistic_eggs_centres(
+    dict_case, points, labels, mask_eggs, img=None, segm=None, path_out=None, col_prefix=''
+):
     """ compute statistic on missed detected eggs and multiple detection
     inside single egg
 
@@ -124,13 +119,21 @@ def compute_statistic_eggs_centres(dict_case, points, labels, mask_eggs,
     # visualise missing eggs from annotation
     if os.path.isdir(path_out) and img is not None and segm is not None:
         run_train.export_show_image_points_labels(
-            path_out, dict_case['image'], img, segm, centers, labels_eggs, None,
-            mask_eggs, '_stat_eggs', dict_label_marker=tl_visu.DICT_LABEL_MARKER_FN_FP)
+            path_out,
+            dict_case['image'],
+            img,
+            segm,
+            centers,
+            labels_eggs,
+            None,
+            mask_eggs,
+            '_stat_eggs',
+            dict_label_marker=tl_visu.DICT_LABEL_MARKER_FN_FP
+        )
     return dict_case
 
 
-def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
-                         col_prefix=''):
+def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None, col_prefix=''):
     """ complete pipeline fon input image and seg_pipe, such that load them,
     generate points, compute features and using given classifier predict labels
 
@@ -146,8 +149,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
     dict_row['image'] = os.path.splitext(os.path.basename(dict_row['path_image']))[0]
 
     if idx not in df_annot.index:
-        logging.debug('particular image/slice "%s" does not contain eggs '
-                      'of selected stage %s', idx, col_prefix)
+        logging.debug('particular image/slice "%s" does not contain eggs ' 'of selected stage %s', idx, col_prefix)
         return dict_row
 
     name, img, segm, centres = run_train.load_image_segm_center((None, row))
@@ -171,12 +173,11 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None,
             plt.close(fig)
 
         if VISUAL_SEGM_CENTRES:
-            run_clust.export_draw_image_centers_clusters(path_visu, name, img,
-                                                         centres, segm=segm)
+            run_clust.export_draw_image_centers_clusters(path_visu, name, img, centres, segm=segm)
         labels = np.array([1] * len(centres))
-        dict_stat = compute_statistic_eggs_centres(dict_row, centres, labels,
-                                                   mask_eggs, img, segm,
-                                                   path_visu, col_prefix)
+        dict_stat = compute_statistic_eggs_centres(
+            dict_row, centres, labels, mask_eggs, img, segm, path_visu, col_prefix
+        )
     except Exception:
         logging.exception('load_center_evaluate')
         dict_stat = dict_row
@@ -221,12 +222,14 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_workers=1)
     # perfom on new images
     stage_prefix = '[stage-%s] ' % str_stage
     logging.info('start section %s - load_center_evaluate ...', stage_prefix)
-    _wrapper_detection = partial(load_center_evaluate, df_annot=df_slices_info,
-                                 path_annot=path_annot, path_visu=path_visu,
-                                 col_prefix=stage_prefix)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_detection,
-                                          df_paths.iterrows(),
-                                          nb_workers=nb_workers)
+    _wrapper_detection = partial(
+        load_center_evaluate,
+        df_annot=df_slices_info,
+        path_annot=path_annot,
+        path_visu=path_visu,
+        col_prefix=stage_prefix,
+    )
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_detection, df_paths.iterrows(), nb_workers=nb_workers)
     for dict_eval in iterate:
         df_eval = df_eval.append(dict_eval, ignore_index=True)
         df_eval.to_csv(os.path.join(path_out, NAME_CSV_TRIPLES_TEMP))
@@ -239,24 +242,21 @@ def main(params):
 
     :param dict params:
     """
-    params['path_expt'] = os.path.join(params['path_output'],
-                                       run_detect.FOLDER_EXPERIMENT % params['name'])
+    params['path_expt'] = os.path.join(params['path_output'], run_detect.FOLDER_EXPERIMENT % params['name'])
     tl_expt.set_experiment_logger(params['path_expt'])
     # tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     path_csv = os.path.join(params['path_expt'], NAME_CSV_TRIPLES)
-    df_paths = run_detect.get_csv_triplets(params['path_list'], path_csv,
-                                           params['path_images'],
-                                           params['path_segms'],
-                                           params['path_centers'], FORCE_RELOAD)
+    df_paths = run_detect.get_csv_triplets(
+        params['path_list'], path_csv, params['path_images'], params['path_segms'], params['path_centers'], FORCE_RELOAD
+    )
 
     df_eval = df_paths.copy(deep=True)
     for stage in params['stages']:
-        df_eval = evaluate_detection_stage(df_eval, stage,
-                                           params['path_infofile'],
-                                           params['path_expt'],
-                                           params['nb_workers'])
+        df_eval = evaluate_detection_stage(
+            df_eval, stage, params['path_infofile'], params['path_expt'], params['nb_workers']
+        )
         if not df_eval.empty and 'image' in df_eval.columns:
             df_eval.set_index('image', inplace=True)
         df_eval.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_STAT))

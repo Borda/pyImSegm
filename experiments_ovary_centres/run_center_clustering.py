@@ -50,9 +50,9 @@ DEFAULT_PARAMS.update(CLUSTER_PARAMS)
 DEFAULT_PARAMS.update({
     'path_images': os.path.join(run_train.PATH_IMAGES, 'image', '*.jpg'),
     'path_segms': os.path.join(run_train.PATH_IMAGES, 'segm', '*.png'),
-    'path_centers': os.path.join(DEFAULT_PARAMS['path_output'],
-                                 FOLDER_EXPERIMENT % DEFAULT_PARAMS['name'],
-                                 'candidates', '*.csv')
+    'path_centers': os.path.join(
+        DEFAULT_PARAMS['path_output'], FOLDER_EXPERIMENT % DEFAULT_PARAMS['name'], 'candidates', '*.csv'
+    )
 })
 
 
@@ -81,9 +81,17 @@ def cluster_center_candidates(points, max_dist=100, min_samples=1):
     return np.array(centers), labels
 
 
-def export_draw_image_centers_clusters(path_out, name, img, centres, points=None,
-                                       clust_labels=None, segm=None, fig_suffix='',
-                                       max_fig_size=MAX_FIGURE_SIZE):
+def export_draw_image_centers_clusters(
+    path_out,
+    name,
+    img,
+    centres,
+    points=None,
+    clust_labels=None,
+    segm=None,
+    fig_suffix='',
+    max_fig_size=MAX_FIGURE_SIZE,
+):
     """ draw visualisation of clustered center candidates and export it
 
     :param str path_out:
@@ -138,8 +146,8 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
     points = tl_data.swap_coord_x_y(points)
 
     centres, clust_labels = cluster_center_candidates(
-        points, max_dist=params['DBSCAN_max_dist'],
-        min_samples=params['DBSCAN_min_samples'])
+        points, max_dist=params['DBSCAN_max_dist'], min_samples=params['DBSCAN_min_samples']
+    )
     path_csv = os.path.join(path_out, FOLDER_CENTER, name + '.csv')
     tl_data.save_landmarks_csv(path_csv, tl_data.swap_coord_x_y(centres))
 
@@ -151,11 +159,8 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
     if dict_row['path_segm'] is not None and os.path.isfile(dict_row['path_segm']):
         segm = tl_data.io_imread(dict_row['path_segm'])
 
-    export_draw_image_centers_clusters(path_visu, name, img, centres,
-                                       points, clust_labels, segm)
-    dict_row.update({'image': name,
-                     'path_centers': path_csv,
-                     'nb_centres': len(centres)})
+    export_draw_image_centers_clusters(path_visu, name, img, centres, points, clust_labels, segm)
+    dict_row.update({'image': name, 'path_centers': path_csv, 'nb_centres': len(centres)})
     return dict_row
 
 
@@ -191,8 +196,7 @@ def main(params):
 
     :param {str: any} params:
     """
-    params['path_expt'] = os.path.join(params['path_output'],
-                                       FOLDER_EXPERIMENT % params['name'])
+    params['path_expt'] = os.path.join(params['path_output'], FOLDER_EXPERIMENT % params['name'])
     tl_expt.save_config_yaml(os.path.join(params['path_expt'], NAME_YAML_PARAMS), params)
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
 
@@ -205,11 +209,9 @@ def main(params):
 
     logging.info('run clustering...')
     df_paths_new = pd.DataFrame()
-    _wrapper_clustering = partial(cluster_points_draw_export, params=params,
-                                  path_out=params['path_expt'])
+    _wrapper_clustering = partial(cluster_points_draw_export, params=params, path_out=params['path_expt'])
     rows = (dict(row) for idx, row in df_paths.iterrows())
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_clustering, rows,
-                                          nb_workers=params['nb_workers'])
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_clustering, rows, nb_workers=params['nb_workers'])
     for dict_center in iterate:
         df_paths_new = df_paths_new.append(dict_center, ignore_index=True)
 

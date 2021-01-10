@@ -38,20 +38,18 @@ FOLDER_POINTS = run_train.FOLDER_POINTS
 FOLDER_POINTS_VISU = run_train.FOLDER_POINTS_VISU
 FOLDER_CENTRE = run_clust.FOLDER_CENTER
 FOLDER_CLUSTER_VISUAL = run_clust.FOLDER_CLUSTER_VISUAL
-LIST_SUBFOLDER = [FOLDER_INPUTS, FOLDER_POINTS, FOLDER_POINTS_VISU,
-                  FOLDER_CENTRE, FOLDER_CLUSTER_VISUAL]
+LIST_SUBFOLDER = [FOLDER_INPUTS, FOLDER_POINTS, FOLDER_POINTS_VISU, FOLDER_CENTRE, FOLDER_CLUSTER_VISUAL]
 FOLDER_EXPERIMENT = 'detect-centers-predict_%s'
 
 # This sampling only influnece the number of point to be evaluated in the image
 DEFAULT_PARAMS = run_train.CENTER_PARAMS
 DEFAULT_PARAMS.update(run_clust.CLUSTER_PARAMS)
-DEFAULT_PARAMS['path_centers'] = os.path.join(DEFAULT_PARAMS['path_output'],
-                                              run_train.FOLDER_EXPERIMENT % DEFAULT_PARAMS['name'],
-                                              'classifier_RandForest.pkl')
+DEFAULT_PARAMS['path_centers'] = os.path.join(
+    DEFAULT_PARAMS['path_output'], run_train.FOLDER_EXPERIMENT % DEFAULT_PARAMS['name'], 'classifier_RandForest.pkl'
+)
 
 
-def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
-                                path_output=''):
+def load_compute_detect_centers(idx_row, params, classif=None, path_classif='', path_output=''):
     """ complete pipeline fon input image and seg_pipe, such that load them,
     generate points, compute features and using given classifier predict labels
 
@@ -71,21 +69,17 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
 
     try:
         path_show_in = os.path.join(path_output, FOLDER_INPUTS)
-        name, img, segm, _ = run_train.load_image_segm_center((None, row),
-                                                              path_show_in,
-                                                              params['dict_relabel'])
+        name, img, segm, _ = run_train.load_image_segm_center((None, row), path_show_in, params['dict_relabel'])
         t_start = time.time()
         _, slic, points, features, feature_names =\
             run_train.estim_points_compute_features(name, img, segm, params)
-        dict_detect = run_train.detect_center_candidates(name, img, segm, None,
-                                                         slic, points, features,
-                                                         feature_names, params,
-                                                         path_output, classif)
+        dict_detect = run_train.detect_center_candidates(
+            name, img, segm, None, slic, points, features, feature_names, params, path_output, classif
+        )
         dict_detect['time elapsed'] = time.time() - t_start
         dict_center.update(dict_detect)
 
-        dict_center = run_clust.cluster_points_draw_export(dict_center, params,
-                                                           path_output)
+        dict_center = run_clust.cluster_points_draw_export(dict_center, params, path_output)
     except Exception:
         logging.exception('load_compute_detect_centers')
     gc.collect()
@@ -93,8 +87,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='',
     return dict_center
 
 
-def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs,
-                     path_centers=None, force_reload=False):
+def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs, path_centers=None, force_reload=False):
     """ load triplets from CSV if it exists, otherwise crete such triplets
     from paths on particular directories
 
@@ -109,18 +102,15 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs,
     if os.path.isfile(path_csv):
         logging.info('loading path pairs "%s"', path_csv)
         df_paths = pd.read_csv(path_csv, index_col=0)
-        df_paths['image'] = df_paths['path_image'].apply(
-            lambda x: os.path.splitext(os.path.basename(x))[0])
+        df_paths['image'] = df_paths['path_image'].apply(lambda x: os.path.splitext(os.path.basename(x))[0])
         df_paths.set_index('image', inplace=True)
     elif os.path.isfile(path_csv_out) and not force_reload:
         logging.info('loading path pairs "%s"', path_csv_out)
         df_paths = pd.read_csv(path_csv_out, index_col=0)
     else:
         logging.info('estimating own triples')
-        df_paths = run_train.find_match_images_segms_centers(
-            path_imgs, path_segs, path_centers)
-        df_paths['image'] = df_paths['path_image'].apply(
-            lambda x: os.path.splitext(os.path.basename(x))[0])
+        df_paths = run_train.find_match_images_segms_centers(path_imgs, path_segs, path_centers)
+        df_paths['image'] = df_paths['path_image'].apply(lambda x: os.path.splitext(os.path.basename(x))[0])
         df_paths.set_index('image', inplace=True)
     for col in (c for c in df_paths.columns if c.startswith('path_')):
         df_paths[col] = df_paths[col].apply(tl_data.update_path)
@@ -143,9 +133,9 @@ def main(params):
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBFOLDER)
 
     path_csv = os.path.join(params['path_expt'], NAME_CSV_TRIPLES)
-    df_paths = get_csv_triplets(params['path_list'], path_csv,
-                                params['path_images'], params['path_segms'],
-                                force_reload=FORCE_RERUN)
+    df_paths = get_csv_triplets(
+        params['path_list'], path_csv, params['path_images'], params['path_segms'], force_reload=FORCE_RERUN
+    )
 
     dict_classif = seg_clf.load_classifier(params['path_classif'])
     params_clf = dict_classif['params']
@@ -154,11 +144,13 @@ def main(params):
 
     # perform on new images
     df_stat = pd.DataFrame()
-    _wrapper_detection = partial(load_compute_detect_centers, params=params_clf,
-                                 path_classif=params['path_classif'],
-                                 path_output=params['path_expt'])
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_detection, df_paths.iterrows(),
-                                          nb_workers=params['nb_workers'])
+    _wrapper_detection = partial(
+        load_compute_detect_centers,
+        params=params_clf,
+        path_classif=params['path_classif'],
+        path_output=params['path_expt'],
+    )
+    iterate = tl_expt.WrapExecuteSequence(_wrapper_detection, df_paths.iterrows(), nb_workers=params['nb_workers'])
     for dict_center in iterate:
         df_stat = df_stat.append(dict_center, ignore_index=True)
         df_stat.to_csv(os.path.join(params['path_expt'], NAME_CSV_TRIPLES_TEMP))

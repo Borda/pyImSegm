@@ -10,7 +10,6 @@ SAMPLE run::
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-
 import argparse
 import glob
 import logging
@@ -35,17 +34,15 @@ def parse_arg_params():
     :return obj: argparse
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-imgs', '--path_images', type=str, required=True,
-                        help='path to dir with annot', default=PATH_IMAGES)
-    parser.add_argument('--label', type=int, required=False, nargs='+',
-                        help='labels to be replaced', default=[-1])
-    parser.add_argument('--nb_workers', type=int, required=False,
-                        help='number of jobs in parallel', default=NB_WORKERS)
+    parser.add_argument(
+        '-imgs', '--path_images', type=str, required=True, help='path to dir with annot', default=PATH_IMAGES
+    )
+    parser.add_argument('--label', type=int, required=False, nargs='+', help='labels to be replaced', default=[-1])
+    parser.add_argument('--nb_workers', type=int, required=False, help='number of jobs in parallel', default=NB_WORKERS)
     args = vars(parser.parse_args())
     p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
     assert os.path.isdir(p_dir), 'missing folder: %s' % args['path_images']
-    args['path_images'] = os.path.join(p_dir,
-                                       os.path.basename(args['path_images']))
+    args['path_images'] = os.path.join(p_dir, os.path.basename(args['path_images']))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args
 
@@ -83,17 +80,16 @@ def quantize_folder_images(path_images, label, nb_workers=1):
     logging.info('found %i images', len(path_imgs))
 
     _wrapper_img_inpaint = partial(perform_img_inpaint, labels=label)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_img_inpaint, path_imgs,
-                                          nb_workers=nb_workers,
-                                          desc='quantise images')
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_img_inpaint, path_imgs, nb_workers=nb_workers, desc='quantise images'
+    )
     list(iterate)
 
 
 def main(params):
     """ the main_train entry point   """
     logging.info('running...')
-    quantize_folder_images(params['path_images'], params['label'],
-                           nb_workers=params['nb_workers'])
+    quantize_folder_images(params['path_images'], params['label'], nb_workers=params['nb_workers'])
     logging.info('DONE')
 
 

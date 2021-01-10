@@ -61,7 +61,7 @@ readme = readme.replace('](docs/source/', '](')
 readme = re.sub(
     r' \[(.*)\]\((?!http)(.*)\)',
     r' [\1](https://github.com/%s/%s/blob/master/\2)' % (github_user, github_repo),
-    readme
+    readme,
 )
 # TODO: temp fix removing SVG badges and GIF, because PDF cannot show them
 readme = re.sub(r'(\[!\[.*\))', '', readme)
@@ -70,7 +70,6 @@ for dir_name in (os.path.basename(p) for p in glob.glob(os.path.join(PATH_ROOT, 
     readme = readme.replace('](%s/' % dir_name, '](%s/%s/' % (PATH_UP, dir_name))
 with open('readme.md', 'w') as fp:
     fp.write(readme)
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -128,15 +127,16 @@ language = None
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
     'data-images',
-    '*tests.*', '*.test_*',
-    '*.so', '*.dll',
+    '*tests.*',
+    '*.test_*',
+    '*.so',
+    '*.dll',
     'api/modules.rst',
-    '*/transform-img-plane_inter-circle.ipynb'
+    '*/transform-img-plane_inter-circle.ipynb',
 ]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
-
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -166,12 +166,10 @@ html_static_path = []  # , '_static', 'notebooks'
 #
 # html_sidebars = {}
 
-
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + 'Doc'
-
 
 # -- Options for LaTeX output ------------------------------------------------
 
@@ -196,26 +194,21 @@ latex_documents = [
     (master_doc, project + '.tex', project + ' Documentation', author, 'manual'),
 ]
 
-
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, project, project + ' Documentation', [author], 1)
-]
-
+man_pages = [(master_doc, project, project + ' Documentation', [author], 1)]
 
 # -- Options for Texinfo output ----------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
-texinfo_documents = [
-    (master_doc, project, project + ' Documentation', author, project,
-     'One line description of project.', 'Miscellaneous'),
-]
-
+texinfo_documents = [(
+    master_doc, project, project + ' Documentation', author, project, 'One line description of project.',
+    'Miscellaneous'
+)]
 
 # -- Options for Epub output -------------------------------------------------
 
@@ -234,7 +227,6 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
-
 # -- Extension configuration -------------------------------------------------
 
 # -- Options for intersphinx extension ---------------------------------------
@@ -246,7 +238,6 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-
 
 # https://github.com/rtfd/readthedocs.org/issues/1139
 # I use sphinx-apidoc to auto-generate API documentation for my project.
@@ -260,11 +251,7 @@ PACKAGES = [imsegm.__name__]
 
 def run_apidoc(_):
     for pkg in PACKAGES:
-        argv = ['-e',
-                '-o', os.path.join(PATH_HERE, 'api'),
-                os.path.join(PATH_ROOT, pkg),
-                'tests/*',
-                '--force']
+        argv = ['-e', '-o', os.path.join(PATH_HERE, 'api'), os.path.join(PATH_ROOT, pkg), 'tests/*', '--force']
         try:
             # Sphinx 1.7+
             from sphinx.ext import apidoc
@@ -287,7 +274,6 @@ if not os.path.isdir(path_docs_nbs):
 for path_ipynb_in in glob.glob(os.path.join(PATH_ROOT, 'notebooks', '*.ipynb')):
     path_ipynb_new = os.path.join(path_docs_nbs, os.path.basename(path_ipynb_in))
     shutil.copy(path_ipynb_in, path_ipynb_new)
-
 
 # Ignoring Third-party packages
 # https://stackoverflow.com/questions/15889621/sphinx-how-to-exclude-imports-in-automodule
@@ -313,6 +299,7 @@ autodoc_mock_imports = [PACKAGE_MAPPING.get(pkg.lower(), pkg) for pkg in MOCK_MO
 # Resolve function
 # This function is used to populate the (source) links in the API
 def linkcode_resolve(domain, info):
+
     def find_source():
         # try to find the file and line number, based on code from numpy:
         # https://github.com/numpy/numpy/blob/master/doc/source/conf.py#L286
@@ -350,6 +337,9 @@ def linkcode_resolve(domain, info):
 autodoc_member_order = 'groupwise'
 autoclass_content = 'both'
 autodoc_default_flags = [
-    'members', 'undoc-members', 'show-inheritance', 'private-members',
+    'members',
+    'undoc-members',
+    'show-inheritance',
+    'private-members',
     # 'special-members', 'inherited-members'
 ]

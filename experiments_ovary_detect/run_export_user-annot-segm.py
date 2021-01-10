@@ -59,25 +59,50 @@ def arg_parse_params(params):
     :return ({str: str}, int):
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-imgs', '--path_images', type=str, required=False,
-                        help='path to directory & name pattern for images',
-                        default=params['path_images'])
-    parser.add_argument('-segs', '--path_segms', type=str, required=False,
-                        help='path to directory & name pattern for segmentation',
-                        default=params['path_segms'])
-    parser.add_argument('-centers', '--path_centers', type=str, required=False,
-                        help='path to directory & name pattern for centres',
-                        default=params['path_centers'])
-    parser.add_argument('-info', '--path_infofile', type=str, required=False,
-                        help='path to the global information file',
-                        default=params['path_infofile'])
-    parser.add_argument('--stages', type=int, required=False, nargs='+',
-                        help='stage indexes', default=[1, 2, 3, 4, 5])
-    parser.add_argument('-out', '--path_output', type=str, required=False,
-                        help='path to the output directory',
-                        default=params['path_output'])
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
-                        help='number of processes in parallel')
+    parser.add_argument(
+        '-imgs',
+        '--path_images',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for images',
+        default=params['path_images']
+    )
+    parser.add_argument(
+        '-segs',
+        '--path_segms',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for segmentation',
+        default=params['path_segms']
+    )
+    parser.add_argument(
+        '-centers',
+        '--path_centers',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for centres',
+        default=params['path_centers']
+    )
+    parser.add_argument(
+        '-info',
+        '--path_infofile',
+        type=str,
+        required=False,
+        help='path to the global information file',
+        default=params['path_infofile']
+    )
+    parser.add_argument('--stages', type=int, required=False, nargs='+', help='stage indexes', default=[1, 2, 3, 4, 5])
+    parser.add_argument(
+        '-out',
+        '--path_output',
+        type=str,
+        required=False,
+        help='path to the output directory',
+        default=params['path_output']
+    )
+    parser.add_argument(
+        '--nb_workers', type=int, required=False, default=NB_WORKERS, help='number of processes in parallel'
+    )
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
     for k in (k for k in params if 'path' in k):
@@ -86,8 +111,7 @@ def arg_parse_params(params):
     return params
 
 
-def figure_draw_img_centre_segm(fig, img, centres, segm,
-                                subfig_size=FIGURE_SIZE):
+def figure_draw_img_centre_segm(fig, img, centres, segm, subfig_size=FIGURE_SIZE):
     """ add to a figure drawing of center
     in case no figure exists, create new one
 
@@ -104,7 +128,7 @@ def figure_draw_img_centre_segm(fig, img, centres, segm,
         ax.imshow(img[:, :, 0], cmap=plt.cm.Greys_r)
     else:
         ax = fig.gca()
-    ax.contour(segm, levels=np.unique(segm), colors=COLOR_SEGM, linewidths=(3,))
+    ax.contour(segm, levels=np.unique(segm), colors=COLOR_SEGM, linewidths=(3, ))
     # ax.plot(centres[:, 0], centres[:, 1], 'o', color='b')
     ax.scatter(centres[:, 0], centres[:, 1], s=500, c=COLOR_SEGM)
     return fig
@@ -140,10 +164,9 @@ def figure_draw_annot_csv(fig, img, row_slice, subfig_size=FIGURE_SIZE):
 
     pos_ant, pos_lat, pos_post = tl_visu.parse_annot_rectangles(row_slice)
 
-    list_masks = tl_visu.draw_eggs_rectangle(img.shape[:2],
-                                             pos_ant, pos_lat, pos_post)
+    list_masks = tl_visu.draw_eggs_rectangle(img.shape[:2], pos_ant, pos_lat, pos_post)
     for mask in list_masks:
-        ax.contour(mask, colors=COLOR_ANNOT, linewidths=(3,))
+        ax.contour(mask, colors=COLOR_ANNOT, linewidths=(3, ))
 
     return fig
 
@@ -199,9 +222,9 @@ def export_figure(idx_row, df_slices_info, path_out):
 
 
 def main(params):
-    df_paths = tl_data.find_files_match_names_across_dirs([params['path_images'],
-                                                           params['path_segms'],
-                                                           params['path_centers']])
+    df_paths = tl_data.find_files_match_names_across_dirs([
+        params['path_images'], params['path_segms'], params['path_centers']
+    ])
     df_paths.columns = ['path_image', 'path_segm', 'path_centers']
     df_paths.index = range(1, len(df_paths) + 1)
 
@@ -210,12 +233,17 @@ def main(params):
             'missing folder: "%s"' % os.path.dirname(params['path_output'])
         os.mkdir(params['path_output'])
 
-    df_slices_info = seg_annot.load_info_group_by_slices(params['path_infofile'],
-                                                         params['stages'])
-    _wrapper_export = partial(export_figure, df_slices_info=df_slices_info,
-                              path_out=params['path_output'])
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_export, df_paths.iterrows(),
-                                          nb_workers=params['nb_workers'])
+    df_slices_info = seg_annot.load_info_group_by_slices(params['path_infofile'], params['stages'])
+    _wrapper_export = partial(
+        export_figure,
+        df_slices_info=df_slices_info,
+        path_out=params['path_output'],
+    )
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_export,
+        df_paths.iterrows(),
+        nb_workers=params['nb_workers'],
+    )
     list(iterate)
 
 

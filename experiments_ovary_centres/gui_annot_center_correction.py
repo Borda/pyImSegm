@@ -41,7 +41,6 @@ from scipy import ndimage, spatial
 
 matplotlib.use('GTKAgg')  # or >> matplotlib.rcsetup.all_backends
 
-
 # http://matplotlib.org/users/navigation_toolbar.html
 import gtk
 from matplotlib.figure import Figure
@@ -65,10 +64,30 @@ COLOR_FALSE_POSITIVE = '#FF5733'
 COLOR_FALSE_NEGATIVE = 'w'
 
 POINT_MARKERS = [
-    {'change': 0, 'label': 1, 'marker': 'o', 'color': 'y'},
-    {'change': 0, 'label': 0, 'marker': 'x', 'color': 'y'},
-    {'change': 1, 'label': 1, 'marker': 'o', 'color': COLOR_FALSE_NEGATIVE},
-    {'change': 1, 'label': 0, 'marker': 'o', 'color': COLOR_FALSE_POSITIVE},
+    {
+        'change': 0,
+        'label': 1,
+        'marker': 'o',
+        'color': 'y',
+    },
+    {
+        'change': 0,
+        'label': 0,
+        'marker': 'x',
+        'color': 'y',
+    },
+    {
+        'change': 1,
+        'label': 1,
+        'marker': 'o',
+        'color': COLOR_FALSE_NEGATIVE,
+    },
+    {
+        'change': 1,
+        'label': 0,
+        'marker': 'o',
+        'color': COLOR_FALSE_POSITIVE,
+    },
 ]
 
 df_center_labeled, fig = None, None
@@ -82,12 +101,15 @@ def arg_parse_params():
     :return dict:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-imgs', '--path_images', type=str, required=False,
-                        help='path to dir and image pattern', default=PATH_IMAGES)
-    parser.add_argument('-csv', '--path_csv', type=str, required=False,
-                        help='path to the CSV directory', default=PATH_CSV)
-    parser.add_argument('-info', '--path_info', type=str, required=False,
-                        help='path to file with complete info', default=None)
+    parser.add_argument(
+        '-imgs', '--path_images', type=str, required=False, help='path to dir and image pattern', default=PATH_IMAGES
+    )
+    parser.add_argument(
+        '-csv', '--path_csv', type=str, required=False, help='path to the CSV directory', default=PATH_CSV
+    )
+    parser.add_argument(
+        '-info', '--path_info', type=str, required=False, help='path to file with complete info', default=None
+    )
     params = vars(parser.parse_args())
     for k in (k for k in params if 'path' in k):
         if not params[k]:
@@ -108,16 +130,14 @@ def load_paths_image_csv(params, skip_csv=POSIX_CSV_LABEL):
     :param str skip_csv: pattern in csv name that skips the file
     :return [(str, str)]:
     """
-    logging.debug('loading pairs for %s and %s', params['path_csv'],
-                  params['path_images'])
+    logging.debug('loading pairs for %s and %s', params['path_csv'], params['path_images'])
     get_name = lambda p: os.path.splitext(os.path.basename(p))[0]
     list_csv = glob.glob(params['path_csv'])
     list_names = [get_name(p) for p in list_csv]
     # skip al names that contains given posix
     list_names = [n for n in list_names if skip_csv not in n]
     # filter to have just paths with the  right names
-    list_imgs = sorted([p for p in glob.glob(params['path_images'])
-                        if get_name(p) in list_names])
+    list_imgs = sorted([p for p in glob.glob(params['path_images']) if get_name(p) in list_names])
     # update list of names
     list_names = [get_name(p) for p in list_imgs]
     # filter to have just paths with the  right names
@@ -148,9 +168,7 @@ def set_false_negative(df_points, mask_eggs):
         labels = mask[points[:, 1], points[:, 0]]
         if sum(labels) == 0:
             pos = ndimage.measurements.center_of_mass(mask)
-            df_points = df_points.append(
-                {'X': pos[1], 'Y': pos[0], 'label': 1, 'change': 1},
-                ignore_index=True)
+            df_points = df_points.append({'X': pos[1], 'Y': pos[0], 'label': 1, 'change': 1}, ignore_index=True)
     return df_points
 
 
@@ -214,8 +232,10 @@ def canvas_load_image_centers():
     """ load image nad csv with centers and update canvas """
     global paths_img_csv, actual_idx, df_center_labeled, img, mask_eggs
     path_img, path_csv = paths_img_csv[actual_idx]
-    logging.info('loading image (%i/%i): "%s"', actual_idx + 1, len(paths_img_csv),
-                 os.path.splitext(os.path.basename(path_img))[0])
+    logging.info(
+        'loading image (%i/%i): "%s"', actual_idx + 1, len(paths_img_csv),
+        os.path.splitext(os.path.basename(path_img))[0]
+    )
 
     img = plt.imread(path_img)
     mask_eggs = estimate_eggs_from_info(path_img)
@@ -237,8 +257,9 @@ def canvas_update_image_centers(marker_schema=POINT_MARKERS):
         filter_label = (df_center_labeled['change'] == dict_marker['change'])
         filter_change = (df_center_labeled['label'] == dict_marker['label'])
         df_points = df_center_labeled[filter_label & filter_change]
-        fig.gca().plot(df_points['X'].tolist(), df_points['Y'].tolist(),
-                       dict_marker['marker'], color=dict_marker['color'])
+        fig.gca().plot(
+            df_points['X'].tolist(), df_points['Y'].tolist(), dict_marker['marker'], color=dict_marker['color']
+        )
 
     fig.gca().set_xlim([0, img.shape[1]])
     fig.gca().set_ylim([img.shape[0], 0])
@@ -259,8 +280,7 @@ def add_point_correction(x, y, changing=1, limit_dist=DICT_LIMIT_CORRECT):
     """
     global df_center_labeled
     points = df_center_labeled[['X', 'Y']].values
-    dists = spatial.distance.cdist(np.array(points), np.array([[x, y]]),
-                                   metric='euclidean')
+    dists = spatial.distance.cdist(np.array(points), np.array([[x, y]]), metric='euclidean')
     if np.min(dists) < limit_dist:
         # corect a point
         idx = np.argmin(dists)
@@ -269,8 +289,7 @@ def add_point_correction(x, y, changing=1, limit_dist=DICT_LIMIT_CORRECT):
         df_center_labeled.xs(idx)['change'] = changing
     else:
         # add new point
-        df_center_labeled = df_center_labeled.append(
-            {'X': x, 'Y': y, 'label': 1, 'change': 1}, ignore_index=True)
+        df_center_labeled = df_center_labeled.append({'X': x, 'Y': y, 'label': 1, 'change': 1}, ignore_index=True)
 
     canvas_update_image_centers()
 
@@ -285,8 +304,7 @@ def remove_point(x, y, limit_dist=DICT_LIMIT_REMOVE):
     """
     global df_center_labeled
     points = df_center_labeled[['X', 'Y']].values
-    dists = spatial.distance.cdist(np.array(points), np.array([[x, y]]),
-                                   metric='euclidean')
+    dists = spatial.distance.cdist(np.array(points), np.array([[x, y]]), metric='euclidean')
     if np.min(dists) < limit_dist:
         idx = np.argmin(dists)
         df_center_labeled.drop(idx, inplace=True)
@@ -303,8 +321,7 @@ def onclick(event):
     if event.xdata is None or event.ydata is None:
         logging.warning('click out of image bounds')
         return
-    logging.debug('button=%d, xdata=%f, ydata=%f', event.button,
-                  event.xdata, event.ydata)
+    logging.debug('button=%d, xdata=%f, ydata=%f', event.button, event.xdata, event.ydata)
     if event.button == 1:  # left click
         add_point_correction(event.xdata, event.ydata)
     elif event.button == 3:  # left click

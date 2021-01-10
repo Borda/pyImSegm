@@ -51,8 +51,8 @@ def get_hex(data, n=16):
 
 def read_struct(data, t):
     """ read a t type from data(str)"""
-#    vartype = (ord(data[0]), ord(data[1]))
-#    print t, vartype
+    # vartype = (ord(data[0]), ord(data[1]))
+    # print t, vartype
     next_data = data[2:]  # skip vartype I16
 
     if t == '?':
@@ -86,8 +86,7 @@ def read_struct(data, t):
 
 
 ZviImageTuple = namedtuple(
-    'ZviImageTuple',
-    'Version FileName Width Height Depth PIXEL_FORMAT Count '
+    'ZviImageTuple', 'Version FileName Width Height Depth PIXEL_FORMAT Count '
     'ValidBitsPerPixel m_PluginCLSID Others Layers Scaling'
 )
 
@@ -97,8 +96,8 @@ def read_image_container_content(stream):
     data = stream.read()
     next_data = data
     [version, next_data] = read_struct(next_data, 'I4')
-#    [Type, next] = read_struct(next, 'I4')
-#    [TypeDescription, next] = read_struct(next, 'BSTR')
+    # [Type, next] = read_struct(next, 'I4')
+    # [TypeDescription, next] = read_struct(next, 'BSTR')
     [filename, next_data] = read_struct(next_data, 'BSTR')
     [width, next_data] = read_struct(next_data, 'I4')
     [height, next_data] = read_struct(next_data, 'I4')
@@ -111,18 +110,17 @@ def read_image_container_content(stream):
     [layers, next_data] = read_struct(next_data, 'I4')
     [scaling, _] = read_struct(next_data, 'I2')
 
-    zvi_image = ZviImageTuple(version, filename, width, height, depth,
-                              pixel_format, count, valid_bits_per_pixel,
-                              m_PluginCLSID, others, layers, scaling)
+    zvi_image = ZviImageTuple(
+        version, filename, width, height, depth, pixel_format, count, valid_bits_per_pixel, m_PluginCLSID, others,
+        layers, scaling
+    )
     return zvi_image
 
 
 ZviItemTuple = namedtuple(
-    'ZviItemTuple',
-    'Version FileName Width Height Depth PIXEL_FORMAT Count '
+    'ZviItemTuple', 'Version FileName Width Height Depth PIXEL_FORMAT Count '
     'ValidBitsPerPixel Others Layers Scaling Image'
 )
-
 
 PIXEL_FORMAT = {
     1: (3, 'ByteBGR'),
@@ -142,8 +140,8 @@ def read_item_storage_content(stream):
     data = stream.read()
     next_data = data
     [version, next_data] = read_struct(next_data, 'I4')
-#    [Type, next] = read_struct(next, 'I4')
-#    [TypeDescription, next] = read_struct(next, 'BSTR')
+    # [Type, next] = read_struct(next, 'I4')
+    # [TypeDescription, next] = read_struct(next, 'BSTR')
     [filename, next_data] = read_struct(next_data, 'BSTR')
     [width, next_data] = read_struct(next_data, 'I4')
     [height, next_data] = read_struct(next_data, 'I4')
@@ -159,17 +157,24 @@ def read_item_storage_content(stream):
     # parse the actual image data
     image = parse_image(data[-offset:])
     # group results into one single structure (namedtuple)
-    zvi_item = ZviItemTuple(version, filename, width, height, depth,
-                            pixel_format, count, valid_bits_per_pixel, others,
-                            layers, scaling, image)
+    zvi_item = ZviItemTuple(
+        version,
+        filename,
+        width,
+        height,
+        depth,
+        pixel_format,
+        count,
+        valid_bits_per_pixel,
+        others,
+        layers,
+        scaling,
+        image,
+    )
     return zvi_item
 
 
-ImageTuple = namedtuple(
-    'ImageTuple',
-    'Version Width Height Depth PixelWidth PIXEL_FORMAT '
-    'ValidBitsPerPixel Array'
-)
+ImageTuple = namedtuple('ImageTuple', 'Version Width Height Depth PixelWidth PIXEL_FORMAT ' 'ValidBitsPerPixel Array')
 
 
 def parse_image(data):
@@ -183,8 +188,7 @@ def parse_image(data):
     valid_bits_per_pixel = i32(data[24:28])
     raw = np.fromstring(data[28:], 'uint16')
     array = np.reshape(raw, (height, width))
-    image = ImageTuple(version, width, height, depth, pixel_width,
-                       pixel_format, valid_bits_per_pixel, array)
+    image = ImageTuple(version, width, height, depth, pixel_width, pixel_format, valid_bits_per_pixel, array)
     return image
 
 

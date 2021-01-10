@@ -39,8 +39,10 @@ def segment_slic_img2d(img, sp_size=50, relative_compact=0.1, slico=False):
     >>> slic.shape
     (150, 100)
     """
-    logging.debug('Init SLIC superpixels 2d RGB clustering with params size=%i and'
-                  ' regul=%f for image dims %r', sp_size, relative_compact, img.shape)
+    logging.debug(
+        'Init SLIC superpixels 2d RGB clustering with params size=%i and'
+        ' regul=%f for image dims %r', sp_size, relative_compact, img.shape
+    )
     nb_pixels = np.prod(img.shape[:2])
 
     if not isinstance(img, np.ndarray):
@@ -52,15 +54,13 @@ def segment_slic_img2d(img, sp_size=50, relative_compact=0.1, slico=False):
         img = (img - img.min()) / float(img.max() - img.min())
 
     # set native SLIC parameters
-    slic_nb_spx = int(nb_pixels / (sp_size ** 2))
-    slic_compact = (sp_size * relative_compact) ** 1.5
-    logging.debug('Starting SLIC with params NB=%i & compat=%f for image %r',
-                  slic_nb_spx, slic_compact, img.shape)
+    slic_nb_spx = int(nb_pixels / (sp_size**2))
+    slic_compact = (sp_size * relative_compact)**1.5
+    logging.debug('Starting SLIC with params NB=%i & compat=%f for image %r', slic_nb_spx, slic_compact, img.shape)
     # run SLIC segmentation
-    slic_segments = ski_segm.slic(img, n_segments=slic_nb_spx,
-                                  compactness=slic_compact,
-                                  sigma=1, enforce_connectivity=True,
-                                  slic_zero=slico)
+    slic_segments = ski_segm.slic(
+        img, n_segments=slic_nb_spx, compactness=slic_compact, sigma=1, enforce_connectivity=True, slic_zero=slico
+    )
     logging.debug('SLIC finished')
     # slic_segments, _, _ = ski_segm.relabel_sequential(slic_segments)
     # fix: unconnected segments - [ndimage.label(slic==i)[1]
@@ -69,8 +69,7 @@ def segment_slic_img2d(img, sp_size=50, relative_compact=0.1, slico=False):
     return np.array(slic_segments)
 
 
-def segment_slic_img3d_gray(im, sp_size=50, relative_compact=0.1,
-                            space=IMAGE_SPACING):
+def segment_slic_img3d_gray(im, sp_size=50, relative_compact=0.1, space=IMAGE_SPACING):
     """ segmentation by SLIC superpixels using originla SLIC implementation
 
     :param ndarray im: input 3D grascale image
@@ -86,22 +85,25 @@ def segment_slic_img3d_gray(im, sp_size=50, relative_compact=0.1,
     >>> slic.shape
     (100, 100, 10)
     """
-    logging.debug('Init SLIC superpixels 3d Gray clustering with params'
-                  ' size=%i and regul=%f for image dims %r',
-                  sp_size, relative_compact, im.shape)
+    logging.debug(
+        'Init SLIC superpixels 3d Gray clustering with params size=%i and regul=%f for image dims %r', sp_size,
+        relative_compact, im.shape
+    )
     nb_pixels = np.prod(im.shape)
     sp_size = np.prod(sp_size / np.asarray(space, dtype=np.float32) * min(space))
     # set native SLIC parameters
     slic_nb_sp = int(nb_pixels / sp_size)
     # slic_compact = int((sp_size * relative_compact) ** 1.5)
-    slic_compact = int((sp_size * relative_compact) ** 1.5)
-    logging.debug('Starting SLIC superpixels clustering with params NB=%i and '
-                  'compat=%f and spacing=%r', slic_nb_sp, slic_compact, space)
+    slic_compact = int((sp_size * relative_compact)**1.5)
+    logging.debug(
+        'Starting SLIC superpixels clustering with params NB=%i and compat=%f and spacing=%r', slic_nb_sp, slic_compact,
+        space
+    )
     # run SLIC segmentation
     # slic_segments = SLIC.slic_n(np.array(im), slic_nb_sp, slic_compact)
-    slic_segments = ski_segm.slic(np.array(im), n_segments=slic_nb_sp,
-                                  compactness=slic_compact, multichannel=False,
-                                  spacing=space, sigma=1)
+    slic_segments = ski_segm.slic(
+        np.array(im), n_segments=slic_nb_sp, compactness=slic_compact, multichannel=False, spacing=space, sigma=1
+    )
     logging.debug('SLIC superpixels estimated.')
     # slic_segments, _, _ = ski_segm.relabel_sequential(slic_segments)
     # fix: unconnected segments - [ndimage.label(slic==i)[1]
@@ -125,8 +127,7 @@ def make_graph_segment_connect_edges(vertices, all_edges):
     # find unique connections
     edges = np.unique(edge_hash)
     # undo hashing
-    edges = [[vertices[int(edge % nb_vertices)],
-              vertices[int(edge / nb_vertices)]] for edge in edges]
+    edges = [[vertices[int(edge % nb_vertices)], vertices[int(edge / nb_vertices)]] for edge in edges]
     return vertices, edges
 
 

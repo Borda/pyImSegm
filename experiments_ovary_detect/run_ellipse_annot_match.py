@@ -48,20 +48,41 @@ def arg_parse_params(params):
     :return dict:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-imgs', '--path_images', type=str, required=False,
-                        help='path to directory & name pattern for images',
-                        default=params.get('path_images', None))
-    parser.add_argument('-ells', '--path_ellipses', type=str, required=False,
-                        help='path to directory & name pattern for ellipses',
-                        default=params.get('path_ellipses', None))
-    parser.add_argument('-info', '--path_infofile', type=str, required=False,
-                        help='path to the global information file',
-                        default=params.get('path_infofile', None))
-    parser.add_argument('-out', '--path_output', type=str, required=False,
-                        help='path to the output directory',
-                        default=params.get('path_output', None))
-    parser.add_argument('--nb_workers', type=int, required=False, default=NB_WORKERS,
-                        help='number of processes in parallel')
+    parser.add_argument(
+        '-imgs',
+        '--path_images',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for images',
+        default=params.get('path_images', None)
+    )
+    parser.add_argument(
+        '-ells',
+        '--path_ellipses',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for ellipses',
+        default=params.get('path_ellipses', None)
+    )
+    parser.add_argument(
+        '-info',
+        '--path_infofile',
+        type=str,
+        required=False,
+        help='path to the global information file',
+        default=params.get('path_infofile', None)
+    )
+    parser.add_argument(
+        '-out',
+        '--path_output',
+        type=str,
+        required=False,
+        help='path to the output directory',
+        default=params.get('path_output', None)
+    )
+    parser.add_argument(
+        '--nb_workers', type=int, required=False, default=NB_WORKERS, help='number of processes in parallel'
+    )
     arg_params = vars(parser.parse_args())
     params.update(arg_params)
     for k in (k for k in params if 'path' in k and params[k] is not None):
@@ -89,13 +110,11 @@ def select_optimal_ellipse(idx_row, path_dir_csv, overlap_thr=OVERLAP_THRESHOLD)
     pos_ant = [[row['ant_x'], row['ant_y']]]
     pos_lat = [[row['lat_x'], row['lat_y']]]
     pos_post = [[row['post_x'], row['post_y']]]
-    mask_ref = tl_visu.draw_eggs_rectangle((max_size, max_size),
-                                           pos_ant, pos_lat, pos_post)[0]
+    mask_ref = tl_visu.draw_eggs_rectangle((max_size, max_size), pos_ant, pos_lat, pos_post)[0]
 
     list_jaccard = []
     for _, ell_row in df_ellipses.iterrows():
-        mask_ell = ell_fit.add_overlap_ellipse(np.zeros(mask_ref.shape),
-                                               ell_row.values.tolist(), 1)
+        mask_ell = ell_fit.add_overlap_ellipse(np.zeros(mask_ref.shape), ell_row.values.tolist(), 1)
         union = np.sum(np.logical_and(mask_ref, mask_ell))
         intersect = np.sum(np.logical_or(mask_ref, mask_ell))
         list_jaccard.append(union / float(intersect))
@@ -127,13 +146,10 @@ def filter_table(df_info, path_pattern):
     :param str path_pattern: path and pattern to selected images
     :return DF: filterd dataframe
     """
-    list_name = [os.path.splitext(os.path.basename(p))[0]
-                 for p in glob.glob(path_pattern) if os.path.isfile(p)]
-    logging.info('loaded item in table %i and found %i in dir'
-                 % (len(df_info), len(list_name)))
+    list_name = [os.path.splitext(os.path.basename(p))[0] for p in glob.glob(path_pattern) if os.path.isfile(p)]
+    logging.info('loaded item in table %i and found %i in dir' % (len(df_info), len(list_name)))
 
-    df_info['image_name'] = [os.path.splitext(p)[0]
-                             for p in df_info['image_path']]
+    df_info['image_name'] = [os.path.splitext(p)[0] for p in df_info['image_path']]
     df_info = df_info[df_info['image_name'].isin(list_name)]
 
     return df_info
@@ -154,10 +170,15 @@ def main(params):
     list_evals = []
     # get the folder
     path_dir_csv = os.path.dirname(params['path_ellipses'])
-    _wrapper_match = partial(select_optimal_ellipse,
-                             path_dir_csv=path_dir_csv)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_match, df_info.iterrows(),
-                                          nb_workers=params['nb_workers'])
+    _wrapper_match = partial(
+        select_optimal_ellipse,
+        path_dir_csv=path_dir_csv,
+    )
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_match,
+        df_info.iterrows(),
+        nb_workers=params['nb_workers'],
+    )
     for i, dict_row in enumerate(iterate):
         list_evals.append(dict_row)
         # every hundreds iteration do export

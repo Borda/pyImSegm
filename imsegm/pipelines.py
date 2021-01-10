@@ -11,11 +11,18 @@ import numpy as np
 import skimage.color as sk_color
 
 from imsegm.classification import (
-    DEFAULT_CLASSIF_NAME, DEFAULT_CLUSTERING, convert_set_features_labels_2_dataset,
-    CrossValidateGroups, create_classif_search_train_export)
+    DEFAULT_CLASSIF_NAME,
+    DEFAULT_CLUSTERING,
+    convert_set_features_labels_2_dataset,
+    CrossValidateGroups,
+    create_classif_search_train_export,
+)
 from imsegm.descriptors import (
-    FEATURES_SET_COLOR, norm_features, compute_selected_features_img2d,
-    compute_selected_features_gray3d)
+    FEATURES_SET_COLOR,
+    norm_features,
+    compute_selected_features_img2d,
+    compute_selected_features_gray3d,
+)
 from imsegm.graph_cuts import segment_graph_cut_general, estim_class_model
 from imsegm.labeling import histogram_regions_labels_norm
 from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
@@ -35,12 +42,19 @@ CROSS_VAL_LEAVE_OUT = 2
 NB_WORKERS = nb_workers(0.6)
 
 
-def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
-                                              sp_size=30, sp_regul=0.2,
-                                              pca_coef=None, use_scaler=True,
-                                              estim_model='GMM',
-                                              gc_regul=1., gc_edge_type='model',
-                                              debug_visual=None):
+def pipe_color2d_slic_features_model_graphcut(
+    image,
+    nb_classes,
+    dict_features,
+    sp_size=30,
+    sp_regul=0.2,
+    pca_coef=None,
+    use_scaler=True,
+    estim_model='GMM',
+    gc_regul=1.,
+    gc_edge_type='model',
+    debug_visual=None,
+):
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
 
@@ -69,9 +83,7 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
     (125, 150, 2)
     """
     logging.info('PIPELINE Superpixels-Features-GMM-GraphCut')
-    slic, features = compute_color2d_superpixels_features(image, dict_features,
-                                                          sp_size=sp_size,
-                                                          sp_regul=sp_regul)
+    slic, features = compute_color2d_superpixels_features(image, dict_features, sp_size=sp_size, sp_regul=sp_regul)
 
     if debug_visual is not None:
         if image.ndim == 2:  # duplicate channels to be like RGB
@@ -80,8 +92,7 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
         debug_visual['slic'] = slic
         debug_visual['slic_mean'] = sk_color.label2rgb(slic, image, kind='avg')
 
-    model = estim_class_model(features, nb_classes, estim_model,
-                              pca_coef, use_scaler)
+    model = estim_class_model(features, nb_classes, estim_model, pca_coef, use_scaler)
     proba = model.predict_proba(features)
     logging.debug('list of probabilities: %r', proba.shape)
 
@@ -92,17 +103,24 @@ def pipe_color2d_slic_features_model_graphcut(image, nb_classes, dict_features,
 
     segm_soft = proba[slic]
 
-    graph_labels = segment_graph_cut_general(slic, proba, image, features,
-                                             gc_regul, gc_edge_type,
-                                             debug_visual=debug_visual)
+    graph_labels = segment_graph_cut_general(
+        slic, proba, image, features, gc_regul, gc_edge_type, debug_visual=debug_visual
+    )
     segm = graph_labels[slic]
     return segm, segm_soft
 
 
-def estim_model_classes_group(list_images, nb_classes, dict_features,
-                              sp_size=30, sp_regul=0.2,
-                              use_scaler=True, pca_coef=None, model_type='GMM',
-                              nb_workers=NB_WORKERS):
+def estim_model_classes_group(
+    list_images,
+    nb_classes,
+    dict_features,
+    sp_size=30,
+    sp_regul=0.2,
+    use_scaler=True,
+    pca_coef=None,
+    model_type='GMM',
+    nb_workers=NB_WORKERS,
+):
     """ estimate a model from sequence of input images and return it as result
 
     :param [ndarray] list_images:
@@ -118,12 +136,15 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     :return:
     """
     list_slic, list_features = list(), list()
-    _wrapper_compute = partial(compute_color2d_superpixels_features,
-                               sp_size=sp_size, sp_regul=sp_regul,
-                               dict_features=dict_features)
-    iterate = WrapExecuteSequence(_wrapper_compute, list_images,
-                                  desc='compute SLIC & features',
-                                  nb_workers=nb_workers)
+    _wrapper_compute = partial(
+        compute_color2d_superpixels_features, sp_size=sp_size, sp_regul=sp_regul, dict_features=dict_features
+    )
+    iterate = WrapExecuteSequence(
+        _wrapper_compute,
+        list_images,
+        desc='compute SLIC & features',
+        nb_workers=nb_workers,
+    )
     for slic, features in iterate:
         list_slic.append(slic)
         list_features.append(features)
@@ -136,12 +157,16 @@ def estim_model_classes_group(list_images, nb_classes, dict_features,
     return model, list_features
 
 
-def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
-                                                 dict_features,
-                                                 sp_size=30, sp_regul=0.2,
-                                                 gc_regul=1.,
-                                                 gc_edge_type='model',
-                                                 debug_visual=None):
+def segment_color2d_slic_features_model_graphcut(
+    image,
+    model_pipeline,
+    dict_features,
+    sp_size=30,
+    sp_regul=0.2,
+    gc_regul=1.,
+    gc_edge_type='model',
+    debug_visual=None,
+):
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
 
@@ -190,9 +215,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     (125, 150, 2)
     """
     logging.info('PIPELINE Superpixels-Features-Model-GraphCut')
-    slic, features = compute_color2d_superpixels_features(image, dict_features,
-                                                          sp_size=sp_size,
-                                                          sp_regul=sp_regul)
+    slic, features = compute_color2d_superpixels_features(image, dict_features, sp_size=sp_size, sp_regul=sp_regul)
 
     if debug_visual is not None:
         if image.ndim == 2:  # duplicate channels to be like RGB
@@ -211,9 +234,9 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
 
     segm_soft = proba[slic]
 
-    graph_labels = segment_graph_cut_general(slic, proba, image, features,
-                                             gc_regul, gc_edge_type,
-                                             debug_visual=debug_visual)
+    graph_labels = segment_graph_cut_general(
+        slic, proba, image, features, gc_regul, gc_edge_type, debug_visual=debug_visual
+    )
     # relabel according classif classes
     if hasattr(model_pipeline, 'classes_'):
         graph_labels = model_pipeline.classes_[graph_labels]
@@ -221,8 +244,7 @@ def segment_color2d_slic_features_model_graphcut(image, model_pipeline,
     return segm, segm_soft
 
 
-def compute_color2d_superpixels_features(image, dict_features,
-                                         sp_size=30, sp_regul=0.2):
+def compute_color2d_superpixels_features(image, dict_features, sp_size=30, sp_regul=0.2):
     """ segment image into superpixels and estimate features per superpixel
 
     :param ndarray image: input RGB image
@@ -249,17 +271,13 @@ def compute_color2d_superpixels_features(image, dict_features,
     return slic, features
 
 
-def wrapper_compute_color2d_slic_features_labels(img_annot,
-                                                 sp_size, sp_regul,
-                                                 dict_features, label_purity):
+def wrapper_compute_color2d_slic_features_labels(img_annot, sp_size, sp_regul, dict_features, label_purity):
     img, annot = img_annot
     # in case of binary annotation convert it to integers labels
     annot = annot.astype(int)
     assert img.shape[:2] == annot.shape[:2], \
         'image %r and annot %r should match' % (img.shape, annot.shape)
-    slic, features = compute_color2d_superpixels_features(img, dict_features,
-                                                          sp_size=sp_size,
-                                                          sp_regul=sp_regul)
+    slic, features = compute_color2d_superpixels_features(img, dict_features, sp_size=sp_size, sp_regul=sp_regul)
     neg_label = np.max(annot) + 1 if np.sum(annot < 0) > 0 else None
     if neg_label is not None:
         annot[annot < 0] = neg_label
@@ -274,14 +292,20 @@ def wrapper_compute_color2d_slic_features_labels(img_annot,
     return slic, features, labels
 
 
-def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
-                                        sp_size=30, sp_regul=0.2,
-                                        clf_name=CLASSIF_NAME,
-                                        label_purity=0.9,
-                                        feature_balance='unique',
-                                        pca_coef=None, nb_classif_search=1,
-                                        nb_hold_out=CROSS_VAL_LEAVE_OUT,
-                                        nb_workers=1):
+def train_classif_color2d_slic_features(
+    list_images,
+    list_annots,
+    dict_features,
+    sp_size=30,
+    sp_regul=0.2,
+    clf_name=CLASSIF_NAME,
+    label_purity=0.9,
+    feature_balance='unique',
+    pca_coef=None,
+    nb_classif_search=1,
+    nb_hold_out=CROSS_VAL_LEAVE_OUT,
+    nb_workers=1,
+):
     """ train classifier on list of annotated images
 
     :param [ndarray] list_images:
@@ -305,14 +329,20 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
         % (len(list_images), len(list_annots))
 
     list_slic, list_features, list_labels = list(), list(), list()
-    _wrapper_compute = partial(wrapper_compute_color2d_slic_features_labels,
-                               sp_size=sp_size, sp_regul=sp_regul,
-                               dict_features=dict_features,
-                               label_purity=label_purity)
+    _wrapper_compute = partial(
+        wrapper_compute_color2d_slic_features_labels,
+        sp_size=sp_size,
+        sp_regul=sp_regul,
+        dict_features=dict_features,
+        label_purity=label_purity,
+    )
     list_imgs_annot = zip(list_images, list_annots)
-    iterate = WrapExecuteSequence(_wrapper_compute, list_imgs_annot,
-                                  desc='compute SLIC & features & labels',
-                                  nb_workers=nb_workers)
+    iterate = WrapExecuteSequence(
+        _wrapper_compute,
+        list_imgs_annot,
+        desc='compute SLIC & features & labels',
+        nb_workers=nb_workers,
+    )
     for slic, fts, lbs in iterate:
         list_slic.append(slic)
         list_features.append(fts)
@@ -323,7 +353,9 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
     features, labels, sizes = convert_set_features_labels_2_dataset(
         dict(zip(range(len(list_features)), list_features)),
         dict(zip(range(len(list_labels)), list_labels)),
-        balance_type=feature_balance, drop_labels=[-1])
+        balance_type=feature_balance,
+        drop_labels=[-1]
+    )
     # drop do not care label whichare -1
     features = np.nan_to_num(features)
 
@@ -338,16 +370,27 @@ def train_classif_color2d_slic_features(list_images, list_annots, dict_features,
         cv = 10
 
     classif, _ = create_classif_search_train_export(
-        clf_name, features, labels, pca_coef=pca_coef, cross_val=cv,
-        nb_search_iter=nb_classif_search, nb_workers=nb_workers)
+        clf_name,
+        features,
+        labels,
+        pca_coef=pca_coef,
+        cross_val=cv,
+        nb_search_iter=nb_classif_search,
+        nb_workers=nb_workers,
+    )
 
     return classif, list_slic, list_features, list_labels
 
 
-def pipe_gray3d_slic_features_model_graphcut(image, nb_classes, dict_features,
-                                             spacing=(12, 1, 1),
-                                             sp_size=15, sp_regul=0.2,
-                                             gc_regul=0.1):
+def pipe_gray3d_slic_features_model_graphcut(
+    image,
+    nb_classes,
+    dict_features,
+    spacing=(12, 1, 1),
+    sp_size=15,
+    sp_regul=0.2,
+    gc_regul=0.1,
+):
     """ complete pipe-line for segmentation using superpixels, extracting features
     and graphCut segmentation
 
@@ -368,8 +411,7 @@ def pipe_gray3d_slic_features_model_graphcut(image, nb_classes, dict_features,
     (5, 125, 150)
     """
     logging.info('PIPELINE Superpixels-Features-GraphCut')
-    slic = segment_slic_img3d_gray(image, sp_size=sp_size,
-                                   relative_compact=sp_regul, space=spacing)
+    slic = segment_slic_img3d_gray(image, sp_size=sp_size, relative_compact=sp_regul, space=spacing)
     # plt.imshow(segments)
     logging.info('extract segments/superpixels features.')
     # f = features.computeColourMean(image, segments)
@@ -424,7 +466,6 @@ def pipe_gray3d_slic_features_model_graphcut(image, nb_classes, dict_features,
 #     # relabel according classif classes
 #     segm = classif.classes_[segm]
 #     return segm, classif
-
 
 # def estim_model_classes_annot(img, annot, clr_space='rgb', sp_size=30,
 #                               sp_regul=0.2, dict_features=FTS_SET_SIMPLE,

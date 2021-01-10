@@ -39,8 +39,7 @@ import imsegm.classification as seg_clf
 NB_WORKERS = tl_expt.nb_workers(0.9)
 NAME_CVS_OVERALL = 'STATISTIC__%s___Overall.csv'
 NAME_CVS_PER_IMAGE = 'STATISTIC__%s___per-Image.csv'
-PATH_IMAGES = os.path.join(tl_data.update_path('data-images'),
-                           'drosophila_ovary_slice')
+PATH_IMAGES = os.path.join(tl_data.update_path('data-images'), 'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SUFFIX_VISUAL = '___STAT-visual'
 PATHS = {
@@ -57,38 +56,56 @@ def aparse_params(dict_paths):
     :return ({str: str}, obj):
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-a', '--path_annot', type=str, required=True,
-                        help='path to directory with annotations & name pattern',
-                        default=dict_paths['annot'])
-    parser.add_argument('-s', '--path_segm', type=str, required=True,
-                        help='path to directory & name pattern for segmentation',
-                        default=dict_paths['segm'])
-    parser.add_argument('-i', '--path_image', type=str, required=False,
-                        help='path to directory & name pattern for images',
-                        default=dict_paths['image'])
-    parser.add_argument('-o', '--path_output', type=str, required=False,
-                        help='path to the output directory',
-                        default=dict_paths['output'])
-    parser.add_argument('--drop_labels', type=int, required=False, nargs='*',
-                        help='list of skipped labels from statistic')
-    parser.add_argument('--nb_workers', type=int, required=False,
-                        help='number of processes in parallel',
-                        default=NB_WORKERS)
-    parser.add_argument('--overlap', type=float, required=False,
-                        help='alpha for segmentation', default=0.2)
-    parser.add_argument('--relabel', required=False, action='store_true',
-                        help='relabel to find label relations', default=False)
-    parser.add_argument('--visual', required=False, action='store_true',
-                        help='export visualisations', default=False)
+    parser.add_argument(
+        '-a',
+        '--path_annot',
+        type=str,
+        required=True,
+        help='path to directory with annotations & name pattern',
+        default=dict_paths['annot']
+    )
+    parser.add_argument(
+        '-s',
+        '--path_segm',
+        type=str,
+        required=True,
+        help='path to directory & name pattern for segmentation',
+        default=dict_paths['segm']
+    )
+    parser.add_argument(
+        '-i',
+        '--path_image',
+        type=str,
+        required=False,
+        help='path to directory & name pattern for images',
+        default=dict_paths['image']
+    )
+    parser.add_argument(
+        '-o',
+        '--path_output',
+        type=str,
+        required=False,
+        help='path to the output directory',
+        default=dict_paths['output']
+    )
+    parser.add_argument(
+        '--drop_labels', type=int, required=False, nargs='*', help='list of skipped labels from statistic'
+    )
+    parser.add_argument(
+        '--nb_workers', type=int, required=False, help='number of processes in parallel', default=NB_WORKERS
+    )
+    parser.add_argument('--overlap', type=float, required=False, help='alpha for segmentation', default=0.2)
+    parser.add_argument(
+        '--relabel', required=False, action='store_true', help='relabel to find label relations', default=False
+    )
+    parser.add_argument('--visual', required=False, action='store_true', help='export visualisations', default=False)
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %r', args)
     if not isinstance(args['path_image'], str) or args['path_image'].lower() == 'none':
         args['path_image'] = None
 
-    _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])),
-                                      os.path.basename(args[k]))
-    dict_paths = {k.split('_')[-1]: _fn_path(k)
-                  for k in args if k.startswith('path_') and args[k] is not None}
+    _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])), os.path.basename(args[k]))
+    dict_paths = {k.split('_')[-1]: _fn_path(k) for k in args if k.startswith('path_') and args[k] is not None}
     for k in dict_paths:
         assert os.path.isdir(os.path.dirname(dict_paths[k])), \
             'missing: (%s) "%s"' % (k, os.path.dirname(dict_paths[k]))
@@ -129,16 +146,13 @@ def export_visual(name, annot, segm, img, path_out, drop_labels, segm_alpha=1.):
     # normalise alpha in range (0, 1)
     segm_alpha = tl_visu.norm_aplha(segm_alpha)
 
-    fig = tl_visu.figure_overlap_annot_segm_image(annot, segm, img,
-                                                  drop_labels=drop_labels,
-                                                  segm_alpha=segm_alpha)
+    fig = tl_visu.figure_overlap_annot_segm_image(annot, segm, img, drop_labels=drop_labels, segm_alpha=segm_alpha)
     logging.debug('>> exporting -> %s', name)
     fig.savefig(os.path.join(path_out, '%s.png' % name))
     plt.close(fig)
 
 
-def stat_single_set(idx_row, drop_labels=None, relabel=False, path_visu='',
-                    segm_alpha=1.):
+def stat_single_set(idx_row, drop_labels=None, relabel=False, path_visu='', segm_alpha=1.):
     _, row = idx_row
     path_annot = row['path_1']
     path_segm = row['path_2']
@@ -153,20 +167,16 @@ def stat_single_set(idx_row, drop_labels=None, relabel=False, path_visu='',
             annot[annot == lb] = np.nan
     annot = np.nan_to_num(annot + 1).astype(int) - 1
 
-    dc_stat = seg_clf.compute_classif_stat_segm_annot((annot, segm, name),
-                                                      drop_labels=[-1],
-                                                      relabel=relabel)
+    dc_stat = seg_clf.compute_classif_stat_segm_annot((annot, segm, name), drop_labels=[-1], relabel=relabel)
 
     if os.path.isdir(path_visu):
         img, _ = tl_data.load_image(path_img)
-        export_visual(name, annot, segm, img, path_visu, drop_labels=[-1],
-                      segm_alpha=segm_alpha)
+        export_visual(name, annot, segm, img, path_visu, drop_labels=[-1], segm_alpha=segm_alpha)
 
     return dc_stat
 
 
-def main(dict_paths, visual=True, drop_labels=None, relabel=True,
-         segm_alpha=1., nb_workers=NB_WORKERS):
+def main(dict_paths, visual=True, drop_labels=None, relabel=True, segm_alpha=1., nb_workers=NB_WORKERS):
     """ main evaluation
 
     :param {str: str} dict_paths:
@@ -197,12 +207,19 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True,
         path_visu = ''
 
     logging.info('compute statistic per image')
-    _wrapper_stat = partial(stat_single_set, drop_labels=drop_labels,
-                            relabel=relabel, path_visu=path_visu,
-                            segm_alpha=segm_alpha)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_stat, df_paths.iterrows(),
-                                          desc='compute statistic',
-                                          nb_workers=nb_workers)
+    _wrapper_stat = partial(
+        stat_single_set,
+        drop_labels=drop_labels,
+        relabel=relabel,
+        path_visu=path_visu,
+        segm_alpha=segm_alpha,
+    )
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_stat,
+        df_paths.iterrows(),
+        desc='compute statistic',
+        nb_workers=nb_workers,
+    )
     list_stats = list(iterate)
     df_stat = pd.DataFrame(list_stats)
 
@@ -224,8 +241,13 @@ if __name__ == '__main__':
     logging.info('running...')
 
     dict_paths, args = aparse_params(PATHS)
-    main(dict_paths, nb_workers=args['nb_workers'], visual=args['visual'],
-         drop_labels=args['drop_labels'], relabel=args['relabel'],
-         segm_alpha=args['overlap'])
+    main(
+        dict_paths,
+        nb_workers=args['nb_workers'],
+        visual=args['visual'],
+        drop_labels=args['drop_labels'],
+        relabel=args['relabel'],
+        segm_alpha=args['overlap'],
+    )
 
     logging.info('DONE')

@@ -103,8 +103,7 @@ class Experiment(object):
 
     def _check_exist_paths(self):
         """ Check all required paths in parameters whether they exist """
-        for p in (self.params[n] for n in self.params
-                  if 'dir' in n.lower() or 'path' in n.lower()):
+        for p in (self.params[n] for n in self.params if 'dir' in n.lower() or 'path' in n.lower()):
             if not os.path.exists(p):
                 raise Exception('given folder "%s" does not exist!' % p)
         for p in (self.params[n] for n in self.params if 'file' in n.lower()):
@@ -119,9 +118,7 @@ class Experiment(object):
         # create results folder for experiments
         if not os.path.exists(self.params.get('path_out', 'NONE')):
             raise ValueError('no results folder "%r"' % self.params.get('path_out', None))
-        self.params = create_experiment_folder(self.params,
-                                               self.__class__.__name__,
-                                               time_stamp)
+        self.params = create_experiment_folder(self.params, self.__class__.__name__, time_stamp)
 
 
 # def check_exist_dirs_files(params):
@@ -201,8 +198,7 @@ def set_experiment_logger(path_out, file_name=FILE_LOGS, reset=True):
     """ set the logger to file """
     log = logging.getLogger()
     if reset:
-        log.handlers = [h for h in log.handlers
-                        if not isinstance(h, logging.FileHandler)]
+        log.handlers = [h for h in log.handlers if not isinstance(h, logging.FileHandler)]
     path_logger = os.path.join(path_out, file_name)
     logging.info('setting logger to "%s"', path_logger)
     fh = logging.FileHandler(path_logger)
@@ -228,8 +224,7 @@ def string_dict(d, offset=30, desc='DICTIONARY'):
     return str(s)
 
 
-def append_final_stat(out_dir, y_true, y_pred, time_sec,
-                      file_name=RESULTS_TXT):
+def append_final_stat(out_dir, y_true, y_pred, time_sec, file_name=RESULTS_TXT):
     """ append (export) statistic to existing default file
 
     :param str out_dir:
@@ -249,8 +244,7 @@ def append_final_stat(out_dir, y_true, y_pred, time_sec,
     >>> os.remove(f_path)
     """
     # y_true, y_pred = np.array(y_true), np.array(y_pred)
-    logging.debug('export compare labeling sizes %r with %r [px]',
-                  y_true.shape, y_pred.shape)
+    logging.debug('export compare labeling sizes %r with %r [px]', y_true.shape, y_pred.shape)
     res = metrics.classification_report(y_true, y_pred, digits=4)
     logging.info('FINAL results: \n {}'.format(res))
 
@@ -319,12 +313,14 @@ def try_decorator(func):
     :param func:
     :return:
     """
+
     @wraps(func)
     def wrap(*args, **kwargs):
         try:
             return func(*args, **kwargs)
         except Exception:
             logging.exception('%r with %r and %r', func.__name__, args, kwargs)
+
     return wrap
 
 
@@ -372,8 +368,7 @@ class WrapExecuteSequence:
     [0, 0, 0, 0, 0]
     """
 
-    def __init__(self, wrap_func, iterate_vals, nb_workers=CPU_COUNT, desc='',
-                 ordered=False):
+    def __init__(self, wrap_func, iterate_vals, nb_workers=CPU_COUNT, desc='', ordered=False):
         """ the init of this wrapper fro parallelism
 
         :param wrap_func: function which will be excited in the iterations

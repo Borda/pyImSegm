@@ -41,8 +41,7 @@ def generate_data(nb_samples=100, nb_classes=3, dim_features=4):
 
 class TestClassification(unittest.TestCase):
 
-    def classif_eval(self, clf, features_train, labels_train,
-                     features_test, labels_test):
+    def classif_eval(self, clf, features_train, labels_train, features_test, labels_test):
         """ train and test classifier with assumption of separable data
 
         :param clf: classifier object
@@ -52,12 +51,10 @@ class TestClassification(unittest.TestCase):
         :param list(int) labels_test:
         """
         nb_classes = len(np.unique(labels_train))
-        f1_train = metrics.f1_score(labels_train, clf.predict(features_train),
-                                    average='weighted')
+        f1_train = metrics.f1_score(labels_train, clf.predict(features_train), average='weighted')
         logging.debug('f1 metric on training: %f', f1_train)
         self.assertGreaterEqual(f1_train, 1. / nb_classes)
-        f1_test = metrics.f1_score(labels_test, clf.predict(features_test),
-                                   average='weighted')
+        f1_test = metrics.f1_score(labels_test, clf.predict(features_test), average='weighted')
         logging.debug('f1 metric on testing: %f', f1_test)
         self.assertGreaterEqual(f1_test, 1. / nb_classes)
 
@@ -69,8 +66,7 @@ class TestClassification(unittest.TestCase):
             logging.info('created classifier: %s', n)
             clf = create_classifiers()[n]
             clf.fit(data_train, labels_train)
-            self.classif_eval(clf, data_train, labels_train,
-                              data_test, labels_test)
+            self.classif_eval(clf, data_train, labels_train, data_test, labels_test)
 
     def test_classif_pipeline(self):
         """ test the training of classif with expected F1 score close to one """
@@ -78,10 +74,8 @@ class TestClassification(unittest.TestCase):
         data_test, labels_test = generate_data()
         for n in CLASSIFIER_NAMES:
             logging.info('created classif.: %s', n)
-            clf, _ = create_classif_search_train_export(n, data_train, labels_train,
-                                                        nb_search_iter=5)
-            self.classif_eval(clf, data_train, labels_train,
-                              data_test, labels_test)
+            clf, _ = create_classif_search_train_export(n, data_train, labels_train, nb_search_iter=5)
+            self.classif_eval(clf, data_train, labels_train, data_test, labels_test)
 
 
 if __name__ == '__main__':

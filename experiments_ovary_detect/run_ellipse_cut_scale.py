@@ -27,9 +27,7 @@ import imsegm.utilities.experiments as tl_expt
 import imsegm.ellipse_fitting as ell_fit
 import run_ellipse_annot_match as r_match
 
-COLUMNS_ELLIPSE = ['ellipse_xc', 'ellipse_yc',
-                   'ellipse_a', 'ellipse_b',
-                   'ellipse_theta']
+COLUMNS_ELLIPSE = ['ellipse_xc', 'ellipse_yc', 'ellipse_a', 'ellipse_b', 'ellipse_theta']
 OVERLAP_THRESHOLD = 0.45
 NORM_FUNC = np.median  # other options - mean, max, ...
 
@@ -61,8 +59,7 @@ def extract_ellipse_object(idx_row, path_images, path_out, norm_size):
 
     # create mask according to chosen ellipse
     ell_params = row[COLUMNS_ELLIPSE].tolist()
-    mask = ell_fit.add_overlap_ellipse(np.zeros(img.shape[:2], dtype=int),
-                                       ell_params, 1)
+    mask = ell_fit.add_overlap_ellipse(np.zeros(img.shape[:2], dtype=int), ell_params, 1)
 
     # cut the particular image
     img_cut = tl_data.cut_object(img, mask, 0, use_mask=True, bg_color=None)
@@ -93,12 +90,19 @@ def perform_stage(df_group, stage, path_images, path_out):
     if not os.path.isdir(path_out_stage):
         os.mkdir(path_out_stage)
 
-    _wrapper_object = partial(extract_ellipse_object, path_images=path_images,
-                              path_out=path_out_stage, norm_size=norm_size)
+    _wrapper_object = partial(
+        extract_ellipse_object,
+        path_images=path_images,
+        path_out=path_out_stage,
+        norm_size=norm_size,
+    )
     desc = 'stage %i - size %s' % (stage, norm_size)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_object, df_group.iterrows(),
-                                          nb_workers=params['nb_workers'],
-                                          desc=desc)
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_object,
+        df_group.iterrows(),
+        nb_workers=params['nb_workers'],
+        desc=desc,
+    )
     list(iterate)
 
 

@@ -186,8 +186,9 @@ def image_frequent_colors(img, ratio_threshold=1e-3):
         return dict()
     dict_clrs = dict([(clr, nb) for nb, clr in img_colors if nb >= nb_px_min])
     ration_main_colors = sum(dict_clrs.values()) / float(nb_pixels)
-    logging.debug('image main colors=%f and other=%f with colours: \n%r',
-                  ration_main_colors, 1. - ration_main_colors, dict_clrs)
+    logging.debug(
+        'image main colors=%f and other=%f with colours: \n%r', ration_main_colors, 1. - ration_main_colors, dict_clrs
+    )
     return dict_clrs
 
 
@@ -241,8 +242,7 @@ def image_color_2_labels(img, colors=None):
     if not colors:
         colors = image_frequent_colors(img).keys()
     pixels = img.reshape(-1, 3)
-    dist = [np.sum(np.abs(np.subtract(pixels, clr)), axis=1)
-            for clr in colors]
+    dist = [np.sum(np.abs(np.subtract(pixels, clr)), axis=1) for clr in colors]
     lut = np.argmin(np.asarray(dist), axis=0)
     seg = lut.reshape(img.shape[:2])
     return seg
@@ -268,8 +268,7 @@ def quantize_image_nearest_color(img, colors):
     [True, True]
     """
     pixels = img.reshape(-1, 3)
-    dist = [np.sum(np.abs(np.subtract(pixels, clr)), axis=1)
-            for clr in colors]
+    dist = [np.sum(np.abs(np.subtract(pixels, clr)), axis=1) for clr in colors]
     lut = np.argmin(np.asarray(dist), axis=0)
     pixels = np.asarray(colors)[lut]
     img_q = np.asarray(pixels, dtype=img.dtype).reshape(img.shape)
@@ -310,7 +309,7 @@ def quantize_image_nearest_pixel(img, colors):
 
     for i, clr in enumerate(colors):
         # male homogenious images of this single color
-        color = np.tile(clr, labels.shape + (1,))
+        color = np.tile(clr, labels.shape + (1, ))
         # find different pixels
         diff = np.sum(abs(img - color), axis=-1)
         labels[diff == 0] = i
@@ -321,8 +320,7 @@ def quantize_image_nearest_pixel(img, colors):
     return img_inpaint
 
 
-def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
-                              dict_slice_tol=ANNOT_SLICE_DIST_TOL):
+def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION, dict_slice_tol=ANNOT_SLICE_DIST_TOL):
     """ load all info and group position info according name if stack
 
     :param str path_txt:
@@ -356,14 +354,12 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION,
     tqdm_bar = tqdm.tqdm(total=len(df[SLICE_NAME_GROUPING].unique()))
     for _, df_group in df.groupby(SLICE_NAME_GROUPING):
         slice_idxs = df_group['slice_index'].values
-        slice_tols = np.array([dict_slice_tol[i]
-                               for i in df_group['stage'].values])
+        slice_tols = np.array([dict_slice_tol[i] for i in df_group['stage'].values])
         for _, row in df_group.iterrows():
             sl_idx = row['slice_index']
             diff = abs(slice_idxs - sl_idx)
             filter_slice = (diff <= slice_tols)
-            dict_slice = {col: df_group[col].values[filter_slice]
-                          for col in pos_columns}
+            dict_slice = {col: df_group[col].values[filter_slice] for col in pos_columns}
             dict_slice['image'] = os.path.splitext(row['image_path'])[0]
             df_marked = df_marked.append(dict_slice, ignore_index=True)
         tqdm_bar.update()

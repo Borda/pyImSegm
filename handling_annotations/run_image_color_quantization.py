@@ -15,7 +15,6 @@ SAMPLE run::
 Copyright (C) 2014-2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 """
 
-
 import argparse
 import glob
 import logging
@@ -41,16 +40,27 @@ def parse_arg_params():
     :return obj: argparse
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-imgs', '--path_images', type=str, required=True,
-                        help='path to dir with images', default=PATH_IMAGES)
-    parser.add_argument('-m', '--method', type=str, required=False,
-                        help='method for quantisation color/position',
-                        default='color', choices=['color', 'position'])
-    parser.add_argument('-thr', '--px_threshold', type=float, required=False,
-                        help='percentage of pixels of a color to be removed',
-                        default=THRESHOLD_INVALID_PIXELS)
-    parser.add_argument('--nb_workers', type=int, required=False,
-                        help='number of jobs in parallel', default=NB_WORKERS)
+    parser.add_argument(
+        '-imgs', '--path_images', type=str, required=True, help='path to dir with images', default=PATH_IMAGES
+    )
+    parser.add_argument(
+        '-m',
+        '--method',
+        type=str,
+        required=False,
+        help='method for quantisation color/position',
+        default='color',
+        choices=['color', 'position']
+    )
+    parser.add_argument(
+        '-thr',
+        '--px_threshold',
+        type=float,
+        required=False,
+        help='percentage of pixels of a color to be removed',
+        default=THRESHOLD_INVALID_PIXELS
+    )
+    parser.add_argument('--nb_workers', type=int, required=False, help='number of jobs in parallel', default=NB_WORKERS)
     args = vars(parser.parse_args())
     p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
     assert os.path.isdir(p_dir), 'missing folder: %s' % args['path_images']
@@ -103,8 +113,9 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     # plt.show()
 
 
-def quantize_folder_images(path_images, colors=None, method='color',
-                           px_threshold=THRESHOLD_INVALID_PIXELS, nb_workers=1):
+def quantize_folder_images(
+    path_images, colors=None, method='color', px_threshold=THRESHOLD_INVALID_PIXELS, nb_workers=1
+):
     """ perform single or multi thread image quantisation
 
     :param str path_images:, input directory and image pattern for loading
@@ -119,20 +130,25 @@ def quantize_folder_images(path_images, colors=None, method='color',
         dict_colors = see_images_color_info(path_images, px_thr=px_threshold)
         colors = [c for c in dict_colors]
 
-    _wrapper_quantize_img = partial(perform_quantize_image,
-                                    method=method, list_colors=colors)
-    iterate = tl_expt.WrapExecuteSequence(_wrapper_quantize_img, path_imgs,
-                                          nb_workers=nb_workers,
-                                          desc='quantize images')
+    _wrapper_quantize_img = partial(perform_quantize_image, method=method, list_colors=colors)
+    iterate = tl_expt.WrapExecuteSequence(
+        _wrapper_quantize_img,
+        path_imgs,
+        nb_workers=nb_workers,
+        desc='quantize images',
+    )
     list(iterate)
 
 
 def main(params):
     """ the main_train entry point   """
     logging.info('running...')
-    quantize_folder_images(params['path_images'], method=params['method'],
-                           px_threshold=params['px_threshold'],
-                           nb_workers=params['nb_workers'])
+    quantize_folder_images(
+        params['path_images'],
+        method=params['method'],
+        px_threshold=params['px_threshold'],
+        nb_workers=params['nb_workers']
+    )
     logging.info('DONE')
 
 
