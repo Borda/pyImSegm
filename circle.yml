@@ -36,8 +36,11 @@ references:
    run:
      name: Building project
      command: |
-       gcc --version ; python --version ; pwd ; ls -l
+       pip install cython
+       gcc --version
+       python --version
        python setup.py build_ext --inplace
+       pwd ; ls -l imsegm
 
   install_project: &install_project
    run:
@@ -50,14 +53,16 @@ references:
    run:
      name: Make Documentation
      command: |
-       sudo apt-get install pandoc
-       sudo pip install -r docs/requirements.txt
-       # sphinx-apidoc -o ./docs/source ./imsegm **/test_* --force --follow-links
+       # sudo apt-get install pandoc
+       pyenv global 3.7.3
+       python --version
+       pip install -r requirements.txt
+       pip install -r docs/requirements.txt
        python setup.py build_ext --inplace
+       # sphinx-apidoc -o ./docs/source ./imsegm **/test_* --force --follow-links
        cd docs
        make html --debug --jobs 2 SPHINXOPTS="-W"
        make latexpdf
-
 
 jobs:
   Formatting:
@@ -85,7 +90,8 @@ jobs:
           name: Finalise
           command: |
             python setup.py install --user
-            coverage report && coverage xml -o test-reports/coverage.xml
+            coverage report
+            coverage xml -o test-reports/coverage.xml
 
       - store_test_results:
           path: test-reports
@@ -112,28 +118,13 @@ jobs:
       # REGION GROWING section
       - run: bash experiments_ovary_detect/test_ovary_detect.sh
 
-  Py2-Tests:
-    docker:
-      - image: circleci/python:2.7
-    steps: *steps_test
-
-  Py2-Experiments:
-    docker:
-      - image: circleci/python:2.7
-    steps: *steps_expt
-
   Build-Docs:
     docker:
-      - image: circleci/python:3.6
+      - image: readthedocs/build:latest
     steps:
       - checkout
-      - run:
-          name: TexLive
-          command: |
-            sudo apt-get update -qq
-            sudo apt-get install -y imagemagick ghostscript latexmk texlive texlive-latex-recommended texlive-fonts-recommended texlive-formats-extra
-      # INSTALLATION
-      - *install_pips
+      # BUILDING
+      - *build_project
       # DOCUMENTATION
       - *make_docs
       # PREVIEW
@@ -147,7 +138,6 @@ workflows:
   build:
     jobs:
       - Formatting
-      - Py2-Tests
       - Py3-Tests
       #- Py2-Experiments
       #- Py3-Experiments

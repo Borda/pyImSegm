@@ -392,8 +392,8 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
     [[13, 17], [0, 0]]
     """
     annot, segm, name = annot_segm_name
-    assert segm.shape == annot.shape, 'dimension do not match for segm: %r - annot: %r' \
-                                      % (segm.shape, annot.shape)
+    assert segm.shape == annot.shape, \
+        'dimension do not match for segm: %r - annot: %r' % (segm.shape, annot.shape)
     y_true, y_pred = annot.ravel(), segm.ravel()
     # filter particular labels
     if drop_labels is not None:
@@ -406,8 +406,7 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None,
     # relabel such that the classes maximaly match
     if relabel:
         y_pred = relabel_max_overlap_unique(y_true, y_pred, keep_bg=False)
-    dict_stat = compute_classif_metrics(y_true, y_pred,
-                                        metric_averages=['macro'])
+    dict_stat = compute_classif_metrics(y_true, y_pred, metric_averages=['macro'])
     # add binary metric
     if len(np.unique(y_pred)) == 2:
         dict_stat['(FP+FN)/(TP+FN)'] = compute_metric_fpfn_tpfn(y_true, y_pred)
@@ -433,38 +432,34 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2,
     >>> np.random.seed(0)
     >>> img_true = np.random.randint(0, 3, (50, 100))
     >>> img_pred = np.random.randint(0, 2, (50, 100))
-    >>> df = compute_stat_per_image([img_true], [img_true], nb_workers=2,
-    ...                             relabel=True)
-    >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    ARS                                                         1
-    accuracy                                                    1
-    confusion          [[1672, 0, 0], [0, 1682, 0], [0, 0, 1646]]
-    f1_macro                                                    1
-    precision_macro                                             1
-    recall_macro                                                1
-    support_macro                                            None
-    Name: 0, dtype: object
+    >>> df = compute_stat_per_image([img_true], [img_true], nb_workers=2, relabel=True)
+    >>> from pprint import pprint
+    >>> pprint(pd.Series(df.iloc[0]).sort_index().to_dict())  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    {'ARS': 1.0,
+     'accuracy': 1.0,
+     'confusion': [[1672, 0, 0], [0, 1682, 0], [0, 0, 1646]],
+     'f1_macro': 1.0,
+     'precision_macro': 1.0,
+     'recall_macro': 1.0,
+     'support_macro': None}
     >>> df = compute_stat_per_image([img_true], [img_pred], drop_labels=[-1])
-    >>> pd.Series(df.iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    ARS                                                       0.0...
+    >>> pd.Series(df.round(4).iloc[0]).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    ARS                                                       0.0002
     accuracy                                                  0.3384
     confusion          [[836, 826, 770], [836, 856, 876], [0, 0, 0]]
-    f1_macro                                                0.270077
-    precision_macro                                         0.336306
-    recall_macro                                            0.225694
+    f1_macro                                                  0.2701
+    precision_macro                                           0.3363
+    recall_macro                                              0.2257
     support_macro                                               None
     Name: 0, dtype: object
     """
     assert len(segms) == len(annots), \
-        'size of segment. (%i) amd annot. (%i) should be equal' \
-        % (len(segms), len(annots))
+        'size of segment. (%i) amd annot. (%i) should be equal' % (len(segms), len(annots))
     if not names:
         names = map(str, range(len(segms)))
-    _compute_stat = partial(compute_classif_stat_segm_annot,
-                            drop_labels=drop_labels, relabel=relabel)
+    _compute_stat = partial(compute_classif_stat_segm_annot, drop_labels=drop_labels, relabel=relabel)
     iterate = WrapExecuteSequence(_compute_stat, zip(annots, segms, names),
-                                  nb_workers=nb_workers,
-                                  desc='statistic per image')
+                                  nb_workers=nb_workers, desc='statistic per image')
     list_stat = list(iterate)
     df_stat = pd.DataFrame(list_stat)
     df_stat.set_index('name', inplace=True)
@@ -490,19 +485,18 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     >>> indices, df_scoring = feature_scoring_selection(features, labels)
     >>> indices
     array([1, 0, 2, 3, 4])
-    >>> df_scoring  # doctest: +NORMALIZE_WHITESPACE
-              ExtTree     F-test     k-Best  variance
+    >>> df_scoring  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+             ExtTree    F-test    k-Best variance
     feature
-    1        0.248465   0.755881   0.755881  2.495970
-    2        0.330818  58.944450  58.944450  1.851036
-    3        0.221636   2.242583   2.242583  1.541042
-    4        0.106441   4.022076   4.022076  0.965971
-    5        0.092639   0.022651   0.022651  1.016170
+    1        0.24...   0.75...   0.75...  2.49...
+    2        0.33...  58.94...  58.94...  1.85...
+    3        0.22...   2.24...   2.24...  1.54...
+    4        0.10...   4.02...   4.02...  0.96...
+    5        0.09...   0.02...   0.02...  1.01...
     >>> features[:, 2] = 1
     >>> path_out = 'test_fts-select'
     >>> os.mkdir(path_out)
-    >>> indices, df_scoring = feature_scoring_selection(features.tolist(), labels.tolist(),
-    ...                                                 path_out=path_out)
+    >>> indices, df_scoring = feature_scoring_selection(features.tolist(), labels.tolist(), path_out=path_out)
     >>> indices
     array([1, 0, 3, 4, 2])
     >>> import shutil
@@ -719,13 +713,15 @@ def create_classif_search_train_export(clf_name, features, labels, cross_val=10,
         # find the best params for the classif.
         logging.debug('Performing param search...')
         nb_labels = len(np.unique(labels))
-        clf_search = create_classif_search(clf_name, clf_pipeline,
-                                           nb_labels=nb_labels,
-                                           search_type=search_type,
-                                           cross_val=cross_val,
-                                           eval_metric=eval_metric,
-                                           nb_iter=nb_search_iter,
-                                           nb_workers=nb_workers)
+        clf_search = create_classif_search(
+            clf_name, clf_pipeline,
+            nb_labels=nb_labels,
+            search_type=search_type,
+            cross_val=cross_val,
+            eval_metric=eval_metric,
+            nb_iter=nb_search_iter,
+            nb_workers=nb_workers,
+        )
 
         # NOTE, this is temporal just for purposes of computing statistic
         clf_search.fit(features, relabel_sequential(labels))
@@ -772,10 +768,10 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     >>> data.shape
     (300, 6)
     >>> from sklearn.model_selection import StratifiedKFold
-    >>> cv = StratifiedKFold(n_splits=5, random_state=0)
+    >>> cv = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
-    >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
-    ...                               data, labels, cv)
+    >>> df = eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif, data, labels, cv)
+    >>> df.round(decimals=1)
        f1_macro  accuracy  precision_macro  recall_macro
     0       1.0       1.0              1.0           1.0
     1       1.0       1.0              1.0           1.0
@@ -783,9 +779,9 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
     3       1.0       1.0              1.0           1.0
     4       1.0       1.0              1.0           1.0
     >>> labels[labels == 1] = 2
-    >>> cv = StratifiedKFold(n_splits=3, random_state=0)
-    >>> eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif,
-    ...                               data, labels, cv, path_out='.')
+    >>> cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=True)
+    >>> df = eval_classif_cross_val_scores(DEFAULT_CLASSIF_NAME, classif, data, labels, cv, path_out='.')
+    >>> df.round(decimals=1)
        f1_macro  accuracy  precision_macro  recall_macro
     0       1.0       1.0              1.0           1.0
     1       1.0       1.0              1.0           1.0
@@ -806,9 +802,9 @@ def eval_classif_cross_val_scores(clf_name, classif, features, labels,
             if len(uq_labels) <= 2:
                 # NOTE, this is temporal just for purposes of computing stat.
                 labels = relabel_sequential(labels, uq_labels)
-            scores = model_selection.cross_val_score(classif, features, labels,
-                                                     cv=cross_val,
-                                                     scoring=scoring)
+            scores = model_selection.cross_val_score(
+                classif, features, labels, cv=cross_val, scoring=scoring,
+            )
             logging.info('Cross-Val score (%s = %f):\n %r',
                          scoring, np.mean(scores), scores)
             df_scoring[scoring] = scores
@@ -856,30 +852,30 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels,
     >>> data.shape
     (300, 6)
     >>> from sklearn.model_selection import StratifiedKFold
-    >>> cv = StratifiedKFold(n_splits=5, random_state=0)
+    >>> cv = StratifiedKFold(n_splits=5, random_state=0, shuffle=True)
     >>> classif = create_classifiers()[DEFAULT_CLASSIF_NAME]
-    >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif,
-    ...                                         data, labels, cv, nb_steps=10)
+    >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif, data, labels, cv, nb_steps=11)
     >>> fp_tp
-             FP   TP
-    0  0.000000  0.0
-    1  0.111111  1.0
-    2  0.222222  1.0
-    3  0.333333  1.0
-    4  0.444444  1.0
-    5  0.555556  1.0
-    6  0.666667  1.0
-    7  0.777778  1.0
-    8  0.888889  1.0
-    9  1.000000  1.0
-    >>> auc
-    0.94444444444444442
+         FP   TP
+    0   0.0  0.0
+    1   0.1  1.0
+    2   0.2  1.0
+    3   0.3  1.0
+    4   0.4  1.0
+    5   0.5  1.0
+    6   0.6  1.0
+    7   0.7  1.0
+    8   0.8  1.0
+    9   0.9  1.0
+    10  1.0  1.0
+    >>> auc  # doctest: +ELLIPSIS
+    0.94...
     >>> labels[-50:] -= 1
     >>> data[-50:, :] -= 1
     >>> path_out = 'temp_eval-cv-roc'
     >>> os.mkdir(path_out)
-    >>> fp_tp, auc = eval_classif_cross_val_roc(DEFAULT_CLASSIF_NAME, classif,
-    ...                           data, labels, cv, nb_steps=5, path_out=path_out)
+    >>> fp_tp, auc = eval_classif_cross_val_roc(
+    ...     DEFAULT_CLASSIF_NAME, classif, data, labels, cv, nb_steps=5, path_out=path_out)
     >>> fp_tp
          FP   TP
     0  0.00  0.0
@@ -1016,8 +1012,7 @@ def shuffle_features_labels(features, labels):
     False
     """
     assert len(features) == len(labels), \
-        'features (%i) and labels (%i) should have equal length' \
-        % (len(features), len(labels))
+        'features (%i) and labels (%i) should have equal length' % (len(features), len(labels))
     idx = list(range(len(labels)))
     logging.debug('shuffle indexes - %i', len(labels))
     np.random.shuffle(idx)
@@ -1102,8 +1097,7 @@ def down_sample_dict_features_kmean(dict_features, nb_samples):
         if len(features) <= nb_samples:
             dict_features_new[label] = features.copy()
             continue
-        kmeans = cluster.KMeans(n_clusters=nb_samples, init='random', n_init=3,
-                                max_iter=5, n_jobs=-1)
+        kmeans = cluster.KMeans(n_clusters=nb_samples, init='random', n_init=3, max_iter=5, n_jobs=-1)
         dist = kmeans.fit_transform(features)
         find_min = np.argmin(dist, axis=0)
         dict_features_new[label] = features[find_min, :]
@@ -1232,8 +1226,9 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels,
 
         if balance_type is not None:
             # balance_type dataset to have comparable nb of samples
-            features, labels = balance_dataset_by_(features, labels,
-                                                   balance_type=balance_type)
+            features, labels = balance_dataset_by_(
+                features, labels, balance_type=balance_type,
+            )
         features_all += features.tolist()
         labels_all += np.asarray(labels).tolist()
         sizes.append(len(labels))
@@ -1282,14 +1277,10 @@ def compute_tp_tn_fp_fn(annot, segm, label_positive=None):
     uq_labels.remove(label_positive)
     label_negative = uq_labels[0]
 
-    tp = np.sum(
-        np.logical_and(y_true == label_positive, y_pred == label_positive))
-    tn = np.sum(
-        np.logical_and(y_true == label_negative, y_pred == label_negative))
-    fp = np.sum(
-        np.logical_and(y_true == label_positive, y_pred == label_negative))
-    fn = np.sum(
-        np.logical_and(y_true == label_negative, y_pred == label_positive))
+    tp = np.sum(np.logical_and(y_true == label_positive, y_pred == label_positive))
+    tn = np.sum(np.logical_and(y_true == label_negative, y_pred == label_negative))
+    fp = np.sum(np.logical_and(y_true == label_positive, y_pred == label_negative))
+    fn = np.sum(np.logical_and(y_true == label_negative, y_pred == label_positive))
     return tp, tn, fp, fn
 
 
@@ -1516,8 +1507,7 @@ class CrossValidate(object):
             if ignore_overflow < 1 else ignore_overflow
         assert self._nb_hold_out > self._ignore_overflow, \
             'The tolerance of overflowing (%i) the split has to be larger than' \
-            ' the number of hold out samples (%i).' % (self._ignore_overflow,
-                                                       self._nb_hold_out)
+            ' the number of hold out samples (%i).' % (self._ignore_overflow, self._nb_hold_out)
 
         self._revert = False  # sets the sizes
         if self._nb_hold_out > (self._nb_samples / 2.):

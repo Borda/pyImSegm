@@ -2,10 +2,8 @@ name: CI testing
 
 # see: https://help.github.com/en/actions/reference/events-that-trigger-workflows
 on:  # Trigger the workflow on push or pull request, but only for the master branch
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+  - push
+  - pull_request
 
 jobs:
   pytest:
@@ -43,8 +41,10 @@ jobs:
     - name: Set min. dependencies
       if: matrix.requires == 'minimal'
       run: |
-        python -c "fname = 'requirements.txt' ; req = open(fname).read().replace('>=', '==') ; open(fname, 'w').write(req)"
-        python -c "fname = 'tests/requirements.txt' ; req = open(fname).read().replace('>=', '==') ; open(fname, 'w').write(req)"
+        for fpath in ('requirements.txt', 'tests/requirements.txt'):
+            req = open(fpath).read().replace('>=', '==')
+            open(fpath, 'w').write(req)
+      shell: python
 
     # Note: This uses an internal pip API and may not always work
     # https://github.com/actions/cache/blob/master/examples.md#multiple-oss-in-a-workflow
@@ -77,10 +77,8 @@ jobs:
       env:
         DISPLAY: ""
       run: |
-        check-manifest
-        python setup.py check --metadata --strict
-        python setup.py install --dry-run --user
         python setup.py build_ext --inplace
+        # run tests with coverage
         coverage run --source imsegm -m pytest imsegm tests --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
 
     - name: Upload pytest test results
