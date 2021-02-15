@@ -86,7 +86,7 @@ setup(
     ext_modules=[
         Extension(
             'imsegm.features_cython',
-            language='c++',
+            language='python',
             sources=['imsegm/features_cython.pyx'],
             extra_compile_args=['-O3', '-ffast-math', '-march=native'],
             # extra_link_args=['-fopenmp'],
