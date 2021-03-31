@@ -13,10 +13,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, macOS-10.15]  # , windows-2019
-        python-version: [3.6, 3.8, 3.9]
-        requires: ['minimal', 'latest']
-        exclude:
-          - python-version: 3.9
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        requires: ['latest']
+        include:
+          - os: ubuntu-18.04
+            python-version: 3.6
+            requires: 'minimal'
+          - os: macOS-10.15
+            python-version: 3.6
             requires: 'minimal'
 
     # Timeout: https://stackoverflow.com/a/59076067/4521646
