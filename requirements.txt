@@ -5,7 +5,7 @@ scipy >= 1.2.0
 pandas >= 0.23.0
 pillow >= 5.0.0, != 7  # fail loading JPG images
 matplotlib >= 3.0.0
-scikit-learn >= 0.18.1
+scikit-learn >= 0.19.0
 scikit-image >= 0.14.0
 tqdm >= 4.7.4
 olefile == 0.44  # new version - ImportError: No module named OleFileIO_PL

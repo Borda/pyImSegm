@@ -32,7 +32,7 @@ jobs:
     - name: Setup macOS
       if: runner.os == 'macOS'
       run: |
-        brew install gfortran
+        brew install gfortran zlib
 
     - name: Set min. dependencies
       if: matrix.requires == 'minimal'
