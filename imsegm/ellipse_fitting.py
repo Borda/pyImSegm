@@ -9,8 +9,8 @@ from scipy import ndimage, spatial
 from skimage import morphology
 from skimage.measure import fit as sk_fit
 
-from imsegm.descriptors import reduce_close_points, compute_ray_features_segm_2d, reconstruct_ray_features_2d
-from imsegm.superpixels import segment_slic_img2d, superpixel_centers, make_graph_segm_connect_grid2d_conn4
+from imsegm.descriptors import compute_ray_features_segm_2d, reconstruct_ray_features_2d, reduce_close_points
+from imsegm.superpixels import make_graph_segm_connect_grid2d_conn4, segment_slic_img2d, superpixel_centers
 # from skimage.measure.fit import EllipseModel  # fix in future skimage>0.13.0
 from imsegm.utilities.drawing import ellipse
 

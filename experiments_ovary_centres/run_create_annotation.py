@@ -30,12 +30,13 @@ from functools import partial
 import numpy as np
 import pandas as pd
 from scipy import ndimage
-from skimage import morphology, measure, draw
+from skimage import draw, measure, morphology
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+import run_center_candidate_training as run_train
+
 import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
-import run_center_candidate_training as run_train
 
 NAME_DIR = 'annot_centres'
 PARAMS = run_train.CENTER_PARAMS

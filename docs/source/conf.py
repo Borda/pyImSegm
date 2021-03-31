@@ -15,9 +15,9 @@
 import glob
 import inspect
 import os
+import re
 import shutil
 import sys
-import re
 
 import m2r
 

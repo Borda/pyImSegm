@@ -10,7 +10,7 @@ import logging
 from warnings import warn
 
 import numpy as np
-from scipy import stats, ndimage, interpolate
+from scipy import interpolate, ndimage, stats
 from skimage import morphology
 from sklearn import cluster, mixture
 
@@ -19,10 +19,10 @@ try:
 except ImportError:
     warn('Missing Grah-Cut (GCO) library,' ' please install it from https://github.com/Borda/pyGCO.')
 
-from imsegm.graph_cuts import MAX_PAIRWISE_COST, get_vertexes_edges, compute_spatial_dist
-from imsegm.labeling import histogram_regions_labels_norm
 from imsegm.descriptors import compute_ray_features_segm_2d, interpolate_ray_dist, shift_ray_features
-from imsegm.superpixels import superpixel_centers, get_neighboring_segments, make_graph_segm_connect_grid2d_conn4
+from imsegm.graph_cuts import compute_spatial_dist, get_vertexes_edges, MAX_PAIRWISE_COST
+from imsegm.labeling import histogram_regions_labels_norm
+from imsegm.superpixels import get_neighboring_segments, make_graph_segm_connect_grid2d_conn4, superpixel_centers
 
 #: all infinty values in Grah-Cut terms replace by this value
 GC_REPLACE_INF = 1e5

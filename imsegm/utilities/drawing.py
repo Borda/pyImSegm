@@ -13,11 +13,11 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import numpy as np
 import matplotlib.pyplot as plt
-from scipy import ndimage
-from skimage import draw, color, segmentation
+import numpy as np
 from planar import line as pl_line
+from scipy import ndimage
+from skimage import color, draw, segmentation
 
 #: for blending two images define chess field size in pixels
 SIZE_CHESS_FIELD = 50

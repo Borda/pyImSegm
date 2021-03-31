@@ -14,20 +14,19 @@ try:
 except ImportError:
     warn('Missing Grah-Cut (GCO) library,' ' please install it from https://github.com/Borda/pyGCO.')
 from skimage import filters
-from sklearn import metrics, preprocessing
-from sklearn import pipeline, cluster, mixture, decomposition
+from sklearn import cluster, decomposition, metrics, mixture, pipeline, preprocessing
 
-from imsegm.utilities.drawing import (
-    draw_graphcut_unary_cost_segments,
-    draw_graphcut_weighted_edges,
-    draw_color_labeling,
-)
+from imsegm.descriptors import compute_selected_features_img2d
 from imsegm.superpixels import (
     make_graph_segm_connect_grid2d_conn4,
     make_graph_segm_connect_grid3d_conn6,
     superpixel_centers,
 )
-from imsegm.descriptors import compute_selected_features_img2d
+from imsegm.utilities.drawing import (
+    draw_color_labeling,
+    draw_graphcut_unary_cost_segments,
+    draw_graphcut_weighted_edges,
+)
 
 #: define munber of iteration in Grap-Cut optimization
 DEFAULT_GC_ITERATIONS = 25

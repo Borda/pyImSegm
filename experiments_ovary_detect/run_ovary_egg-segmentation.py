@@ -37,24 +37,25 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from scipy import ndimage
-from skimage import segmentation, morphology
-from skimage import measure, draw
+from skimage import draw, measure, morphology, segmentation
 # from sklearn.externals import joblib
 # from sklearn import metrics, cross_validation
 from skimage.measure.fit import EllipseModel
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.data_io as tl_data
-import imsegm.utilities.experiments as tl_expt
-import imsegm.utilities.drawing as tl_visu
-import imsegm.superpixels as seg_spx
-import imsegm.region_growing as seg_rg
-import imsegm.ellipse_fitting as ell_fit
 from morphsnakes import morphsnakes, multi_snakes
+
+import imsegm.ellipse_fitting as ell_fit
+import imsegm.region_growing as seg_rg
+import imsegm.superpixels as seg_spx
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
+import imsegm.utilities.experiments as tl_expt
+
 # from libs import chanvese
 
 NB_WORKERS = tl_expt.nb_workers(0.8)

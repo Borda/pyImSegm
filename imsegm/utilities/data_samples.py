@@ -16,7 +16,7 @@ import os
 # from PIL import Image
 import numpy as np
 
-from imsegm.utilities.data_io import update_path, io_imread
+from imsegm.utilities.data_io import io_imread, update_path
 
 #: image size for small 2D sample image
 SAMPLE_SEG_SIZE_2D_SMALL = (20, 10)

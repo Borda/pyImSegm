@@ -18,18 +18,18 @@ from sklearn.metrics import adjusted_rand_score
 # import pickle
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-from imsegm.utilities.data_io import update_path, load_image_2d
-from imsegm.utilities.drawing import draw_rg2sp_results, figure_rg2sp_debug_complete
-from imsegm.superpixels import segment_slic_img2d
 from imsegm.region_growing import (
-    RG2SP_THRESHOLDS,
-    compute_shape_prior_table_cdf,
     compute_object_shapes,
-    transform_rays_model_sets_mean_cdf_mixture,
     compute_segm_prob_fg,
-    region_growing_shape_slic_greedy,
+    compute_shape_prior_table_cdf,
     region_growing_shape_slic_graphcut,
+    region_growing_shape_slic_greedy,
+    RG2SP_THRESHOLDS,
+    transform_rays_model_sets_mean_cdf_mixture,
 )
+from imsegm.superpixels import segment_slic_img2d
+from imsegm.utilities.data_io import load_image_2d, update_path
+from imsegm.utilities.drawing import draw_rg2sp_results, figure_rg2sp_debug_complete
 from tests import PATH_OUTPUT
 
 PATH_OVARY = os.path.join(update_path('data-images', absolute=True), 'drosophila_ovary_slice')

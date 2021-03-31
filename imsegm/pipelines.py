@@ -11,22 +11,22 @@ import numpy as np
 import skimage.color as sk_color
 
 from imsegm.classification import (
+    convert_set_features_labels_2_dataset,
+    create_classif_search_train_export,
+    CrossValidateGroups,
     DEFAULT_CLASSIF_NAME,
     DEFAULT_CLUSTERING,
-    convert_set_features_labels_2_dataset,
-    CrossValidateGroups,
-    create_classif_search_train_export,
 )
 from imsegm.descriptors import (
+    compute_selected_features_gray3d,
+    compute_selected_features_img2d,
     FEATURES_SET_COLOR,
     norm_features,
-    compute_selected_features_img2d,
-    compute_selected_features_gray3d,
 )
-from imsegm.graph_cuts import segment_graph_cut_general, estim_class_model
+from imsegm.graph_cuts import estim_class_model, segment_graph_cut_general
 from imsegm.labeling import histogram_regions_labels_norm
 from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
-from imsegm.utilities.experiments import WrapExecuteSequence, nb_workers
+from imsegm.utilities.experiments import nb_workers, WrapExecuteSequence
 
 # from sklearn import mixture
 

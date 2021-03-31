@@ -23,11 +23,12 @@ from functools import partial
 import pandas as pd
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.experiments as tl_expt
-import imsegm.utilities.data_io as tl_data
-import imsegm.classification as seg_clf
 import run_center_candidate_training as run_train
 import run_center_clustering as run_clust
+
+import imsegm.classification as seg_clf
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.experiments as tl_expt
 
 FORCE_RERUN = False
 NAME_CSV_TRIPLES = run_train.NAME_CSV_TRIPLES

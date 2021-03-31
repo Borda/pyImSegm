@@ -42,28 +42,33 @@ if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-from PIL import Image
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import skimage.color as sk_color
+from PIL import Image
 # from llvmpy._api.llvm.CmpInst import FCMP_OLE
 from skimage import segmentation
-import skimage.color as sk_color
 from sklearn import metrics
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.data_io as tl_data
-import imsegm.utilities.experiments as tl_expt
-import imsegm.utilities.drawing as tl_visu
-import imsegm.pipelines as seg_pipe
-import imsegm.labeling as seg_label
-import imsegm.descriptors as seg_fts
-import imsegm.classification as seg_clf
-import imsegm.superpixels as seg_spx
-import imsegm.graph_cuts as seg_gc
 from run_segm_slic_model_graphcut import (
-    arg_parse_params, load_image, parse_imgs_idx_path, get_idx_name, write_skip_file
+    arg_parse_params,
+    get_idx_name,
+    load_image,
+    parse_imgs_idx_path,
+    write_skip_file,
 )
+
+import imsegm.classification as seg_clf
+import imsegm.descriptors as seg_fts
+import imsegm.graph_cuts as seg_gc
+import imsegm.labeling as seg_label
+import imsegm.pipelines as seg_pipe
+import imsegm.superpixels as seg_spx
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
+import imsegm.utilities.experiments as tl_expt
 
 NAME_EXPERIMENT = 'experiment_segm-Supervised'
 NB_WORKERS = tl_expt.nb_workers(0.9)

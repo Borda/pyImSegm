@@ -22,7 +22,7 @@ import os
 import sys
 
 try:
-    from setuptools import setup, Extension  # , find_packages, Command
+    from setuptools import Extension, setup  # , find_packages, Command
     from setuptools.command.build_ext import build_ext
 except ImportError:
     from distutils.core import setup, Extension  # , find_packages, Command

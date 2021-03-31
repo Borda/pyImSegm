@@ -38,19 +38,19 @@ jobs:
       - name: yapf
         run: yapf --diff --parallel --recursive .
 
-  #imports-check-isort:
-  #  runs-on: ubuntu-20.04
-  #  steps:
-  #    - uses: actions/checkout@master
-  #    - uses: actions/setup-python@v2
-  #      with:
-  #        python-version: 3.8
-  #    - name: Install isort
-  #      run: |
-  #        pip install isort
-  #        pip list
-  #    - name: isort
-  #      run: isort --check-only .
+  imports-check-isort:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install isort
+        run: |
+          pip install isort
+          pip list
+      - name: isort
+        run: isort --check-only .
 
   #typing-check-mypy:
   #  runs-on: ubuntu-20.04

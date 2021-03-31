@@ -11,8 +11,8 @@ import sys
 import unittest
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-from imsegm.utilities.experiments import try_decorator
 from imsegm.utilities.data_samples import LIST_ALL_IMAGES, PATH_IMAGES
+from imsegm.utilities.experiments import try_decorator
 
 
 class TestDataSamples(unittest.TestCase):
