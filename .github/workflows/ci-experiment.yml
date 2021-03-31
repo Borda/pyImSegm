@@ -46,7 +46,7 @@ jobs:
       run: |
         python --version
         pip --version
-        pip install wheel --quiet
+        pip install wheel "numpy<1.17" --quiet
         pip install . --user --prefer-binary
         rm -rf imsegm
         pip list

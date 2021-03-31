@@ -32,8 +32,7 @@ jobs:
     - name: Setup macOS
       if: runner.os == 'macOS'
       run: |
-        xcode-select —-install
-        brew install gfortran libjpeg
+        brew install gfortran zlib libjpeg
 
     - name: Set min. dependencies
       if: matrix.requires == 'minimal'
