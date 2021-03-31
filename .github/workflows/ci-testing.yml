@@ -62,7 +62,7 @@ jobs:
       run: |
         python --version
         pip --version
-        pip install wheel --quiet
+        pip install wheel "numpy<1.17" --quiet
         pip install --requirement requirements.txt --upgrade --prefer-binary
         pip install --requirement tests/requirements.txt  --upgrade-strategy only-if-needed
         pip list
