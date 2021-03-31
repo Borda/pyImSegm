@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macOS-10.15, windows-2019]
+        os: [ubuntu-20.04, macOS-10.15]  # , windows-2019
         python-version: [3.7, 3.9]
         requires: ['minimal', 'latest']
         exclude:
@@ -28,14 +28,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Set Windows specific
-      if: runner.os == 'windows'
-      run: |
-        fname = 'requirements.txt'
-        lines = [line for line in open(fname).readlines() if not line.startswith('gco-wrapper')]
-        open(fname, 'w').writelines(lines)
-      shell: python
 
     - name: Set min. dependencies
       if: matrix.requires == 'minimal'
@@ -62,21 +54,24 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install wheel --quiet
-        pip install --requirement requirements.txt --quiet --upgrade
-        pip install --requirement tests/requirements.txt --quiet --upgrade
         python --version
         pip --version
+        pip install wheel --quiet
+        pip install --requirement requirements.txt --upgrade
+        pip install --requirement tests/requirements.txt  --upgrade-strategy only-if-needed
         pip list
-        mkdir output
-        mkdir results
       shell: bash
+
+    - name: Build
+      run: |
+        python setup.py build_ext --inplace
 
     - name: Tests
       env:
         DISPLAY: ""
       run: |
-        python setup.py build_ext --inplace
+        mkdir output
+        mkdir results
         # run tests with coverage
         coverage run --source imsegm -m pytest imsegm tests --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
 
@@ -86,7 +81,7 @@ jobs:
         name: pytest-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}
         path: junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
       # Use always() to always run this step to publish test results when there are test failures
-      if: always()
+      if: failure()
 
     - name: Statistics
       if: success()
