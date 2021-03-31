@@ -29,6 +29,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Setup macOS
+      if: runner.os == 'macOS'
+      run: |
+        brew install gfortran
+
     - name: Set min. dependencies
       if: matrix.requires == 'minimal'
       run: |
@@ -57,7 +62,7 @@ jobs:
         python --version
         pip --version
         pip install wheel --quiet
-        pip install --requirement requirements.txt --upgrade
+        pip install --requirement requirements.txt --upgrade --prefer-binary
         pip install --requirement tests/requirements.txt  --upgrade-strategy only-if-needed
         pip list
       shell: bash
