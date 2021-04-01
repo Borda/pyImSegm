@@ -12,13 +12,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, macOS-10.15]  # , windows-2019
-        python-version: [2.7, 3.6, 3.8]
-        requires: ['minimal', 'latest']
-        exclude:
-          - python-version: 2.7
+        os: [ubuntu-20.04, macOS-10.15]  # , windows-2019
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        requires: ['latest']
+        include:
+          - os: ubuntu-18.04
+            python-version: 3.6
             requires: 'minimal'
-          - python-version: 3.8
+          - os: macOS-10.15
+            python-version: 3.6
             requires: 'minimal'
 
     # Timeout: https://stackoverflow.com/a/59076067/4521646
@@ -31,12 +33,10 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Set py2.7 dependencies
-      if: matrix.python-version == 2.7
+    - name: Setup macOS
+      if: runner.os == 'macOS'
       run: |
-        cp -r requirements-py27.txt requirements.txt
-        # required for matplotlib @py2
-        pip install -U backports.functools_lru_cache
+        brew install gfortran zlib libjpeg
 
     - name: Set min. dependencies
       if: matrix.requires == 'minimal'
@@ -63,21 +63,24 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install wheel --quiet
-        pip install --requirement requirements.txt --quiet --upgrade
-        pip install --requirement tests/requirements.txt --quiet --upgrade
         python --version
         pip --version
+        pip install wheel "numpy<1.17" --quiet
+        pip install --requirement requirements.txt --upgrade --prefer-binary
+        pip install --requirement tests/requirements.txt  --upgrade-strategy only-if-needed
         pip list
-        mkdir output
-        mkdir results
       shell: bash
+
+    - name: Build
+      run: |
+        python setup.py build_ext --inplace
 
     - name: Tests
       env:
         DISPLAY: ""
       run: |
-        python setup.py build_ext --inplace
+        mkdir output
+        mkdir results
         # run tests with coverage
         coverage run --source imsegm -m pytest imsegm tests --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
 
@@ -87,7 +90,7 @@ jobs:
         name: pytest-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}
         path: junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
       # Use always() to always run this step to publish test results when there are test failures
-      if: always()
+      if: failure()
 
     - name: Statistics
       if: success()

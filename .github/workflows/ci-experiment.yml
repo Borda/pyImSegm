@@ -14,8 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04]
-        python-version: [2.7, 3.6, 3.7, 3.8]
+        os: [ubuntu-20.04]
+        python-version: [3.6, 3.7, 3.8, 3.9]
 
     # Timeout: https://stackoverflow.com/a/59076067/4521646
     timeout-minutes: 35
@@ -37,18 +37,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-py${{ matrix.python-version }}-
 
-    - name: Set py2.7 dependencies
-      if: matrix.python-version == 2.7
-      run: |
-        cp -r requirements-py27.txt requirements.txt
+    #- name: Set py2.7 dependencies
+    #  if: matrix.python-version == 2.7
+    #  run: |
+    #    cp -r requirements-py27.txt requirements.txt
 
     - name: install ImSegm
       run: |
         python --version
         pip --version
-        pip install wheel --quiet
-        pip install https://github.com/Borda/pyGCO/archive/master.zip
-        pip install . --user
+        pip install wheel "numpy<1.17" --quiet
+        pip install . --user --prefer-binary
         rm -rf imsegm
         pip list
         # create filders
