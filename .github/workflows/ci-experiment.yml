@@ -8,8 +8,8 @@ on:  # Trigger the workflow on push or pull request, but only for the master bra
     branches: [master]
 
 jobs:
-  pytest:
 
+  bash-expt:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
