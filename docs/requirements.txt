@@ -3,5 +3,5 @@ m2r  # fails with multi-line text
 myst-parser
 nbsphinx>=0.8.5
 pandoc
-docutils<0.15  # higher version breaks py2
+docutils
 ipython

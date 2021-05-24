@@ -57,7 +57,7 @@ references:
        pyenv global 3.7.3
        python --version
        pip install -r requirements.txt
-       pip install -r docs/requirements.txt
+       pip install -U -r docs/requirements.txt
        python setup.py build_ext --inplace
        # sphinx-apidoc -o ./docs/source ./imsegm **/test_* --force --follow-links
        cd docs
