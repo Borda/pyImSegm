@@ -91,8 +91,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
     # 'sphinxcontrib.rsvgconverter'
-    'recommonmark',
-    # 'm2r',
+    'myst_parser',
     'nbsphinx',
 ]
 
