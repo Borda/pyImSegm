@@ -6,6 +6,8 @@ recursive-exclude __pycache__ *.pyc *.pyo *.orig
 # Include the README
 include *.md
 
+include streamlit*.py
+
 # Include the license file
 include LICENSE
 
@@ -24,7 +26,6 @@ exclude *.yml
 # Exclude testing
 exclude pytest.*
 recursive-exclude tests *
-exclude tests
 
 # Exclude experiments
 exclude */*.sh
