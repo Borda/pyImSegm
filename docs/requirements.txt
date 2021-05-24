@@ -1,5 +1,5 @@
 sphinx>=2.0, <3.0
-recommonmark  # fails with badges
+m2r  # fails with multi-line text
 myst-parser
 nbsphinx>=0.8.5
 pandoc
