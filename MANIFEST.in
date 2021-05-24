@@ -5,8 +5,8 @@ recursive-exclude __pycache__ *.pyc *.pyo *.orig
 
 # Include the README
 include *.md
-
-include streamlit*.py
+exclude Makefile
+exclude streamlit*.py
 
 # Include the license file
 include LICENSE
