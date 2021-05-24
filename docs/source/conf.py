@@ -337,7 +337,7 @@ def linkcode_resolve(domain, info):
 
 autodoc_member_order = 'groupwise'
 autoclass_content = 'both'
-autodoc_default_flags = [
+autodoc_default_options = [
     'members',
     'undoc-members',
     'show-inheritance',
