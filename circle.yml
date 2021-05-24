@@ -25,13 +25,6 @@ references:
         coverage report
         python setup.py check --metadata --strict
 
-  formatting: &formatting
-    run:
-      name: Formatting
-      command: |
-        pip install flake8 -q
-        flake8 .
-
   build_project: &build_project
    run:
      name: Building project
@@ -42,22 +35,15 @@ references:
        python setup.py build_ext --inplace
        pwd ; ls -l imsegm
 
-  install_project: &install_project
-   run:
-     name: Insatlling project
-     command: |
-       python setup.py install --user
-       rm -rf imsegm
-
   make_docs: &make_docs
    run:
      name: Make Documentation
      command: |
-       # sudo apt-get install pandoc
+       sudo apt-get install pandoc
        pyenv global 3.7.3
        python --version
        pip install -r requirements.txt
-       pip install -U -r docs/requirements.txt
+       pip install -r docs/requirements.txt
        python setup.py build_ext --inplace
        # sphinx-apidoc -o ./docs/source ./imsegm **/test_* --force --follow-links
        cd docs
@@ -65,12 +51,6 @@ references:
        make latexpdf
 
 jobs:
-  Formatting:
-    docker:
-      - image: circleci/python:3.6
-    steps:
-      - checkout
-      - *formatting
 
   Py3-Tests:
     docker:
@@ -98,26 +78,6 @@ jobs:
       - store_artifacts:
           path: test-reports
 
-  Py3-Experiments:
-    docker:
-        - image: circleci/python:3.6
-    steps: &steps_expt
-      - checkout
-      # INSTALLATION
-      - *install_pips
-      #- run: git lfs pull
-      - *install_project
-
-      - run: mkdir libs && mkdir output && mkdir results
-      # ANNOTATION section
-      - run: bash handling_annotations/test_annotations.sh
-      # SEGMENTATION section
-      - run: bash experiments_segmentation/test_segmentations.sh
-      # CENTER DETECT. section
-      - run: bash experiments_ovary_centres/test_ovary_centers.sh
-      # REGION GROWING section
-      - run: bash experiments_ovary_detect/test_ovary_detect.sh
-
   Build-Docs:
     docker:
       - image: readthedocs/build:latest
@@ -137,8 +97,5 @@ workflows:
   version: 2
   build:
     jobs:
-      - Formatting
       - Py3-Tests
-      #- Py2-Experiments
-      #- Py3-Experiments
-      - Build-Docs
+      # - Build-Docs
