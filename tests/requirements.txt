@@ -2,7 +2,7 @@ nose>=1.3.7
 coverage
 codecov
 pytest>4.0
-# pytest-cov
+pytest-cov
 # pytest-flake8
 codacy-coverage
 check-manifest

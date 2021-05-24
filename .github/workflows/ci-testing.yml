@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macOS-10.15] # , windows-2019
+        os: [ubuntu-20.04, macOS-10.15, windows-2019]
         python-version: [3.6, 3.8, 3.9]
         requires: ['latest']
         include:
@@ -43,6 +43,14 @@ jobs:
         for fpath in ('requirements.txt', 'tests/requirements.txt'):
             req = open(fpath).read().replace('>=', '==')
             open(fpath, 'w').write(req)
+      shell: python
+
+    - name: Drop GCO for Windows
+      if: runner.os == 'windows'
+      run: |
+        fname = 'requirements.txt'
+        lines = [line for line in open(fname).readlines() if not line.startswith('gco')]
+        open(fname, 'w').writelines(lines)
       shell: python
 
     # Note: This uses an internal pip API and may not always work
@@ -81,7 +89,7 @@ jobs:
         mkdir output
         mkdir results
         # run tests with coverage
-        coverage run --source imsegm -m pytest imsegm tests --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
+        python -m pytest imsegm tests --cov=imsegm --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
 
     - name: Upload pytest test results
       uses: actions/upload-artifact@master
