@@ -31,13 +31,17 @@ def process_image(
     if not img_path:
         return
 
+    st.write('loading image...')
     img = plt.imread(img_path)
     # if streamlit_app:
     #     st.image(img)
 
     debug = {}
     spx_config = dict(sp_size=spx_size, sp_regul=spx_regul, dict_features=FEATURES_SET_MIN)
+    st.write('estimating model...')
     model, _ = estim_model_classes_group([img], nb_classes=nb_classes, **spx_config)
+
+    st.write('performing GC segmentation...')
     segm, _ = segment_color2d_slic_features_model_graphcut(
         img, model, **spx_config, gc_regul=gc_regul, debug_visual=debug
     )
@@ -45,12 +49,19 @@ def process_image(
     print(debug.keys())
     spx_contour = ski_segm.mark_boundaries(debug['image'], debug['slic'], color=(1, 0, 0), mode='subpixel')
 
-    fig, axarr = plt.subplots(ncols=3, nrows=2, figsize=(18, 12))
+    st.write('preparing visualization...')
+    fig, axarr = plt.subplots(ncols=3, nrows=2, figsize=(18, 12), tight_layout=True)
+    axarr[0, 0].set_title("Original image")
     axarr[0, 0].imshow(debug['image'])
+    axarr[0, 1].set_title("Superpixel contours")
     axarr[0, 1].imshow(spx_contour)
+    axarr[0, 2].set_title("Image represented by superpixel colour means")
     axarr[0, 2].imshow(debug['slic_mean'] / 255.)
+    axarr[1, 0].set_title("Graph edges with colour importance")
     axarr[1, 0].imshow(debug['img_graph_edges'])
+    axarr[1, 1].set_title("Segmentation graph")
     axarr[1, 1].imshow(debug['img_graph_segm'])
+    axarr[1, 2].set_title("Output segmentation")
     axarr[1, 2].imshow(segm)
     if streamlit_app:
         st.pyplot(fig)
