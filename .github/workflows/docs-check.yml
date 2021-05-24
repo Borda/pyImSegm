@@ -61,7 +61,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake pandoc
+          sudo apt-get install -y cmake pandoc latexmk
           sudo apt-get install -y texlive-latex-extra dvipng texlive-pictures
           pip --version
           pip install -r requirements.txt
