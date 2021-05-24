@@ -30,6 +30,7 @@ jobs:
           pip --version
           pip install -r requirements.txt
           pip install -r docs/requirements.txt
+          python setup.py build_ext --inplace
           pip list
         shell: bash
 
@@ -67,6 +68,7 @@ jobs:
           # install Texlive, see https://linuxconfig.org/how-to-install-latex-on-ubuntu-20-04-focal-fossa-linux
           sudo apt-get update
           sudo apt-get install -y texlive-latex-extra dvipng texlive-pictures
+          python setup.py build_ext --inplace
           pip list
         shell: bash
 
