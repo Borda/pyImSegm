@@ -4,10 +4,10 @@ Simple StreamLit app for unsupervised segmentation
 >> streamlit run streamlit-app.py
 """
 
-import streamlit as st
-
-from skimage import segmentation as ski_segm
 import matplotlib.pyplot as plt
+import streamlit as st
+from skimage import segmentation as ski_segm
+
 from imsegm.pipelines import estim_model_classes_group, segment_color2d_slic_features_model_graphcut
 
 FEATURES_SET_MIN = {

@@ -1,7 +1,7 @@
 sphinx>=2.0, <3.0
 recommonmark  # fails with badges
 m2r  # fails with multi-line text
-nbsphinx
+nbsphinx < 0.8  # todo: notebooks are missing tags
 pandoc
 docutils<0.15  # higher version breaks py2
 ipython
