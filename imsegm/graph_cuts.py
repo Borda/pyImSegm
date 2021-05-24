@@ -321,8 +321,7 @@ def compute_spatial_dist(centres, edges, relative=False):
     array([ 1.12,  1.57,  1.34,  1.34,  0.5 ,  0.63,  0.5 ])
     """
     assert np.max(edges) < len(centres), \
-        'max vertex %i exceed size of centres %i'\
-        % (np.max(edges), len(centres))
+        'max vertex %i exceed size of centres %i' % (np.max(edges), len(centres))
     ndim = np.max([len(c) for c in centres if c is not None])
     # replace empy segments by a empty vector
     for i, c in enumerate(centres):
@@ -510,8 +509,7 @@ def create_pairwise_matrix(gc_regul, nb_classes):
     """
     if isinstance(gc_regul, np.ndarray):
         assert gc_regul.shape[0] == gc_regul.shape[1] == nb_classes, \
-            'GC regul matrix %r should match match number of classes (%i)' \
-            % (gc_regul.shape, nb_classes)
+            'GC regul matrix %r should match match number of classes (%i)' % (gc_regul.shape, nb_classes)
         # sub_min = np.tile(np.min(gc_regul, axis=0), (gc_regul.shape[0], 1))
         pairwise = gc_regul - np.min(gc_regul)
     elif isinstance(gc_regul, list):
@@ -566,9 +564,9 @@ def insert_gc_debug_images(debug_visual, segments, graph_labels, unary_cost, edg
     debug_visual['imgs_unary_cost'] = draw_graphcut_unary_cost_segments(segments, unary_cost)
     img = debug_visual.get('slic_mean', None)
     list_centres = superpixel_centers(segments)
-    debug_visual['img_graph_edges'] = \
-        draw_graphcut_weighted_edges(segments, list_centres, edges,
-                                     edge_weights, img_bg=img)
+    debug_visual['img_graph_edges'] = draw_graphcut_weighted_edges(
+        segments, list_centres, edges, edge_weights, img_bg=img
+    )
     debug_visual['img_graph_segm'] = draw_color_labeling(segments, graph_labels)
 
 
