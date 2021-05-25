@@ -91,8 +91,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
     # 'sphinxcontrib.rsvgconverter'
-    'recommonmark',
-    # 'm2r',
+    'myst_parser',
     'nbsphinx',
 ]
 
@@ -105,6 +104,8 @@ templates_path = ['_templates']
 # they should be run at build time.
 nbsphinx_execute = 'never'
 nbsphinx_allow_errors = True
+
+myst_update_mathjax = False
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -336,10 +337,11 @@ def linkcode_resolve(domain, info):
 
 autodoc_member_order = 'groupwise'
 autoclass_content = 'both'
-autodoc_default_flags = [
-    'members',
-    'undoc-members',
-    'show-inheritance',
-    'private-members',
-    # 'special-members', 'inherited-members'
-]
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'private-members': True,
+    'methods': True,
+    'exclude-members': '_abc_impl',
+    'show-inheritance': True,
+}

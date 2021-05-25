@@ -320,8 +320,7 @@ def export_visual(idx_name, img, segm, debug_visual=None, path_out=None, path_vi
         fig.savefig(path_fig)
         plt.close(fig)
 
-    if path_visu is not None and os.path.isdir(path_visu) \
-            and debug_visual is not None:
+    if path_visu is not None and os.path.isdir(path_visu) and debug_visual is not None:
         path_fig = os.path.join(path_visu, str(idx_name) + '_debug.png')
         logging.debug('exporting (debug) visualization: %s', path_fig)
         fig = tl_visu.figure_segm_graphcut_debug(debug_visual)

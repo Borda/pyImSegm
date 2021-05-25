@@ -5,13 +5,15 @@ recursive-exclude __pycache__ *.pyc *.pyo *.orig
 
 # Include the README
 include *.md
+exclude Makefile
+exclude streamlit*.py
 
 # Include the license file
 include LICENSE
 
 # Include the Requirements
 include requirements.txt
-include requirements-py27.txt
+include require-py27.txt
 
 # Include package
 recursive-include imsegm *.py *.pyx
@@ -24,7 +26,6 @@ exclude *.yml
 # Exclude testing
 exclude pytest.*
 recursive-exclude tests *
-exclude tests
 
 # Exclude experiments
 exclude */*.sh
