@@ -4,8 +4,8 @@
  * @author Jiri Borovec
  * @date 13/06/2014
  * @mail jiri.borovec@fel.cvut.cz
- * 
- * @brief: This macro does export set of points from Multi-point tool 
+ *
+ * @brief: This macro does export set of points from Multi-point tool
  * into .csv and .txt files (the name is specified during exporting)
  */
 
@@ -40,4 +40,4 @@ for(i=0; i<lengthOf(xCoordinates); i++) {
     setResult("Y", i, yCoordinates[i]);
 }
 updateResults();
-saveAs("Results", fileName+".csv"); 
+saveAs("Results", fileName+".csv");

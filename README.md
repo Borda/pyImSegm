@@ -80,10 +80,10 @@ Reference: _Borovec J., Kybic J., Sugimoto, A. (2017). **Region growing using su
 
 Create your own local environment, for more see the [User Guide](https://pip.pypa.io/en/latest/user_guide.html), and install dependencies requirements.txt contains list of packages and can be installed as
 ```bash
-@duda:~$ cd pyImSegm  
+@duda:~$ cd pyImSegm
 @duda:~/pyImSegm$ virtualenv env
-@duda:~/pyImSegm$ source env/bin/activate  
-(env)@duda:~/pyImSegm$ pip install -r requirements.txt  
+@duda:~/pyImSegm$ source env/bin/activate
+(env)@duda:~/pyImSegm$ pip install -r requirements.txt
 (env)@duda:~/pyImSegm$ python ...
 ```
 and in the end terminating...
@@ -111,11 +111,11 @@ If loading of compiled descriptors in `cython` fails, it is automatically swappe
 
 **Installation**
 
-The package can be installed via pip 
+The package can be installed via pip
 ```bash
 pip install git+https://github.com/Borda/pyImSegm.git
 ```
-or using `setuptools` from a local folder 
+or using `setuptools` from a local folder
 ```bash
 python setup.py install
 ```
@@ -147,7 +147,7 @@ We introduce some useful tools for work with image annotation and segmentation.
         -imgs "./data-images/drosophila_ovary_slice/segm/*.png" \
         -out ./data-images/drosophila_ovary_slice/segm_rgb
     ```
-* **Visualisation:** having input image and its segmentation we can use simple visualisation which overlap the segmentation over input image. 
+* **Visualisation:** having input image and its segmentation we can use simple visualisation which overlap the segmentation over input image.
     ```bash
     python handling_annotations/run_overlap_images_segms.py \
         -imgs "./data-images/drosophila_ovary_slice/image/*.jpg" \
@@ -164,7 +164,7 @@ We introduce some useful tools for work with image annotation and segmentation.
     ```bash
     python handling_annotations/run_segm_annot_relabel.py \
         -out ./results/relabel_center_levels \
-        --label_old 2 3 --label_new 1 1 
+        --label_old 2 3 --label_new 1 1
     ```
 
 
@@ -220,7 +220,7 @@ The previous two (un)segmentation accept [configuration file](experiments_segmen
 ```yaml
 slic_size: 35
 slic_regul: 0.2
-features: 
+features:
   color_hsv: ['mean', 'std', 'eng']
 classif: 'SVM'
 nb_classif_search: 150
