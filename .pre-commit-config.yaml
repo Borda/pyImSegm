@@ -1,0 +1,43 @@
+default_language_version:
+  python: python3.8
+
+ci:
+  autofix_prs: true
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit suggestions'
+  # submodules: true
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: pretty-format-json
+
+  #- repo: https://github.com/pre-commit/mirrors-autopep8
+  #  rev: v1.5.7
+  #  hooks:
+  #    - id: autopep8
+  #      name: fixing PEP8
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.8.0
+    hooks:
+      - id: isort
+        name: imports
+        require_serial: false
+
+  - repo: https://github.com/pre-commit/mirrors-yapf
+    rev: v0.31.0
+    hooks:
+      - id: yapf
+        name: formatting
+        language: python
+        require_serial: false
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+        name: PEP8
