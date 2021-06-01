@@ -6,10 +6,12 @@ on:  # Trigger the workflow on push or pull request, but only for the master bra
     branches: [master]
   pull_request:
     branches: [master]
+    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
 
   bash-expt:
+    if: github.event.pull_request.draft == false
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

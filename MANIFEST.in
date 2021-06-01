@@ -22,7 +22,7 @@ recursive-include imsegm *.py *.pyx
 include setup.*
 
 # Exclude build configs
-exclude *.yml
+exclude *.yml *.yaml
 # Exclude testing
 exclude pytest.*
 recursive-exclude tests *

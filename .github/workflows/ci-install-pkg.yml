@@ -4,13 +4,13 @@ name: Install pkg
 on:
   # Trigger the workflow on push or pull request,
   # but only for the master branch
-  - push
-  - pull_request
+  push:
+    branches: [ master ]
+  pull_request: { }
 
 jobs:
   pkg-check:
     runs-on: ubuntu-20.04
-
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v2
@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependenies
         run: |
-          pip install --upgrade cython setuptools wheel check-manifest twine==3.2 "numpy<1.17"
+          pip install --upgrade cython setuptools wheel check-manifest twine==3.2
 
       - name: Check package
         run: |
@@ -44,7 +44,6 @@ jobs:
       matrix:
         os: [ubuntu-20.04, macOS-10.15]  # , windows-2019
         python-version: [3.7]
-
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v2
