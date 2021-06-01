@@ -415,8 +415,7 @@ def compute_edge_model(edges, proba, metric='l_T'):
     >>> np.round(weights, 3).tolist()
     [0.0, 0.002, 0.0, 0.005, 0.0, 0.0, 0.101, 0.092, 0.001]
     """
-    assert np.max(edges) < len(proba), \
-        'max vertex %i exceed size of proba %r' % (np.max(edges), proba.shape)
+    assert np.max(edges) < len(proba), 'max vertex %i exceed size of proba %r' % (np.max(edges), proba.shape)
     vertex_1 = proba[edges[:, 0]]
     vertex_2 = proba[edges[:, 1]]
     # pp 32, http://www.coe.utah.edu/~cs7640/readings/graph_cuts_intro.pdf

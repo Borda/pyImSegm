@@ -71,8 +71,7 @@ def arg_parse_params(dict_paths):
     _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])), os.path.basename(args[k]))
     dict_paths = {k.split('_')[-1]: _fn_path(k) for k in args if k.startswith('path_')}
     for k in dict_paths:
-        assert os.path.exists(os.path.dirname(dict_paths[k])), \
-            'missing (%s) "%s"' % (k, os.path.dirname(dict_paths[k]))
+        assert os.path.exists(os.path.dirname(dict_paths[k])), 'missing (%s) "%s"' % (k, os.path.dirname(dict_paths[k]))
     return dict_paths, args
 
 
@@ -85,8 +84,7 @@ def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
     """
     annot, _ = tl_data.load_image_2d(df_row['path_1'])
     img, name = tl_data.load_image_2d(df_row['path_2'])
-    assert annot.shape[:2] == img.shape[:2], \
-        'image sizes not match %r vs %r' % (annot.shape, img.shape)
+    assert annot.shape[:2] == img.shape[:2], 'image sizes not match %r vs %r' % (annot.shape, img.shape)
 
     uq_objects = np.unique(annot)
     if len(uq_objects) == 1:
@@ -107,8 +105,7 @@ def main(dict_paths, padding=0, use_mask=False, bg_color=None, nb_workers=NB_WOR
     :param int nb_workers:
     """
     if not os.path.isdir(dict_paths['output']):
-        assert os.path.isdir(os.path.dirname(dict_paths['output'])), \
-            '"%s" should be folder' % dict_paths['output']
+        assert os.path.isdir(os.path.dirname(dict_paths['output'])), '"%s" should be folder' % dict_paths['output']
         logging.debug('creating dir: %s', dict_paths['output'])
         os.mkdir(dict_paths['output'])
 

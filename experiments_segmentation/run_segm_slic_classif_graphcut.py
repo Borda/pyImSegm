@@ -233,15 +233,15 @@ def dataset_load_images_annot_compute_features(params, show_debug_imgs=SHOW_DEBU
     :return ({str: ndarray} * 6, list(str)):
     """
     dict_images, dict_annots = dict(), dict()
-    dict_slics, dict_features, dict_labels, dict_label_hist = \
-        dict(), dict(), dict(), dict()
+    dict_slics, dict_features, dict_labels, dict_label_hist = dict(), dict(), dict(), dict()
     feature_names = list()
 
     # compute features
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     df_paths.reset_index(inplace=True)
-    assert all(n in df_paths.columns for n in ['path_image', 'path_annot']), \
-        'missing required columns in loaded csv file'
+    assert all(
+        n in df_paths.columns for n in ['path_image', 'path_annot']
+    ), 'missing required columns in loaded csv file'
     _wrapper_load_compute = partial(
         load_image_annot_compute_features_labels,
         params=params,
@@ -367,8 +367,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None, show
     np.savez_compressed(path_npz, segm_soft)
 
     # plt.imsave(os.path.join(path_out, idx_name + '_rgb.png'), seg_pipe)
-    if params.get('visual', False) and path_visu is not None \
-            and os.path.isdir(path_visu):
+    if params.get('visual', False) and path_visu is not None and os.path.isdir(path_visu):
         export_draw_image_segm_contour(img, segm_gc, path_visu, idx_name, '_GC')
         export_draw_image_segm_contour(img, segm_map, path_visu, idx_name, '_MAP')
         if show_debug_imgs and debug_visual is not None:
@@ -404,8 +403,7 @@ def eval_segment_with_annot(
     if dict_label_hist is not None:
         visu_histogram_labels(params, dict_label_hist)
     assert sorted(dict_annot.keys()) == sorted(dict_segm.keys()), \
-        'mismatch in dictionary keys: \n%s \n%s' % (sorted(dict_annot.keys()),
-                                                    sorted(dict_segm.keys()))
+        'mismatch in dictionary keys: \n%s \n%s' % (sorted(dict_annot.keys()), sorted(dict_segm.keys()))
     list_annot = [dict_annot[n] for n in dict_annot]
     list_segm = [dict_segm[n] for n in dict_annot]
     df_stat = seg_clf.compute_stat_per_image(
@@ -438,8 +436,7 @@ def retrain_lpo_segment_image(
     :param bool show_debug_imgs: whether show debug images
     :return (str, ndarray, ndarray):
     """
-    dict_imgs, _, _, dict_features, dict_labels, _, _ = \
-        load_dump_data(path_dump)
+    dict_imgs, _, _, dict_features, dict_labels, _, _ = load_dump_data(path_dump)
     dict_classif = seg_clf.load_classifier(path_classif)
     classif = dict_classif['clf_pipeline']
     params = dict_classif['params']
