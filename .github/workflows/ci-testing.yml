@@ -2,8 +2,9 @@ name: CI testing
 
 # see: https://help.github.com/en/actions/reference/events-that-trigger-workflows
 on:  # Trigger the workflow on push or pull request, but only for the master branch
-  - push
-  - pull_request
+  push:
+    branches: [ master ]
+  pull_request: {}
 
 jobs:
   pytest:
@@ -12,8 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macOS-10.15]  # , windows-2019
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        os: [ubuntu-20.04, macOS-10.15, windows-2019]
+        python-version: [3.6, 3.8, 3.9]
         requires: ['latest']
         include:
           - os: ubuntu-18.04
