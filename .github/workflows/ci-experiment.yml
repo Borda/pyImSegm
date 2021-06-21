@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9]
 
     # Timeout: https://stackoverflow.com/a/59076067/4521646
     timeout-minutes: 35
@@ -43,7 +43,7 @@ jobs:
       run: |
         python --version
         pip --version
-        pip install wheel "numpy<1.17" --quiet
+        pip install --quiet wheel
         pip install . --user --prefer-binary
         rm -rf imsegm
         pip list
