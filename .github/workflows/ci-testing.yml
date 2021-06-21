@@ -8,7 +8,6 @@ on:  # Trigger the workflow on push or pull request, but only for the master bra
 
 jobs:
   pytest:
-
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -23,7 +22,6 @@ jobs:
           - os: macOS-10.15
             python-version: 3.6
             requires: 'minimal'
-
     # Timeout: https://stackoverflow.com/a/59076067/4521646
     timeout-minutes: 35
 
@@ -61,6 +59,17 @@ jobs:
         key: ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ matrix.requires }}-${{ hashFiles('requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ matrix.requires }}-
+
+    - name: GCO for Windows
+      if: runner.os == 'windows'
+      run: |
+        pip install "numpy<1.17" "matplotlib<3.0"
+        git clone https://github.com/Borda/pyGCO.git
+        cd pyGCO
+        python setup.py build_ext
+        python setup.py install
+        python -c "fname = 'requirements.txt' ; lines = [line for line in open(fname).readlines() if not line.startswith('gco-wrapper')] ; open(fname, 'w').writelines(lines)"
+      shell: bash
 
     - name: Install dependencies
       run: |
