@@ -25,14 +25,14 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from skimage import exposure, segmentation
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utilities.data_io as tl_data
-import imsegm.utilities.experiments as tl_expt
 import imsegm.utilities.drawing as tl_visu
+import imsegm.utilities.experiments as tl_expt
 
 NB_WORKERS = tl_expt.nb_workers(0.9)
 BOOL_IMAGE_RESCALE_INTENSITY = False

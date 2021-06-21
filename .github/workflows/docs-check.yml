@@ -1,0 +1,85 @@
+name: "Docs check"
+# https://github.com/marketplace/actions/sphinx-build
+
+on:
+- pull_request
+
+jobs:
+
+  test-docs:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      # Note: This uses an internal pip API and may not always work
+      # https://github.com/actions/cache/blob/master/examples.md#multiple-oss-in-a-workflow
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y cmake pandoc
+          pip --version
+          pip install -r requirements.txt
+          pip install -r docs/requirements.txt
+          python setup.py build_ext --inplace
+          pip list
+        shell: bash
+
+      - name: Test Documentation
+        run: |
+          # First run the same pipeline as Read-The-Docs
+          cd docs
+          make doctest
+
+  make-docs:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      # Note: This uses an internal pip API and may not always work
+      # https://github.com/actions/cache/blob/master/examples.md#multiple-oss-in-a-workflow
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake pandoc latexmk
+          sudo apt-get install -y texlive-latex-extra dvipng texlive-pictures
+          pip --version
+          pip install -r requirements.txt
+          pip install -r docs/requirements.txt
+          python setup.py build_ext --inplace
+          pip list
+        shell: bash
+
+      - name: Make Documentation
+        run: |
+          cd docs
+          make clean
+          make html --debug --jobs 2 SPHINXOPTS="-W"
+          make latexpdf
+
+      - name: Upload built docs
+        uses: actions/upload-artifact@v2
+        with:
+          name: docs-results-${{ runner.os }}-${{ matrix.python-version }}
+          path: docs/build/html/
+        if: success()

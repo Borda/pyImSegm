@@ -6,10 +6,12 @@ on:  # Trigger the workflow on push or pull request, but only for the master bra
     branches: [master]
   pull_request:
     branches: [master]
+    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
-  pytest:
 
+  bash-expt:
+    if: github.event.pull_request.draft == false
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -36,11 +38,6 @@ jobs:
         key: ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-py${{ matrix.python-version }}-
-
-    #- name: Set py2.7 dependencies
-    #  if: matrix.python-version == 2.7
-    #  run: |
-    #    cp -r requirements-py27.txt requirements.txt
 
     - name: install ImSegm
       run: |

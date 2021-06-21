@@ -15,14 +15,14 @@ import pandas as pd
 from sklearn.metrics import adjusted_rand_score
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-from imsegm.utilities.data_io import update_path, load_image_2d
-from imsegm.utilities.drawing import ellipse, figure_ellipse_fitting
 from imsegm.ellipse_fitting import (
-    get_slic_points_labels,
-    ransac_segm,
     EllipseModelSegm,
+    get_slic_points_labels,
     prepare_boundary_points_ray_edge,
+    ransac_segm,
 )
+from imsegm.utilities.data_io import load_image_2d, update_path
+from imsegm.utilities.drawing import ellipse, figure_ellipse_fitting
 from tests import PATH_OUTPUT
 
 # set some default paths

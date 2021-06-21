@@ -24,10 +24,10 @@ close("All")
 for (i=0; i<list.length; i++){
 	name = list[i];
 	nameNew = replace(name, ".tif", ".png");
-	
-	print(toString(i+1) + "#" + toString(list.length) + " -> " + name);	
+
+	print(toString(i+1) + "#" + toString(list.length) + " -> " + name);
 	open(dirIn + name);
-	
+
 	//run("Brightness/Contrast...");
 	run("Stack to Images");
 	selectWindow("Green");
@@ -37,7 +37,7 @@ for (i=0; i<list.length; i++){
 	selectWindow("Red");
 	run("8-bit");
 	run("8-bit");
-	
-	saveAs("PNG", dirOut + nameNew);	
+
+	saveAs("PNG", dirOut + nameNew);
 	close();
 }

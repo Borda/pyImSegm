@@ -95,8 +95,7 @@ def relabel_folder_images(path_images, path_out, labels_old, labels_new, nb_work
     :param [int] labels_new: list of new labels
     :param int nb_workers:
     """
-    assert os.path.isdir(os.path.dirname(path_images)), \
-        'missing folder: %s' % path_images
+    assert os.path.isdir(os.path.dirname(path_images)), 'missing folder: %s' % path_images
     assert os.path.isdir(path_out), 'missing ouput folder: %s' % path_out
 
     path_imgs = sorted(glob.glob(path_images))

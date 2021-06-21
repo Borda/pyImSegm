@@ -37,21 +37,22 @@ if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-from PIL import Image
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from PIL import Image
 # from llvmpy._api.llvm.CmpInst import FCMP_OLE
 from skimage import segmentation
 from sklearn import metrics
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.data_io as tl_data
-import imsegm.utilities.experiments as tl_expt
-import imsegm.utilities.drawing as tl_visu
-import imsegm.pipelines as seg_pipe
-import imsegm.labeling as seg_lbs
 import imsegm.descriptors as seg_fts
+import imsegm.labeling as seg_lbs
+import imsegm.pipelines as seg_pipe
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
+import imsegm.utilities.experiments as tl_expt
+
 # sometimes it freeze in "Cython: computing Colour means for image"
 seg_fts.USE_CYTHON = False
 
@@ -319,8 +320,7 @@ def export_visual(idx_name, img, segm, debug_visual=None, path_out=None, path_vi
         fig.savefig(path_fig)
         plt.close(fig)
 
-    if path_visu is not None and os.path.isdir(path_visu) \
-            and debug_visual is not None:
+    if path_visu is not None and os.path.isdir(path_visu) and debug_visual is not None:
         path_fig = os.path.join(path_visu, str(idx_name) + '_debug.png')
         logging.debug('exporting (debug) visualization: %s', path_fig)
         fig = tl_visu.figure_segm_graphcut_debug(debug_visual)

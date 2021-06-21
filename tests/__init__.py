@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 
 import imsegm.utilities
 from imsegm.utilities.data_io import update_path

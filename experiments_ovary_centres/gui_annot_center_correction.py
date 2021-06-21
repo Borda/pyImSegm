@@ -43,8 +43,8 @@ matplotlib.use('GTKAgg')  # or >> matplotlib.rcsetup.all_backends
 
 # http://matplotlib.org/users/navigation_toolbar.html
 import gtk
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg
+from matplotlib.figure import Figure
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utilities.data_io as tl_data

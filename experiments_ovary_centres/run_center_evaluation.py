@@ -32,13 +32,14 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.data_io as tl_data
-import imsegm.utilities.experiments as tl_expt
-import imsegm.utilities.drawing as tl_visu
-import imsegm.annotation as seg_annot
 import run_center_candidate_training as run_train
-import run_center_prediction as run_detect
 import run_center_clustering as run_clust
+import run_center_prediction as run_detect
+
+import imsegm.annotation as seg_annot
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
+import imsegm.utilities.experiments as tl_expt
 
 # whether skip loading triplest CSV from previous run
 FORCE_RELOAD = False
@@ -158,8 +159,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None, col_pref
         return dict_row
 
     assert all(c in df_annot.columns for c in tl_visu.COLUMNS_POSITION_EGG_ANNOT), \
-        'some required columns %r are missing for %s' % \
-        (tl_visu.COLUMNS_POSITION_EGG_ANNOT, df_annot.columns)
+        'some required columns %r are missing for %s' % (tl_visu.COLUMNS_POSITION_EGG_ANNOT, df_annot.columns)
     mask_eggs = estimate_eggs_from_info(df_annot.loc[idx], img.shape[:2])
 
     try:

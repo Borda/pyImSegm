@@ -17,7 +17,7 @@ import pandas as pd
 from PIL import Image
 # import libtiff, nibabel
 from scipy import ndimage
-from skimage import exposure, io, color, measure
+from skimage import color, exposure, io, measure
 
 from imsegm.utilities.read_zvi import load_image as load_zvi
 

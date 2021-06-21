@@ -26,16 +26,16 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn import metrics
-import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.experiments as tl_expt
+import imsegm.labeling as seg_lbs
 import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.drawing as tl_visu
-import imsegm.labeling as seg_lbs
+import imsegm.utilities.experiments as tl_expt
 
 EXPORT_VUSIALISATION = False
 NB_WORKERS = tl_expt.nb_workers(0.9)

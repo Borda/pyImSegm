@@ -12,7 +12,7 @@ import itertools
 import logging
 
 import numpy as np
-from scipy import ndimage, interpolate, optimize, spatial
+from scipy import interpolate, ndimage, optimize, spatial
 from scipy.ndimage.filters import gaussian_filter, gaussian_filter1d, gaussian_laplace
 from skimage import morphology
 from sklearn import preprocessing
@@ -23,6 +23,7 @@ from imsegm.utilities.data_io import convert_img_color_from_rgb
 # from numba import int32, int64, float32
 try:
     import imsegm.features_cython as fts_cython
+
     # logging.debug('try to load Cython implementation')  # CRASH logger
     USE_CYTHON = True
 except Exception:

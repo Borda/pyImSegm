@@ -11,22 +11,22 @@ import numpy as np
 import skimage.color as sk_color
 
 from imsegm.classification import (
+    convert_set_features_labels_2_dataset,
+    create_classif_search_train_export,
+    CrossValidateGroups,
     DEFAULT_CLASSIF_NAME,
     DEFAULT_CLUSTERING,
-    convert_set_features_labels_2_dataset,
-    CrossValidateGroups,
-    create_classif_search_train_export,
 )
 from imsegm.descriptors import (
+    compute_selected_features_gray3d,
+    compute_selected_features_img2d,
     FEATURES_SET_COLOR,
     norm_features,
-    compute_selected_features_img2d,
-    compute_selected_features_gray3d,
 )
-from imsegm.graph_cuts import segment_graph_cut_general, estim_class_model
+from imsegm.graph_cuts import estim_class_model, segment_graph_cut_general
 from imsegm.labeling import histogram_regions_labels_norm
 from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
-from imsegm.utilities.experiments import WrapExecuteSequence, nb_workers
+from imsegm.utilities.experiments import nb_workers, WrapExecuteSequence
 
 # from sklearn import mixture
 
@@ -75,8 +75,7 @@ def pipe_color2d_slic_features_model_graphcut(
     >>> np.random.seed(0)
     >>> image = np.random.random((125, 150, 3)) / 2.
     >>> image[:, :75] += 0.5
-    >>> segm, seg_soft = pipe_color2d_slic_features_model_graphcut(
-    ...                                         image, 2, {'color': ['mean']})
+    >>> segm, seg_soft = pipe_color2d_slic_features_model_graphcut(image, 2, {'color': ['mean']})
     >>> segm.shape
     (125, 150)
     >>> seg_soft.shape
@@ -190,8 +189,7 @@ def segment_color2d_slic_features_model_graphcut(
     >>> image = np.random.random((125, 150, 3)) / 2.
     >>> image[:, :75] += 0.5
     >>> model, _ = estim_model_classes_group([image], 2, {'color': ['mean']})
-    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(
-    ...                                     image, model, {'color': ['mean']})
+    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(image, model, {'color': ['mean']})
     >>> segm.shape
     (125, 150)
     >>> seg_soft.shape
@@ -205,10 +203,8 @@ def segment_color2d_slic_features_model_graphcut(
     >>> image[:, 75:] += 0.5
     >>> annot = np.zeros(image.shape[:2], dtype=int)
     >>> annot[:, 75:] = 1
-    >>> clf, _, _, _ = train_classif_color2d_slic_features([image], [annot],
-    ...                                                    {'color': ['mean']})
-    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(
-    ...                                         image, clf, {'color': ['mean']})
+    >>> clf, _, _, _ = train_classif_color2d_slic_features([image], [annot], {'color': ['mean']})
+    >>> segm, seg_soft = segment_color2d_slic_features_model_graphcut(image, clf, {'color': ['mean']})
     >>> segm.shape
     (125, 150)
     >>> seg_soft.shape

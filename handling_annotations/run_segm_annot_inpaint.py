@@ -20,9 +20,9 @@ from functools import partial
 import numpy as np
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+import imsegm.annotation as seg_annot
 import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
-import imsegm.annotation as seg_annot
 
 PATH_IMAGES = os.path.join('data-images', 'drosophila_ovary_slice', 'segm', '*.png')
 NB_WORKERS = tl_expt.nb_workers(0.9)

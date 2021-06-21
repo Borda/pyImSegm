@@ -35,8 +35,8 @@ read ZVI (Zeiss) image file
 import struct
 from collections import namedtuple
 
-import OleFileIO_PL
 import numpy as np
+import OleFileIO_PL
 
 
 def i32(data):

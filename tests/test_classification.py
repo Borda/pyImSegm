@@ -13,7 +13,7 @@ import numpy as np
 from sklearn import metrics
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
-from imsegm.classification import create_classifiers, create_classif_search_train_export
+from imsegm.classification import create_classif_search_train_export, create_classifiers
 
 CLASSIFIER_NAMES = create_classifiers().keys()
 

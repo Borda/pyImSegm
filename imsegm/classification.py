@@ -20,11 +20,21 @@ import pandas as pd
 from scipy import interp
 from scipy.stats import randint as sp_randint
 from scipy.stats import uniform as sp_random
-from sklearn import cluster, metrics
-from sklearn import ensemble, neighbors, svm, tree
-from sklearn import model_selection
-from sklearn import pipeline, linear_model, neural_network
-from sklearn import preprocessing, feature_selection, decomposition
+from sklearn import (
+    cluster,
+    decomposition,
+    ensemble,
+    feature_selection,
+    linear_model,
+    metrics,
+    model_selection,
+    neighbors,
+    neural_network,
+    pipeline,
+    preprocessing,
+    svm,
+    tree,
+)
 from sklearn.base import clone
 
 try:  # due to some chnages in between versions
@@ -33,7 +43,7 @@ except Exception:
     from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 from imsegm.labeling import relabel_max_overlap_unique
-from imsegm.utilities.experiments import WrapExecuteSequence, nb_workers
+from imsegm.utilities.experiments import nb_workers, WrapExecuteSequence
 
 # NAME_FILE_RESULTS = 'results.csv'
 #: name template forexporting trained classifier (adding classifier name and version)

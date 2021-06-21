@@ -23,10 +23,12 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
 import matplotlib.pylab as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.data_io as tl_data
-import imsegm.utilities.experiments as tl_expt
-import imsegm.utilities.drawing as tl_visu
 import run_center_candidate_training as run_train
+
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
+import imsegm.utilities.experiments as tl_expt
+
 # import run_center_prediction as run_pred
 
 # Set experiment folders

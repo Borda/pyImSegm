@@ -13,11 +13,11 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
-import numpy as np
 import matplotlib.pyplot as plt
-from scipy import ndimage
-from skimage import draw, color, segmentation
+import numpy as np
 from planar import line as pl_line
+from scipy import ndimage
+from skimage import color, draw, segmentation
 
 #: for blending two images define chess field size in pixels
 SIZE_CHESS_FIELD = 50
@@ -243,8 +243,7 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2, mid
     >>> isinstance(fig, matplotlib.figure.Figure)
     True
     """
-    assert img.shape[:2] == seg.shape[:2], \
-        'different image %r & seg_pipe %r sizes' % (img.shape, seg.shape)
+    assert img.shape[:2] == seg.shape[:2], 'different image %r & seg_pipe %r sizes' % (img.shape, seg.shape)
     if img.ndim == 2:  # for gray images of ovary
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         img = color.gray2rgb(img)
@@ -437,8 +436,7 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
         'should match' % (len(ellipses), len(centers), len(crits))
 
     fig, ax = create_figure_by_image(img.shape[:2], fig_size)
-    assert img.ndim == 2, \
-        'required image dimension is 2 to instead %r' % img.shape
+    assert img.ndim == 2, 'required image dimension is 2 to instead %r' % img.shape
     ax.imshow(img, cmap=plt.cm.Greys_r)
 
     for i, params in enumerate(ellipses):
@@ -820,8 +818,7 @@ def draw_image_segm_points(
         ax.contour(seg_contour, linewidths=3, levels=np.unique(seg_contour))
     if labels is not None:
         assert len(points) == len(labels), \
-            'number of points (%i) and labels (%i) should match' \
-            % (len(points), len(labels))
+            'number of points (%i) and labels (%i) should match' % (len(points), len(labels))
         for lb in lut_label_marker:
             marker, clr = lut_label_marker[lb]
             ax.plot(points[(labels == lb), 1], points[(labels == lb), 0], marker, color=clr)
@@ -1113,15 +1110,13 @@ def draw_image_clusters_centers(ax, img, centres, points=None, labels_centre=Non
     """
     if img is not None:
         img = (img / float(np.max(img)))
-        assert img.ndim == 2, \
-            'required image dimension is 2 to instead %r' % img.shape
+        assert img.ndim == 2, 'required image dimension is 2 to instead %r' % img.shape
         ax.imshow(img, cmap=plt.cm.Greys_r)
         ax.set(xlim=[0, img.shape[1]], ylim=[img.shape[0], 0])
     if segm is not None:
         ax.imshow(segm, alpha=0.1)
         ax.contour(segm)
-    if points is not None and len(points) > 0 \
-            and labels_centre is not None:
+    if points is not None and len(points) > 0 and labels_centre is not None:
         points = np.array(points)
         for i in range(max(labels_centre) + 1):
             select = points[np.asarray(labels_centre) == i]

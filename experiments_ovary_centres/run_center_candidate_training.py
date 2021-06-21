@@ -43,13 +43,13 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
 import matplotlib.pyplot as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.data_io as tl_data
-import imsegm.utilities.experiments as tl_expt
-import imsegm.utilities.drawing as tl_visu
-import imsegm.superpixels as seg_spx
-import imsegm.descriptors as seg_fts
 import imsegm.classification as seg_clf
+import imsegm.descriptors as seg_fts
 import imsegm.labeling as seg_lbs
+import imsegm.superpixels as seg_spx
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
+import imsegm.utilities.experiments as tl_expt
 
 # whether skip loading triplest CSV from previous run
 FORCE_RELOAD = False

@@ -4,8 +4,8 @@
  * @author Jiri Borovec
  * @date 13/06/2014
  * @mail jiri.borovec@fel.cvut.cz
- * 
- * @brief: This macro does importing set of points from Multi-point tool 
+ *
+ * @brief: This macro does importing set of points from Multi-point tool
  * from .csv and .txt files (the name is specified during exporting)
  */
 
@@ -20,7 +20,7 @@ text = split(allText, "\n");
 
 // define array for points
 var xpoints = newArray;
-var ypoints = newArray; 
+var ypoints = newArray;
 
 // in case input is in TXT format
 if (ext=="txt") {
@@ -32,11 +32,11 @@ if (ext=="txt") {
 	// loading and parsing each line
 	for (i = 2; i < (text.length); i++){
 	   line = split(text[i]," ");
-	   setOption("ExpandableArrays", true);   
+	   setOption("ExpandableArrays", true);
 	   xpoints[i-2] = parseInt(line[iX]);
-	   ypoints[i-2] = parseInt(line[iY]); 
-	   print("p("+i-1+") ["+xpoints[i-2]+"; "+ypoints[i-2]+"]"); 
-	} 
+	   ypoints[i-2] = parseInt(line[iY]);
+	   print("p("+i-1+") ["+xpoints[i-2]+"; "+ypoints[i-2]+"]");
+	}
 // in case input is in CSV format
 } else if (ext=="csv") {
 	print("importing CSV point set...");
@@ -50,15 +50,15 @@ if (ext=="txt") {
 	// loading and parsing each line
 	for (i = 1; i < (text.length); i++){
 	   line = split(text[i],",");
-	   setOption("ExpandableArrays", true);   
+	   setOption("ExpandableArrays", true);
 	   xpoints[i-1] = parseInt(line[iX]);
 	   ypoints[i-1] = parseInt(line[iY]);
-	   print("p("+i+") ["+xpoints[i-1]+"; "+ypoints[i-1]+"]"); 
-	} 
+	   print("p("+i+") ["+xpoints[i-1]+"; "+ypoints[i-1]+"]");
+	}
 // in case of any other format
 } else {
-	print("not supported format...");	
+	print("not supported format...");
 }
- 
+
 // show the points in the image
-makeSelection("point", xpoints, ypoints); 
+makeSelection("point", xpoints, ypoints);

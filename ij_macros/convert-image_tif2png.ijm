@@ -22,13 +22,13 @@ print("found: " + toString(list.length));
 for (i=0; i<list.length; i++){
 	name = list[i];
 	nameNew = replace(name, ".tif", ".png");
-	
-	print(toString(i+1) + "#" + toString(list.length) + " -> " + name);	
+
+	print(toString(i+1) + "#" + toString(list.length) + " -> " + name);
 	open(dirIn + name);
-	
+
 	//run("Brightness/Contrast...");
 	run("Enhance Contrast", "saturated=0.35");
-	
-	saveAs("PNG", dirOut + nameNew);	
+
+	saveAs("PNG", dirOut + nameNew);
 	close();
 }

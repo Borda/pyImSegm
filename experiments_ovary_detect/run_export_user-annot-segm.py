@@ -27,15 +27,15 @@ if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'ag
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
 
+import matplotlib.pylab as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pylab as plt
 
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
-import imsegm.utilities.data_io as tl_data
-import imsegm.utilities.experiments as tl_expt
-import imsegm.utilities.drawing as tl_visu
 import imsegm.annotation as seg_annot
+import imsegm.utilities.data_io as tl_data
+import imsegm.utilities.drawing as tl_visu
+import imsegm.utilities.experiments as tl_expt
 
 NB_WORKERS = tl_expt.nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))

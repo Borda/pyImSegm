@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join('..', '..')))  # Add path to root
+from imsegm.labeling import binary_image_from_coords, compute_distance_map, contour_coords
 from imsegm.utilities.data_samples import sample_segment_vertical_2d
-from imsegm.labeling import binary_image_from_coords, contour_coords, compute_distance_map
 from tests import PATH_OUTPUT
 
 
