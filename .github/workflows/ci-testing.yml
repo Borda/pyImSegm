@@ -60,17 +60,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ matrix.requires }}-
 
-    - name: GCO for Windows
-      if: runner.os == 'windows'
-      run: |
-        pip install "numpy<1.17"
-        git clone https://github.com/Borda/pyGCO.git
-        cd pyGCO
-        python setup.py build_ext
-        python setup.py install
-        python -c "fname = 'requirements.txt' ; lines = [line for line in open(fname).readlines() if not line.startswith('gco-wrapper')] ; open(fname, 'w').writelines(lines)"
-      shell: bash
-
     - name: Install dependencies
       run: |
         python --version
