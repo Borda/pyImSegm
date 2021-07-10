@@ -701,7 +701,8 @@ def segment_graph_cut_general(
     >>> np.argmax(proba, axis=1)  # doctest: +ELLIPSIS
     array([0, 0, 0, 1, 1, 1]...)
     >>> debug_visual = dict()
-    >>> segment_graph_cut_general(slic, proba, gc_regul=0., edge_type='', debug_visual=debug_visual)  # doctest: +ELLIPSIS
+    >>> segment_graph_cut_general(
+    ...     slic, proba, gc_regul=0., edge_type='', debug_visual=debug_visual)  # doctest: +ELLIPSIS
     array([0, 0, 0, 1, 1, 1]...)
     >>> sorted(debug_visual.keys())  # doctest: +NORMALIZE_WHITESPACE
     ['edge_weights', 'edges', 'img_graph_edges', 'img_graph_segm',

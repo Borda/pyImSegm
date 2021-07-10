@@ -225,7 +225,7 @@ def computeLabelHistogram2d(
     int nb_labels
 ):
     cdef:
-        long[:] hist = np.array(nb_labels, dtype=np.int)
+        int[:] hist = np.array(nb_labels, dtype=np.int)
         int w = segm_select.shape[1]
         int h = segm_select.shape[0]
 
