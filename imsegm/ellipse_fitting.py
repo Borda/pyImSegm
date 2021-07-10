@@ -95,16 +95,13 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         >>> weights = np.ones(seg.ravel().shape)
         >>> seg[4:5, 6:8] = 1
         >>> table_prob = [[0.1, 0.9]]
-        >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(),
-        ...              table_prob)  # doctest: +ELLIPSIS
+        >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(), table_prob)  # doctest: +ELLIPSIS
         87.888...
         >>> seg[2:7, 4:11] = 1
-        >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(),
-        ...              table_prob)  # doctest: +ELLIPSIS
+        >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(), table_prob)  # doctest: +ELLIPSIS
         17.577...
         >>> seg[1:9, 1:14] = 1
-        >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(),
-        ...              table_prob)   # doctest: +ELLIPSIS
+        >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(), table_prob)   # doctest: +ELLIPSIS
         -70.311...
         """
         assert len(points) == len(weights) == len(labels), \
@@ -197,14 +194,12 @@ def ransac_segm(
     >>> seg = np.zeros((120, 150), dtype=int)
     >>> ell_params = 60, 75, 40, 65, np.deg2rad(30)
     >>> seg = add_overlap_ellipse(seg, ell_params, 1)
-    >>> slic, points_all, labels = get_slic_points_labels(seg, slic_size=10,
-    ...                                                   slic_regul=0.3)
-    >>> points = prepare_boundary_points_ray_dist(seg, [(40, 90)], 2,
-    ...                                           sel_bg=1, sel_fg=0)[0]
+    >>> slic, points_all, labels = get_slic_points_labels(seg, slic_size=10, slic_regul=0.3)
+    >>> points = prepare_boundary_points_ray_dist(seg, [(40, 90)], 2, sel_bg=1, sel_fg=0)[0]
     >>> table_prob = [[0.01, 0.75, 0.95, 0.9], [0.99, 0.25, 0.05, 0.1]]
     >>> weights = np.bincount(slic.ravel())
-    >>> ransac_model, _ = ransac_segm(points, EllipseModelSegm, points_all, weights,
-    ...                               labels, table_prob, 0.6, 3, max_trials=15)
+    >>> ransac_model, _ = ransac_segm(
+    ...     points, EllipseModelSegm, points_all, weights, labels, table_prob, 0.6, 3, max_trials=15)
     >>> np.round(ransac_model.params[:4]).astype(int)
     array([60, 75, 41, 65])
     >>> np.round(ransac_model.params[4], 1)

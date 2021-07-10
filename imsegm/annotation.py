@@ -232,12 +232,12 @@ def image_color_2_labels(img, colors=None):
     >>> np.random.seed(0)
     >>> rand = np.random.randint(0, 2, (5, 7)).astype(np.uint8)
     >>> img = np.rollaxis(np.array([rand] * 3), 0, 3)
-    >>> image_color_2_labels(img)
+    >>> image_color_2_labels(img)  # doctest: +ELLIPSIS
     array([[1, 0, 0, 1, 0, 0, 0],
            [0, 0, 0, 0, 1, 1, 0],
            [1, 1, 1, 1, 1, 0, 1],
            [0, 0, 1, 1, 0, 0, 0],
-           [0, 1, 0, 1, 0, 1, 0]])
+           [0, 1, 0, 1, 0, 1, 0]]...)
     """
     if not colors:
         colors = image_frequent_colors(img).keys()
@@ -330,8 +330,7 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION, di
     :return: DF
 
     >>> from imsegm.utilities.data_io import update_path
-    >>> path_txt = os.path.join(update_path('data-images'),
-    ...                 'drosophila_ovary_slice', 'info_ovary_images.txt')
+    >>> path_txt = os.path.join(update_path('data-images'), 'drosophila_ovary_slice', 'info_ovary_images.txt')
     >>> df = load_info_group_by_slices(path_txt, [4])
     >>> df.sort_index(axis=1) # doctest: +NORMALIZE_WHITESPACE
                 ant_x  ant_y  lat_x  lat_y post_x post_y

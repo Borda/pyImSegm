@@ -350,10 +350,9 @@ def load_image_2d(path_img):
     >>> # PNG image
     >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(20, 20, 3))
-    >>> path_img = export_image(os.path.join('.', img_name), img,
-    ...                         stretch_range=False)
-    >>> path_img
-    './testing-image.png'
+    >>> path_img = export_image(os.path.join('.', img_name), img, stretch_range=False)
+    >>> os.path.basename(path_img)
+    'testing-image.png'
     >>> os.path.exists(path_img)
     True
     >>> img_new, _ = load_image_2d(path_img)
@@ -372,10 +371,9 @@ def load_image_2d(path_img):
     >>> # TIFF image
     >>> img_name = 'testing-image'
     >>> img = np.random.randint(0, 255, size=(5, 20, 20))
-    >>> path_img = export_image(os.path.join('.', img_name), img,
-    ...                         stretch_range=False)
-    >>> path_img
-    './testing-image.tiff'
+    >>> path_img = export_image(os.path.join('.', img_name), img, stretch_range=False)
+    >>> os.path.basename(path_img)
+    'testing-image.tiff'
     >>> os.path.exists(path_img)
     True
     >>> img_new, _ = load_image_2d(path_img)
@@ -421,8 +419,8 @@ def export_image(path_img, img, stretch_range=True):
     >>> np.random.seed(0)
     >>> img = np.random.random([5, 10])
     >>> path_img = export_image(os.path.join('.', 'testing-image'), img)
-    >>> path_img
-    './testing-image.png'
+    >>> os.path.basename(path_img)
+    'testing-image.png'
     >>> os.path.exists(path_img)
     True
     >>> im, name = load_image_2d(path_img)
@@ -439,8 +437,8 @@ def export_image(path_img, img, stretch_range=True):
     >>> # TIFF image
     >>> img = np.random.random([5, 20, 25])
     >>> path_img = export_image(os.path.join('.', 'testing-image'), img)
-    >>> path_img
-    './testing-image.tiff'
+    >>> os.path.basename(path_img)
+    'testing-image.tiff'
     >>> os.path.exists(path_img)
     True
     >>> im, name = load_image_2d(path_img)
@@ -479,7 +477,7 @@ def load_params_from_txt(path_file):
     >>> path_file = './sample_config.txt'
     >>> with open(path_file, 'w') as fp:
     ...     lines = ['"{}" : {},'.format(k, p[k]) for k in p]
-    ...     _= fp.write(os.linesep.join(lines))  # it may return nb characters
+    ...     _ = fp.write(os.linesep.join(lines))  # it may return nb characters
     >>> p2 = load_params_from_txt(path_file)
     >>> p2
     {'abc': '123'}
@@ -635,13 +633,11 @@ def load_image_tiff_volume(path_img, im_range=None):
     :param float im_range: range to scale image values (1. or 255)
     :return ndarray:
 
-    >>> p_img = os.path.join(update_path('data-images'), 'drosophila_ovary_3D',
-    ...                      'AU10-13_f0011.tif')
+    >>> p_img = os.path.join(update_path('data-images'), 'drosophila_ovary_3D', 'AU10-13_f0011.tif')
     >>> img = load_image_tiff_volume(p_img)
     >>> img.shape
     (30, 323, 512)
-    >>> p_img = os.path.join(update_path('data-images'),
-    ...                      'drosophila_ovary_slice', 'image', 'insitu7545.tif')
+    >>> p_img = os.path.join(update_path('data-images'), 'drosophila_ovary_slice', 'image', 'insitu7545.tif')
     >>> img = load_image_tiff_volume(p_img)
     >>> img.shape
     (647, 1024, 3)
@@ -672,13 +668,11 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
     :param float im_range: range to scale image values (1. or 255)
     :return ndarray, ndarray:
 
-    >>> p_img = os.path.join(update_path('data-images'), 'drosophila_ovary_3D',
-    ...                      'AU10-13_f0011.tif')
+    >>> p_img = os.path.join(update_path('data-images'), 'drosophila_ovary_3D', 'AU10-13_f0011.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
     >>> img_b1.shape, img_b2.shape
     ((15, 323, 512), (15, 323, 512))
-    >>> p_img = os.path.join(update_path('data-images'),
-    ...                      'drosophila_ovary_slice', 'image', 'insitu7545.tif')
+    >>> p_img = os.path.join(update_path('data-images'), 'drosophila_ovary_slice', 'image', 'insitu7545.tif')
     >>> img_b1, img_b2 = load_tiff_volume_split_double_band(p_img)
     >>> img_b1.shape, img_b2.shape
     ((1, 647, 1024), (1, 647, 1024))
@@ -749,8 +743,7 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     >>> img_b1, img_b2 = load_img_double_band_split(p_img)
     >>> img_b1.shape
     (647, 1024)
-    >>> p_img = os.path.join(update_path('data-images'),
-    ...                      'drosophila_ovary_3D', 'AU10-13_f0011.tif')
+    >>> p_img = os.path.join(update_path('data-images'), 'drosophila_ovary_3D', 'AU10-13_f0011.tif')
     >>> img_b1, img_b2 = load_img_double_band_split(p_img)
     >>> img_b1.shape
     (15, 323, 512)
@@ -810,8 +803,7 @@ def load_complete_image_folder(path_dir, img_name_pattern='*.png', nb_sample=Non
     :param list(str)|None skip: skip some prticular images by name
     :return:
 
-    >>> p_imgs = os.path.join(update_path('data-images'),
-    ...                      'drosophila_ovary_slice', 'image')
+    >>> p_imgs = os.path.join(update_path('data-images'), 'drosophila_ovary_slice', 'image')
     >>> l_imgs, l_names = load_complete_image_folder(p_imgs, '*.jpg')
     >>> len(l_imgs)
     5
@@ -930,18 +922,19 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     :return: DF<path_1, path_2, ...>
 
     >>> def _mp(d, n):
-    ...     return os.path.join(update_path('data-images'),
-    ...                         'drosophila_ovary_slice', d, n)
-    >>> df = find_files_match_names_across_dirs([_mp('image', '*.jpg'),
-    ...                                          _mp('segm', '*.png'),
-    ...                                          _mp('center_levels', '*.csv')])
+    ...     return os.path.join(update_path('data-images'), 'drosophila_ovary_slice', d, n)
+    >>> df = find_files_match_names_across_dirs([
+    ...     _mp('image', '*.jpg'),
+    ...     _mp('segm', '*.png'),
+    ...     _mp('center_levels', '*.csv')])
     >>> len(df) > 0
     True
     >>> df.columns.tolist()
     ['path_1', 'path_2', 'path_3']
-    >>> df = find_files_match_names_across_dirs([_mp('image', '*.png'),
-    ...                                          _mp('segm', '*.jpg'),
-    ...                                          _mp('center_levels', '*.csv')])
+    >>> df = find_files_match_names_across_dirs([
+    ...     _mp('image', '*.png'),
+    ...     _mp('segm', '*.jpg'),
+    ...     _mp('center_levels', '*.csv')])
     >>> len(df)
     0
     """

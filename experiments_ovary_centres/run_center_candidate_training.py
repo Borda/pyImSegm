@@ -27,6 +27,7 @@ Copyright (C) 2016-2017 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import argparse
 import logging
 import os
+import platform
 import sys
 from functools import partial
 
@@ -78,7 +79,7 @@ CROSS_VAL_LEAVE_OUT_SEARCH = 0.2
 CROSS_VAL_LEAVE_OUT_EVAL = 0.1
 
 CENTER_PARAMS = {
-    'computer': os.uname(),
+    'computer': platform.uname(),
     'slic_size': 25,
     'slic_regul': 0.3,
     # 'fts_hist_diams': None,

@@ -88,15 +88,13 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None, us
     >>> mm = estim_class_model(fts, 2)
     >>> mm.predict_proba(fts).shape
     (100, 2)
-    >>> mm = estim_class_model(fts, 2, estim_model='GMM_kmeans',
-    ...                         pca_coef=0.95, max_iter=3)
+    >>> mm = estim_class_model(fts, 2, estim_model='GMM_kmeans', pca_coef=0.95, max_iter=3)
     >>> mm.predict_proba(fts).shape
     (100, 2)
     >>> mm = estim_class_model(fts, 2, estim_model='GMM_Otsu', max_iter=3)
     >>> mm.predict_proba(fts).shape
     (100, 2)
-    >>> mm = estim_class_model(fts, 2, estim_model='kmeans_quantiles',
-    ...                         use_scaler=False, max_iter=3)
+    >>> mm = estim_class_model(fts, 2, estim_model='kmeans_quantiles', use_scaler=False, max_iter=3)
     >>> mm.predict_proba(fts).shape
     (100, 2)
     >>> mm = estim_class_model(fts, 2, estim_model='BGM', max_iter=3)
@@ -593,20 +591,16 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
     [[0, 1], [1, 2], [0, 4], [1, 4], [1, 5], [2, 5], [4, 5], [2, 6], [5, 6]]
     >>> np.round(weights, 2).tolist()
     [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-    >>> edges, weights = compute_edge_weights(segments, image=img,
-    ...                                        edge_type='spatial')
+    >>> edges, weights = compute_edge_weights(segments, image=img, edge_type='spatial')
     >>> np.round(weights, 3).tolist()
     [0.776, 0.69, 2.776, 0.853, 2.194, 0.853, 0.69, 2.776, 0.776]
-    >>> edges, weights = compute_edge_weights(segments, image=img,
-    ...                                        edge_type='color')
+    >>> edges, weights = compute_edge_weights(segments, image=img, edge_type='color')
     >>> np.round(weights, 3).tolist()
     [0.06, 0.002, 0.001, 0.001, 0.001, 0.009, 0.001, 0.019, 0.044]
-    >>> edges, weights = compute_edge_weights(segments, features=features,
-    ...                                        edge_type='features')
+    >>> edges, weights = compute_edge_weights(segments, features=features, edge_type='features')
     >>> np.round(weights, 3).tolist()
     [0.031, 0.005, 0.051, 0.032, 0.096, 0.013, 0.018, 0.033, 0.013]
-    >>> edges, weights = compute_edge_weights(segments, proba=proba,
-    ...                                        edge_type='model')
+    >>> edges, weights = compute_edge_weights(segments, proba=proba, edge_type='model')
     >>> np.round(weights, 3).tolist()
     [0.001, 0.028, 1.122, 0.038, 0.117, 0.688, 0.487, 1.152, 0.282]
     """
@@ -681,8 +675,7 @@ def segment_graph_cut_general(
     >>> np.random.seed(0)
     >>> segments = np.array([[0] * 3 + [2] * 3 + [4] * 3 + [6] * 3 + [8] * 3,
     ...                      [1] * 3 + [3] * 3 + [5] * 3 + [7] * 3 + [9] * 3])
-    >>> proba = np.array([[0.1] * 6 + [0.9] * 4,
-    ...                   [0.9] * 6 + [0.1] * 4], dtype=float).T
+    >>> proba = np.array([[0.1] * 6 + [0.9] * 4, [0.9] * 6 + [0.1] * 4], dtype=float).T
     >>> proba += (0.5 - np.random.random(proba.shape)) * 0.2
     >>> compute_unary_cost(proba)
     array([[ 2.40531242,  0.15436155],
@@ -695,10 +688,9 @@ def segment_graph_cut_general(
            [ 0.0143091 ,  1.70059894],
            [ 0.01005034,  3.39692559],
            [ 0.16916609,  3.64975219]])
-    >>> segment_graph_cut_general(segments, proba, gc_regul=0., edge_type='')
-    array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0], dtype=int32)
-    >>> labels = segment_graph_cut_general(segments, proba, gc_regul=1.,
-    ...                                    edge_type='spatial')
+    >>> segment_graph_cut_general(segments, proba, gc_regul=0., edge_type='')  # doctest: +ELLIPSIS
+    array([1, 1, 1, 1, 1, 1, 0, 0, 0, 0]...)
+    >>> labels = segment_graph_cut_general(segments, proba, gc_regul=1., edge_type='spatial')
     >>> labels[segments]
     array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
            [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0]], dtype=int32)
@@ -709,8 +701,7 @@ def segment_graph_cut_general(
     >>> np.argmax(proba, axis=1)
     array([0, 0, 0, 1, 1, 1])
     >>> debug_visual = dict()
-    >>> segment_graph_cut_general(slic, proba, gc_regul=0., edge_type='',
-    ...                           debug_visual=debug_visual)
+    >>> segment_graph_cut_general(slic, proba, gc_regul=0., edge_type='', debug_visual=debug_visual)
     array([0, 0, 0, 1, 1, 1], dtype=int32)
     >>> sorted(debug_visual.keys())  #doctest: +NORMALIZE_WHITESPACE
     ['edge_weights', 'edges', 'img_graph_edges', 'img_graph_segm',
