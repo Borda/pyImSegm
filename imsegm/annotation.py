@@ -332,7 +332,8 @@ def load_info_group_by_slices(path_txt, stages, pos_columns=COLUMNS_POSITION, di
     >>> from imsegm.utilities.data_io import update_path
     >>> path_txt = os.path.join(update_path('data-images'),
     ...                 'drosophila_ovary_slice', 'info_ovary_images.txt')
-    >>> load_info_group_by_slices(path_txt, [4]) # doctest: +NORMALIZE_WHITESPACE
+    >>> df = load_info_group_by_slices(path_txt, [4])
+    >>> df.sort_index(axis=1) # doctest: +NORMALIZE_WHITESPACE
                 ant_x  ant_y  lat_x  lat_y post_x post_y
     image
     insitu7569  [298]  [327]  [673]  [411]  [986]  [155]
