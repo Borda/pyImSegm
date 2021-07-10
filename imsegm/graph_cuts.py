@@ -698,12 +698,12 @@ def segment_graph_cut_general(
     ...                  [3] * 5 + [4] * 4 + [5] * 5])
     >>> proba = np.array([[1] * 3 + [0] * 3, [0] * 3 + [1] * 3], dtype=float).T
     >>> proba += np.random.random(proba.shape) / 2.
-    >>> np.argmax(proba, axis=1)
-    array([0, 0, 0, 1, 1, 1])
+    >>> np.argmax(proba, axis=1)  # doctest: +ELLIPSIS
+    array([0, 0, 0, 1, 1, 1]...)
     >>> debug_visual = dict()
     >>> segment_graph_cut_general(slic, proba, gc_regul=0., edge_type='', debug_visual=debug_visual)
     array([0, 0, 0, 1, 1, 1], dtype=int32)
-    >>> sorted(debug_visual.keys())  #doctest: +NORMALIZE_WHITESPACE
+    >>> sorted(debug_visual.keys())  # doctest: +NORMALIZE_WHITESPACE
     ['edge_weights', 'edges', 'img_graph_edges', 'img_graph_segm',
      'imgs_unary_cost', 'segments']
     """

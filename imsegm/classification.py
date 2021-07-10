@@ -485,9 +485,9 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     >>> features, labels = make_classification(
     ...     n_samples=250, n_features=5, n_informative=3, n_redundant=0, n_repeated=0,
     ...     n_classes=2, random_state=0, shuffle=False)
-    >>> indices, df_scoring = feature_scoring_selection(features, labels)
+    >>> indices, df_scoring = feature_scoring_selection(features, labels)  # doctest: +ELLIPSIS
     >>> indices
-    array([1, 0, 2, 3, 4])
+    array([1, 0, 2, 3, 4]...)
     >>> df_scoring.sort_index(axis=1)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
              ExtTree    F-test    k-Best variance
     feature

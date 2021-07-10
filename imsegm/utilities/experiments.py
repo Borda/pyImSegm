@@ -149,17 +149,17 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     >>> import pandas as pd
     >>> p = {'path_out': '.'}
     >>> p = create_experiment_folder(p, 'my_test', False, skip_load=True)
-    >>> pd.Series(p).sort_index()  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> pd.Series(p).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     computer                   [...
-    path_exp      ./my_test_EXAMPLE
+    path_exp     ...my_test_EXAMPLE
     path_out                      .
     dtype: object
     >>> p = create_experiment_folder(p, 'my_test', False, skip_load=False)
     >>> shutil.rmtree(p['path_exp'], ignore_errors=True)
     >>> p = create_experiment_folder(p, 'my_test', stamp_unique=True)
-    >>> pd.Series(p).sort_index()  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> pd.Series(p).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     computer                         [...
-    path_exp    ./my_test_EXAMPLE_...-...
+    path_exp   ...my_test_EXAMPLE_...-...
     path_out                            .
     dtype: object
     >>> shutil.rmtree(p['path_exp'], ignore_errors=True)
@@ -215,7 +215,7 @@ def string_dict(d, offset=30, desc='DICTIONARY'):
     :param str desc: dictionary title
     :return str:
 
-    >>> string_dict({'abc': 123})  #doctest: +NORMALIZE_WHITESPACE
+    >>> string_dict({'abc': 123})  # doctest: +NORMALIZE_WHITESPACE
     \'DICTIONARY: \\n"abc": 123\'
     """
     s = desc + ': \n'

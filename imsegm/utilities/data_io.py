@@ -86,7 +86,6 @@ def update_path(path_file, lim_depth=5, absolute=True):
     >>> f = open(path, 'w')
     >>> update_path(path, absolute=False)
     'sample_file.test'
-    >>> os.remove(path)
     """
     if path_file.startswith('/'):
         return path_file
