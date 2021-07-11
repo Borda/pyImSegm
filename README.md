@@ -10,6 +10,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pyimsegm/badge/?version=latest)](https://pyimsegm.readthedocs.io/en/latest/?badge=latest)
 [![Gitter](https://badges.gitter.im/pyImSegm/community.svg)](https://gitter.im/pyImSegm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 ![CI experiments](https://github.com/Borda/pyImSegm/workflows/CI%20experiments/badge.svg?branch=master&event=push)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Borda/pyImSegm/master.svg)](https://results.pre-commit.ci/latest/github/Borda/pyImSegm/master)
 
 <!--
 [![Run Status](https://api.shippable.com/projects/5962ea48a125960700c197f8/badge?branch=master)](https://app.shippable.com/github/Borda/pyImSegm)

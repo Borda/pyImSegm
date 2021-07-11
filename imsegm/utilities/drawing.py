@@ -1105,8 +1105,7 @@ def draw_image_clusters_centers(ax, img, centres, points=None, labels_centre=Non
     >>> centres = np.random.randint(0, 100, (3, 2))
     >>> points = np.random.randint(0, 100, (25, 2))
     >>> labels = np.random.randint(0, 4, 25)
-    >>> draw_image_clusters_centers(plt.Figure().gca(), img[:, :, 0], centres,
-    ...                             points, labels, seg)
+    >>> draw_image_clusters_centers(plt.Figure().gca(), img[:, :, 0], centres, points, labels, seg)
     """
     if img is not None:
         img = (img / float(np.max(img)))

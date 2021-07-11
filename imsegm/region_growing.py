@@ -70,11 +70,9 @@ def object_segmentation_graphcut_slic(
     >>> slic = np.array([[0] * 3 + [1] * 3 + [2] * 3 + [3] * 3 + [4] * 3,
     ...                  [5] * 3 + [6] * 3 + [7] * 3 + [8] * 3 + [9] * 3])
     >>> segm = np.array([[0] * 15, [1] * 12 + [0] * 3])
-    >>> object_segmentation_graphcut_slic(slic, segm, [(1, 7)],
-    ...                              gc_regul=0., edge_coef=1., coef_shape=1.)
+    >>> object_segmentation_graphcut_slic(slic, segm, [(1, 7)], gc_regul=0., edge_coef=1., coef_shape=1.)
     array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0], dtype=int32)
-    >>> object_segmentation_graphcut_slic(slic, segm, [(1, 7)],
-    ...                              gc_regul=1., edge_coef=1., debug_visual={})
+    >>> object_segmentation_graphcut_slic(slic, segm, [(1, 7)], gc_regul=1., edge_coef=1., debug_visual={})
     array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0], dtype=int32)
     """
     assert np.min(labels_fg_prob) < 1, 'non label can ce strictly 1'
@@ -180,9 +178,9 @@ def object_segmentation_graphcut_pixels(
     :return list(list(int)):
 
     >>> segm = np.array([[0] * 10,
-    ...                 [1] * 5 + [0] * 5, [1] * 4 + [0] * 6,
-    ...                 [0] * 6 + [1] * 4, [0] * 5 + [1] * 5,
-    ...                 [0] * 10])
+    ...                  [1] * 5 + [0] * 5, [1] * 4 + [0] * 6,
+    ...                  [0] * 6 + [1] * 4, [0] * 5 + [1] * 5,
+    ...                  [0] * 10])
     >>> centres = [(1, 2), (4, 8)]
     >>> object_segmentation_graphcut_pixels(segm, centres, gc_regul=0., coef_shape=0.5)
     array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -339,8 +337,8 @@ def compute_cumulative_distrib(means, stds, weights, max_dist):
     :param float max_dist: maxim distance for shape model
     :return [[float]]:
 
-    >>> cdist = compute_cumulative_distrib(np.array([[1, 2]]),
-    ...                 np.array([[1.5, 0.5], [0.5, 1]]), np.array([0.5]), 6)
+    >>> cdist = compute_cumulative_distrib(
+    ...     np.array([[1, 2]]), np.array([[1.5, 0.5], [0.5, 1]]), np.array([0.5]), 6)
     >>> np.round(cdist, 2)
     array([[ 1.  ,  0.67,  0.34,  0.12,  0.03,  0.  ,  0.  ],
            [ 1.  ,  0.98,  0.5 ,  0.02,  0.  ,  0.  ,  0.  ]])
@@ -831,8 +829,9 @@ def compute_update_shape_costs_points_table_cdf(
             centre_new = init_centres[i] + thr * diff
 
         cdist_act_2 = np.sum((np.array(centre_new) - np.array(centre))**2)
-        if cdist_act_2 <= thresholds['centre'] ** 2 and \
-                np.abs(shift - shifts[i]) <= thresholds['shift'] and not swap_shift:
+        is_in_center = cdist_act_2 <= thresholds['centre']**2
+        is_in_shift = np.abs(shift - shifts[i]) <= thresholds['shift']
+        if is_in_center and is_in_shift and not swap_shift:
             continue
         if cdist_act_2 > thresholds['centre']**2:
             centres[i] = centre_new.tolist()

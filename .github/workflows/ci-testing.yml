@@ -8,12 +8,11 @@ on:  # Trigger the workflow on push or pull request, but only for the master bra
 
 jobs:
   pytest:
-
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macOS-10.15] # , windows-2019
+        os: [ubuntu-20.04, macOS-10.15, windows-2019]
         python-version: [3.6, 3.8, 3.9]
         requires: ['latest']
         include:
@@ -23,7 +22,6 @@ jobs:
           - os: macOS-10.15
             python-version: 3.6
             requires: 'minimal'
-
     # Timeout: https://stackoverflow.com/a/59076067/4521646
     timeout-minutes: 35
 
@@ -83,7 +81,7 @@ jobs:
         mkdir output
         mkdir results
         # run tests with coverage
-        coverage run --source imsegm -m pytest imsegm tests --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
+        python -m pytest imsegm tests --cov=imsegm --durations=25 --junitxml=junit/test-results-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.requires }}.xml
 
     - name: Upload pytest test results
       uses: actions/upload-artifact@master
