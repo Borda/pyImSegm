@@ -56,8 +56,10 @@ def __cinit__():
 #     return features
 
 
-def normColorFeatures(int[:, :] seg,
-                      double[:, :] features):
+def normColorFeatures(
+    int[:, :] seg,
+    double[:, :] features
+):
     cdef:
         int nb_segments = np.max(seg) + 1
         int[:] count = np.zeros(nb_segments, dtype=np.int32)
@@ -76,8 +78,10 @@ def normColorFeatures(int[:, :] seg,
     return features
 
 
-def computeColorImage2dMean(float[:, :, :] img,
-                            int[:, :] seg):
+def computeColorImage2dMean(
+    float[:, :, :] img,
+    int[:, :] seg
+):
     cdef:
         int nb_segments = np.max(seg) + 1
         double[:, :] features = np.zeros([nb_segments, 3], dtype=np.float64)
@@ -94,8 +98,10 @@ def computeColorImage2dMean(float[:, :, :] img,
     return features
 
 
-def computeColorImage2dEnergy(float[:, :, :] img,
-                              int[:, :] seg):
+def computeColorImage2dEnergy(
+    float[:, :, :] img,
+    int[:, :] seg
+):
     cdef:
         int nb_segments = np.max(seg) + 1
         double[:, :] features = np.zeros([nb_segments, 3], dtype=np.float64)
@@ -113,9 +119,11 @@ def computeColorImage2dEnergy(float[:, :, :] img,
     return features
 
 
-def computeColorImage2dVariance(float[:, :, :] img,
-                                int[:, :] seg,
-                                float[:, :] mean):
+def computeColorImage2dVariance(
+    float[:, :, :] img,
+    int[:, :] seg,
+    float[:, :] mean
+):
     cdef:
         int nb_segments = np.max(seg) + 1
         double[:, :] features = np.zeros([nb_segments, 3], dtype=np.float64)
@@ -133,8 +141,10 @@ def computeColorImage2dVariance(float[:, :, :] img,
     return features
 
 
-def computeGrayImage3dMean(float[:, :, :] img,
-                           int[:, :, :] seg):
+def computeGrayImage3dMean(
+    float[:, :, :] img,
+    int[:, :, :] seg
+):
     cdef:
         int nb_segments = np.max(seg) + 1
         double[:] features = np.zeros(nb_segments, dtype=np.float64)
@@ -156,8 +166,10 @@ def computeGrayImage3dMean(float[:, :, :] img,
     return features
 
 
-def computeGrayImage3dEnergy(float[:, :, :] img,
-                             int[:, :, :] seg):
+def computeGrayImage3dEnergy(
+    float[:, :, :] img,
+    int[:, :, :] seg
+):
     cdef:
         int nb_segments = np.max(seg) + 1
         double[:] features = np.zeros(nb_segments, dtype=np.float64)
@@ -179,9 +191,11 @@ def computeGrayImage3dEnergy(float[:, :, :] img,
     return features
 
 
-def computeGrayImage3dVariance(float[:, :, :] img,
-                               int[:, :, :] seg,
-                               float[:] mean):
+def computeGrayImage3dVariance(
+    float[:, :, :] img,
+    int[:, :, :] seg,
+    float[:] mean
+):
     cdef:
         int nb_segments = np.max(seg) + 1
         double[:] features = np.zeros(nb_segments, dtype=np.float64)
@@ -205,11 +219,13 @@ def computeGrayImage3dVariance(float[:, :, :] img,
     return features
 
 
-def computeLabelHistogram2d(short[:, :] segm_select,
-                            short[:, :] struc_elem,
-                            int nb_labels):
+def computeLabelHistogram2d(
+    short[:, :] segm_select,
+    short[:, :] struc_elem,
+    int nb_labels
+):
     cdef:
-        long[:] hist = np.zeros(nb_labels, dtype=np.int64)
+        unsigned int[:] hist = np.zeros(nb_labels, dtype=np.uint32)
         int w = segm_select.shape[1]
         int h = segm_select.shape[0]
 
@@ -220,10 +236,12 @@ def computeLabelHistogram2d(short[:, :] segm_select,
     return hist
 
 
-def computeRayFeaturesBinary2d(char[:, :] seg_binary,
-                               int[:] position,
-                               float angle_step,
-                               int edge):
+def computeRayFeaturesBinary2d(
+    char[:, :] seg_binary,
+    int[:] position,
+    float angle_step,
+    int edge
+):
     # NOTE: for the edges: 'up' == 1 and 'down' == -1
     cdef:
         float[:] angles = np.arange(0, 360, angle_step, dtype=np.float32)

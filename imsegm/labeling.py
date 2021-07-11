@@ -90,7 +90,7 @@ def contour_coords(seg, label=1, include_boundary=False):
     >>> img[1:5, 2:] = 1
     >>> contour_coords(img)
     [[1, 2], [1, 3], [1, 4], [2, 2], [3, 2], [4, 2], [4, 3], [4, 4]]
-    >>> contour_coords(img, include_boundary=True)  #doctest: +NORMALIZE_WHITESPACE
+    >>> contour_coords(img, include_boundary=True)  # doctest: +NORMALIZE_WHITESPACE
     [[1, 2], [1, 3], [1, 4], [2, 2], [3, 2], [4, 2], [4, 3], [4, 4],
      [1, 5], [2, 5], [3, 5], [4, 5]]
     """
@@ -179,7 +179,7 @@ def segm_labels_assignment(segm, segm_gt):
     ...                 [[4] * 3 + [5] * 3 + [6] * 3 + [7] * 3] * 4)
     >>> segm = np.zeros(slic.shape, dtype=int)
     >>> segm[4:, 6:] = 1
-    >>> segm_labels_assignment(slic, segm)  #doctest: +NORMALIZE_WHITESPACE
+    >>> segm_labels_assignment(slic, segm)  # doctest: +NORMALIZE_WHITESPACE
     {0: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
      1: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
      2: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

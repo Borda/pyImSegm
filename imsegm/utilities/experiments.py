@@ -8,6 +8,7 @@ import copy
 import logging
 import multiprocessing as mproc
 import os
+import platform
 import time
 import types
 import uuid
@@ -148,17 +149,17 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
     >>> import pandas as pd
     >>> p = {'path_out': '.'}
     >>> p = create_experiment_folder(p, 'my_test', False, skip_load=True)
-    >>> pd.Series(p).sort_index()  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> pd.Series(p).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     computer                   [...
-    path_exp      ./my_test_EXAMPLE
+    path_exp     ...my_test_EXAMPLE
     path_out                      .
     dtype: object
     >>> p = create_experiment_folder(p, 'my_test', False, skip_load=False)
     >>> shutil.rmtree(p['path_exp'], ignore_errors=True)
     >>> p = create_experiment_folder(p, 'my_test', stamp_unique=True)
-    >>> pd.Series(p).sort_index()  #doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> pd.Series(p).sort_index()  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     computer                         [...
-    path_exp    ./my_test_EXAMPLE_...-...
+    path_exp   ...my_test_EXAMPLE_...-...
     path_out                            .
     dtype: object
     >>> shutil.rmtree(p['path_exp'], ignore_errors=True)
@@ -187,7 +188,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
         logging.info('loaded following PARAMETERS: %s', string_dict(params))
 
     # extending parameters bu this run
-    params.update({'computer': list(os.uname()), 'path_exp': path_expt})
+    params.update({'computer': list(platform.uname()), 'path_exp': path_expt})
     # export experiment config
     logging.debug('saving params to file "%s"', CONFIG_YAML)
     save_config_yaml(path_config, params)
@@ -214,7 +215,7 @@ def string_dict(d, offset=30, desc='DICTIONARY'):
     :param str desc: dictionary title
     :return str:
 
-    >>> string_dict({'abc': 123})  #doctest: +NORMALIZE_WHITESPACE
+    >>> string_dict({'abc': 123})  # doctest: +NORMALIZE_WHITESPACE
     \'DICTIONARY: \\n"abc": 123\'
     """
     s = desc + ': \n'
@@ -356,8 +357,7 @@ class WrapExecuteSequence:
 
     Example
     -------
-    >>> it = WrapExecuteSequence(lambda x: (x, x ** 2), range(5),
-    ...                          nb_workers=1, ordered=True)
+    >>> it = WrapExecuteSequence(lambda x: (x, x ** 2), range(5), nb_workers=1, ordered=True)
     >>> list(it)
     [(0, 0), (1, 1), (2, 4), (3, 9), (4, 16)]
     >>> it = WrapExecuteSequence(sum, [[0, 1]] * 5, nb_workers=2, desc=None)

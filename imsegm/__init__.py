@@ -11,12 +11,12 @@ except ImportError:
     import traceback
     traceback.print_exc()
 
-__version__ = '0.1.8'
+__version__ = '0.1.9'
 __author__ = 'Jiri Borovec'
 __author_email__ = 'jiri.borovec@fel.cvut.cz'
 __license__ = 'BSD 3-clause'
 __homepage__ = 'https://borda.github.io/pyImSegm'
-__copyright__ = 'Copyright (c) 2014-2020, %s.' % __author__
+__copyright__ = 'Copyright (c) 2014-2021, %s.' % __author__
 __doc__ = 'General superpixel image segmentation: (un)supervised, center detection, region growing'
 __long_doc__ = "# %s" % __doc__ + """
 

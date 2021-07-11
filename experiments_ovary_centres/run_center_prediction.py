@@ -16,6 +16,7 @@ Copyright (C) 2016 Jiri Borovec <jiri.borovec@fel.cvut.cz>
 import gc
 import logging
 import os
+import platform
 import sys
 import time
 from functools import partial
@@ -128,7 +129,7 @@ def main(params):
 
     # run_train.check_pathes_patterns(paths)
     tl_expt.set_experiment_logger(params['path_expt'])
-    logging.info('COMPUTER: \n%r', os.uname())
+    logging.info('COMPUTER: \n%r', platform.uname())
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     tl_expt.create_subfolders(params['path_expt'], LIST_SUBFOLDER)

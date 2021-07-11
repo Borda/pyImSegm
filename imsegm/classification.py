@@ -90,11 +90,9 @@ def create_classifiers(nb_workers=-1):
     >>> classifs = create_classifiers()
     >>> classifs  # doctest: +ELLIPSIS
     {...}
-    >>> sum([isinstance(create_clf_param_search_grid(k), dict)
-    ...      for k in classifs.keys()])
+    >>> sum([isinstance(create_clf_param_search_grid(k), dict) for k in classifs.keys()])
     7
-    >>> sum([isinstance(create_clf_param_search_distrib(k), dict)
-    ...      for k in classifs.keys()])
+    >>> sum([isinstance(create_clf_param_search_distrib(k), dict) for k in classifs.keys()])
     7
     """
     clfs = {
@@ -383,20 +381,17 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None, relabel=F
     >>> np.random.seed(0)
     >>> annot = np.random.randint(0, 2, (5, 10))
     >>> segm = np.random.randint(0, 2, (5, 10))
-    >>> d = compute_classif_stat_segm_annot((annot, annot, 'ttt'), relabel=True,
-    ...                                     drop_labels=[5])
+    >>> d = compute_classif_stat_segm_annot((annot, annot, 'ttt'), relabel=True, drop_labels=[5])
     >>> d['(FP+FN)/(TP+FN)']  # doctest: +ELLIPSIS
     0.0
     >>> d['(TP+FP)/(TP+FN)']  # doctest: +ELLIPSIS
     1.0
-    >>> d = compute_classif_stat_segm_annot((annot, segm, 'ttt'), relabel=True,
-    ...                                     drop_labels=[5])
+    >>> d = compute_classif_stat_segm_annot((annot, segm, 'ttt'), relabel=True, drop_labels=[5])
     >>> d['(FP+FN)/(TP+FN)']  # doctest: +ELLIPSIS
     0.846...
     >>> d['(TP+FP)/(TP+FN)']  # doctest: +ELLIPSIS
     1.153...
-    >>> d = compute_classif_stat_segm_annot((annot, segm + 1, 'ttt'),
-    ...                                     relabel=False, drop_labels=[0])
+    >>> d = compute_classif_stat_segm_annot((annot, segm + 1, 'ttt'), relabel=False, drop_labels=[0])
     >>> d['confusion']
     [[13, 17], [0, 0]]
     """
@@ -487,14 +482,13 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     :return tuple(list(int),DF): indices, Dataframe with scoring
 
     >>> from sklearn.datasets import make_classification
-    >>> features, labels = make_classification(n_samples=250, n_features=5,
-    ...                                        n_informative=3, n_redundant=0,
-    ...                                        n_repeated=0, n_classes=2,
-    ...                                        random_state=0, shuffle=False)
-    >>> indices, df_scoring = feature_scoring_selection(features, labels)
+    >>> features, labels = make_classification(
+    ...     n_samples=250, n_features=5, n_informative=3, n_redundant=0, n_repeated=0,
+    ...     n_classes=2, random_state=0, shuffle=False)
+    >>> indices, df_scoring = feature_scoring_selection(features, labels)  # doctest: +ELLIPSIS
     >>> indices
-    array([1, 0, 2, 3, 4])
-    >>> df_scoring  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    array([1, 0, 2, 3, 4]...)
+    >>> df_scoring.sort_index(axis=1)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
              ExtTree    F-test    k-Best variance
     feature
     1        0.24...   0.75...   0.75...  2.49...
@@ -506,8 +500,8 @@ def feature_scoring_selection(features, labels, names=None, path_out=''):
     >>> path_out = 'test_fts-select'
     >>> os.mkdir(path_out)
     >>> indices, df_scoring = feature_scoring_selection(features.tolist(), labels.tolist(), path_out=path_out)
-    >>> indices
-    array([1, 0, 3, 4, 2])
+    >>> indices  # doctest: +ELLIPSIS
+    array([1, 0, 3, 4, 2]...)
     >>> import shutil
     >>> shutil.rmtree(path_out, ignore_errors=True)
     """
@@ -562,8 +556,8 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None, lab
 
     >>> clf = create_classifiers()['RandForest']
     >>> p_clf = save_classifier('.', clf, 'TESTINNG', {})
-    >>> p_clf
-    './classifier_TESTINNG.pkl'
+    >>> os.path.basename(p_clf)
+    'classifier_TESTINNG.pkl'
     >>> d_clf = load_classifier(p_clf)
     >>> sorted(d_clf.keys())
     ['clf_pipeline', 'features', 'label_names', 'name', 'params']
@@ -703,14 +697,14 @@ def create_classif_search_train_export(
     Fitting ...
     >>> clf  # doctest: +ELLIPSIS
     Pipeline(...)
-    >>> p_clf
-    './classifier_RandForest.pkl'
+    >>> os.path.basename(p_clf)
+    'classifier_RandForest.pkl'
     >>> os.remove(p_clf)
     >>> import glob
     >>> files = glob.glob(os.path.join('.', 'classif_*.txt'))
-    >>> sorted(files)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    ['./classif_RandForest_search_params_best.txt',
-     './classif_RandForest_search_params_scores.txt']
+    >>> sorted([os.path.basename(fp) for fp in files])  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    ['classif_RandForest_search_params_best.txt',
+     'classif_RandForest_search_params_scores.txt']
     >>> for p in files: os.remove(p)
     """
     assert list(labels), 'some labels has to be given'
@@ -1189,8 +1183,7 @@ def balance_dataset_by_(features, labels, balance_type='random', min_samples=Non
     :return tuple(ndarray,ndarray):
 
     >>> np.random.seed(0)
-    >>> fts, lbs = balance_dataset_by_(np.random.random((25, 3)),
-    ...                                np.random.randint(0, 2, 25))
+    >>> fts, lbs = balance_dataset_by_(np.random.random((25, 3)), np.random.randint(0, 2, 25))
     >>> fts.shape
     (24, 3)
     >>> lbs
