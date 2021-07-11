@@ -195,7 +195,7 @@ def arg_parse_params(params):
     # load saved configuration
     if params['path_config'] is not None:
         ext = os.path.splitext(params['path_config'])[-1]
-        assert (ext == '.yaml' or ext == '.yml'), 'wrong extension for %s' % params['path_config']
+        assert ext in ('.yaml', '.yml'), 'wrong extension for %s' % params['path_config']
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
     params.update(paths)
@@ -751,8 +751,8 @@ def main_train(params):
 
     path_dump_data = os.path.join(params['path_expt'], NAME_DUMP_TRAIN_DATA)
     if not os.path.isfile(path_dump_data) or FORCE_RECOMP_DATA:
-        (dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, dict_features, dict_labels,
-         feature_names) = dataset_load_images_segms_compute_features(params, df_paths, params['nb_workers'])
+        dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, dict_features, dict_labels, feature_names = \
+            dataset_load_images_segms_compute_features(params, df_paths, params['nb_workers'])
         assert len(dict_imgs) > 0, 'missing images'
         save_dump_data(
             path_dump_data,

@@ -239,9 +239,8 @@ def dataset_load_images_annot_compute_features(params, show_debug_imgs=SHOW_DEBU
     # compute features
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     df_paths.reset_index(inplace=True)
-    assert all(
-        n in df_paths.columns for n in ['path_image', 'path_annot']
-    ), 'missing required columns in loaded csv file'
+    assert all(n in df_paths.columns for n in ['path_image', 'path_annot']), \
+        'missing required columns in loaded csv file'
     _wrapper_load_compute = partial(
         load_image_annot_compute_features_labels,
         params=params,
