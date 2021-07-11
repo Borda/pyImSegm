@@ -829,8 +829,9 @@ def compute_update_shape_costs_points_table_cdf(
             centre_new = init_centres[i] + thr * diff
 
         cdist_act_2 = np.sum((np.array(centre_new) - np.array(centre))**2)
-        if cdist_act_2 <= thresholds['centre'] ** 2 and \
-                np.abs(shift - shifts[i]) <= thresholds['shift'] and not swap_shift:
+        is_in_center = cdist_act_2 <= thresholds['centre'] ** 2
+        is_in_shift = np.abs(shift - shifts[i]) <= thresholds['shift']
+        if is_in_center and is_in_shift and not swap_shift:
             continue
         if cdist_act_2 > thresholds['centre']**2:
             centres[i] = centre_new.tolist()

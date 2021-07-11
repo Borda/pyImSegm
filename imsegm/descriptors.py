@@ -1701,8 +1701,7 @@ def numpy_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
         last = seg_binary[position[0], position[1]]
         for _ in range(segm_diag):
             pos += grad
-            if pos[0] < 0 or round(pos[0]) >= height \
-                    or pos[1] < 0 or round(pos[1]) >= width:
+            if pos[0] < 0 or round(pos[0]) >= height or pos[1] < 0 or round(pos[1]) >= width:
                 break
             actual = seg_binary[int(round(pos[0])), int(round(pos[1]))]
             if (edge == 'up' and actual) or (edge == 'down' and last and not actual):

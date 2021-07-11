@@ -51,8 +51,8 @@ def convert_img_color_from_rgb(image, color_space):
     >>> convert_img_color_from_rgb(np.ones((50, 75, 3)), 'hsv').shape
     (50, 75, 3)
     """
-    if image.ndim == 3 and image.shape[-1] in (3, 4) \
-            and color_space in DICT_CONVERT_COLOR_FROM_RGB:
+    im_dims = image.ndim == 3 and image.shape[-1] in (3, 4)
+    if im_dims and color_space in DICT_CONVERT_COLOR_FROM_RGB:
         image = DICT_CONVERT_COLOR_FROM_RGB[color_space](image)
     return image
 
@@ -67,8 +67,8 @@ def convert_img_color_to_rgb(image, color_space):
     >>> convert_img_color_to_rgb(np.ones((50, 75, 3)), 'hsv').shape
     (50, 75, 3)
     """
-    if image.ndim == 3 and image.shape[-1] == 3 \
-            and color_space in DICT_CONVERT_COLOR_TO_RGB:
+    im_dims = image.ndim == 3 and image.shape[-1] == 3
+    if im_dims and color_space in DICT_CONVERT_COLOR_TO_RGB:
         image = DICT_CONVERT_COLOR_TO_RGB[color_space](image)
     return image
 
