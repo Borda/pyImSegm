@@ -470,7 +470,7 @@ def label_close_points(centers, points, params):
         logging.warning('not relevant centers info of type "%s"', type(centers))
         labels = [-1] * len(points)
     if len(points) != len(labels):
-        raise ValueError('not equal lengths of points (%i) and labels (%i)' % (len(points), len(labels)))
+        raise RuntimeError('not equal lengths of points (%i) and labels (%i)' % (len(points), len(labels)))
     return labels
 
 
@@ -759,7 +759,7 @@ def main_train(params):
     if not os.path.isfile(path_dump_data) or FORCE_RECOMP_DATA:
         dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, dict_features, dict_labels, feature_names = \
             dataset_load_images_segms_compute_features(params, df_paths, params['nb_workers'])
-        if len(dict_imgs) <= 0:
+        if not dict_imgs:
             raise FileNotFoundError('missing images')
         save_dump_data(
             path_dump_data,

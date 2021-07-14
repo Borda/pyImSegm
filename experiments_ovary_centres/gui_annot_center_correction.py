@@ -144,7 +144,7 @@ def load_paths_image_csv(params, skip_csv=POSIX_CSV_LABEL):
     # filter to have just paths with the  right names
     list_csv = sorted([p for p in list_csv if get_name(p) in list_names])
     if len(list_imgs) != len(list_csv):
-        raise ValueError('the number of images (%i) and csv (%i) has to be same' % (len(list_imgs), len(list_csv)))
+        raise RuntimeError('the number of images (%i) and csv (%i) has to be same' % (len(list_imgs), len(list_csv)))
     list_join_img_csv = zip(list_imgs, list_csv)
     if not all(get_name(p1) == get_name(p2) for p1, p2 in list_join_img_csv):
         raise ValueError('names has to be same for %r' % list_join_img_csv)

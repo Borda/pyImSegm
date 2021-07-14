@@ -820,7 +820,7 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='SEGMENT___', p
     """
     logging.getLogger().setLevel(logging.INFO)
     logging.info('running PREDICTION...')
-    if path_pattern_imgs is None:
+    if not path_pattern_imgs:
         raise RuntimeError
 
     dict_classif = seg_clf.load_classifier(path_classif)

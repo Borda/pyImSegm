@@ -456,7 +456,7 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2, drop_labels=
     Name: 0, dtype: object
     """
     if len(segms) != len(annots):
-        raise ValueError('size of segment. (%i) amd annot. (%i) should be equal' % (len(segms), len(annots)))
+        raise RuntimeError('size of segment. (%i) amd annot. (%i) should be equal' % (len(segms), len(annots)))
     if not names:
         names = map(str, range(len(segms)))
     _compute_stat = partial(compute_classif_stat_segm_annot, drop_labels=drop_labels, relabel=relabel)
@@ -1240,7 +1240,7 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels, drop_label
     logging.debug('convert set of features and labels to single one')
     if not all(k in imgs_labels for k in imgs_features):
         raise ValueError('missing some items of %r' % imgs_labels.keys())
-    features_all, labels_all, sizes = list(), list(), list()
+    features_all, labels_all, sizes = [], [], []
     for name in sorted(imgs_features.keys()):
         features = np.array(imgs_features[name])
         labels = np.array(imgs_labels[name].astype(int))
