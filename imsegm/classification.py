@@ -1173,7 +1173,7 @@ def down_sample_dict_features_unique(dict_features):
         if features.ndim != unique_fts.ndim:
             raise TypeError('feature dim matching')
         if features.shape[1] != unique_fts.shape[1]:
-            raise TypeError('features: %i <> %i' % (features.shape[1], unique_fts.shape[1]))
+            raise ValueError('features: %i <> %i' % (features.shape[1], unique_fts.shape[1]))
         dict_features_new[label] = unique_fts
     return dict_features_new
 

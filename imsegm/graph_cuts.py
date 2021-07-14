@@ -706,7 +706,7 @@ def segment_graph_cut_general(
     >>> proba += np.random.random(proba.shape) / 2.
     >>> np.argmax(proba, axis=1)  # doctest: +ELLIPSIS
     array([0, 0, 0, 1, 1, 1]...)
-    >>> debug_visual = dict()
+    >>> debug_visual = {}
     >>> segment_graph_cut_general(
     ...     slic, proba, gc_regul=0., edge_type='', debug_visual=debug_visual)  # doctest: +ELLIPSIS
     array([0, 0, 0, 1, 1, 1]...)

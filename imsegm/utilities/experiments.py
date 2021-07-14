@@ -106,10 +106,10 @@ class Experiment(object):
         """ Check all required paths in parameters whether they exist """
         for p in (self.params[n] for n in self.params if 'dir' in n.lower() or 'path' in n.lower()):
             if not os.path.exists(p):
-                raise Exception('given folder "%s" does not exist!' % p)
+                raise FileNotFoundError('given folder "%s" does not exist!' % p)
         for p in (self.params[n] for n in self.params if 'file' in n.lower()):
             if not os.path.exists(p):
-                raise Exception('given folder "%s" does not exist!' % p)
+                raise FileNotFoundError('given folder "%s" does not exist!' % p)
 
     def _create_folder(self, time_stamp=True):
         """ Create the experiment folder and iterate while there is no available

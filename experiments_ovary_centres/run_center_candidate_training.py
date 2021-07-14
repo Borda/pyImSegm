@@ -197,7 +197,7 @@ def arg_parse_params(params):
     if params['path_config'] is not None:
         ext = os.path.splitext(params['path_config'])[-1]
         if ext not in ('.yaml', '.yml'):
-            raise RuntimeError('wrong extension for %s' % params['path_config'])
+            raise TypeError('wrong extension for %s' % params['path_config'])
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
     params.update(paths)

@@ -113,7 +113,7 @@ def arg_parse_params(paths):
         p = paths[k] if k == 'results' else os.path.dirname(paths[k])
         if not os.path.exists(p):
             raise FileNotFoundError('missing: %s' % p)
-    logging.info('ARG PARAMETERS: \n %s', (paths))
+    logging.info('ARG PARAMETERS: \n %s', paths)
     return paths, export_visual, arg_params['nb_workers']
 
 
