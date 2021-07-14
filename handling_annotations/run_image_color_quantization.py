@@ -30,7 +30,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
 
 PATH_IMAGES = os.path.join('data-images', 'drosophila_ovary_slice', 'segm_rgb', '*.png')
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 THRESHOLD_INVALID_PIXELS = 5e-3
 
 

@@ -29,7 +29,7 @@ import imsegm.utilities.experiments as tl_expt
 PATH_INPUT = os.path.join('data-images', 'drosophila_ovary_slice', 'segm', '*.png')
 PATH_OUTPUT = os.path.join('data-images', 'drosophila_ovary_slice', 'segm_rgb')
 NAME_JSON_DICT = 'dictionary_label-color.json'
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 
 def parse_arg_params():

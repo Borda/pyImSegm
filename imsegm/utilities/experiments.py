@@ -31,13 +31,13 @@ RESULTS_CSV = 'results.csv'
 FILE_LOGS = 'logging.txt'
 
 
-def nb_workers(ratio):
+def get_nb_workers(ratio):
     """get fraction of of available CPUs
 
     :param float ratio: range (0, 1)
     :return int: number of workers with lower bound 1
 
-    >>> nb_workers(0)
+    >>> get_nb_workers(0)
     1
     """
     return max(1, int(CPU_COUNT * ratio))

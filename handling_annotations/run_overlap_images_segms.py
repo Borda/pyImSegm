@@ -34,7 +34,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 BOOL_IMAGE_RESCALE_INTENSITY = False
 BOOL_SAVE_IMAGE_CONTOUR = False
 BOOL_SHOW_SEGM_BINARY = False

@@ -45,7 +45,7 @@ except Exception:
     from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 from imsegm.labeling import relabel_max_overlap_unique
-from imsegm.utilities.experiments import nb_workers, WrapExecuteSequence
+from imsegm.utilities.experiments import get_nb_workers, WrapExecuteSequence
 
 # NAME_FILE_RESULTS = 'results.csv'
 #: name template forexporting trained classifier (adding classifier name and version)
@@ -72,7 +72,7 @@ METRIC_SCORING = ('f1_macro', 'accuracy', 'precision_macro', 'recall_macro')
 #: rounding unique features, in case to detail precision
 ROUND_UNIQUE_FTS_DIGITS = 3
 #: default number of workers
-NB_WORKERS_SERACH = nb_workers(0.5)
+NB_WORKERS_SERACH = get_nb_workers(0.5)
 
 #: mapping of metrics names to used functions
 DICT_SCORING = {

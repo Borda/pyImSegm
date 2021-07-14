@@ -26,7 +26,7 @@ import imsegm.utilities.experiments as tl_expt
 
 IMAGE_CHANNEL = 0  # image channel for mass extraction
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 PATH_IMAGES = os.path.join(tl_data.update_path('data-images'), 'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SWAP_CONDITION = 'cc'

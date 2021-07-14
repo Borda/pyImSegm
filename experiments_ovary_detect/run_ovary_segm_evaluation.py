@@ -40,7 +40,7 @@ import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
 EXPORT_VUSIALISATION = False
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 NAME_DIR_VISUAL_1 = 'ALL_visualisation-1'
 NAME_DIR_VISUAL_2 = 'ALL_visualisation-2'

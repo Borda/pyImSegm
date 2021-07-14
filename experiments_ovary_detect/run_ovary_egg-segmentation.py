@@ -60,7 +60,7 @@ import imsegm.utilities.experiments as tl_expt
 
 # from libs import chanvese
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 NAME_EXPERIMENT = 'experiment_egg-segment'
 TYPE_LOAD_IMAGE = '2d_struct'
 DIR_VISUAL_POSIX = '___visu'

@@ -27,7 +27,7 @@ from imsegm.graph_cuts import estim_class_model, segment_graph_cut_general
 from imsegm.labeling import histogram_regions_labels_norm
 from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
 from imsegm.utilities import ImageDimensionError
-from imsegm.utilities.experiments import nb_workers, WrapExecuteSequence
+from imsegm.utilities.experiments import get_nb_workers, WrapExecuteSequence
 
 # from sklearn import mixture
 
@@ -40,7 +40,7 @@ CLUSTER_METHOD = DEFAULT_CLUSTERING
 #: define how many images will be left out during cross-validation training
 CROSS_VAL_LEAVE_OUT = 2
 #: default number of workers
-NB_WORKERS = nb_workers(0.6)
+NB_WORKERS = get_nb_workers(0.6)
 
 
 def pipe_color2d_slic_features_model_graphcut(

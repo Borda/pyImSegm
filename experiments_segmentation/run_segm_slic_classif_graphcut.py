@@ -73,7 +73,7 @@ import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
 NAME_EXPERIMENT = 'experiment_segm-Supervised'
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_FIG_LABEL_HISTO = 'fig_histogram_annot_segments.png'

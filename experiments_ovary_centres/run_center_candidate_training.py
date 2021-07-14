@@ -74,7 +74,7 @@ NAME_CSV_STAT_TRAIN = 'statistic_train_centers.csv'
 NAME_YAML_PARAMS = 'configuration.yaml'
 NAME_DUMP_TRAIN_DATA = 'dump_training_data.npz'
 
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 # position is label in loaded segm and nb are out labels
 LUT_ANNOT_CENTER_RELABEL = [0, 0, -1, 1]
 CROSS_VAL_LEAVE_OUT_SEARCH = 0.2

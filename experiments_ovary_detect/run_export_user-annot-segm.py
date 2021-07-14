@@ -37,7 +37,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 DEFAULT_PARAMS = {

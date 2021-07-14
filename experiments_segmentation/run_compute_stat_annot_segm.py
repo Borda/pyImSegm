@@ -36,7 +36,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 NAME_CVS_OVERALL = 'STATISTIC__%s___Overall.csv'
 NAME_CVS_PER_IMAGE = 'STATISTIC__%s___per-Image.csv'
 PATH_IMAGES = os.path.join(tl_data.update_path('data-images'), 'drosophila_ovary_slice')

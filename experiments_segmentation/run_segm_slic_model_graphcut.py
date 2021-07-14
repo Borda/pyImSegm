@@ -58,7 +58,7 @@ import imsegm.utilities.experiments as tl_expt
 # sometimes it freeze in "Cython: computing Colour means for image"
 seg_fts.USE_CYTHON = False
 
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_DUMP_MODEL = 'estimated_model.npz'
 NAME_CSV_ARS_CORES = 'metric_ARS.csv'

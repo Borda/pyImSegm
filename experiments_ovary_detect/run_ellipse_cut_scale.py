@@ -32,7 +32,7 @@ COLUMNS_ELLIPSE = ['ellipse_xc', 'ellipse_yc', 'ellipse_a', 'ellipse_b', 'ellips
 OVERLAP_THRESHOLD = 0.45
 NORM_FUNC = np.median  # other options - mean, max, ...
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 
