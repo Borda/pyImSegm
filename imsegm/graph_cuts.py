@@ -614,7 +614,7 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
     logging.debug('graph edges %r', edges.shape)
 
     if edge_type.startswith('model'):
-        if not proba:
+        if proba is None or len(proba) == 0:
             raise ValueError('"proba" is required')
         metric = edge_type.split('_')[-1] if '_' in edge_type else 'lT'
         edge_weights = compute_edge_model(edges, proba, metric)
