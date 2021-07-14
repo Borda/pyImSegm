@@ -22,6 +22,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -127,7 +129,7 @@ def compute_metrics(row):
     annot, _ = tl_data.load_image_2d(row['path_annot'])
     segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
     if annot.shape != segm.shape:
-        raise TypeError('dimension do mot match %r - %r' % (annot.shape, segm.shape))
+        raise ImageDimensionError('dimension do mot match %r - %r' % (annot.shape, segm.shape))
     jacobs = []
     segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=True)
     for lb in np.unique(annot)[1:]:

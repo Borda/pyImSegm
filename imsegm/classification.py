@@ -37,6 +37,8 @@ from sklearn import (
 )
 from sklearn.base import clone
 
+from imsegm.utilities import ImageDimensionError
+
 try:  # due to some chnages in between versions
     from sklearn.grid_search import GridSearchCV, RandomizedSearchCV
 except Exception:
@@ -328,7 +330,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     if y_true.shape != y_pred.shape:
-        raise TypeError('prediction (%i) and annotation (%i) should be equal' % (len(y_true), len(y_pred)))
+        raise ValueError('prediction (%i) and annotation (%i) should be equal' % (len(y_true), len(y_pred)))
     logging.debug('unique lbs true: %r, predict %r', np.unique(y_true), np.unique(y_pred))
 
     uq_labels = np.unique(np.hstack((y_true, y_pred)))
@@ -396,7 +398,7 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None, relabel=F
     """
     annot, segm, name = annot_segm_name
     if segm.shape != annot.shape:
-        raise TypeError('dimension do not match for segm: %r - annot: %r' % (segm.shape, annot.shape))
+        raise ImageDimensionError('dimension do not match for segm: %r - annot: %r' % (segm.shape, annot.shape))
     y_true, y_pred = annot.ravel(), segm.ravel()
     # filter particular labels
     if drop_labels is not None:
@@ -1171,7 +1173,7 @@ def down_sample_dict_features_unique(dict_features):
         features = np.round(dict_features[label], ROUND_UNIQUE_FTS_DIGITS)
         unique_fts = np.array(unique_rows(features))
         if features.ndim != unique_fts.ndim:
-            raise TypeError('feature dim matching')
+            raise ValueError('feature dim matching')
         if features.shape[1] != unique_fts.shape[1]:
             raise ValueError('features: %i <> %i' % (features.shape[1], unique_fts.shape[1]))
         dict_features_new[label] = unique_fts

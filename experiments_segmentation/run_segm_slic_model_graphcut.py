@@ -33,6 +33,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -212,7 +214,7 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
     if img_type == '2d_split':
         img, _ = tl_data.load_img_double_band_split(path_img)
         if img.ndim != 2:
-            raise TypeError('image dims: %r' % img.shape)
+            raise ImageDimensionError('image dims: %r' % img.shape)
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         # if img.max() > 1:
         #     img = (img / 255.)

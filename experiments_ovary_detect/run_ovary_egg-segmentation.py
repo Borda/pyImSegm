@@ -33,6 +33,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -164,7 +166,7 @@ def arg_parse_params(params):
             raise FileNotFoundError('missing file: %s' % params['path_config'])
         _, ext = os.path.splitext(params['path_config'])
         if not (ext == '.yaml' or ext == '.yml'):
-            raise TypeError('"%s" should be YAML file' % os.path.basename(params['path_config']))
+            raise RuntimeError('"%s" should be YAML file' % os.path.basename(params['path_config']))
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
         params.update(arg_params)
@@ -194,7 +196,7 @@ def load_image(path_img, img_type=TYPE_LOAD_IMAGE):
     elif img_type == '2d_struct':
         img, _ = tl_data.load_img_double_band_split(path_img)
         if img.ndim != 2:
-            raise TypeError('image can be only single color')
+            raise ImageDimensionError('image can be only single color')
     else:
         logging.error('not supported loading img_type: %s', img_type)
         img = tl_data.io_imread(path_img)
@@ -737,7 +739,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     img_rgb = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     seg = load_image(row_path['path_segm'], 'segm')
     if img_rgb.shape[:2] != seg.shape:
-        raise TypeError('image %r and segm %r do not match' % (img_rgb.shape[:2], seg.shape))
+        raise ImageDimensionError('image %r and segm %r do not match' % (img_rgb.shape[:2], seg.shape))
     if not os.path.isfile(row_path['path_centers']):
         logging.warning('no center was detected for "%s"', name)
         return name

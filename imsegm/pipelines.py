@@ -26,6 +26,7 @@ from imsegm.descriptors import (
 from imsegm.graph_cuts import estim_class_model, segment_graph_cut_general
 from imsegm.labeling import histogram_regions_labels_norm
 from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
+from imsegm.utilities import ImageDimensionError
 from imsegm.utilities.experiments import nb_workers, WrapExecuteSequence
 
 # from sklearn import mixture
@@ -273,7 +274,7 @@ def wrapper_compute_color2d_slic_features_labels(img_annot, sp_size, sp_regul, d
     # in case of binary annotation convert it to integers labels
     annot = annot.astype(int)
     if img.shape[:2] != annot.shape[:2]:
-        raise TypeError('image %r and annot %r should match' % (img.shape, annot.shape))
+        raise ImageDimensionError('image %r and annot %r should match' % (img.shape, annot.shape))
     slic, features = compute_color2d_superpixels_features(img, dict_features, sp_size=sp_size, sp_regul=sp_regul)
     neg_label = np.max(annot) + 1 if np.sum(annot < 0) > 0 else None
     if neg_label is not None:

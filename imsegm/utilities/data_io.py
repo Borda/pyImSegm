@@ -19,6 +19,7 @@ from PIL import Image
 from scipy import ndimage
 from skimage import color, exposure, io, measure
 
+from imsegm.utilities import ImageDimensionError
 from imsegm.utilities.read_zvi import load_image as load_zvi
 
 #: position columns
@@ -450,7 +451,7 @@ def export_image(path_img, img, stretch_range=True):
     >>> os.remove(path_img)
     """
     if img.ndim < 2:
-        raise TypeError('wrong image dim: %r' % img.shape)
+        raise ImageDimensionError('wrong image dim: %r' % img.shape)
     if not os.path.isdir(os.path.dirname(path_img)):
         return ''
     logging.debug(' .. saving image %r with %r to "%s"', img.shape, np.unique(img), path_img)
@@ -711,7 +712,7 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
         if not img_b2.size:
             # loading also 2d images with rgb bands
             if img_b1.ndim != 4:
-                raise TypeError('image is not stack of RGB')
+                raise ImageDimensionError('image is not stack of RGB')
             img_b2 = np.array([img_b1[0, :, :, 1]])
             img_b1 = np.array([img_b1[0, :, :, 0]])
     if img_b1.shape[0] != img_b2.shape[0]:
@@ -913,14 +914,14 @@ def merge_image_channels(img_ch1, img_ch2, img_ch3=None):
     (150, 125, 3)
     """
     if img_ch1.ndim != 2:
-        raise TypeError('image as to strictly 2D and single channel, got %r' % img_ch1.shape)
+        raise ImageDimensionError('image as to strictly 2D and single channel, got %r' % img_ch1.shape)
     if img_ch1.shape != img_ch2.shape:
-        raise TypeError('channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch2.shape))
+        raise ImageDimensionError('channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch2.shape))
     if img_ch3 is None:
         img_ch3 = np.zeros(img_ch1.shape)
     else:
         if img_ch1.shape != img_ch3.shape:
-            raise TypeError('channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch3.shape))
+            raise ImageDimensionError('channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch3.shape))
     img_rgb = np.rollaxis(np.array([img_ch1, img_ch2, img_ch3]), 0, 3)
     return img_rgb
 

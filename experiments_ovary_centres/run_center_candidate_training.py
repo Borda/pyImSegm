@@ -37,6 +37,8 @@ import pandas as pd
 import tqdm
 from scipy import spatial
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -385,7 +387,7 @@ def estim_points_compute_features(name, img, segm, params):
     """
     # superpixels on image
     if img.shape[:2] != segm.shape[:2]:
-        raise TypeError('not matching shapes: %r : %r' % (img.shape, segm.shape))
+        raise ImageDimensionError('not matching shapes: %r : %r' % (img.shape, segm.shape))
     slic = seg_spx.segment_slic_img2d(img, params['slic_size'], params['slic_regul'])
     slic_centers = seg_spx.superpixel_centers(slic)
     # slic_edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)

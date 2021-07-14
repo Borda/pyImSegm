@@ -10,6 +10,7 @@ import numpy as np
 import skimage.segmentation as sk_segm
 from scipy import ndimage
 
+from imsegm.utilities import ImageDimensionError
 from imsegm.utilities.data_io import get_image2d_boundary_color
 
 
@@ -190,7 +191,7 @@ def segm_labels_assignment(segm, segm_gt):
      7: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}
     """
     if segm_gt.shape != segm.shape:
-        raise TypeError('segm %r and annot %r should match' % (segm.shape, segm_gt.shape))
+        raise ImageDimensionError('segm %r and annot %r should match' % (segm.shape, segm_gt.shape))
     labels = np.unique(segm)
     # label_hist = {}
     # for lb in labels:
@@ -226,7 +227,7 @@ def histogram_regions_labels_counts(slic, segm):
            [  0.,   0.,  12.]])
     """
     if slic.shape != segm.shape:
-        raise TypeError('dimension does not agree')
+        raise ImageDimensionError('dimension does not agree')
     if np.sum(np.unique(segm) < 0) != 0:
         raise ValueError('only positive labels are allowed')
     segm_flat = slic.ravel()
@@ -263,7 +264,7 @@ def histogram_regions_labels_norm(slic, segm):
            [ 0.        ,  0.        ,  1.        ]])
     """
     if slic.shape != segm.shape:
-        raise TypeError('dimension of SLIC %r and segm %r should match' % (slic.shape, segm.shape))
+        raise ImageDimensionError('dimension of SLIC %r and segm %r should match' % (slic.shape, segm.shape))
     if np.sum(np.unique(segm) < 0) != 0:
         raise ValueError('only positive labels are allowed')
     matrix_hist = histogram_regions_labels_counts(slic, segm)
@@ -512,7 +513,7 @@ def compute_labels_overlap_matrix(seg1, seg2):
     """
     logging.debug('computing overlap of two seg_pipe of shapes %r <-> %r', seg1.shape, seg2.shape)
     if seg1.shape != seg2.shape:
-        raise TypeError('segm %r and segm %r should match' % (seg1.shape, seg2.shape))
+        raise ImageDimensionError('segm %r and segm %r should match' % (seg1.shape, seg2.shape))
     maxims = [np.max(seg1) + 1, np.max(seg2) + 1]
     overlap = np.zeros(maxims, dtype=int)
     for lb1, lb2 in zip(seg1.ravel(), seg2.ravel()):
@@ -576,7 +577,9 @@ def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
            [ 0,  3,  3,  3,  3,  3,  3,  2,  2,  2,  2,  2,  2,  2,  0]])
     """
     if seg_ref.shape != seg_relabel.shape:
-        raise TypeError('Reference segm. %r and input segm. %r should match' % (seg_ref.shape, seg_relabel.shape))
+        raise ImageDimensionError(
+            'Reference segm. %r and input segm. %r should match' % (seg_ref.shape, seg_relabel.shape)
+        )
     overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
 
     lut = [-1] * (np.max(seg_relabel) + 1)
@@ -657,7 +660,7 @@ def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
            [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0]])
     """
     if seg_ref.shape != seg_relabel.shape:
-        raise TypeError('Ref. segm %r and segm %r should match' % (seg_ref.shape, seg_relabel.shape))
+        raise ImageDimensionError('Ref. segm %r and segm %r should match' % (seg_ref.shape, seg_relabel.shape))
     overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
     # ref_ptn_size = np.bincount(seg_ref.ravel())
     # overlap = overlap.astype(float) / np.tile(ref_ptn_size, (overlap.shape[1], 1)).T
@@ -700,7 +703,7 @@ def compute_boundary_distances(segm_ref, segm):
     [2.0, 1.0, 2.0, 3.0, 2.0]
     """
     if segm_ref.shape != segm.shape:
-        raise TypeError('Ref. segm %r and segm %r should match' % (segm_ref.shape, segm.shape))
+        raise ImageDimensionError('Ref. segm %r and segm %r should match' % (segm_ref.shape, segm.shape))
     grid_y, grid_x = np.meshgrid(range(segm_ref.shape[1]), range(segm_ref.shape[0]))
     segr_boundary = sk_segm.find_boundaries(segm_ref, mode='thick')
     points = np.array([grid_x[segr_boundary].ravel(), grid_y[segr_boundary].ravel()]).T

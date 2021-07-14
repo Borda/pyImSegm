@@ -18,6 +18,8 @@ from functools import partial
 
 import numpy as np
 
+from imsegm.utilities import ImageDimensionError
+
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
@@ -87,7 +89,7 @@ def export_cut_objects(df_row, path_out, padding, use_mask=True, bg_color=None):
     annot, _ = tl_data.load_image_2d(df_row['path_1'])
     img, name = tl_data.load_image_2d(df_row['path_2'])
     if annot.shape[:2] != img.shape[:2]:
-        raise TypeError('image sizes not match %r vs %r' % (annot.shape, img.shape))
+        raise ImageDimensionError('image sizes not match %r vs %r' % (annot.shape, img.shape))
 
     uq_objects = np.unique(annot)
     if len(uq_objects) == 1:

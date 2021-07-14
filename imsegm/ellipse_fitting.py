@@ -114,7 +114,7 @@ class EllipseModelSegm(sk_fit.EllipseModel):
                 table_prob = table_prob[0]
             table_prob = np.array([table_prob, 1. - table_prob])
         if table_prob.shape[0] != 2:
-            raise TypeError('table shape %r' % table_prob.shape)
+            raise ValueError('table shape %r' % table_prob.shape)
         if np.max(labels) >= table_prob.shape[1]:
             raise ValueError('labels (%i) exceed the table %r' % (np.max(labels), table_prob.shape))
 

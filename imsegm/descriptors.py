@@ -17,6 +17,7 @@ from scipy.ndimage.filters import gaussian_filter, gaussian_filter1d, gaussian_l
 from skimage import morphology
 from sklearn import preprocessing
 
+from imsegm.utilities import ImageDimensionError
 from imsegm.utilities.data_io import convert_img_color_from_rgb
 
 # from numba.decorators import jit
@@ -135,10 +136,10 @@ def _check_color_image_segm(image, segm):
     >>> _check_color_image_segm(np.zeros((125, 150, 3)), np.zeros((150, 125)))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    TypeError: ndarrays - image and segmentation do not match (125, 150, 3) vs (150, 125)
+    imsegm.utilities.ImageDimensionError: ndarrays - image and segmentation do not match (125, 150, 3) vs (150, 125)
     """
     if image.shape[:2] != segm.shape:
-        raise TypeError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
+        raise ImageDimensionError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
     return True
 
 
@@ -152,10 +153,10 @@ def _check_gray_image_segm(image, segm):
     >>> _check_gray_image_segm(np.zeros((125, 150)), np.zeros((150, 125)))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    TypeError: ndarrays - image and segmentation do not match (125, 150) vs (150, 125)
+    imsegm.utilities.ImageDimensionError: ndarrays - image and segmentation do not match (125, 150) vs (150, 125)
     """
     if image.shape != segm.shape:
-        raise TypeError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
+        raise ImageDimensionError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
     return True
 
 
@@ -168,10 +169,10 @@ def _check_color_image(image):
     >>> _check_color_image(np.zeros((200, 250, 1)))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    TypeError: image is not RGB with dims (200, 250, 1)
+    imsegm.utilities.ImageDimensionError: image is not RGB with dims (200, 250, 1)
     """
     if image.ndim != 3 or image.shape[2] != 3:
-        raise TypeError('image is not RGB with dims %s' % repr(image.shape))
+        raise ImageDimensionError('image is not RGB with dims %s' % repr(image.shape))
     return True
 
 

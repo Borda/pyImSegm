@@ -38,6 +38,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -197,7 +199,7 @@ def load_image_annot_compute_features_labels(idx_row, params, show_debug_imgs=SH
     annot = load_image(row['path_annot'], '2d_segm')
     logging.debug('.. processing: %s', idx_name)
     if img.shape[:2] != annot.shape[:2]:
-        raise TypeError(
+        raise ImageDimensionError(
             'individual size of image %r and seg_pipe %r for "%s" - "%s"' %
             (img.shape, annot.shape, row['path_image'], row['path_annot'])
         )

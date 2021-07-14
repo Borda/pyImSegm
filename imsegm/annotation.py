@@ -15,6 +15,7 @@ from PIL import Image
 from scipy import interpolate
 
 # sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+from imsegm.utilities import ImageDimensionError
 from imsegm.utilities.data_io import io_imread
 
 #: names of annotated columns
@@ -277,7 +278,7 @@ def quantize_image_nearest_color(img, colors):
 
 def image_inpaint_pixels(img, valid_mask):
     if img.shape != valid_mask.shape:
-        raise TypeError('image size %r and mask size %r should be equal' % (img.shape, valid_mask.shape))
+        raise ImageDimensionError('image size %r and mask size %r should be equal' % (img.shape, valid_mask.shape))
     coords = np.array(np.nonzero(valid_mask)).T
     values = img[valid_mask]
     it = interpolate.NearestNDInterpolator(coords, values)
