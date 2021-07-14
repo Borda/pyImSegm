@@ -141,7 +141,7 @@ def load_landmarks_txt(path_file):
     with open(path_file, 'r') as f:
         lines = f.readlines()
 
-    landmarks = list()
+    landmarks = []
     for line in lines[2:]:
         # logging.debug(line)
         match_obj = re.match('(.*) (.*)', line)

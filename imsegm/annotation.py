@@ -183,7 +183,7 @@ def image_frequent_colors(img, ratio_threshold=1e-3):
     image = Image.fromarray(img)
     img_colors = image.getcolors(maxcolors=nb_pixels)
     if not img_colors:
-        return dict()
+        return {}
     dict_clrs = dict([(clr, nb) for nb, clr in img_colors if nb >= nb_px_min])
     ration_main_colors = sum(dict_clrs.values()) / float(nb_pixels)
     logging.debug(
@@ -210,7 +210,7 @@ def group_images_frequent_colors(paths_img, ratio_threshold=1e-3):
     >>> os.remove(path_img)
     """
     logging.debug('passing %i images', len(paths_img))
-    dict_colors = dict()
+    dict_colors = {}
     for path_im in paths_img:
         img = io_imread(path_im)
         local_dict_colors = image_frequent_colors(img, ratio_threshold)

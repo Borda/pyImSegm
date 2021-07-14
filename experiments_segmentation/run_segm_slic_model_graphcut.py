@@ -345,7 +345,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None, sh
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    debug_visual = dict() if show_debug_imgs else None
+    debug_visual = {} if show_debug_imgs else None
     try:
         segm, segm_soft = seg_pipe.pipe_color2d_slic_features_model_graphcut(
             img,
@@ -395,7 +395,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None, path_visu=N
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    debug_visual = dict() if show_debug_imgs else None
+    debug_visual = {} if show_debug_imgs else None
 
     try:
         segm, segm_soft = seg_pipe.segment_color2d_slic_features_model_graphcut(

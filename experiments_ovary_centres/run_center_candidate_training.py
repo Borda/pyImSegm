@@ -400,7 +400,7 @@ def compute_points_features(segm, points, params):
     :param {str: any} params: parameters
     :return ([[float]], list(str)): [[float] * nb_features] * nb_points, list(str) * nb_features
     """
-    features, feature_names = np.empty((len(points), 0)), list()
+    features, feature_names = np.empty((len(points), 0)), []
 
     # segmentation histogram
     if 'fts_hist_diams' in params and params['fts_hist_diams'] is not None:
@@ -410,7 +410,7 @@ def compute_points_features(segm, points, params):
         features = np.hstack((features, features_hist))
         feature_names += names_hist
 
-    names_ray = list()  # default empty, require some at leas one compute
+    names_ray = []  # default empty, require some at leas one compute
     # Ray features
     if 'fts_ray_step' in params and params['fts_ray_step'] is not None:
         list_features_ray = []
@@ -483,7 +483,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_W
     :param int nb_workers: parallel
     :return dict:
     """
-    dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
+    dict_imgs, dict_segms, dict_center = {}, {}, {}
     logging.info('loading input data (images, segmentation and centers)')
     path_show_in = os.path.join(params['path_expt'], FOLDER_INPUT)
     _wrapper_load = partial(load_image_segm_center, path_out=path_show_in, dict_relabel=params['dict_relabel'])
@@ -495,7 +495,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_W
         dict_segms[name] = seg
         dict_center[name] = center
 
-    dict_slics, dict_points, dict_features = dict(), dict(), dict()
+    dict_slics, dict_points, dict_features = {}, {}, {}
     logging.info('estimate candidate points and compute features')
     gene_name_img_seg = ((name, dict_imgs[name], dict_segms[name]) for name in dict_imgs)
     _wrapper_pnt_features = partial(wrapper_estim_points_compute_features, params=params)
@@ -509,7 +509,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_W
         dict_features[name] = features
     logging.debug('computed features:\n %r', feature_names)
 
-    dict_labels = dict()
+    dict_labels = {}
     logging.info('assign labels according close distance to center')
     path_points_train = os.path.join(params['path_expt'], FOLDER_POINTS_TRAIN)
     tqdm_bar = tqdm.tqdm(total=len(dict_center), desc='labels assignment')
