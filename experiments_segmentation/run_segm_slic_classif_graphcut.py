@@ -232,9 +232,9 @@ def dataset_load_images_annot_compute_features(params, show_debug_imgs=SHOW_DEBU
     :param bool show_debug_imgs: whether show debug images
     :return ({str: ndarray} * 6, list(str)):
     """
-    dict_images, dict_annots = dict(), dict()
-    dict_slics, dict_features, dict_labels, dict_label_hist = dict(), dict(), dict(), dict()
-    feature_names = list()
+    dict_images, dict_annots = {}, {}
+    dict_slics, dict_features, dict_labels, dict_label_hist = {}, {}, {}, {}
+    feature_names = []
 
     # compute features
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
@@ -333,7 +333,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None, show
     idx_name = get_idx_name(idx, path_img)
     img = load_image(path_img, params['img_type'])
 
-    debug_visual = dict() if show_debug_imgs else None
+    debug_visual = {} if show_debug_imgs else None
 
     gc_regul = params['gc_regul']
     if params['gc_use_trans']:
@@ -493,7 +493,7 @@ def perform_train_predictions(params, paths_img, classif, show_debug_imgs=SHOW_D
     logging.info('run prediction on training images...')
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
 
-    dict_segms, dict_segms_gc = dict(), dict()
+    dict_segms, dict_segms_gc = {}, {}
     path_out = os.path.join(params['path_exp'], FOLDER_TRAIN)
     path_visu = os.path.join(params['path_exp'], FOLDER_TRAIN_VISU)
     _wrapper_segment = partial(
@@ -532,7 +532,7 @@ def experiment_lpo(
     :return dict:
     """
     logging.info('run prediction on training images as Leave-%i-Out...', nb_holdout)
-    dict_segms, dict_segms_gc = dict(), dict()
+    dict_segms, dict_segms_gc = {}, {}
     cv = seg_clf.CrossValidate(len(idx_paths_img), nb_hold_out=nb_holdout)
     test_imgs_idx_path = [[idx_paths_img[i] for i in ids] for _, ids in cv]
     path_out = os.path.join(params['path_exp'], FOLDER_LPO)

@@ -278,7 +278,7 @@ def create_circle_center(img_shape, centers, radius=10):
     """
     mask_circle = np.zeros(img_shape, dtype=int)
     mask_perimeter = np.zeros(img_shape, dtype=int)
-    center_circles = list()
+    center_circles = []
     for i, pos in enumerate(centers):
         rr, cc = draw.circle(int(pos[0]), int(pos[1]), radius, shape=img_shape[:2])
         mask_circle[rr, cc] = i + 1
@@ -556,7 +556,7 @@ def segment_rg2sp_greedy(
         shape_model = np.load(path_model, allow_pickle=True)
     else:
         shape_model = pickle.load(open(path_model, 'rb'))
-    dict_debug = dict() if os.path.isdir(debug_export) else None
+    dict_debug = {} if os.path.isdir(debug_export) else None
 
     slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, labels_fg_prob)
     labels_greedy = seg_rg.region_growing_shape_slic_greedy(
@@ -603,7 +603,7 @@ def segment_rg2sp_graphcut(
         shape_model = np.load(path_model, allow_pickle=True)
     else:
         shape_model = pickle.load(open(path_model, 'rb'))
-    dict_debug = dict() if os.path.isdir(debug_export) else None
+    dict_debug = {} if os.path.isdir(debug_export) else None
 
     slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, labels_fg_prob)
     labels_gc = seg_rg.region_growing_shape_slic_graphcut(

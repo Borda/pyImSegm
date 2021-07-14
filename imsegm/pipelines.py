@@ -134,7 +134,7 @@ def estim_model_classes_group(
     :param int nb_workers: number of jobs running in parallel
     :return:
     """
-    list_slic, list_features = list(), list()
+    list_slic, list_features = [], []
     _wrapper_compute = partial(
         compute_color2d_superpixels_features, sp_size=sp_size, sp_regul=sp_regul, dict_features=dict_features
     )
@@ -324,7 +324,7 @@ def train_classif_color2d_slic_features(
         'size of images (%i) and annotations (%i) should match' \
         % (len(list_images), len(list_annots))
 
-    list_slic, list_features, list_labels = list(), list(), list()
+    list_slic, list_features, list_labels = [], [], []
     _wrapper_compute = partial(
         wrapper_compute_color2d_slic_features_labels,
         sp_size=sp_size,

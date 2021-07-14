@@ -194,7 +194,7 @@ def segm_labels_assignment(segm, segm_gt):
     # label_hist = {}
     # for lb in labels:
     #     label_hist[lb] = (segm_gt[segm == lb].tolist())
-    label_hist = {lb: list() for lb in labels}
+    label_hist = {lb: [] for lb in labels}
     segm_gt_flat = segm_gt.ravel()
     segm_flat = segm.ravel()
     for i, lb in enumerate(segm_flat):

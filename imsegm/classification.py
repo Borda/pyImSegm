@@ -1067,7 +1067,7 @@ def compose_dict_label_features(features, labels):
     :param list(int) labels: annotation for samples
     :return {int: ndarray}: {int: np.array<nb, nb_features>}
     """
-    dict_features = dict()
+    dict_features = {}
     features = np.array(features)
     for lb in np.unique(labels):
         dict_features[lb] = features[labels == lb, :]
@@ -1088,7 +1088,7 @@ def down_sample_dict_features_random(dict_features, nb_samples):
     >>> d_fts['a'].shape
     (5, 3)
     """
-    dict_features_new = dict()
+    dict_features_new = {}
     for label in dict_features:
         features = dict_features[label]
         if len(features) <= nb_samples:
@@ -1115,7 +1115,7 @@ def down_sample_dict_features_kmean(dict_features, nb_samples):
     >>> d_fts['a'].shape
     (5, 3)
     """
-    dict_features_new = dict()
+    dict_features_new = {}
     for label in dict_features:
         features = dict_features[label]
         if len(features) <= nb_samples:
@@ -1162,7 +1162,7 @@ def down_sample_dict_features_unique(dict_features):
     >>> d_fts['a'].shape
     (100, 3)
     """
-    dict_features_new = dict()
+    dict_features_new = {}
     for label in dict_features:
         features = np.round(dict_features[label], ROUND_UNIQUE_FTS_DIGITS)
         unique_fts = np.array(unique_rows(features))
@@ -1235,7 +1235,7 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels, drop_label
     logging.debug('convert set of features and labels to single one')
     assert all(k in imgs_labels.keys() for k in imgs_features.keys()), \
         'missing some items of %r' % imgs_labels.keys()
-    features_all, labels_all, sizes = list(), list(), list()
+    features_all, labels_all, sizes = [], [], []
     for name in sorted(imgs_features.keys()):
         features = np.array(imgs_features[name])
         labels = np.array(imgs_labels[name].astype(int))

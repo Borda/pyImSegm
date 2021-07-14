@@ -215,7 +215,7 @@ def superpixel_centers(segments):
     [[1.0, 0.5, 2.5], [1.0, 0.0, 8.0], [1.0, 1.0, 8.0]]
     """
     logging.debug('compute centers for %d superpixels', segments.max())
-    centers = [list() for _ in range(np.max(segments) + 1)]
+    centers = [[] for _ in range(np.max(segments) + 1)]
 
     if segments.ndim <= 2:
         # regionprops works for labels from 1

@@ -1337,11 +1337,11 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
     logging.debug('prepare extended segm. and struc. elements')
     list_struct_elems = [morphology.disk(d) for d in diameters]
 
-    pos_hists = list()
+    pos_hists = []
     logging.debug('compute circular histogram')
     # for each position compute features
     for pos in positions:
-        hist_inter = list()
+        hist_inter = []
         hist_last = np.zeros(nb_labels)
         sel_size_last = np.zeros(1)
         for sel in list_struct_elems:
