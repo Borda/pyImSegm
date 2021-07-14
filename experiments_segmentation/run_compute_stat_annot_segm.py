@@ -107,8 +107,9 @@ def aparse_params(dict_paths):
     _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])), os.path.basename(args[k]))
     dict_paths = {k.split('_')[-1]: _fn_path(k) for k in args if k.startswith('path_') and args[k] is not None}
     for k in dict_paths:
-        if not os.path.isdir(os.path.dirname(dict_paths[k])):
-            raise AssertionError('missing: (%s) "%s"' % (k, os.path.dirname(dict_paths[k])))
+        dir_p = os.path.dirname(dict_paths[k])
+        if not os.path.isdir(dir_p):
+            raise FileNotFoundError('missing: (%s) "%s"' % (k, dir_p))
     if not args['drop_labels']:
         args['drop_labels'] = []
     return dict_paths, args
@@ -185,7 +186,7 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True, segm_alpha=1.,
     """
     if not os.path.isdir(dict_paths['output']):
         if not os.path.isdir(os.path.dirname(dict_paths['output'])):
-            raise AssertionError('missing folder: %s' % dict_paths['output'])
+            raise FileNotFoundError('missing folder: %s' % dict_paths['output'])
         os.mkdir(dict_paths['output'])
 
     name = os.path.basename(os.path.dirname(dict_paths['segm']))
@@ -198,7 +199,7 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True, segm_alpha=1.,
     df_paths.to_csv(path_csv)
 
     if df_paths.empty:
-        raise AssertionError('nothing to compare')
+        raise ValueError('nothing to compare')
 
     name_seg_dir = os.path.basename(os.path.dirname(dict_paths['segm']))
     path_visu = os.path.join(dict_paths['output'], name_seg_dir + SUFFIX_VISUAL)

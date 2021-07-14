@@ -251,7 +251,7 @@ def compute_color2d_superpixels_features(image, dict_features, sp_size=30, sp_re
     :return list(list(int)), [[floats]]: superpixels and related of features
     """
     if sp_regul <= 0.:
-        raise AssertionError('slic. regularisation must be positive')
+        raise ValueError('slic. regularisation must be positive')
     logging.debug('run Superpixel clustering.')
     slic = segment_slic_img2d(image, sp_size=sp_size, relative_compact=sp_regul)
     # plt.figure(), plt.imshow(slic)
@@ -273,7 +273,7 @@ def wrapper_compute_color2d_slic_features_labels(img_annot, sp_size, sp_regul, d
     # in case of binary annotation convert it to integers labels
     annot = annot.astype(int)
     if img.shape[:2] != annot.shape[:2]:
-        raise AssertionError('image %r and annot %r should match' % (img.shape, annot.shape))
+        raise TypeError('image %r and annot %r should match' % (img.shape, annot.shape))
     slic, features = compute_color2d_superpixels_features(img, dict_features, sp_size=sp_size, sp_regul=sp_regul)
     neg_label = np.max(annot) + 1 if np.sum(annot < 0) > 0 else None
     if neg_label is not None:
@@ -322,8 +322,7 @@ def train_classif_color2d_slic_features(
     """
     logging.info('TRAIN Superpixels-Features-Classifier')
     if len(list_images) != len(list_annots):
-        raise AssertionError('size of images (%i) and annotations (%i) should match' \
-        % (len(list_images), len(list_annots)))
+        raise ValueError('size of images (%i) and annotations (%i) should match' % (len(list_images), len(list_annots)))
 
     list_slic, list_features, list_labels = [], [], []
     _wrapper_compute = partial(

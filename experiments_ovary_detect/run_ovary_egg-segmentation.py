@@ -161,10 +161,10 @@ def arg_parse_params(params):
     else:
         params['path_config'] = tl_data.update_path(params['path_config'])
         if not os.path.isfile(params['path_config']):
-            raise AssertionError('missing file: %s' % params['path_config'])
+            raise FileNotFoundError('missing file: %s' % params['path_config'])
         ext = os.path.splitext(params['path_config'])[-1]
         if not (ext == '.yaml' or ext == '.yml'):
-            raise AssertionError('"%s" should be YAML file' % os.path.basename(params['path_config']))
+            raise RuntimeError('"%s" should be YAML file' % os.path.basename(params['path_config']))
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
         params.update(arg_params)
@@ -173,7 +173,7 @@ def arg_parse_params(params):
             continue
         params[k] = tl_data.update_path(arg_params[k], absolute=True)
         if not os.path.exists(params[k]):
-            raise AssertionError('missing: %s' % params[k])
+            raise FileNotFoundError('missing: %s' % params[k])
     # load saved configuration
     logging.info('ARG PARAMETERS: \n %r', params)
     return params
@@ -188,13 +188,13 @@ def load_image(path_img, img_type=TYPE_LOAD_IMAGE):
     """
     path_img = os.path.abspath(os.path.expanduser(path_img))
     if not os.path.isfile(path_img):
-        raise AssertionError('missing: "%s"' % path_img)
+        raise FileNotFoundError('missing: "%s"' % path_img)
     if img_type == 'segm':
         img = tl_data.io_imread(path_img)
     elif img_type == '2d_struct':
         img, _ = tl_data.load_img_double_band_split(path_img)
         if img.ndim != 2:
-            raise AssertionError('image can be only single color')
+            raise TypeError('image can be only single color')
     else:
         logging.error('not supported loading img_type: %s', img_type)
         img = tl_data.io_imread(path_img)
@@ -223,7 +223,7 @@ def export_draw_image_segm(path_fig, img, segm=None, segm_obj=None, centers=None
     if segm_obj is not None:
         ax.imshow(segm_obj, alpha=0.1)
         if len(np.unique(segm_obj)) >= 1e2:
-            raise AssertionError('too many labeled objects - %i' % len(np.unique(segm_obj)))
+            raise ValueError('too many labeled objects - %i' % len(np.unique(segm_obj)))
         ax.contour(segm_obj, levels=np.unique(segm_obj).tolist(), cmap=plt.cm.jet_r, linewidths=(10, ))
     if centers is not None:
         ax.plot(np.array(centers)[:, 1], np.array(centers)[:, 0], 'o', color='r')
@@ -737,7 +737,7 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     img_rgb = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     seg = load_image(row_path['path_segm'], 'segm')
     if img_rgb.shape[:2] != seg.shape:
-        raise AssertionError('image %r and segm %r do not match' % (img_rgb.shape[:2], seg.shape))
+        raise TypeError('image %r and segm %r do not match' % (img_rgb.shape[:2], seg.shape))
     if not os.path.isfile(row_path['path_centers']):
         logging.warning('no center was detected for "%s"', name)
         return name

@@ -70,7 +70,7 @@ def load_correct_segm(path_img):
     :return (ndarray, ndarray):
     """
     if not os.path.isfile(path_img):
-        raise AssertionError('missing: %s' % path_img)
+        raise FileNotFoundError('missing: %s' % path_img)
     logging.debug('loading image: %s', path_img)
     img = tl_data.io_imread(path_img)
     seg = (img > 0)
@@ -160,13 +160,14 @@ def main(path_segs, path_out, nb_workers):
     :param int nb_workers: number of processes in parallel
     """
     if os.path.dirname(path_segs) == path_out:
-        raise AssertionError('the output dir has to be different then the input object segmentation')
+        raise RuntimeError('the output dir has to be different then the input object segmentation')
     list_imgs = glob.glob(path_segs)
     logging.info('found %i images', len(list_imgs))
 
     if not os.path.exists(path_out):
-        if not os.path.isdir(os.path.dirname(path_out)):
-            raise AssertionError('missing: %s' % path_out)
+        dir_out = os.path.dirname(path_out)
+        if not os.path.isdir(dir_out):
+            raise FileNotFoundError('missing: %s' % path_out)
         os.mkdir(path_out)
 
     _wrapper_create_annot_centers = partial(

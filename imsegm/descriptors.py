@@ -138,7 +138,7 @@ def _check_color_image_segm(image, segm):
     ValueError: ndarrays - image and segmentation do not match (125, 150, 3) vs (150, 125)
     """
     if image.shape[:2] != segm.shape:
-        raise ValueError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
+        raise TypeError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
     return True
 
 
@@ -155,7 +155,7 @@ def _check_gray_image_segm(image, segm):
     ValueError: ndarrays - image and segmentation do not match (125, 150) vs (150, 125)
     """
     if image.shape != segm.shape:
-        raise ValueError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
+        raise TypeError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
     return True
 
 
@@ -171,7 +171,7 @@ def _check_color_image(image):
     ValueError: image is not RGB with dims (200, 250, 1)
     """
     if image.ndim != 3 or image.shape[2] != 3:
-        raise ValueError('image is not RGB with dims %s' % repr(image.shape))
+        raise TypeError('image is not RGB with dims %s' % repr(image.shape))
     return True
 
 
@@ -361,8 +361,7 @@ def numpy_img2d_color_std(img, seg, means=None):
 
     nb_labels = np.max(seg) + 1
     if len(means) < nb_labels:
-        raise AssertionError('number of means (%i) should be equal to number of labels (%i)' \
-        % (len(means), nb_labels))
+        raise ValueError('number of means (%i) should be equal to number of labels (%i)' % (len(means), nb_labels))
     variations = np.zeros((nb_labels, 3))
     counts = np.zeros(nb_labels)
     for i in range(seg.shape[0]):
@@ -613,8 +612,7 @@ def numpy_img3d_gray_std(img, seg, means=None):
 
     nb_labels = np.max(seg) + 1
     if len(means) < nb_labels:
-        raise AssertionError('number of means (%i) should be equal to number of labels (%i)' \
-        % (len(means), nb_labels))
+        raise ValueError('number of means (%i) should be equal to number of labels (%i)' % (len(means), nb_labels))
     variances = np.zeros(nb_labels)
     counts = np.zeros(nb_labels)
     for i in range(seg.shape[0]):
@@ -739,7 +737,7 @@ def compute_image3d_gray_statistic(image, segm, feature_flags=NAMES_FEATURE_FLAG
     _check_gray_image_segm(image, segm)
 
     if not list(feature_flags):
-        raise AssertionError('some features has to be selected')
+        raise ValueError('some features has to be selected')
     image = np.nan_to_num(image)
     features = []
     # nb_fts = image.shape[0]
@@ -781,7 +779,7 @@ def compute_image3d_gray_statistic(image, segm, feature_flags=NAMES_FEATURE_FLAG
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
     if features.shape[1] != len(names):
-        raise AssertionError('features: %r and names %r' % (features.shape, names))
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -860,7 +858,7 @@ def compute_image2d_color_statistic(image, segm, feature_flags=NAMES_FEATURE_FLA
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
     if features.shape[1] != len(names):
-        raise AssertionError('features: %r and names %r' % (features.shape, names))
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1035,7 +1033,7 @@ def compute_texture_desc_lm_img3d_val(img, seg, feature_flags, bank_type='normal
     features[features == 0] = 0
     names = ['tLM_%s' % name for name in names]
     if features.shape[1] != len(names):
-        raise AssertionError('features: %r and names %r' % (features.shape, names))
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1103,7 +1101,7 @@ def compute_texture_desc_lm_img2d_clr(img, seg, feature_flags, bank_type='normal
     features[features == 0] = 0
     names = ['tLM_%s' % name for name in names]
     if features.shape[1] != len(names):
-        raise AssertionError('features: %r and names %r' % (features.shape, names))
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1138,7 +1136,7 @@ def compute_selected_features_gray3d(img, segments, feature_flags=FEATURES_SET_C
     """
     _check_gray_image_segm(img, segments)
     if not feature_flags:
-        raise AssertionError('some features has to be selected')
+        raise ValueError('some features has to be selected')
 
     features, names = [], []
     # COLOR FEATURES
@@ -1165,7 +1163,7 @@ def compute_selected_features_gray3d(img, segments, feature_flags=FEATURES_SET_C
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
     if features.shape[1] != len(names):
-        raise AssertionError('features: %r and names %r' % (features.shape, names))
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1201,7 +1199,7 @@ def compute_selected_features_gray2d(img, segments, features_flags=FEATURES_SET_
 
     features, names = compute_selected_features_gray3d(img[np.newaxis, ...], segments[np.newaxis, ...], features_flags)
     if features.shape[1] != len(names):
-        raise AssertionError('features: %r and names %r' % (features.shape, names))
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1267,7 +1265,7 @@ def compute_selected_features_color2d(img, segments, feature_flags=FEATURES_SET_
     if not features.size:
         logging.error('not supported features: %r', feature_flags)
     if features.shape[1] != len(names):
-        raise AssertionError('features: %r and names %r' % (features.shape, names))
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1325,7 +1323,7 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
     """
     pos_dim = np.asarray(positions).shape[1]
     if (segm.ndim - pos_dim) not in (0, 1):
-        raise AssertionError('dimension %r and %r difference should be 0 or 1' % (segm.ndim, pos_dim))
+        raise ValueError('dimension %r and %r difference should be 0 or 1' % (segm.ndim, pos_dim))
 
     if nb_labels is None:
         if segm.ndim == pos_dim:
@@ -1353,10 +1351,11 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
                 hist, sel_size = compute_label_hist_proba(segm, pos, sel)
             inter_size = sel_size - sel_size_last
             if inter_size <= 0:
-                raise AssertionError('norm or element should be positive')
+                raise ValueError('norm or element should be positive')
             if not np.all(hist >= hist_last):
-                raise AssertionError('outer elem should have more labels %r then the inter %r' \
-                % (hist.tolist(), hist_last.tolist()))
+                raise ValueError(
+                    'outer elem should have more labels %r then the inter %r' % (hist.tolist(), hist_last.tolist())
+                )
             hist_inter += ((hist - hist_last) / float(inter_size)).tolist()
             hist_last = hist
             sel_size_last = sel_size
@@ -1365,7 +1364,7 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
     feature_names = ['hist-d_%i-lb_%i' % (d, lb) for d in diameters for lb in range(nb_labels)]
     pos_hists = np.array(pos_hists)
     if pos_hists.shape[1] != len(feature_names):
-        raise AssertionError('histogram: %r and names %r' % (pos_hists.shape, feature_names))
+        raise ValueError('histogram: %r and names %r' % (pos_hists.shape, feature_names))
     return np.array(pos_hists), feature_names
 
 
@@ -1387,7 +1386,7 @@ def adjust_bounding_box_crop(image_size, bbox_size, position):
     ((0, 0), (50, 50), (20, 20), (70, 70))
     """
     if len(image_size) != len(bbox_size):
-        raise AssertionError('incompatible sizes %r != %r' % (image_size, bbox_size))
+        raise ValueError('incompatible sizes %r != %r' % (image_size, bbox_size))
     im_size, pos = np.asarray(image_size), np.asarray(position)
     bb_size = np.asarray(bbox_size)
 
@@ -1404,8 +1403,9 @@ def adjust_bounding_box_crop(image_size, bbox_size, position):
             bb_end[i] = (np.floor(bb / 2.) + (im_size[i] - pos[i])).astype(int)
 
     if not np.array_equal((im_end - im_begin), (bb_end - bb_begin)):
-        raise AssertionError('different sizes of image %r and bounding box %r mask' \
-        % (im_end - im_begin, bb_end - bb_begin))
+        raise ValueError(
+            'different sizes of image %r and bounding box %r mask' % (im_end - im_begin, bb_end - bb_begin)
+        )
     return tuple(im_begin), tuple(im_end), tuple(bb_begin), tuple(bb_end)
 
 
@@ -1440,7 +1440,7 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
     (array([  0.,  17.,   8.]), 25.0)
     """
     if segm.ndim != len(position):
-        raise AssertionError('dim of position %r should match the segmentation %r dim' % (position, segm.shape))
+        raise ValueError('dim of position %r should match the segmentation %r dim' % (position, segm.shape))
     position = [int(p) for p in position]
     # take selection around point with size of struc. element
     im_begin, im_end, bb_begin, bb_end = \
@@ -1448,7 +1448,7 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
     segm_select = segm[im_begin[0]:im_end[0], im_begin[1]:im_end[1]]
     struc_elem = struc_elem[bb_begin[0]:bb_end[0], bb_begin[1]:bb_end[1]]
     if segm_select.shape != struc_elem.shape:
-        raise AssertionError('segmentation %s and element %s should match' % (segm_select.shape, struc_elem.shape))
+        raise ValueError('segmentation %s and element %s should match' % (segm_select.shape, struc_elem.shape))
     if USE_CYTHON:
         hist = cython_label_hist_seg2d(segm_select, struc_elem, nb_labels)
     else:  # use standard python code
@@ -1485,7 +1485,7 @@ def cython_label_hist_seg2d(segm_select, struc_elem, nb_labels):
     array([  0.,  19.,   6.])
     """
     if not np.array_equal(segm_select.shape, struc_elem.shape):
-        raise AssertionError('segm. %r and mask %r sizes do not match' % (segm_select.shape, struc_elem.shape))
+        raise ValueError('segm. %r and mask %r sizes do not match' % (segm_select.shape, struc_elem.shape))
     # removing NaN which are converted as 0
     segm_select[np.isnan(segm_select)] = -1
     # assert nb_labels >= (np.nanmax(segm_select) + 1)
@@ -1511,8 +1511,7 @@ def compute_label_hist_proba(segm, position, struc_elem):
     (array([ 114.,   42.]), 156)
     """
     if segm.ndim != (len(position) + 1):
-        raise AssertionError('segment. (%r) should have larger (+1) dim than position %i' \
-        % (segm.shape, len(position)))
+        raise ValueError('segment. (%r) should have larger (+1) dim than position %i' % (segm.shape, len(position)))
     position = list(map(int, position))
     # take selection around point with size of struc. element
     im_begin, im_end, bb_begin, bb_end = adjust_bounding_box_crop(
@@ -1521,8 +1520,7 @@ def compute_label_hist_proba(segm, position, struc_elem):
     segm_select = segm[im_begin[0]:im_end[0], im_begin[1]:im_end[1], :]
     struc_elem = struc_elem[bb_begin[0]:bb_end[0], bb_begin[1]:bb_end[1]]
     if segm_select.shape[:-1] != struc_elem.shape:
-        raise AssertionError('initial dim of segmentation %r should match element %r' \
-        % (segm_select.shape, struc_elem))
+        raise ValueError('initial dim of segmentation %r should match element %r' % (segm_select.shape, struc_elem))
     tile_struc_elem = np.tile(struc_elem, (segm_select.shape[-1], 1, 1))
     segm_mask = np.rollaxis(segm_select, -1, 0) * tile_struc_elem
     hist = np.sum(segm_mask, axis=tuple(range(1, segm_mask.ndim)))
@@ -1747,8 +1745,7 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5., smooth_coe
      23.0, 26.0, 29.0, 35.0, 42.0, 49.0]
     """
     if seg_binary.ndim != len(position):
-        raise AssertionError('Segmentation dim of %r and position (%i) does not match' \
-        % (seg_binary.ndim, len(position)))
+        raise ValueError('Segmentation dim of %r and position (%i) does not match' % (seg_binary.ndim, len(position)))
     seg_binary = seg_binary.astype(bool)
     position = tuple(map(int, position))
 
@@ -1863,7 +1860,7 @@ def compute_ray_features_positions(
     logging.debug('compute Ray features with border label=%r and angle step=%f', border_labels, angle_step)
     pos_dim = np.asarray(list_positions).shape[1]
     if (segm.ndim - pos_dim) not in (0, 1):
-        raise AssertionError('dimension %s and %s difference should be 0 or 1' % (segm.ndim, pos_dim))
+        raise ValueError('dimension %s and %s difference should be 0 or 1' % (segm.ndim, pos_dim))
     border_labels = border_labels if border_labels is not None else [0]
     if segm.ndim > pos_dim:
         # set label segment from probab
@@ -1894,7 +1891,7 @@ def compute_ray_features_positions(
     ]
     pos_rays = np.array(pos_rays)
     if pos_rays.shape[1] != len(feature_names):
-        raise AssertionError('Ray features: %r and names %r' % (pos_rays.shape, feature_names))
+        raise ValueError('Ray features: %r and names %r' % (pos_rays.shape, feature_names))
     return pos_rays, pos_shift, feature_names
 
 
@@ -1985,9 +1982,9 @@ def reconstruct_ray_features_2d(position, ray_features, shift=0):
            [ 10.,   9.]])
     """
     if len(position) != 2:
-        raise AssertionError('positions has to have 2 coordinates')
+        raise ValueError('positions has to have 2 coordinates')
     if len(ray_features) <= 2:
-        raise AssertionError('required at least 2 features')
+        raise ValueError('required at least 2 features')
 
     angles = np.linspace(0, 2 * np.pi, len(ray_features), endpoint=False)
     angles = (np.pi / 2.) - angles - np.deg2rad(shift)
@@ -2028,7 +2025,7 @@ def reduce_close_points(points, dist_thr):
     array([[ 1.,  1.]])
     """
     if len(points) <= 2:
-        raise AssertionError('too few point to be reduced')
+        raise ValueError('too few point to be reduced')
 
     dist = spatial.distance.cdist(points, points, metric='euclidean')
     for i in range(len(points)):

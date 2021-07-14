@@ -105,17 +105,18 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         -70.311...
         """
         if not len(points) == len(weights) == len(labels):
-            raise AssertionError('different sizes for points %i and weights %i and labels %i' \
-            % (len(points), len(weights), len(labels)))
+            raise ValueError(
+                'different sizes for points %i and weights %i and labels %i' % (len(points), len(weights), len(labels))
+            )
         table_prob = np.array(table_prob)
         if table_prob.ndim == 1 or table_prob.shape[0] == 1:
             if table_prob.shape[0] == 1:
                 table_prob = table_prob[0]
             table_prob = np.array([table_prob, 1. - table_prob])
         if table_prob.shape[0] != 2:
-            raise AssertionError('table shape %r' % table_prob.shape)
+            raise TypeError('table shape %r' % table_prob.shape)
         if np.max(labels) >= table_prob.shape[1]:
-            raise AssertionError('labels (%i) exceed the table %r' % (np.max(labels), table_prob.shape))
+            raise ValueError('labels (%i) exceed the table %r' % (np.max(labels), table_prob.shape))
 
         r_pos, c_pos = points[:, 0], points[:, 1]
         r_org, c_org, r_rad, c_rad, phi = self.params
@@ -212,10 +213,10 @@ def ransac_segm(
     best_inliers = None
 
     if isinstance(min_samples, float):
-        if not (0 < min_samples <= 1):
+        if not 0 < min_samples <= 1:
             raise ValueError("`min_samples` as ration must be in range (0, 1]")
         min_samples = int(min_samples * len(points))
-    if not (0 < min_samples <= len(points)):
+    if not 0 < min_samples <= len(points):
         raise ValueError("`min_samples` must be in range (0, <nb-samples>]")
 
     if max_trials < 0:

@@ -189,7 +189,7 @@ def arg_parse_params(params):
         args[k] = tl_data.update_path(args[k])
         p = os.path.dirname(args[k]) if k == 'path_predict_imgs' else args[k]
         if not os.path.exists(p):
-            raise AssertionError('missing: (%s) "%s"' % (k, p))
+            raise FileNotFoundError('missing: (%s) "%s"' % (k, p))
     # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
     if os.path.isfile(args.get('path_config', '')):
@@ -208,11 +208,11 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
     """
     path_img = tl_data.update_path(path_img)
     if not os.path.isfile(path_img):
-        raise AssertionError('missing: "%s"' % path_img)
+        raise FileNotFoundError('missing: "%s"' % path_img)
     if img_type == '2d_split':
         img, _ = tl_data.load_img_double_band_split(path_img)
         if img.ndim != 2:
-            raise AssertionError('image dims: %r' % img.shape)
+            raise TypeError('image dims: %r' % img.shape)
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         # if img.max() > 1:
         #     img = (img / 255.)
@@ -533,7 +533,7 @@ def load_path_images(params):
 
 def write_skip_file(path_dir):
     if not os.path.isdir(path_dir):
-        raise AssertionError('missing: %s' % path_dir)
+        raise FileNotFoundError('missing: %s' % path_dir)
     with open(os.path.join(path_dir, 'RESULTS'), 'w') as fp:
         fp.write('This particular experiment was skipped by user option.')
 
@@ -562,7 +562,7 @@ def main(params):
 
     paths_img = load_path_images(params)
     if not paths_img:
-        raise AssertionError('missing images')
+        raise FileNotFoundError('missing images')
 
     def _path_expt(n):
         return os.path.join(params['path_exp'], n)

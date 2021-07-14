@@ -228,9 +228,10 @@ def main(params):
     df_paths.columns = ['path_image', 'path_segm', 'path_centers']
     df_paths.index = range(1, len(df_paths) + 1)
 
-    if not os.path.exists(params['path_output']):
-        if not os.path.exists(os.path.dirname(params['path_output'])):
-            raise AssertionError('missing folder: "%s"' % os.path.dirname(params['path_output']))
+    if not os.path.isdir(params['path_output']):
+        p_out = os.path.dirname(params['path_output'])
+        if not os.path.isdir(p_out):
+            raise FileNotFoundError('missing folder: "%s"' % p_out)
         os.mkdir(params['path_output'])
 
     df_slices_info = seg_annot.load_info_group_by_slices(params['path_infofile'], params['stages'])

@@ -100,7 +100,7 @@ def arg_parse_params(params):
             continue
         p = os.path.dirname(params[k]) if '*' in params[k] else params[k]
         if not os.path.exists(p):
-            raise AssertionError('missing: (%s) "%s"' % (k, p))
+            raise FileNotFoundError('missing: (%s) "%s"' % (k, p))
     # if the config path is set load the it otherwise use default
     return params
 

@@ -244,7 +244,7 @@ def figure_image_segm_results(img, seg, subfig_size=9, mid_labels_alpha=0.2, mid
     True
     """
     if img.shape[:2] != seg.shape[:2]:
-        raise AssertionError('different image %r & seg_pipe %r sizes' % (img.shape, seg.shape))
+        raise TypeError('different image %r & seg_pipe %r sizes' % (img.shape, seg.shape))
     if img.ndim == 2:  # for gray images of ovary
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         img = color.gray2rgb(img)
@@ -358,10 +358,9 @@ def figure_segm_graphcut_debug(images, subfig_size=9):
     >>> isinstance(fig, matplotlib.figure.Figure)
     True
     """
-    if not all(
-        n in images for n in ['image', 'slic', 'slic_mean', 'img_graph_edges', 'img_graph_segm', 'imgs_unary_cost']
-    ):
-        raise AssertionError('missing keys in debug structure %r' % tuple(images.keys()))
+    keys = ('image', 'slic', 'slic_mean', 'img_graph_edges', 'img_graph_segm', 'imgs_unary_cost')
+    if not all(n in images for n in keys):
+        raise ValueError('missing keys in debug structure %r' % tuple(images.keys()))
     nb_cols = max(3, len(images['imgs_unary_cost']))
     img = images['image']
     if img.ndim == 2:  # for gray images of ovary
@@ -434,12 +433,14 @@ def figure_ellipse_fitting(img, seg, ellipses, centers, crits, fig_size=9):
     True
     """
     if not len(ellipses) == len(centers) == len(crits):
-        raise AssertionError('number of ellipses (%i) and centers (%i) and criteria (%i) ' \
-        'should match' % (len(ellipses), len(centers), len(crits)))
+        raise ValueError(
+            'number of ellipses (%i) and centers (%i) and criteria (%i) should match' %
+            (len(ellipses), len(centers), len(crits))
+        )
 
     fig, ax = create_figure_by_image(img.shape[:2], fig_size)
     if img.ndim != 2:
-        raise AssertionError('required image dimension is 2 to instead %r' % img.shape)
+        raise TypeError('required image dimension is 2 to instead %r' % img.shape)
     ax.imshow(img, cmap=plt.cm.Greys_r)
 
     for i, params in enumerate(ellipses):
@@ -761,7 +762,7 @@ def merge_object_masks(masks, overlap_thr=0.7):
            [0, 0, 2, 2, 2, 2]])
     """
     if len(masks) <= 0:
-        raise AssertionError('no masks are given')
+        raise ValueError('no masks are given')
     mask = np.array(masks[0])
 
     for i in range(1, len(masks)):
@@ -818,11 +819,11 @@ def draw_image_segm_points(
     # fig.gca().imshow(mark_boundaries(img, slic))
     if seg_contour is not None and isinstance(seg_contour, np.ndarray):
         if img.shape[:2] != seg_contour.shape[:2]:
-            raise AssertionError('image size %r and segm. %r should match' % (img.shape, seg_contour.shape))
+            raise TypeError('image size %r and segm. %r should match' % (img.shape, seg_contour.shape))
         ax.contour(seg_contour, linewidths=3, levels=np.unique(seg_contour))
     if labels is not None:
         if len(points) != len(labels):
-            raise AssertionError('number of points (%i) and labels (%i) should match' % (len(points), len(labels)))
+            raise ValueError('number of points (%i) and labels (%i) should match' % (len(points), len(labels)))
         for lb in lut_label_marker:
             marker, clr = lut_label_marker[lb]
             ax.plot(points[(labels == lb), 1], points[(labels == lb), 0], marker, color=clr)
@@ -859,7 +860,7 @@ def figure_image_segm_centres(img, segm, centers=None, cmap_contour=plt.cm.Blues
         ax.plot(np.array(centers)[:, 1], np.array(centers)[:, 0], 'o', color=COLOR_ORANGE)
     elif isinstance(centers, np.ndarray):
         if img.shape[:2] != centers.shape[:2]:
-            raise AssertionError('image size %r and centers %r should match' % (img.shape, centers.shape))
+            raise TypeError('image size %r and centers %r should match' % (img.shape, centers.shape))
         ax.contour(centers, levels=np.unique(centers), cmap=plt.cm.YlOrRd)
 
     ax.set(xlim=[0, img.shape[1]], ylim=[img.shape[0], 0])
@@ -1114,7 +1115,7 @@ def draw_image_clusters_centers(ax, img, centres, points=None, labels_centre=Non
     if img is not None:
         img = (img / float(np.max(img)))
         if img.ndim != 2:
-            raise AssertionError('required image dimension is 2 to instead %r' % img.shape)
+            raise TypeError('required image dimension is 2 to instead %r' % img.shape)
         ax.imshow(img, cmap=plt.cm.Greys_r)
         ax.set(xlim=[0, img.shape[1]], ylim=[img.shape[0], 0])
     if segm is not None:
@@ -1155,7 +1156,7 @@ def figure_segm_boundary_dist(segm_ref, segm, subfig_size=9):
     True
     """
     if segm_ref.shape != segm.shape:
-        raise AssertionError('ref segm %r and segm %r should match' % (segm_ref.shape, segm.shape))
+        raise TypeError('ref segm %r and segm %r should match' % (segm_ref.shape, segm.shape))
     segr_boundary = segmentation.find_boundaries(segm_ref, mode='thick')
     segm_boundary = segmentation.find_boundaries(segm, mode='thick')
     segm_distance = ndimage.distance_transform_edt(~segm_boundary)

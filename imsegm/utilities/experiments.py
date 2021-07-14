@@ -118,7 +118,7 @@ class Experiment(object):
         """
         # create results folder for experiments
         if not os.path.exists(self.params.get('path_out', 'NONE')):
-            raise ValueError('no results folder "%r"' % self.params.get('path_out', None))
+            raise FileNotFoundError('no results folder "%r"' % self.params.get('path_out', None))
         self.params = create_experiment_folder(self.params, self.__class__.__name__, time_stamp)
 
 
@@ -343,7 +343,7 @@ def create_subfolders(path_out, folders):
     count = 0
     for dir_name in folders:
         path_dir = os.path.join(path_out, dir_name)
-        if not os.path.exists(path_dir):
+        if not os.path.isdir(path_dir):
             try:
                 os.mkdir(path_dir)
                 count += 1

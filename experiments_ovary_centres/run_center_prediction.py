@@ -170,7 +170,7 @@ if __name__ == '__main__':
 
     params['path_classif'] = params['path_centers']
     if not os.path.isfile(params['path_classif']):
-        raise AssertionError('missing classifier: %s' % params['path_classif'])
+        raise FileNotFoundError('missing classifier: %s' % params['path_classif'])
 
     main(params)
 

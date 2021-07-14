@@ -137,8 +137,8 @@ def load_landmarks_txt(path_file):
     >>> os.remove(fp)
     """
     path_file = os.path.abspath(os.path.expanduser(path_file))
-    if not os.path.exists(path_file):
-        raise AssertionError('missing "%s"' % path_file)
+    if not os.path.isfile(path_file):
+        raise FileNotFoundError('missing "%s"' % path_file)
     # load input file
     with open(path_file, 'r') as f:
         lines = f.readlines()
@@ -171,8 +171,8 @@ def load_landmarks_csv(path_file):
     >>> os.remove(fp)
     """
     path_file = os.path.abspath(os.path.expanduser(path_file))
-    if not os.path.exists(path_file):
-        raise AssertionError('missing "%s"' % path_file)
+    if not os.path.isfile(path_file):
+        raise FileNotFoundError('missing "%s"' % path_file)
     df = pd.read_csv(path_file, index_col=0)
     landmarks = df[COLUMNS_COORDS].values.tolist()
     logging.debug(' load_landmarks_csv (%i): \n%r', len(landmarks), np.asarray(landmarks).astype(int).tolist())
@@ -210,8 +210,8 @@ def save_landmarks_txt(path_file, landmarks):
     :param landmarks: array of landmarks of size nb_landmarks x 2
     :return str: path to output file
     """
-    if not os.path.exists(os.path.dirname(path_file)):
-        raise AssertionError('missing "%s"' % os.path.dirname(path_file))
+    if not os.path.isdir(os.path.dirname(path_file)):
+        raise FileNotFoundError('missing "%s"' % os.path.dirname(path_file))
     path_file = os.path.splitext(path_file)[0] + '.txt'
     logging.info(' save_landmarks_txt: -> creating TXT file: %s', path_file)
     logging.info(' save_landmarks_txt: -> creating TXT file: %s', path_file)
@@ -232,8 +232,8 @@ def save_landmarks_csv(path_file, landmarks, dtype=float):
     :param type dtype: data type
     :return str: path to output file
     """
-    if not os.path.exists(os.path.dirname(path_file)):
-        raise AssertionError('missing "%s"' % os.path.dirname(path_file))
+    if not os.path.isdir(os.path.dirname(path_file)):
+        raise FileNotFoundError('missing "%s"' % os.path.dirname(path_file))
     path_file = os.path.splitext(path_file)[0] + '.csv'
     logging.debug(' save_landmarks_csv: -> creating CSV file: %s' % path_file)
     # create the results file in CSV
@@ -386,7 +386,7 @@ def load_image_2d(path_img):
     >>> os.remove(path_img)
     """
     if not os.path.exists(path_img):
-        raise AssertionError('missing: %s' % path_img)
+        raise FileNotFoundError('missing: %s' % path_img)
     n_img, img_ext = os.path.splitext(os.path.basename(path_img))
 
     if img_ext in ['.tif', '.tiff']:
@@ -450,7 +450,7 @@ def export_image(path_img, img, stretch_range=True):
     >>> os.remove(path_img)
     """
     if img.ndim < 2:
-        raise AssertionError('wrong image dim: %r' % img.shape)
+        raise TypeError('wrong image dim: %r' % img.shape)
     if not os.path.isdir(os.path.dirname(path_img)):
         return ''
     logging.debug(' .. saving image %r with %r to "%s"', img.shape, np.unique(img), path_img)
@@ -488,7 +488,7 @@ def load_params_from_txt(path_file):
     >>> os.remove(path_file)
     """
     if not os.path.isfile(path_file):
-        raise AssertionError('missing %s' % path_file)
+        raise FileNotFoundError('missing %s' % path_file)
     with open(path_file, "r") as f:
         lines = f.readlines()
 
@@ -522,10 +522,10 @@ def convert_img_2_nifti_gray(path_img, path_out):
     >>> os.remove(p_out)
     >>> os.remove(p_in)
     """
-    if not os.path.exists(path_img):
-        raise AssertionError('missing input: %s' % path_img)
+    if not os.path.isfile(path_img):
+        raise FileNotFoundError('missing input: %s' % path_img)
     if not os.path.exists(path_out):
-        raise AssertionError('missing output: %s' % path_out)
+        raise FileNotFoundError('missing output: %s' % path_out)
     name_img_out = os.path.splitext(os.path.basename(path_img))[0] + '.nii'
     path_img_out = os.path.join(os.path.dirname(path_out), name_img_out)
     logging.debug('Convert image to Nifti format "%s" ->  "%s"', path_img, path_img_out)
@@ -558,10 +558,10 @@ def convert_img_2_nifti_rgb(path_img, path_out):
     >>> os.remove(p_nifty)
     >>> os.remove(p_in)
     """
-    if not os.path.exists(path_img):
-        raise AssertionError('missing input: %s' % path_img)
+    if not os.path.isfile(path_img):
+        raise FileNotFoundError('missing input: %s' % path_img)
     if not os.path.exists(path_out):
-        raise AssertionError('missing output: %s' % path_out)
+        raise FileNotFoundError('missing output: %s' % path_out)
     name_img_out = os.path.splitext(os.path.basename(path_img))[0] + '.nii'
     path_img_out = os.path.join(os.path.dirname(path_out), name_img_out)
     logging.debug('Convert image to Nifti format "%s" ->  "%s"', path_img, path_img_out)
@@ -600,10 +600,10 @@ def convert_nifti_2_img(path_img_in, path_img_out):
     >>> os.remove(p_img)
     >>> os.remove(p_in)
     """
-    if not os.path.exists(path_img_in):
-        raise AssertionError('missing input: %s' % path_img_in)
-    if not os.path.exists(os.path.dirname(path_img_out)):
-        raise AssertionError('missing output: %s' % os.path.dirname(path_img_out))
+    if not os.path.isfile(path_img_in):
+        raise FileNotFoundError('missing input: %s' % path_img_in)
+    if not os.path.isdir(os.path.dirname(path_img_out)):
+        raise FileNotFoundError('missing output: %s' % os.path.dirname(path_img_out))
 
     nim = nibabel.load(path_img_in)
 
@@ -653,8 +653,8 @@ def load_image_tiff_volume(path_img, im_range=None):
     (647, 1024, 3)
     """
     path_img = update_path(path_img)
-    if not os.path.exists(path_img):
-        raise AssertionError('given image "%s" not exist!' % path_img)
+    if not os.path.isfile(path_img):
+        raise FileNotFoundError('given image "%s" not exist!' % path_img)
 
     img = io_imread(path_img)
 
@@ -711,11 +711,11 @@ def load_tiff_volume_split_double_band(path_img, im_range=None):
         if not img_b2.size:
             # loading also 2d images with rgb bands
             if img_b1.ndim != 4:
-                raise AssertionError('image is not stack of RGB')
+                raise TypeError('image is not stack of RGB')
             img_b2 = np.array([img_b1[0, :, :, 1]])
             img_b1 = np.array([img_b1[0, :, :, 0]])
     if img_b1.shape[0] != img_b2.shape[0]:
-        raise AssertionError('not equal slice number for %r and %r' % (img_b1.shape, img_b2.shape))
+        raise ValueError('not equal slice number for %r and %r' % (img_b1.shape, img_b2.shape))
     return img_b1, img_b2
 
 
@@ -731,7 +731,7 @@ def load_zvi_volume_double_band_split(path_img):
     (2, 488, 648)
     """
     if not os.path.isfile(path_img):
-        raise AssertionError('missing: %s' % path_img)
+        raise FileNotFoundError('missing: %s' % path_img)
     img = load_zvi(path_img)
     nb_half = img.shape[0] / 2
     img_b1 = img[:int(nb_half)]
@@ -762,7 +762,7 @@ def load_img_double_band_split(path_img, im_range=1., quantiles=(2, 98)):
     (15, 323, 512)
     """
     if not os.path.isfile(path_img):
-        raise AssertionError('missing: %s' % path_img)
+        raise FileNotFoundError('missing: %s' % path_img)
     file_ext = os.path.splitext(os.path.basename(path_img))[1]
     if file_ext == '.zvi':
         img_b1, img_b2 = load_zvi_volume_double_band_split(path_img)
@@ -874,7 +874,7 @@ def load_image(path_im, im_range=255):
         return None, ''
     path_im = update_path(path_im)
     im_name = os.path.splitext(os.path.basename(path_im))[0]
-    if not os.path.exists(path_im):
+    if not os.path.isfile(path_im):
         logging.debug('particular image is missing "%s"', path_im)
         return None, im_name
     logging.debug('loading image "{}"'.format(path_im))
@@ -913,14 +913,14 @@ def merge_image_channels(img_ch1, img_ch2, img_ch3=None):
     (150, 125, 3)
     """
     if img_ch1.ndim != 2:
-        raise AssertionError('image as to strictly 2D and single channel, got %r' % img_ch1.shape)
+        raise TypeError('image as to strictly 2D and single channel, got %r' % img_ch1.shape)
     if img_ch1.shape != img_ch2.shape:
-        raise AssertionError('channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch2.shape))
+        raise TypeError('channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch2.shape))
     if img_ch3 is None:
         img_ch3 = np.zeros(img_ch1.shape)
     else:
         if img_ch1.shape != img_ch3.shape:
-            raise AssertionError('channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch3.shape))
+            raise TypeError('channel dimension has to match: %r vs %r' % (img_ch1.shape, img_ch3.shape))
     img_rgb = np.rollaxis(np.array([img_ch1, img_ch2, img_ch3]), 0, 3)
     return img_rgb
 
@@ -954,10 +954,10 @@ def find_files_match_names_across_dirs(list_path_pattern, drop_none=True):
     """
     list_path_pattern = [pp for pp in list_path_pattern if pp is not None]
     if len(list_path_pattern) <= 1:
-        raise AssertionError('at least 2 paths required')
+        raise ValueError('at least 2 paths required')
     for p in list_path_pattern:
         if not os.path.exists(os.path.dirname(p)):
-            raise AssertionError('missing "%s"' % os.path.dirname(p))
+            raise FileNotFoundError('missing "%s"' % os.path.dirname(p))
 
     def _get_name(path, pattern='*'):
         name = os.path.splitext(os.path.basename(path))[0]

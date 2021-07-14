@@ -76,17 +76,17 @@ def object_segmentation_graphcut_slic(
     array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0], dtype=int32)
     """
     if np.min(labels_fg_prob) >= 1:
-        raise AssertionError('non label can ce strictly 1')
+        raise ValueError('non label can ce strictly 1')
     label_hist = histogram_regions_labels_norm(slic, segm)
     labels = np.argmax(label_hist, axis=1)
 
     if segm.max() > len(labels_fg_prob):
-        raise AssertionError('table of label proba is shorter then the nb of labels in segmentation')
+        raise ValueError('table of label prob is shorter then the nb of labels in segmentation')
     labels_fg_prob = np.array(labels_fg_prob)
     labels_bg_prob = 1. - labels_fg_prob
 
     if not list(centres):
-        raise AssertionError('at least one center has to be given')
+        raise ValueError('at least one center has to be given')
     centres = [np.round(c).astype(int) for c in centres]
     slic_points = superpixel_centers(slic)
 
@@ -200,15 +200,15 @@ def object_segmentation_graphcut_pixels(
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=int32)
     """
     if np.min(labels_fg_prob) >= 1:
-        raise AssertionError('non label can ce strictly 1')
+        raise ValueError('non label can ce strictly 1')
     if segm.max() > len(labels_fg_prob):
-        raise AssertionError('table of label proba is shorter then the nb of labels in segmentation')
+        raise ValueError('table of label proba is shorter then the nb of labels in segmentation')
     height, width = segm.shape
     labels_fg_prob = np.array(labels_fg_prob)
     labels_bg_prob = 1. - labels_fg_prob
 
     if not list(centres):
-        raise AssertionError('at least one center has to be given')
+        raise ValueError('at least one center has to be given')
     centres = [np.round(c).astype(int) for c in centres]
 
     proba = np.ones((height, width, len(centres) + 1))
@@ -637,10 +637,10 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 
     a0 = int(np.floor(angle_norm))
     if a0 >= (cum_distribution.shape[0] - 1):
-        raise AssertionError('angle %i is larger then size %i' % (a0, cum_distribution.shape[0]))
+        raise ValueError('angle %i is larger then size %i' % (a0, cum_distribution.shape[0]))
     d0 = int(np.floor(dist))
     if d0 >= (cum_distribution.shape[1] - 1):
-        raise AssertionError('distance %i is larger then size %i' % (d0, cum_distribution.shape[1]))
+        raise ValueError('distance %i is larger then size %i' % (d0, cum_distribution.shape[1]))
     interp = interpolate.interp2d(
         np.array([[a0, a0 + 1], [a0, a0 + 1]]).T,
         np.array([[d0, d0 + 1], [d0, d0 + 1]]),
@@ -806,7 +806,7 @@ def compute_update_shape_costs_points_table_cdf(
     array([[  7.5,  17.1]])
     """
     if len(points) != len(labels):
-        raise AssertionError('number of points (%i) and labels (%i) should match' % (len(points), len(labels)))
+        raise ValueError('number of points (%i) and labels (%i) should match' % (len(points), len(labels)))
     if selected_idx is None:
         selected_idx = list(range(len(points)))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
@@ -928,8 +928,7 @@ def compute_update_shape_costs_points_close_mean_cdf(
            [ 0.   ,  4.605]])
     """
     if len(points) != len(labels):
-        raise AssertionError('number of points (%i) and labels (%i) should match' \
-        % (len(points), len(labels)))
+        raise ValueError('number of points (%i) and labels (%i) should match' % (len(points), len(labels)))
     selected_idx = range(len(points)) if selected_idx is None else selected_idx
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     segm_obj = labels[slic]
@@ -1293,8 +1292,7 @@ def region_growing_shape_slic_greedy(
 
     """
     if len(slic_prob_fg) < np.max(slic):
-        raise AssertionError('dims of probs %s and slic %s not match' \
-                                              % (len(slic_prob_fg), np.max(slic)))
+        raise ValueError('dims of probs %s and slic %s not match' % (len(slic_prob_fg), np.max(slic)))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     slic_points = superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
@@ -1425,12 +1423,10 @@ def prepare_graphcut_variables(
     :return:
     """
     if np.max(candidates) >= len(slic_points):
-        raise AssertionError('max candidate idx: %d for %d centres' \
-        % (np.max(candidates), len(slic_points)))
+        raise ValueError('max candidate idx: %d for %d centres' % (np.max(candidates), len(slic_points)))
     max_slic_neighbours = max(max(lb) for lb in slic_neighbours)
     if max_slic_neighbours >= len(slic_points):
-        raise AssertionError('max slic neighbours idx: %d for %d centres' \
-        % (max_slic_neighbours, len(slic_points)))
+        raise ValueError('max slic neighbours idx: %d for %d centres' % (max_slic_neighbours, len(slic_points)))
     unary = np.zeros((len(candidates), nb_centres + 1))
     vertexes, edges = list(candidates), []
     for i, idx in enumerate(candidates):
@@ -1621,8 +1617,7 @@ def region_growing_shape_slic_graphcut(
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
     if len(slic_prob_fg) < np.max(slic):
-        raise AssertionError('dims of probs %s and slic %s not match' \
-        % (len(slic_prob_fg), np.max(slic)))
+        raise ValueError('dims of probs %s and slic %s not match' % (len(slic_prob_fg), np.max(slic)))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     slic_points = superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)

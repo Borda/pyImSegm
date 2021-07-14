@@ -64,7 +64,7 @@ def parse_arg_params():
     args = vars(parser.parse_args())
     p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
     if not os.path.isdir(p_dir):
-        raise AssertionError('missing folder: %s' % args['path_images'])
+        raise FileNotFoundError('missing folder: %s' % args['path_images'])
     args['path_images'] = os.path.join(p_dir, os.path.basename(args['path_images']))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args

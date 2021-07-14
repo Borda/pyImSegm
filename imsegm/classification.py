@@ -328,8 +328,7 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     if y_true.shape != y_pred.shape:
-        raise AssertionError('prediction (%i) and annotation (%i) should be equal' \
-        % (len(y_true), len(y_pred)))
+        raise TypeError('prediction (%i) and annotation (%i) should be equal' % (len(y_true), len(y_pred)))
     logging.debug('unique lbs true: %r, predict %r', np.unique(y_true), np.unique(y_pred))
 
     uq_labels = np.unique(np.hstack((y_true, y_pred)))
@@ -397,7 +396,7 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None, relabel=F
     """
     annot, segm, name = annot_segm_name
     if segm.shape != annot.shape:
-        raise AssertionError('dimension do not match for segm: %r - annot: %r' % (segm.shape, annot.shape))
+        raise TypeError('dimension do not match for segm: %r - annot: %r' % (segm.shape, annot.shape))
     y_true, y_pred = annot.ravel(), segm.ravel()
     # filter particular labels
     if drop_labels is not None:
@@ -457,7 +456,7 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2, drop_labels=
     Name: 0, dtype: object
     """
     if len(segms) != len(annots):
-        raise AssertionError('size of segment. (%i) amd annot. (%i) should be equal' % (len(segms), len(annots)))
+        raise ValueError('size of segment. (%i) amd annot. (%i) should be equal' % (len(segms), len(annots)))
     if not names:
         names = map(str, range(len(segms)))
     _compute_stat = partial(compute_classif_stat_segm_annot, drop_labels=drop_labels, relabel=relabel)
@@ -568,7 +567,7 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None, lab
     >>> os.remove(p_clf)
     """
     if not os.path.isdir(path_out):
-        raise AssertionError('missing folder: %s' % path_out)
+        raise FileNotFoundError('missing folder: %s' % path_out)
     dict_classif = {
         'params': params,
         'name': clf_name,
@@ -594,7 +593,7 @@ def load_classifier(path_classif):
     >>> load_classifier('none.abc')
     """
     logging.info('import classifier from "%s"', path_classif)
-    if not os.path.exists(path_classif):
+    if not os.path.isfile(path_classif):
         logging.debug('classifier does not exist')
         return None
     with open(path_classif, 'rb') as f:
@@ -612,7 +611,7 @@ def export_results_clf_search(path_out, clf_name, clf_search):
     :param object clf_search:
     """
     if not os.path.isdir(path_out):
-        raise AssertionError('missing folder: %s' % path_out)
+        raise FileNotFoundError('missing folder: %s' % path_out)
 
     def _fn_path_out(s):
         return os.path.join(path_out, 'classif_%s_%s.txt' % (clf_name, s))
@@ -710,13 +709,12 @@ def create_classif_search_train_export(
     >>> for p in files: os.remove(p)
     """
     if not list(labels):
-        raise AssertionError('some labels has to be given')
+        raise RuntimeError('some labels has to be given')
     features = np.nan_to_num(features)
     if len(features) != len(labels):
-        raise AssertionError('features (%i) and labels (%i) should have equal length' \
-        % (len(features), len(labels)))
+        raise ValueError('features (%i) and labels (%i) should have equal length' % (len(features), len(labels)))
     if not (features.ndim == 2 and features.shape[1] > 0):
-        raise AssertionError('at least one feature is required')
+        raise ValueError('at least one feature is required')
     logging.debug('training data: %r, labels (%i): %r', features.shape, len(labels), collections.Counter(labels))
     # gc.collect(), time.sleep(1)
     logging.info('create Classifier: %s', clf_name)
@@ -829,7 +827,7 @@ def eval_classif_cross_val_scores(
 
     if path_out is not None:
         if not os.path.exists(path_out):
-            raise AssertionError('missing: "%s"' % path_out)
+            raise FileNotFoundError('missing: "%s"' % path_out)
         name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'all-folds')
         path_csv = os.path.join(path_out, name_csv)
         df_scoring.to_csv(path_csv)
@@ -839,7 +837,7 @@ def eval_classif_cross_val_scores(
         logging.info('cross_val scores: \n %r', df_stat)
         if path_out is not None:
             if not os.path.exists(path_out):
-                raise AssertionError('missing: "%s"' % path_out)
+                raise FileNotFoundError('missing: "%s"' % path_out)
             name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'statistic')
             path_csv = os.path.join(path_out, name_csv)
             df_stat.to_csv(path_csv)
@@ -910,7 +908,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels, cross_val, p
     labels_bin = np.zeros((len(labels), np.max(labels) + 1))
     unique_labels = np.unique(labels)
     if not all(unique_labels >= 0):
-        raise AssertionError('some labels are negative: %r' % unique_labels)
+        raise ValueError('some labels are negative: %r' % unique_labels)
     for lb in unique_labels:
         labels_bin[:, lb] = (labels == lb)
 
@@ -940,7 +938,7 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels, cross_val, p
 
     if path_out is not None:
         if not os.path.exists(path_out):
-            raise AssertionError('missing: "%s"' % path_out)
+            raise FileNotFoundError('missing: "%s"' % path_out)
         name_csv = NAME_CSV_CLASSIF_CV_ROC.format(clf_name, 'mean')
         df_roc.to_csv(os.path.join(path_out, name_csv))
         name_txt = NAME_TXT_CLASSIF_CV_AUC.format(clf_name, 'mean')
@@ -1042,7 +1040,7 @@ def shuffle_features_labels(features, labels):
     False
     """
     if len(features) != len(labels):
-        raise AssertionError('features (%i) and labels (%i) should have equal length' % (len(features), len(labels)))
+        raise ValueError('features (%i) and labels (%i) should have equal length' % (len(features), len(labels)))
     idx = list(range(len(labels)))
     logging.debug('shuffle indexes - %i', len(labels))
     np.random.shuffle(idx)
@@ -1173,9 +1171,9 @@ def down_sample_dict_features_unique(dict_features):
         features = np.round(dict_features[label], ROUND_UNIQUE_FTS_DIGITS)
         unique_fts = np.array(unique_rows(features))
         if features.ndim != unique_fts.ndim:
-            raise AssertionError('feature dim matching')
+            raise TypeError('feature dim matching')
         if features.shape[1] != unique_fts.shape[1]:
-            raise AssertionError('features: %i <> %i' % (features.shape[1], unique_fts.shape[1]))
+            raise TypeError('features: %i <> %i' % (features.shape[1], unique_fts.shape[1]))
         dict_features_new[label] = unique_fts
     return dict_features_new
 
@@ -1240,8 +1238,8 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels, drop_label
     [25, 30]
     """
     logging.debug('convert set of features and labels to single one')
-    if not all(k in imgs_labels.keys() for k in imgs_features):
-        raise AssertionError('missing some items of %r' % imgs_labels.keys())
+    if not all(k in imgs_labels for k in imgs_features):
+        raise ValueError('missing some items of %r' % imgs_labels.keys())
     features_all, labels_all, sizes = list(), list(), list()
     for name in sorted(imgs_features.keys()):
         features = np.array(imgs_features[name])
@@ -1431,7 +1429,7 @@ class HoldOut(object):
         :param obj rand_seed: Seed for the random number generator.
         """
         if nb_samples <= hold_out:
-            raise AssertionError('total %i should be higher than hold Idx %i' % (nb_samples, hold_out))
+            raise ValueError('total %i should be higher than hold Idx %i' % (nb_samples, hold_out))
 
         self._total = nb_samples
         self.hold_out = hold_out
@@ -1525,9 +1523,9 @@ class CrossValidate(object):
         :param float ignore_overflow: tolerance while dividing dataset to folds
         """
         if nb_samples <= nb_hold_out:
-            raise AssertionError('Number of holdout has to be smaller then total size.')
+            raise ValueError('Number of holdout has to be smaller then total size.')
         if nb_hold_out <= 0:
-            raise AssertionError('Number of holdout has to be positive number.')
+            raise ValueError('Number of holdout has to be positive number.')
         self._nb_samples = nb_samples
         self._nb_hold_out = int(np.round(nb_samples * nb_hold_out)) \
             if nb_hold_out < 1 else nb_hold_out
@@ -1535,8 +1533,10 @@ class CrossValidate(object):
         self._ignore_overflow = int(np.round(nb_samples * ignore_overflow)) \
             if ignore_overflow < 1 else ignore_overflow
         if self._nb_hold_out <= self._ignore_overflow:
-            raise AssertionError('The tolerance of overflowing (%i) the split has to be larger than' \
-            ' the number of hold out samples (%i).' % (self._ignore_overflow, self._nb_hold_out))
+            raise ValueError(
+                'The tolerance of overflowing (%i) the split has to be larger than the number of hold out samples (%i).'
+                % (self._ignore_overflow, self._nb_hold_out)
+            )
 
         self._revert = False  # sets the sizes
         if self._nb_hold_out > (self._nb_samples / 2.):
@@ -1681,7 +1681,7 @@ class CrossValidateGroups(CrossValidate):
 
         total = np.sum(self._set_sizes)
         if np.sum(len(i) for i in self.set_indexes) != total:
-            raise AssertionError('all indexes should sum to total count %i' % total)
+            raise ValueError('all indexes should sum to total count %i' % total)
 
     def __iter_indexes(self, sets):
         """ return enrol indexes from sets
