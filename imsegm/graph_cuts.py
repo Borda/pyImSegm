@@ -507,7 +507,9 @@ def create_pairwise_matrix(gc_regul, nb_classes):
     """
     if isinstance(gc_regul, np.ndarray):
         if not gc_regul.shape[0] == gc_regul.shape[1] == nb_classes:
-            raise AssertionError('GC regul matrix %r should match match number of classes (%i)' % (gc_regul.shape, nb_classes))
+            raise AssertionError(
+                'GC regul matrix %r should match match number of classes (%i)' % (gc_regul.shape, nb_classes)
+            )
         # sub_min = np.tile(np.min(gc_regul, axis=0), (gc_regul.shape[0], 1))
         pairwise = gc_regul - np.min(gc_regul)
     elif isinstance(gc_regul, list):

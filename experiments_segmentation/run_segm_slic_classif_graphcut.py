@@ -402,7 +402,9 @@ def eval_segment_with_annot(
     if dict_label_hist is not None:
         visu_histogram_labels(params, dict_label_hist)
     if sorted(dict_annot.keys()) != sorted(dict_segm.keys()):
-        raise AssertionError('mismatch in dictionary keys: \n%s \n%s' % (sorted(dict_annot.keys()), sorted(dict_segm.keys())))
+        raise AssertionError(
+            'mismatch in dictionary keys: \n%s \n%s' % (sorted(dict_annot.keys()), sorted(dict_segm.keys()))
+        )
     list_annot = [dict_annot[n] for n in dict_annot]
     list_segm = [dict_segm[n] for n in dict_annot]
     df_stat = seg_clf.compute_stat_per_image(
