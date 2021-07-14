@@ -1294,7 +1294,7 @@ def compute_tp_tn_fp_fn(annot, segm, label_positive=None):
     if len(uq_labels) > 2:
         logging.debug('too many labels: %r', uq_labels)
         return np.nan, np.nan, np.nan, np.nan
-    elif len(uq_labels) < 2:
+    if len(uq_labels) < 2:
         logging.debug('only one label: %r', uq_labels)
         return len(y_true), 0, 0, 0
 
@@ -1331,7 +1331,7 @@ def compute_metric_fpfn_tpfn(annot, segm, label_positive=None):
     tp, _, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
     if tp == np.nan:
         return np.nan
-    elif (fp + fn) == 0:
+    if (fp + fn) == 0:
         return 0.
     measure = float(fp + fn) / float(tp + fn)
     return measure
@@ -1360,7 +1360,7 @@ def compute_metric_tpfp_tpfn(annot, segm, label_positive=None):
     tp, _, fp, fn = compute_tp_tn_fp_fn(annot, segm, label_positive)
     if tp == np.nan:
         return np.nan
-    elif (tp + fn) == 0:
+    if (tp + fn) == 0:
         return 0.
     measure = float(tp + fp) / float(tp + fn)
     return measure

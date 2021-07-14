@@ -1281,10 +1281,9 @@ def compute_selected_features_img2d(image, segm, features_flags=FEATURES_SET_COL
     """
     if image.ndim == 3 and image.shape[2] == 3:
         return compute_selected_features_color2d(image, segm, features_flags)
-    elif image.ndim == 2:
+    if image.ndim == 2:
         return compute_selected_features_gray2d(image, segm, features_flags)
-    else:
-        logging.error('invalid image size - %r', image.shape)
+    logging.error('invalid image size - %r', image.shape)
 
 
 def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DIAGONALS, nb_labels=None):

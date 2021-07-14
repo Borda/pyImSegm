@@ -1054,14 +1054,13 @@ def update_shape_costs_points(
             lut_shape_cost, points, labels, init_centres, centres, shifts, volumes, shape_model, selected_idx,
             swap_shift, thresholds
         )
-    elif shape_type == 'set_cdfs':
+    if shape_type == 'set_cdfs':
         # select closest by distance and use cdf
         return compute_update_shape_costs_points_close_mean_cdf(
             lut_shape_cost, slic, points, labels, init_centres, centres, shifts, volumes, shape_model, selected_idx,
             swap_shift, thresholds
         )
-    else:
-        raise NameError('Not supported type of shape model "%s"' % shape_type)
+    raise NameError('Not supported type of shape model "%s"' % shape_type)
 
 
 def compute_pairwise_penalty(edges, labels, prob_bg_fg=0.05, prob_fg1_fg2=0.01):
