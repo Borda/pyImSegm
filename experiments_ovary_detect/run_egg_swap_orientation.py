@@ -85,9 +85,8 @@ def correlation_coefficient(patch1, patch2):
     stds = patch1.std() * patch2.std()
     if stds == 0:
         return 0
-    else:
-        product /= stds
-        return product
+    product /= stds
+    return product
 
 
 def compute_mean_image(list_img_paths):

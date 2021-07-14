@@ -89,7 +89,7 @@ def update_path(path_file, lim_depth=5, absolute=True):
     """
     if path_file.startswith('/'):
         return path_file
-    elif path_file.startswith('~'):
+    if path_file.startswith('~'):
         path_file = os.path.expanduser(path_file)
     else:
         tmp_path = path_file

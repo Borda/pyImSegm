@@ -289,8 +289,7 @@ def get_idx_name(idx, path_img):
     im_name = os.path.splitext(os.path.basename(path_img))[0]
     if idx is not None:
         return '%04d_%s' % (idx, im_name)
-    else:
-        return im_name
+    return im_name
 
 
 def export_visual(idx_name, img, segm, debug_visual=None, path_out=None, path_visu=None):
