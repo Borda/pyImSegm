@@ -827,7 +827,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('run TRAINING...')
 
-    params = arg_parse_params(CENTER_PARAMS)
-    main_train(params)
+    cli_params = arg_parse_params(CENTER_PARAMS)
+    main_train(cli_params)
 
     logging.info('DONE')

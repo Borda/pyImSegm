@@ -164,8 +164,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params(DEFAULT_PARAMS)
+    cli_params = arg_parse_params(DEFAULT_PARAMS)
 
-    main(params)
+    main(cli_params)
 
     logging.info('DONE')

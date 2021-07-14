@@ -188,8 +188,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running...')
 
-    params = run_train.arg_parse_params(PARAMS)
-    path_out = os.path.join(params['path_output'], NAME_DIR)
-    main(params['path_segms'], path_out, params['nb_workers'])
+    cli_params = run_train.arg_parse_params(PARAMS)
+    path_out = os.path.join(cli_params['path_output'], NAME_DIR)
+    main(cli_params['path_segms'], path_out, cli_params['nb_workers'])
 
     logging.info('DONE')

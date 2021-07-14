@@ -866,10 +866,12 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params(SEGM_PARAMS)
+    cli_params = arg_parse_params(SEGM_PARAMS)
 
-    params = main_train(params)
+    cli_params = main_train(cli_params)
 
-    main_predict(params['path_classif'], params['path_predict_imgs'], params['path_exp'], params_local=params)
+    main_predict(
+        cli_params['path_classif'], cli_params['path_predict_imgs'], cli_params['path_exp'], params_local=cli_params
+    )
 
     logging.info('all DONE')

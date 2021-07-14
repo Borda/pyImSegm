@@ -113,7 +113,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params()
-    main(params['path_annot'], params['path_out'], params['nb_comp'])
+    cli_params = arg_parse_params()
+    main(cli_params['path_annot'], cli_params['path_out'], cli_params['nb_comp'])
 
     logging.info('Done')
