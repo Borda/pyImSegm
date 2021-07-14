@@ -53,7 +53,7 @@ class Experiment(object):
     >>> expt = Experiment(params)
     Traceback (most recent call last):
     ...
-    Exception: given folder "./my_experiments" does not exist!
+    FileNotFoundError: given folder "./my_experiments" does not exist!
     >>> os.mkdir(params['path_out'])
     >>> expt = Experiment(params, time_stamp=False)
     >>> expt.run()
@@ -65,7 +65,7 @@ class Experiment(object):
     def __init__(self, params, time_stamp=True):
         """ constructor
 
-        :param dict params: define experimenatl parameters
+        :param dict params: define experimental parameters
         :param bool time_stamp: add to experiment unique time stamp
         """
         self.params = copy.deepcopy(params)

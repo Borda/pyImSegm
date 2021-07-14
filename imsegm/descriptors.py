@@ -135,7 +135,7 @@ def _check_color_image_segm(image, segm):
     >>> _check_color_image_segm(np.zeros((125, 150, 3)), np.zeros((150, 125)))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    ValueError: ndarrays - image and segmentation do not match (125, 150, 3) vs (150, 125)
+    TypeError: ndarrays - image and segmentation do not match (125, 150, 3) vs (150, 125)
     """
     if image.shape[:2] != segm.shape:
         raise TypeError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
@@ -152,7 +152,7 @@ def _check_gray_image_segm(image, segm):
     >>> _check_gray_image_segm(np.zeros((125, 150)), np.zeros((150, 125)))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    ValueError: ndarrays - image and segmentation do not match (125, 150) vs (150, 125)
+    TypeError: ndarrays - image and segmentation do not match (125, 150) vs (150, 125)
     """
     if image.shape != segm.shape:
         raise TypeError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
@@ -168,7 +168,7 @@ def _check_color_image(image):
     >>> _check_color_image(np.zeros((200, 250, 1)))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    ValueError: image is not RGB with dims (200, 250, 1)
+    TypeError: image is not RGB with dims (200, 250, 1)
     """
     if image.ndim != 3 or image.shape[2] != 3:
         raise TypeError('image is not RGB with dims %s' % repr(image.shape))
