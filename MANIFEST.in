@@ -23,6 +23,7 @@ include setup.*
 
 # Exclude build configs
 exclude *.yml *.yaml
+exclude *.toml
 # Exclude testing
 exclude pytest.*
 recursive-exclude tests *
