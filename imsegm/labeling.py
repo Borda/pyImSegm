@@ -475,7 +475,7 @@ def merge_probab_labeling_2d(proba, dict_labels):
     array([ 0.6,  0.3])
     """
     if proba.ndim != 3:
-        raise AssertionError
+        raise ValueError
     if not dict_labels:
         raise ValueError('"dict_labels" is required')
     max_label = max(dict_labels.keys()) + 1

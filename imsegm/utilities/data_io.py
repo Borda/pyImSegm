@@ -117,7 +117,7 @@ def swap_coord_x_y(points):
     if not points.size:
         return points.tolist()
     if points.shape[1] != 2:
-        raise AssertionError
+        raise ValueError
     points_new = points[:, [1, 0]]
     return points_new.tolist()
 
@@ -1087,7 +1087,7 @@ def cut_object(img, mask, padding, use_mask=False, bg_color=None, allow_rotate=T
            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
     """
     if mask.shape[:2] != img.shape[:2]:
-        raise AssertionError
+        raise ValueError
 
     # prepare a simple mask with one horizontal segment
     prop = measure.regionprops(np.array([[0] * 20, [1] * 20, [0] * 20], dtype=int))[0]
