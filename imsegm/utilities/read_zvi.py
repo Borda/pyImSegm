@@ -57,21 +57,21 @@ def read_struct(data, t):
 
     if t == '?':
         return [None, next_data]
-    elif t == 'EMPTY':
+    if t == 'EMPTY':
         return [None, next_data]
-    elif t == 'NULL':
+    if t == 'NULL':
         return [None, next_data]
-    elif t == 'I2':
+    if t == 'I2':
         low = struct.unpack('<h', next_data[:2])
         return [low[0], next_data[2:]]
-    elif t == 'I4':
+    if t == 'I4':
         r = i32(next_data[:4])
         return [r, next_data[4:]]
-    elif t == 'BLOB':
+    if t == 'BLOB':
         size = i32(next_data[:4])
         r = next_data[4:4 + size]
         return [r, next_data[4 + size:]]
-    elif t == 'BSTR':
+    if t == 'BSTR':
         # ! 4 extra bytes escaped
         low, high = struct.unpack('<hh', next_data[:4])
         size = (high << 16) + low
