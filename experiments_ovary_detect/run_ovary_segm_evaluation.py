@@ -111,7 +111,8 @@ def arg_parse_params(paths):
             continue
         paths[k] = tl_data.update_path(arg_params[k], absolute=True)
         p = paths[k] if k == 'results' else os.path.dirname(paths[k])
-        assert os.path.exists(p), 'missing: %s' % p
+        if not os.path.exists(p):
+            raise AssertionError('missing: %s' % p)
     logging.info('ARG PARAMETERS: \n %s', (paths))
     return paths, export_visual, arg_params['nb_workers']
 
@@ -125,8 +126,9 @@ def compute_metrics(row):
     logging.debug('loading annot "%s"\n and segm "%s"', row['path_annot'], row['path_egg-segm'])
     annot, _ = tl_data.load_image_2d(row['path_annot'])
     segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
-    assert annot.shape == segm.shape, 'dimension do mot match %r - %r' % \
-                                      (annot.shape, segm.shape)
+    if annot.shape != segm.shape:
+        raise AssertionError('dimension do mot match %r - %r' % \
+                                      (annot.shape, segm.shape))
     jacobs = []
     segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=True)
     for lb in np.unique(annot)[1:]:

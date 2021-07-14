@@ -318,8 +318,8 @@ def compute_spatial_dist(centres, edges, relative=False):
     >>> np.round(compute_spatial_dist(centres, edges, relative=True), 2)
     array([ 1.12,  1.57,  1.34,  1.34,  0.5 ,  0.63,  0.5 ])
     """
-    assert np.max(edges) < len(centres), \
-        'max vertex %i exceed size of centres %i' % (np.max(edges), len(centres))
+    if np.max(edges) >= len(centres):
+        raise AssertionError('max vertex %i exceed size of centres %i' % (np.max(edges), len(centres)))
     ndim = np.max([len(c) for c in centres if c is not None])
     # replace empy segments by a empty vector
     for i, c in enumerate(centres):
@@ -413,7 +413,8 @@ def compute_edge_model(edges, proba, metric='l_T'):
     >>> np.round(weights, 3).tolist()
     [0.0, 0.002, 0.0, 0.005, 0.0, 0.0, 0.101, 0.092, 0.001]
     """
-    assert np.max(edges) < len(proba), 'max vertex %i exceed size of proba %r' % (np.max(edges), proba.shape)
+    if np.max(edges) >= len(proba):
+        raise AssertionError('max vertex %i exceed size of proba %r' % (np.max(edges), proba.shape))
     vertex_1 = proba[edges[:, 0]]
     vertex_2 = proba[edges[:, 1]]
     # pp 32, http://www.coe.utah.edu/~cs7640/readings/graph_cuts_intro.pdf
@@ -505,8 +506,8 @@ def create_pairwise_matrix(gc_regul, nb_classes):
            [ 1.23,  0.97,  0.54]])
     """
     if isinstance(gc_regul, np.ndarray):
-        assert gc_regul.shape[0] == gc_regul.shape[1] == nb_classes, \
-            'GC regul matrix %r should match match number of classes (%i)' % (gc_regul.shape, nb_classes)
+        if not gc_regul.shape[0] == gc_regul.shape[1] == nb_classes:
+            raise AssertionError('GC regul matrix %r should match match number of classes (%i)' % (gc_regul.shape, nb_classes))
         # sub_min = np.tile(np.min(gc_regul, axis=0), (gc_regul.shape[0], 1))
         pairwise = gc_regul - np.min(gc_regul)
     elif isinstance(gc_regul, list):
@@ -611,11 +612,13 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
     logging.debug('graph edges %r', edges.shape)
 
     if edge_type.startswith('model'):
-        assert proba is not None, '"proba" is required'
+        if proba is None:
+            raise AssertionError('"proba" is required')
         metric = edge_type.split('_')[-1] if '_' in edge_type else 'lT'
         edge_weights = compute_edge_model(edges, proba, metric)
     elif edge_type == 'color':
-        assert image is not None, '"image" is required'
+        if image is None:
+            raise AssertionError('"image" is required')
         image_float = np.array(image, dtype=float)
         if np.max(image) > 1:
             image_float /= 255.
@@ -626,7 +629,8 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
         weights = dist.astype(float) / (2 * np.std(dist)**2)
         edge_weights = np.exp(-weights)
     elif edge_type == 'features':
-        assert features is not None, '"features" is required'
+        if features is None:
+            raise AssertionError('"features" is required')
         features_norm = preprocessing.StandardScaler().fit_transform(features)
         vertex_1 = features_norm[edges[:, 0]]
         vertex_2 = features_norm[edges[:, 1]]
@@ -769,9 +773,9 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels, nb_label
         nb_labels = np.max(uq_labels) + 1
     transitions = np.zeros((nb_labels, nb_labels))
     for name in dict_slics:
-        assert (np.max(dict_slics[name]) + 1) == len(dict_labels[name]), \
-            'dims are not matching - max slic (%i) and label (%i)' \
-            % (np.max(dict_slics[name]), len(dict_labels[name]))
+        if (np.max(dict_slics[name]) + 1) != len(dict_labels[name]):
+            raise AssertionError('dims are not matching - max slic (%i) and label (%i)' \
+            % (np.max(dict_slics[name]), len(dict_labels[name])))
         _, edges = get_vertexes_edges(dict_slics[name])
         label_edges = np.asarray(dict_labels[name])[np.asarray(edges)]
         for lb1, lb2 in label_edges.tolist():

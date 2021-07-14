@@ -327,9 +327,9 @@ def compute_classif_metrics(y_true, y_pred, metric_averages=METRIC_AVERAGES):
     """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-    assert y_true.shape == y_pred.shape, \
-        'prediction (%i) and annotation (%i) should be equal' \
-        % (len(y_true), len(y_pred))
+    if y_true.shape != y_pred.shape:
+        raise AssertionError('prediction (%i) and annotation (%i) should be equal' \
+        % (len(y_true), len(y_pred)))
     logging.debug('unique lbs true: %r, predict %r', np.unique(y_true), np.unique(y_pred))
 
     uq_labels = np.unique(np.hstack((y_true, y_pred)))
@@ -396,8 +396,8 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None, relabel=F
     [[13, 17], [0, 0]]
     """
     annot, segm, name = annot_segm_name
-    assert segm.shape == annot.shape, \
-        'dimension do not match for segm: %r - annot: %r' % (segm.shape, annot.shape)
+    if segm.shape != annot.shape:
+        raise AssertionError('dimension do not match for segm: %r - annot: %r' % (segm.shape, annot.shape))
     y_true, y_pred = annot.ravel(), segm.ravel()
     # filter particular labels
     if drop_labels is not None:
@@ -456,8 +456,8 @@ def compute_stat_per_image(segms, annots, names=None, nb_workers=2, drop_labels=
     support_macro                                               None
     Name: 0, dtype: object
     """
-    assert len(segms) == len(annots), \
-        'size of segment. (%i) amd annot. (%i) should be equal' % (len(segms), len(annots))
+    if len(segms) != len(annots):
+        raise AssertionError('size of segment. (%i) amd annot. (%i) should be equal' % (len(segms), len(annots)))
     if not names:
         names = map(str, range(len(segms)))
     _compute_stat = partial(compute_classif_stat_segm_annot, drop_labels=drop_labels, relabel=relabel)
@@ -567,7 +567,8 @@ def save_classifier(path_out, classif, clf_name, params, feature_names=None, lab
     'TESTINNG'
     >>> os.remove(p_clf)
     """
-    assert os.path.isdir(path_out), 'missing folder: %s' % path_out
+    if not os.path.isdir(path_out):
+        raise AssertionError('missing folder: %s' % path_out)
     dict_classif = {
         'params': params,
         'name': clf_name,
@@ -610,7 +611,8 @@ def export_results_clf_search(path_out, clf_name, clf_search):
     :param str clf_name: name of selected classifier
     :param object clf_search:
     """
-    assert os.path.isdir(path_out), 'missing folder: %s' % path_out
+    if not os.path.isdir(path_out):
+        raise AssertionError('missing folder: %s' % path_out)
 
     def _fn_path_out(s):
         return os.path.join(path_out, 'classif_%s_%s.txt' % (clf_name, s))
@@ -707,13 +709,14 @@ def create_classif_search_train_export(
      'classif_RandForest_search_params_scores.txt']
     >>> for p in files: os.remove(p)
     """
-    assert list(labels), 'some labels has to be given'
+    if not list(labels):
+        raise AssertionError('some labels has to be given')
     features = np.nan_to_num(features)
-    assert len(features) == len(labels), \
-        'features (%i) and labels (%i) should have equal length' \
-        % (len(features), len(labels))
-    assert features.ndim == 2 and features.shape[1] > 0, \
-        'at least one feature is required'
+    if len(features) != len(labels):
+        raise AssertionError('features (%i) and labels (%i) should have equal length' \
+        % (len(features), len(labels)))
+    if not (features.ndim == 2 and features.shape[1] > 0):
+        raise AssertionError('at least one feature is required')
     logging.debug('training data: %r, labels (%i): %r', features.shape, len(labels), collections.Counter(labels))
     # gc.collect(), time.sleep(1)
     logging.info('create Classifier: %s', clf_name)
@@ -825,7 +828,8 @@ def eval_classif_cross_val_scores(
             logging.exception('model_selection.cross_val_score')
 
     if path_out is not None:
-        assert os.path.exists(path_out), 'missing: "%s"' % path_out
+        if not os.path.exists(path_out):
+            raise AssertionError('missing: "%s"' % path_out)
         name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'all-folds')
         path_csv = os.path.join(path_out, name_csv)
         df_scoring.to_csv(path_csv)
@@ -834,7 +838,8 @@ def eval_classif_cross_val_scores(
         df_stat = df_scoring.describe()
         logging.info('cross_val scores: \n %r', df_stat)
         if path_out is not None:
-            assert os.path.exists(path_out), 'missing: "%s"' % path_out
+            if not os.path.exists(path_out):
+                raise AssertionError('missing: "%s"' % path_out)
             name_csv = NAME_CSV_CLASSIF_CV_SCORES.format(clf_name, 'statistic')
             path_csv = os.path.join(path_out, name_csv)
             df_stat.to_csv(path_csv)
@@ -904,8 +909,8 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels, cross_val, p
     mean_fpr = np.linspace(0, 1, nb_steps)
     labels_bin = np.zeros((len(labels), np.max(labels) + 1))
     unique_labels = np.unique(labels)
-    assert all(unique_labels >= 0), \
-        'some labels are negative: %r' % unique_labels
+    if not all(unique_labels >= 0):
+        raise AssertionError('some labels are negative: %r' % unique_labels)
     for lb in unique_labels:
         labels_bin[:, lb] = (labels == lb)
 
@@ -934,7 +939,8 @@ def eval_classif_cross_val_roc(clf_name, classif, features, labels, cross_val, p
     auc = metrics.auc(mean_fpr, mean_tpr)
 
     if path_out is not None:
-        assert os.path.exists(path_out), 'missing: "%s"' % path_out
+        if not os.path.exists(path_out):
+            raise AssertionError('missing: "%s"' % path_out)
         name_csv = NAME_CSV_CLASSIF_CV_ROC.format(clf_name, 'mean')
         df_roc.to_csv(os.path.join(path_out, name_csv))
         name_txt = NAME_TXT_CLASSIF_CV_AUC.format(clf_name, 'mean')
@@ -1035,8 +1041,8 @@ def shuffle_features_labels(features, labels):
     >>> np.array_equal(lbs, lbs_new)
     False
     """
-    assert len(features) == len(labels), \
-        'features (%i) and labels (%i) should have equal length' % (len(features), len(labels))
+    if len(features) != len(labels):
+        raise AssertionError('features (%i) and labels (%i) should have equal length' % (len(features), len(labels)))
     idx = list(range(len(labels)))
     logging.debug('shuffle indexes - %i', len(labels))
     np.random.shuffle(idx)
@@ -1166,9 +1172,10 @@ def down_sample_dict_features_unique(dict_features):
     for label in dict_features:
         features = np.round(dict_features[label], ROUND_UNIQUE_FTS_DIGITS)
         unique_fts = np.array(unique_rows(features))
-        assert features.ndim == unique_fts.ndim, 'feature dim matching'
-        assert features.shape[1] == unique_fts.shape[1], \
-            'features: %i <> %i' % (features.shape[1], unique_fts.shape[1])
+        if features.ndim != unique_fts.ndim:
+            raise AssertionError('feature dim matching')
+        if features.shape[1] != unique_fts.shape[1]:
+            raise AssertionError('features: %i <> %i' % (features.shape[1], unique_fts.shape[1]))
         dict_features_new[label] = unique_fts
     return dict_features_new
 
@@ -1233,9 +1240,9 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels, drop_label
     [25, 30]
     """
     logging.debug('convert set of features and labels to single one')
-    assert all(k in imgs_labels.keys() for k in imgs_features.keys()), \
-        'missing some items of %r' % imgs_labels.keys()
-    features_all, labels_all, sizes = [], [], []
+    if not all(k in imgs_labels.keys() for k in imgs_features):
+        raise AssertionError('missing some items of %r' % imgs_labels.keys())
+    features_all, labels_all, sizes = list(), list(), list()
     for name in sorted(imgs_features.keys()):
         features = np.array(imgs_features[name])
         labels = np.array(imgs_labels[name].astype(int))
@@ -1423,8 +1430,8 @@ class HoldOut(object):
         :param int hold_out: index where the test starts
         :param obj rand_seed: Seed for the random number generator.
         """
-        assert nb_samples > hold_out, \
-            'total %i should be higher than hold Idx %i' % (nb_samples, hold_out)
+        if nb_samples <= hold_out:
+            raise AssertionError('total %i should be higher than hold Idx %i' % (nb_samples, hold_out))
 
         self._total = nb_samples
         self.hold_out = hold_out
@@ -1517,18 +1524,19 @@ class CrossValidate(object):
         :param int|None rand_seed: random seed for shuffling
         :param float ignore_overflow: tolerance while dividing dataset to folds
         """
-        assert nb_samples > nb_hold_out, \
-            'Number of holdout has to be smaller then total size.'
-        assert nb_hold_out > 0, 'Number of holdout has to be positive number.'
+        if nb_samples <= nb_hold_out:
+            raise AssertionError('Number of holdout has to be smaller then total size.')
+        if nb_hold_out <= 0:
+            raise AssertionError('Number of holdout has to be positive number.')
         self._nb_samples = nb_samples
         self._nb_hold_out = int(np.round(nb_samples * nb_hold_out)) \
             if nb_hold_out < 1 else nb_hold_out
         ignore_overflow = abs(ignore_overflow)
         self._ignore_overflow = int(np.round(nb_samples * ignore_overflow)) \
             if ignore_overflow < 1 else ignore_overflow
-        assert self._nb_hold_out > self._ignore_overflow, \
-            'The tolerance of overflowing (%i) the split has to be larger than' \
-            ' the number of hold out samples (%i).' % (self._ignore_overflow, self._nb_hold_out)
+        if self._nb_hold_out <= self._ignore_overflow:
+            raise AssertionError('The tolerance of overflowing (%i) the split has to be larger than' \
+            ' the number of hold out samples (%i).' % (self._ignore_overflow, self._nb_hold_out))
 
         self._revert = False  # sets the sizes
         if self._nb_hold_out > (self._nb_samples / 2.):
@@ -1672,8 +1680,8 @@ class CrossValidateGroups(CrossValidate):
             start += size
 
         total = np.sum(self._set_sizes)
-        assert np.sum(len(i) for i in self.set_indexes) == total, \
-            'all indexes should sum to total count %i' % total
+        if np.sum(len(i) for i in self.set_indexes) != total:
+            raise AssertionError('all indexes should sum to total count %i' % total)
 
     def __iter_indexes(self, sets):
         """ return enrol indexes from sets

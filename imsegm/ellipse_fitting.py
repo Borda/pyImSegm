@@ -104,17 +104,18 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(), table_prob)   # doctest: +ELLIPSIS
         -70.311...
         """
-        assert len(points) == len(weights) == len(labels), \
-            'different sizes for points %i and weights %i and labels %i' \
-            % (len(points), len(weights), len(labels))
+        if not len(points) == len(weights) == len(labels):
+            raise AssertionError('different sizes for points %i and weights %i and labels %i' \
+            % (len(points), len(weights), len(labels)))
         table_prob = np.array(table_prob)
         if table_prob.ndim == 1 or table_prob.shape[0] == 1:
             if table_prob.shape[0] == 1:
                 table_prob = table_prob[0]
             table_prob = np.array([table_prob, 1. - table_prob])
-        assert table_prob.shape[0] == 2, 'table shape %r' % table_prob.shape
-        assert np.max(labels) < table_prob.shape[1], \
-            'labels (%i) exceed the table %r' % (np.max(labels), table_prob.shape)
+        if table_prob.shape[0] != 2:
+            raise AssertionError('table shape %r' % table_prob.shape)
+        if np.max(labels) >= table_prob.shape[1]:
+            raise AssertionError('labels (%i) exceed the table %r' % (np.max(labels), table_prob.shape))
 
         r_pos, c_pos = points[:, 0], points[:, 1]
         r_org, c_org, r_rad, c_rad, phi = self.params

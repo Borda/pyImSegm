@@ -41,7 +41,8 @@ def parse_arg_params():
     parser.add_argument('--nb_workers', type=int, required=False, help='number of jobs in parallel', default=NB_WORKERS)
     args = vars(parser.parse_args())
     p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
-    assert os.path.isdir(p_dir), 'missing folder: %s' % args['path_images']
+    if not os.path.isdir(p_dir):
+        raise AssertionError('missing folder: %s' % args['path_images'])
     args['path_images'] = os.path.join(p_dir, os.path.basename(args['path_images']))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args
@@ -74,8 +75,8 @@ def quantize_folder_images(path_images, label, nb_workers=1):
     :param list(str) path_images: list of image paths
     :param int nb_workers:
     """
-    assert os.path.isdir(os.path.dirname(path_images)), \
-        'input folder does not exist: %s' % os.path.dirname(path_images)
+    if not os.path.isdir(os.path.dirname(path_images)):
+        raise AssertionError('input folder does not exist: %s' % os.path.dirname(path_images))
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
 

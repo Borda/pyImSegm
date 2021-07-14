@@ -49,7 +49,8 @@ def parse_arg_params():
     args = vars(parser.parse_args())
     for n in ['path_images', 'path_out']:
         p_dir = tl_data.update_path(os.path.dirname(args[n]))
-        assert os.path.isdir(p_dir), 'missing: %s' % args[n]
+        if not os.path.isdir(p_dir):
+            raise AssertionError('missing: %s' % args[n])
         args[n] = os.path.join(p_dir, os.path.basename(args[n]))
     if args['path_colors'] is not None:
         args['path_colors'] = tl_data.update_path(args['path_colors'])
@@ -131,13 +132,13 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_workers=1):
     :param str path_json: path to json file
     :param int int nb_workers:
     """
-    assert os.path.isdir(os.path.dirname(path_images)), \
-        'input folder does not exist'
+    if not os.path.isdir(os.path.dirname(path_images)):
+        raise AssertionError('input folder does not exist')
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
     if not os.path.exists(path_out):
-        assert os.path.isdir(os.path.dirname(path_out)), \
-            'missing folder: %s' % os.path.dirname(path_out)
+        if not os.path.isdir(os.path.dirname(path_out)):
+            raise AssertionError('missing folder: %s' % os.path.dirname(path_out))
         os.mkdir(path_out)
 
     dict_colors = load_dict_colours(path_json)
@@ -152,8 +153,8 @@ def main(params):
     logging.info('running...')
 
     if not os.path.exists(params['path_out']):
-        assert os.path.isdir(os.path.dirname(params['path_out'])), \
-            'missing folder: %s' % os.path.dirname(params['path_out'])
+        if not os.path.isdir(os.path.dirname(params['path_out'])):
+            raise AssertionError('missing folder: %s' % os.path.dirname(params['path_out']))
         os.mkdir(params['path_out'])
 
     convert_folder_images(params['path_images'], params['path_out'], params['path_colors'], params['nb_workers'])

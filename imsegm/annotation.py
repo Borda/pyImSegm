@@ -118,8 +118,8 @@ def convert_img_colors_to_labels_reverted(img_rgb, dict_color_label):
         changed = np.bincount(m_lb.flatten())
         if len(changed) == 2:
             converted_labels += np.bincount(m_lb.flatten())[1]
-    assert converted_labels == np.prod(img_labels.shape), \
-        'There is different number of pixels than number of converted labels.'
+    if converted_labels != np.prod(img_labels.shape):
+        raise AssertionError('There is different number of pixels than number of converted labels.')
     img_labels = img_labels.astype(np.int, copy=False)
     return img_labels
 
@@ -142,8 +142,8 @@ def convert_img_labels_to_colors(segm, lut_label_colors):
            [ 0.9,  0.9,  0.2,  0.2,  0.9,  0.9,  0.9],
            [ 0.9,  0.2,  0.9,  0.2,  0.9,  0.2,  0.9]])
     """
-    assert all(lb in lut_label_colors.keys() for lb in np.unique(segm)), \
-        'some labels %r are missing in dictionary %r' % (np.unique(segm), lut_label_colors.keys())
+    if not all(lb in lut_label_colors.keys() for lb in np.unique(segm)):
+        raise AssertionError('some labels %r are missing in dictionary %r' % (np.unique(segm), lut_label_colors.keys()))
     # init Look-Up-Table
     min_label = np.min(segm)
     nb_labels = np.max(segm) - min_label + 1
@@ -276,8 +276,8 @@ def quantize_image_nearest_color(img, colors):
 
 
 def image_inpaint_pixels(img, valid_mask):
-    assert img.shape == valid_mask.shape, \
-        'image size %r and mask size %r should be equal' % (img.shape, valid_mask.shape)
+    if img.shape != valid_mask.shape:
+        raise AssertionError('image size %r and mask size %r should be equal' % (img.shape, valid_mask.shape))
     coords = np.array(np.nonzero(valid_mask)).T
     values = img[valid_mask]
     it = interpolate.NearestNDInterpolator(coords, values)

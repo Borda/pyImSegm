@@ -60,7 +60,8 @@ def arg_parse_params():
     for k in (k for k in params if 'path' in k):
         params[k] = tl_data.update_path(params[k], absolute=True)
         p = os.path.dirname(params[k]) if k == 'path_annot' else params[k]
-        assert os.path.exists(p), 'missing: %s' % p
+        if not os.path.exists(p):
+            raise AssertionError('missing: %s' % p)
     # load saved configuration
     logging.info('ARG PARAMETERS: \n %r', params)
     return params

@@ -169,7 +169,8 @@ if __name__ == '__main__':
     params = run_train.arg_parse_params(DEFAULT_PARAMS)
 
     params['path_classif'] = params['path_centers']
-    assert os.path.isfile(params['path_classif']), 'missing classifier: %s' % params['path_classif']
+    if not os.path.isfile(params['path_classif']):
+        raise AssertionError('missing classifier: %s' % params['path_classif'])
 
     main(params)
 

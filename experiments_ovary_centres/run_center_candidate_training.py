@@ -191,11 +191,13 @@ def arg_parse_params(params):
         else:
             paths[k] = tl_data.update_path(params[k], absolute=True)
             p_dir = paths[k]
-        assert os.path.exists(p_dir), 'missing (%s) %s' % (k, p_dir)
+        if not os.path.exists(p_dir):
+            raise AssertionError('missing (%s) %s' % (k, p_dir))
     # load saved configuration
     if params['path_config'] is not None:
         ext = os.path.splitext(params['path_config'])[-1]
-        assert ext in ('.yaml', '.yml'), 'wrong extension for %s' % params['path_config']
+        if ext not in ('.yaml', '.yml'):
+            raise AssertionError('wrong extension for %s' % params['path_config'])
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
     params.update(paths)
@@ -263,7 +265,8 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
     idx, row_path = idx_row
     for k in ['path_image', 'path_segm', 'path_centers']:
         row_path[k] = tl_data.update_path(row_path[k])
-        assert os.path.exists(row_path[k]), 'missing %s' % row_path[k]
+        if not os.path.exists(row_path[k]):
+            raise AssertionError('missing %s' % row_path[k])
 
     idx_name = get_idx_name(idx, row_path['path_image'])
     img_struc, img_gene = tl_data.load_img_double_band_split(row_path['path_image'], im_range=None)
@@ -382,7 +385,8 @@ def estim_points_compute_features(name, img, segm, params):
     :return (str, ndarray, [(int, int)], [[float]], list(str)):
     """
     # superpixels on image
-    assert img.shape[:2] == segm.shape[:2], 'not matching shapes: %r : %r' % (img.shape, segm.shape)
+    if img.shape[:2] != segm.shape[:2]:
+        raise AssertionError('not matching shapes: %r : %r' % (img.shape, segm.shape))
     slic = seg_spx.segment_slic_img2d(img, params['slic_size'], params['slic_regul'])
     slic_centers = seg_spx.superpixel_centers(slic)
     # slic_edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
@@ -466,7 +470,8 @@ def label_close_points(centers, points, params):
     else:
         logging.warning('not relevant centers info of type "%s"', type(centers))
         labels = [-1] * len(points)
-    assert len(points) == len(labels), 'not equal lenghts of points (%i) and labels (%i)' % (len(points), len(labels))
+    if len(points) != len(labels):
+        raise AssertionError('not equal lenghts of points (%i) and labels (%i)' % (len(points), len(labels)))
     return labels
 
 
@@ -708,7 +713,8 @@ def experiment_loo(
 def prepare_experiment_folder(params, dir_template):
     params['path_expt'] = os.path.join(params['path_output'], dir_template % params['name'])
     if not os.path.exists(params['path_expt']):
-        assert os.path.isdir(os.path.dirname(params['path_expt'])), 'missing: %s' % os.path.dirname(params['path_expt'])
+        if not os.path.isdir(os.path.dirname(params['path_expt'])):
+            raise AssertionError('missing: %s' % os.path.dirname(params['path_expt']))
         logging.debug('creating missing folder: %s', params['path_expt'])
         os.mkdir(params['path_expt'])
     return params
@@ -753,7 +759,8 @@ def main_train(params):
     if not os.path.isfile(path_dump_data) or FORCE_RECOMP_DATA:
         dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, dict_features, dict_labels, feature_names = \
             dataset_load_images_segms_compute_features(params, df_paths, params['nb_workers'])
-        assert len(dict_imgs) > 0, 'missing images'
+        if len(dict_imgs) <= 0:
+            raise AssertionError('missing images')
         save_dump_data(
             path_dump_data,
             dict_imgs,
@@ -781,7 +788,8 @@ def main_train(params):
     # remove all bad values from features space
     features[np.isnan(features)] = 0
     features[np.isinf(features)] = -1
-    assert np.sum(sizes) == len(labels), 'not equal sizes (%d) and labels (%i)' % (int(np.sum(sizes)), len(labels))
+    if np.sum(sizes) != len(labels):
+        raise AssertionError('not equal sizes (%d) and labels (%i)' % (int(np.sum(sizes)), len(labels)))
 
     # feature norm & train classification
     nb_holdout = int(np.ceil(len(sizes) * CROSS_VAL_LEAVE_OUT_SEARCH))

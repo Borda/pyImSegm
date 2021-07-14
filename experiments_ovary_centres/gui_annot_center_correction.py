@@ -116,7 +116,8 @@ def arg_parse_params():
             continue
         params[k] = os.path.abspath(os.path.expanduser(params[k]))
         p = os.path.dirname(params[k]) if '*' in params[k] else params[k]
-        assert os.path.exists(p), 'missing: %s' % p
+        if not os.path.exists(p):
+            raise AssertionError('missing: %s' % p)
     logging.info('ARG PARAMETERS: \n %r', params)
     return params
 
@@ -142,12 +143,12 @@ def load_paths_image_csv(params, skip_csv=POSIX_CSV_LABEL):
     list_names = [get_name(p) for p in list_imgs]
     # filter to have just paths with the  right names
     list_csv = sorted([p for p in list_csv if get_name(p) in list_names])
-    assert len(list_imgs) == len(list_csv), \
-        'the number of images (%i) and csv (%i) has to be same' % \
-        (len(list_imgs), len(list_csv))
+    if len(list_imgs) != len(list_csv):
+        raise AssertionError('the number of images (%i) and csv (%i) has to be same' % \
+        (len(list_imgs), len(list_csv)))
     list_join_img_csv = zip(list_imgs, list_csv)
-    assert all(get_name(p1) == get_name(p2) for p1, p2 in list_join_img_csv), \
-        'names has to be same for %r' % list_join_img_csv
+    if not all(get_name(p1) == get_name(p2) for p1, p2 in list_join_img_csv):
+        raise AssertionError('names has to be same for %r' % list_join_img_csv)
     return list_join_img_csv
 
 
@@ -375,7 +376,8 @@ def main(params):
     actual_idx = 0
     paths_img_csv = load_paths_image_csv(params)
     logging.info('loaded %i pairs (image & centers)', len(paths_img_csv))
-    assert paths_img_csv, 'missing paths image - csv'
+    if not paths_img_csv:
+        raise AssertionError('missing paths image - csv')
 
     if params['path_info'] is not None and os.path.isfile(params['path_info']):
         df_info_all = pd.read_csv(params['path_info'], sep='\t', index_col=0)

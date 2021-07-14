@@ -47,11 +47,12 @@ def parse_arg_params():
     args = vars(parser.parse_args())
     for k in ['path_images', 'path_output']:
         p_dir = tl_data.update_path(os.path.dirname(args[k]))
-        assert os.path.isdir(p_dir), 'missing folder: %s' % args[k]
+        if not os.path.isdir(p_dir):
+            raise AssertionError('missing folder: %s' % args[k])
         args[k] = os.path.join(p_dir, os.path.basename(args[k]))
-    assert len(args['label_old']) == len(args['label_new']), \
-        'length of old (%i) and new (%i) labels should be same' \
-        % (len(args['label_old']), len(args['label_new']))
+    if len(args['label_old']) != len(args['label_new']):
+        raise AssertionError('length of old (%i) and new (%i) labels should be same' \
+        % (len(args['label_old']), len(args['label_new'])))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args
 
@@ -95,8 +96,10 @@ def relabel_folder_images(path_images, path_out, labels_old, labels_new, nb_work
     :param [int] labels_new: list of new labels
     :param int nb_workers:
     """
-    assert os.path.isdir(os.path.dirname(path_images)), 'missing folder: %s' % path_images
-    assert os.path.isdir(path_out), 'missing ouput folder: %s' % path_out
+    if not os.path.isdir(os.path.dirname(path_images)):
+        raise AssertionError('missing folder: %s' % path_images)
+    if not os.path.isdir(path_out):
+        raise AssertionError('missing ouput folder: %s' % path_out)
 
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
@@ -121,8 +124,8 @@ def main(params):
     logging.info('running...')
 
     if not os.path.exists(params['path_output']):
-        assert os.path.isdir(os.path.dirname(params['path_output'])), \
-            'missing folder: %s' % os.path.dirname(params['path_output'])
+        if not os.path.isdir(os.path.dirname(params['path_output'])):
+            raise AssertionError('missing folder: %s' % os.path.dirname(params['path_output']))
         os.mkdir(params['path_output'])
 
     relabel_folder_images(

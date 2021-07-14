@@ -188,7 +188,8 @@ def arg_parse_params(params):
             continue
         args[k] = tl_data.update_path(args[k])
         p = os.path.dirname(args[k]) if k == 'path_predict_imgs' else args[k]
-        assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
+        if not os.path.exists(p):
+            raise AssertionError('missing: (%s) "%s"' % (k, p))
     # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
     if os.path.isfile(args.get('path_config', '')):
@@ -206,10 +207,12 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
     :return ndarray:
     """
     path_img = tl_data.update_path(path_img)
-    assert os.path.isfile(path_img), 'missing: "%s"' % path_img
+    if not os.path.isfile(path_img):
+        raise AssertionError('missing: "%s"' % path_img)
     if img_type == '2d_split':
         img, _ = tl_data.load_img_double_band_split(path_img)
-        assert img.ndim == 2, 'image dims: %r' % img.shape
+        if img.ndim != 2:
+            raise AssertionError('image dims: %r' % img.shape)
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         # if img.max() > 1:
         #     img = (img / 255.)
@@ -530,7 +533,8 @@ def load_path_images(params):
 
 
 def write_skip_file(path_dir):
-    assert os.path.isdir(path_dir), 'missing: %s' % path_dir
+    if not os.path.isdir(path_dir):
+        raise AssertionError('missing: %s' % path_dir)
     with open(os.path.join(path_dir, 'RESULTS'), 'w') as fp:
         fp.write('This particular experiment was skipped by user option.')
 
@@ -558,7 +562,8 @@ def main(params):
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
 
     paths_img = load_path_images(params)
-    assert paths_img, 'missing images'
+    if not paths_img:
+        raise AssertionError('missing images')
 
     def _path_expt(n):
         return os.path.join(params['path_exp'], n)
