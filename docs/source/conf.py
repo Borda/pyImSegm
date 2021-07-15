@@ -309,7 +309,7 @@ def linkcode_resolve(domain, info):
             obj = getattr(obj, part)
         fname = inspect.getsourcefile(obj)
         # https://github.com/rtfd/readthedocs.org/issues/5735
-        if any([s in fname for s in ('readthedocs', 'rtfd', 'checkouts')]):
+        if any(s in fname for s in ('readthedocs', 'rtfd', 'checkouts')):
             path_top = os.path.abspath(os.path.join('..', '..', '..'))
             fname = os.path.relpath(fname, start=path_top)
         else:
