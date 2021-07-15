@@ -109,7 +109,7 @@ class EllipseModelSegm(sk_fit.EllipseModel):
                 'different sizes for points %i and weights %i and labels %i' % (len(points), len(weights), len(labels))
             )
         table_prob = np.array(table_prob)
-        if table_prob.ndim == 1 or table_prob.shape[0] == 1:
+        if 1 in (table_prob.ndim, table_prob.shape[0]):
             if table_prob.shape[0] == 1:
                 table_prob = table_prob[0]
             table_prob = np.array([table_prob, 1. - table_prob])
@@ -235,10 +235,9 @@ def ransac_segm(
         # estimate model for current random sample set
         model = model_class()
         success = model.estimate(samples)
-
-        if success is not None:  # backwards compatibility
-            if not success:
-                continue
+        # backwards compatibility
+        if success is not None and not success:
+            continue
 
         model_residuals = np.abs(model.residuals(points))
         # consensus set / inliers

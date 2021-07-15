@@ -87,7 +87,7 @@ def convert_img_colors_to_labels(img_rgb, lut_label_color):
            [1, 1, 0, 0, 1, 1, 1],
            [1, 0, 1, 0, 1, 0, 1]])
     """
-    dict_color_label = dict((lut_label_color[k], k) for k in lut_label_color)
+    dict_color_label = {lut_label_color[k]: k for k in lut_label_color}
     return convert_img_colors_to_labels_reverted(img_rgb, dict_color_label)
 
 
@@ -185,7 +185,7 @@ def image_frequent_colors(img, ratio_threshold=1e-3):
     img_colors = image.getcolors(maxcolors=nb_pixels)
     if not img_colors:
         return {}
-    dict_clrs = dict([(clr, nb) for nb, clr in img_colors if nb >= nb_px_min])
+    dict_clrs = {clr: nb for nb, clr in img_colors if nb >= nb_px_min}
     ration_main_colors = sum(dict_clrs.values()) / float(nb_pixels)
     logging.debug(
         'image main colors=%f and other=%f with colours: \n%r', ration_main_colors, 1. - ration_main_colors, dict_clrs

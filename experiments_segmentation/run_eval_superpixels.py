@@ -165,7 +165,6 @@ if __name__ == '__main__':
     logging.info('running...')
 
     cli_params = arg_parse_params(DEFAULT_PARAMS)
-
     main(cli_params)
 
     logging.info('DONE')

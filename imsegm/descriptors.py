@@ -1444,8 +1444,7 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
         raise ValueError('dim of position %r should match the segmentation %r dim' % (position, segm.shape))
     position = [int(p) for p in position]
     # take selection around point with size of struc. element
-    im_begin, im_end, bb_begin, bb_end = \
-        adjust_bounding_box_crop(segm.shape, struc_elem.shape, position)
+    im_begin, im_end, bb_begin, bb_end = adjust_bounding_box_crop(segm.shape, struc_elem.shape, position)
     segm_select = segm[im_begin[0]:im_end[0], im_begin[1]:im_end[1]]
     struc_elem = struc_elem[bb_begin[0]:bb_end[0], bb_begin[1]:bb_end[1]]
     if segm_select.shape != struc_elem.shape:

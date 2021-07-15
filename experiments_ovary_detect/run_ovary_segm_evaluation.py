@@ -107,7 +107,7 @@ def arg_parse_params(paths):
     parser.add_argument('--visual', required=False, action='store_true', default=False, help='export visualisations')
     arg_params = vars(parser.parse_args())
     export_visual = arg_params['visual']
-    for k in (k for k in arg_params if k != 'nb_workers' and k != 'visual'):
+    for k in (k for k in arg_params if k not in ('nb_workers', 'visual')):
         if not isinstance(arg_params[k], str) or arg_params[k].lower() == 'none':
             paths[k] = None
             continue

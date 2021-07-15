@@ -396,7 +396,6 @@ def compute_edge_model(edges, proba, metric='l_T'):
     :param str metric: define metric
     :return list(float):
 
-
     >>> segments = np.array([[0] * 3 + [1] * 5 + [2] * 4,
     ...                      [4] * 4 + [5] * 5 + [6] * 3])
     >>> edges = np.array(get_vertexes_edges(segments)[1], dtype=int)
@@ -424,6 +423,8 @@ def compute_edge_model(edges, proba, metric='l_T'):
         edge_weights = np.exp(-dist / (2 * np.std(dist)**2))
     elif metric == 'l2':
         dist = metrics.pairwise.paired_euclidean_distances(vertex_1, vertex_2)
+        if dist is None:
+            raise ValueError('Unexpected `dist` of %r' % dist)
         edge_weights = np.exp(-dist / (2 * np.std(dist)**2))
     elif metric == 'lT':
         # exp(- norm value diff) * (geom dist vertex)**-1

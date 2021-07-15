@@ -189,7 +189,7 @@ if __name__ == '__main__':
     logging.info('running...')
 
     cli_params = run_train.arg_parse_params(PARAMS)
-    path_out = os.path.join(cli_params['path_output'], NAME_DIR)
-    main(cli_params['path_segms'], path_out, cli_params['nb_workers'])
+    path_output = os.path.join(cli_params['path_output'], NAME_DIR)
+    main(cli_params['path_segms'], path_output, cli_params['nb_workers'])
 
     logging.info('DONE')

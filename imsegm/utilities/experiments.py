@@ -91,7 +91,7 @@ class Experiment(object):
 
         :param bool gt: try to load ground truth
         """
-        logging.warning('Not implemented yet...')
+        logging.warning('Not implemented yet with `gt=%s`...', gt)
 
     def _perform(self):
         logging.warning('Not implemented yet...')
@@ -302,8 +302,7 @@ def extend_list_params(params, name_param, options):
             p_new.update({name_param: v})
             if p_new['param_idx']:
                 p_new['param_idx'] += '_'
-            p_new['param_idx'] += \
-                '%s-%i#%i' % (name_param, len(options), i + 1)
+            p_new['param_idx'] += '%s-%i#%i' % (name_param, len(options), i + 1)
             list_params_new.append(p_new)
     return list_params_new
 

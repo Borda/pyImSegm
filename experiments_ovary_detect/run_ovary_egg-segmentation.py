@@ -165,7 +165,7 @@ def arg_parse_params(params):
         if not os.path.isfile(params['path_config']):
             raise FileNotFoundError('missing file: %s' % params['path_config'])
         _, ext = os.path.splitext(params['path_config'])
-        if not (ext == '.yaml' or ext == '.yml'):
+        if ext not in ('.yaml', '.yml'):
             raise RuntimeError('"%s" should be YAML file' % os.path.basename(params['path_config']))
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
@@ -254,6 +254,8 @@ def segment_watershed(seg, centers, post_morph=False):
     markers = np.zeros_like(seg)
     for i, pos in enumerate(centers):
         markers[int(pos[0]), int(pos[1])] = i + 1
+    if not distance or isinstance(distance, tuple):
+        raise TypeError
     segm = morphology.watershed(-distance, markers, mask=seg_binary)
 
     # if morphological postprocessing was not selected, ends here
@@ -783,8 +785,8 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
 
             # also export ellipse params here or inside the segm fn
             if dict_export is not None:
-                for k in dict_export:
-                    export_partial(k, dict_export[k], path_dir, name)
+                for k, v in dict_export.items():
+                    export_partial(k, v, path_dir, name)
 
             logging.info('running time of %r on image "%s" is %d s', fn.__name__, image_name, time.time() - t)
             tl_data.io_imsave(path_segm, segm_obj.astype(np.uint8))
@@ -831,7 +833,7 @@ def main(params, debug_export=DEBUG_EXPORT):
     dict_segment = create_dict_segmentation(params, None, None, None, None)
     dirs_center = [n + DIR_CENTRE_POSIX for n in dict_segment]
     dirs_visu = [n + DIR_VISUAL_POSIX for n in dict_segment]
-    tl_expt.create_subfolders(params['path_exp'], [n for n in dict_segment] + dirs_center + dirs_visu)
+    tl_expt.create_subfolders(params['path_exp'], list(dict_segment) + dirs_center + dirs_visu)
     if debug_export:
         list_dirs = [n + DIR_DEBUG_POSIX for n in dict_segment if 'rg2sp' in n]
         tl_expt.create_subfolders(params['path_exp'], list_dirs)
