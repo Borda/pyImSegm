@@ -193,7 +193,7 @@ def arg_parse_params(params):
         else:
             paths[k] = tl_data.update_path(params[k], absolute=True)
             p_dir = paths[k]
-        if not os.path.isdir(p_dir):
+        if not os.path.exists(p_dir):
             raise FileNotFoundError('missing (%s) %s' % (k, p_dir))
     # load saved configuration
     if params['path_config'] is not None:
