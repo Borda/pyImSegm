@@ -690,8 +690,7 @@ def main_train(params):
         (dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, dict_label_hist,
          feature_names) = load_dump_data(path_dump)
     else:
-        (dict_imgs, dict_annot, dict_slics, dict_features, dict_labels,
-         dict_label_hist, feature_names) = \
+        dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, dict_label_hist, feature_names = \
             dataset_load_images_annot_compute_features(params, show_visual)
         save_dump_data(
             path_dump, dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, dict_label_hist, feature_names
@@ -709,9 +708,7 @@ def main_train(params):
     df_stat.set_index(['name']).to_csv(path_csv_stat)
 
     if params['gc_use_trans']:
-        params['label_transitions'] = \
-            seg_gc.count_label_transitions_connected_segments(dict_slics,
-                                                              dict_labels)
+        params['label_transitions'] = seg_gc.count_label_transitions_connected_segments(dict_slics, dict_labels)
         logging.info('summary on edge-label transitions: \n %r', params['label_transitions'])
 
     path_purity_visu = None

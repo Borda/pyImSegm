@@ -1689,11 +1689,10 @@ def region_growing_shape_slic_graphcut(
                 shape_type, None, list_swap_shift[-1], thresholds
             )
 
-            gc_vestexes, gc_edges, edge_weights, unary, pairwise = \
-                prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
-                                           slic_weights, labels, len(centres),
-                                           lut_data_cost, lut_shape_cost, coef_data,
-                                           coef_shape, coef_pairwise, prob_label_trans)
+            gc_vestexes, gc_edges, edge_weights, unary, pairwise = prepare_graphcut_variables(
+                candidates, slic_points, slic_neighbours, slic_weights, labels, len(centres), lut_data_cost,
+                lut_shape_cost, coef_data, coef_shape, coef_pairwise, prob_label_trans
+            )
             # run GraphCut
             if len(gc_edges) > 0:
                 graph_labels = cut_general_graph(np.array(gc_edges), edge_weights, unary, pairwise, n_iter=999)
@@ -1708,11 +1707,10 @@ def region_growing_shape_slic_graphcut(
                     shape_type, None, list_swap_shift[-1], thresholds
                 )
 
-                gc_vestexes, gc_edges, edge_weights, unary, pairwise = \
-                    prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
-                                               slic_weights, labels, len(centres),
-                                               lut_data_cost, lut_shape_cost, coef_data,
-                                               coef_shape, coef_pairwise, prob_label_trans)
+                gc_vestexes, gc_edges, edge_weights, unary, pairwise = prepare_graphcut_variables(
+                    candidates, slic_points, slic_neighbours, slic_weights, labels, len(centres), lut_data_cost,
+                    lut_shape_cost, coef_data, coef_shape, coef_pairwise, prob_label_trans
+                )
                 # run GraphCut
                 graph_labels = cut_general_graph(np.array(gc_edges), edge_weights, unary, pairwise, n_iter=999)
                 labels_gc[gc_vestexes] = graph_labels

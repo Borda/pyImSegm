@@ -603,9 +603,7 @@ def compute_statistic_centers(dict_stat, img, segm, center, slic, points, labels
     return dict_stat
 
 
-def detect_center_candidates(
-    name, image, segm, centers_gt, slic, points, features, params, path_out, classif
-):
+def detect_center_candidates(name, image, segm, centers_gt, slic, points, features, params, path_out, classif):
     """ for loaded or computer all necessary data, classify centers_gt candidates
     and if we have annotation validate this results
 
@@ -643,9 +641,7 @@ def detect_center_candidates(
 
 def wrapper_detect_center_candidates(data, params, path_output, classif):
     name, img, segm, center, slic, points, features, _ = data
-    return detect_center_candidates(
-        name, img, segm, center, slic, points, features, params, path_output, classif
-    )
+    return detect_center_candidates(name, img, segm, center, slic, points, features, params, path_output, classif)
 
 
 def load_dump_data(path_dump_data):
