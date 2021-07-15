@@ -424,6 +424,8 @@ def compute_edge_model(edges, proba, metric='l_T'):
         edge_weights = np.exp(-dist / (2 * np.std(dist)**2))
     elif metric == 'l2':
         dist = metrics.pairwise.paired_euclidean_distances(vertex_1, vertex_2)
+        if not dist:
+            raise ValueError('Unexpected `dist` of %r' % dist)
         edge_weights = np.exp(-dist / (2 * np.std(dist)**2))
     elif metric == 'lT':
         # exp(- norm value diff) * (geom dist vertex)**-1

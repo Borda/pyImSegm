@@ -254,6 +254,8 @@ def segment_watershed(seg, centers, post_morph=False):
     markers = np.zeros_like(seg)
     for i, pos in enumerate(centers):
         markers[int(pos[0]), int(pos[1])] = i + 1
+    if not distance or isinstance(distance, tuple):
+        raise TypeError
     segm = morphology.watershed(-distance, markers, mask=seg_binary)
 
     # if morphological postprocessing was not selected, ends here
