@@ -235,10 +235,9 @@ def ransac_segm(
         # estimate model for current random sample set
         model = model_class()
         success = model.estimate(samples)
-
-        if success is not None:  # backwards compatibility
-            if not success:
-                continue
+        # backwards compatibility
+        if success is not None and not success:
+            continue
 
         model_residuals = np.abs(model.residuals(points))
         # consensus set / inliers
