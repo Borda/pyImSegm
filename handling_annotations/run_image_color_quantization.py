@@ -129,7 +129,7 @@ def quantize_folder_images(
     logging.info('found %i images', len(path_imgs))
     if colors is None:
         dict_colors = see_images_color_info(path_images, px_thr=px_threshold)
-        colors = [c for c in dict_colors]
+        colors = list(dict_colors)
 
     _wrapper_quantize_img = partial(perform_quantize_image, method=method, list_colors=colors)
     iterate = tl_expt.WrapExecuteSequence(

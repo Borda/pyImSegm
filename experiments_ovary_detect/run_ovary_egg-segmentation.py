@@ -831,7 +831,7 @@ def main(params, debug_export=DEBUG_EXPORT):
     dict_segment = create_dict_segmentation(params, None, None, None, None)
     dirs_center = [n + DIR_CENTRE_POSIX for n in dict_segment]
     dirs_visu = [n + DIR_VISUAL_POSIX for n in dict_segment]
-    tl_expt.create_subfolders(params['path_exp'], [n for n in dict_segment] + dirs_center + dirs_visu)
+    tl_expt.create_subfolders(params['path_exp'], list(dict_segment) + dirs_center + dirs_visu)
     if debug_export:
         list_dirs = [n + DIR_DEBUG_POSIX for n in dict_segment if 'rg2sp' in n]
         tl_expt.create_subfolders(params['path_exp'], list_dirs)

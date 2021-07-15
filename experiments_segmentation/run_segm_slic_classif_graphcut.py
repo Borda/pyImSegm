@@ -412,7 +412,7 @@ def eval_segment_with_annot(
     list_annot = [dict_annot[n] for n in dict_annot]
     list_segm = [dict_segm[n] for n in dict_annot]
     df_stat = seg_clf.compute_stat_per_image(
-        list_segm, list_annot, [n for n in dict_annot], nb_workers, drop_labels=drop_labels
+        list_segm, list_annot, list(dict_annot), nb_workers, drop_labels=drop_labels
     )
 
     path_csv = os.path.join(params['path_exp'], name_csv)
