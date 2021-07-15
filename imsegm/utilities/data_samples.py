@@ -137,8 +137,8 @@ def sample_color_image_rand_segment(im_size=SAMPLE_SEG_SIZE_2D_NORM, nb_classes=
            [1, 0, 1, 0, 0, 0],
            [0, 0, 1, 0, 1, 0]])
     """
-    assert len(im_size) == 2, \
-        'required image dimension is 2 to instead %r' % im_size
+    if len(im_size) != 2:
+        raise ValueError('required image dimension is 2 to instead %r' % im_size)
     np.random.seed(rand_seed)
     im_size_rgb = (im_size[0], im_size[1], 3)
     img = np.random.random_integers(0, 255, im_size_rgb)
@@ -180,7 +180,8 @@ def load_sample_image(name_img=IMAGE_LENNA):
     (512, 512, 3)
     """
     path_img = get_image_path(name_img)
-    assert os.path.exists(path_img), 'missing: "%s"' % path_img
+    if not os.path.isfile(path_img):
+        raise FileNotFoundError('missing: "%s"' % path_img)
     logging.debug('image (%s): %s', os.path.exists(path_img), path_img)
     img = io_imread(path_img)
     return img

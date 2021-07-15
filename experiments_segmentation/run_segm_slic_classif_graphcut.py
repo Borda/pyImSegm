@@ -38,6 +38,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -71,7 +73,7 @@ import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
 NAME_EXPERIMENT = 'experiment_segm-Supervised'
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_FIG_LABEL_HISTO = 'fig_histogram_annot_segments.png'
@@ -196,9 +198,11 @@ def load_image_annot_compute_features_labels(idx_row, params, show_debug_imgs=SH
     img = load_image(row['path_image'], params['img_type'])
     annot = load_image(row['path_annot'], '2d_segm')
     logging.debug('.. processing: %s', idx_name)
-    assert img.shape[:2] == annot.shape[:2], \
-        'individual size of image %r and seg_pipe %r for "%s" - "%s"' % \
-        (img.shape, annot.shape, row['path_image'], row['path_annot'])
+    if img.shape[:2] != annot.shape[:2]:
+        raise ImageDimensionError(
+            'individual size of image %r and seg_pipe %r for "%s" - "%s"' %
+            (img.shape, annot.shape, row['path_image'], row['path_annot'])
+        )
     if show_debug_imgs:
         plt.imsave(_path_out_img(params, FOLDER_IMAGE, idx_name), img, cmap=plt.cm.gray)
         plt.imsave(_path_out_img(params, FOLDER_ANNOT, idx_name), annot)
@@ -239,8 +243,8 @@ def dataset_load_images_annot_compute_features(params, show_debug_imgs=SHOW_DEBU
     # compute features
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     df_paths.reset_index(inplace=True)
-    assert all(n in df_paths.columns for n in ['path_image', 'path_annot']), \
-        'missing required columns in loaded csv file'
+    if not all(n in df_paths.columns for n in ['path_image', 'path_annot']):
+        raise ValueError('missing required columns in loaded csv file')
     _wrapper_load_compute = partial(
         load_image_annot_compute_features_labels,
         params=params,
@@ -401,8 +405,10 @@ def eval_segment_with_annot(
     """
     if dict_label_hist is not None:
         visu_histogram_labels(params, dict_label_hist)
-    assert sorted(dict_annot.keys()) == sorted(dict_segm.keys()), \
-        'mismatch in dictionary keys: \n%s \n%s' % (sorted(dict_annot.keys()), sorted(dict_segm.keys()))
+    if sorted(dict_annot) != sorted(dict_segm):
+        raise ValueError(
+            'mismatch in dictionary keys: \n%s \n%s' % (sorted(dict_annot.keys()), sorted(dict_segm.keys()))
+        )
     list_annot = [dict_annot[n] for n in dict_annot]
     list_segm = [dict_segm[n] for n in dict_annot]
     df_stat = seg_clf.compute_stat_per_image(
@@ -444,9 +450,11 @@ def retrain_lpo_segment_image(
         idx_name = get_idx_name(idx, path_img)
         _ = dict_features.pop(idx_name, None)
         _ = dict_labels.pop(idx_name, None)
-    assert (len(dict_imgs) - len(dict_features)) == len(list_imgs_idx_path), \
-        'subset of %i images was not dropped, training set %i from total %i' \
-        % (len(list_imgs_idx_path), len(dict_features), len(dict_imgs))
+    if (len(dict_imgs) - len(dict_features)) != len(list_imgs_idx_path):
+        raise ValueError(
+            'subset of %i images was not dropped, training set %i from total %i' %
+            (len(list_imgs_idx_path), len(dict_features), len(dict_imgs))
+        )
 
     features, labels, _ = seg_clf.convert_set_features_labels_2_dataset(
         dict_features,
@@ -688,7 +696,8 @@ def main_train(params):
         save_dump_data(
             path_dump, dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, dict_label_hist, feature_names
         )
-    assert len(dict_imgs) > 1, 'training require at least 2 images'
+    if len(dict_imgs) <= 1:
+        raise RuntimeError('training require at least 2 images')
 
     dict_annot_slic = {n: np.asarray(dict_labels[n])[dict_slics[n]] for n in dict_annot}
     df = eval_segment_with_annot(
@@ -813,7 +822,8 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='SEGMENT___', p
     """
     logging.getLogger().setLevel(logging.INFO)
     logging.info('running PREDICTION...')
-    assert path_pattern_imgs is not None
+    if not path_pattern_imgs:
+        raise RuntimeError
 
     dict_classif = seg_clf.load_classifier(path_classif)
     classif = dict_classif['clf_pipeline']
@@ -856,10 +866,12 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params(SEGM_PARAMS)
+    cli_params = arg_parse_params(SEGM_PARAMS)
 
-    params = main_train(params)
+    cli_params = main_train(cli_params)
 
-    main_predict(params['path_classif'], params['path_predict_imgs'], params['path_exp'], params_local=params)
+    main_predict(
+        cli_params['path_classif'], cli_params['path_predict_imgs'], cli_params['path_exp'], params_local=cli_params
+    )
 
     logging.info('all DONE')

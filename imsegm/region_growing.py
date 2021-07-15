@@ -75,16 +75,18 @@ def object_segmentation_graphcut_slic(
     >>> object_segmentation_graphcut_slic(slic, segm, [(1, 7)], gc_regul=1., edge_coef=1., debug_visual={})
     array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0], dtype=int32)
     """
-    assert np.min(labels_fg_prob) < 1, 'non label can ce strictly 1'
+    if np.min(labels_fg_prob) >= 1:
+        raise ValueError('non label can ce strictly 1')
     label_hist = histogram_regions_labels_norm(slic, segm)
     labels = np.argmax(label_hist, axis=1)
 
-    assert segm.max() <= len(labels_fg_prob), \
-        'table of label proba is shorter then the nb of labels in segmentation'
+    if segm.max() > len(labels_fg_prob):
+        raise ValueError('table of label prob is shorter then the nb of labels in segmentation')
     labels_fg_prob = np.array(labels_fg_prob)
     labels_bg_prob = 1. - labels_fg_prob
 
-    assert list(centres), 'at least one center has to be given'
+    if not list(centres):
+        raise ValueError('at least one center has to be given')
     centres = [np.round(c).astype(int) for c in centres]
     slic_points = superpixel_centers(slic)
 
@@ -197,14 +199,16 @@ def object_segmentation_graphcut_pixels(
            [0, 0, 0, 0, 0, 2, 2, 2, 2, 2],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=int32)
     """
-    assert np.min(labels_fg_prob) < 1, 'non label can ce strictly 1'
-    assert segm.max() <= len(labels_fg_prob), \
-        'table of label proba is shorter then the nb of labels in segmentation'
+    if np.min(labels_fg_prob) >= 1:
+        raise ValueError('non label can ce strictly 1')
+    if segm.max() > len(labels_fg_prob):
+        raise ValueError('table of label proba is shorter then the nb of labels in segmentation')
     height, width = segm.shape
     labels_fg_prob = np.array(labels_fg_prob)
     labels_bg_prob = 1. - labels_fg_prob
 
-    assert list(centres), 'at least one center has to be given'
+    if not list(centres):
+        raise ValueError('at least one center has to be given')
     centres = [np.round(c).astype(int) for c in centres]
 
     proba = np.ones((height, width, len(centres) + 1))
@@ -632,11 +636,11 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
         return cum_distribution[int(round(angle_norm)), -1]
 
     a0 = int(np.floor(angle_norm))
-    assert a0 < (cum_distribution.shape[0] - 1), \
-        'angle %i is larger then size %i' % (a0, cum_distribution.shape[0])
+    if a0 >= (cum_distribution.shape[0] - 1):
+        raise ValueError('angle %i is larger then size %i' % (a0, cum_distribution.shape[0]))
     d0 = int(np.floor(dist))
-    assert d0 < (cum_distribution.shape[1] - 1), \
-        'distance %i is larger then size %i' % (d0, cum_distribution.shape[1])
+    if d0 >= (cum_distribution.shape[1] - 1):
+        raise ValueError('distance %i is larger then size %i' % (d0, cum_distribution.shape[1]))
     interp = interpolate.interp2d(
         np.array([[a0, a0 + 1], [a0, a0 + 1]]).T,
         np.array([[d0, d0 + 1], [d0, d0 + 1]]),
@@ -801,8 +805,8 @@ def compute_update_shape_costs_points_table_cdf(
     >>> np.round(centres, 1)
     array([[  7.5,  17.1]])
     """
-    assert len(points) == len(labels), \
-        'number of points (%i) and labels (%i) should match' % (len(points), len(labels))
+    if len(points) != len(labels):
+        raise ValueError('number of points (%i) and labels (%i) should match' % (len(points), len(labels)))
     if selected_idx is None:
         selected_idx = list(range(len(points)))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
@@ -923,9 +927,8 @@ def compute_update_shape_costs_points_close_mean_cdf(
            ...
            [ 0.   ,  4.605]])
     """
-    assert len(points) == len(labels), \
-        'number of points (%i) and labels (%i) should match' \
-        % (len(points), len(labels))
+    if len(points) != len(labels):
+        raise ValueError('number of points (%i) and labels (%i) should match' % (len(points), len(labels)))
     selected_idx = range(len(points)) if selected_idx is None else selected_idx
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     segm_obj = labels[slic]
@@ -1288,8 +1291,8 @@ def region_growing_shape_slic_greedy(
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
 
     """
-    assert len(slic_prob_fg) >= np.max(slic), 'dims of probs %s and slic %s not match' \
-                                              % (len(slic_prob_fg), np.max(slic))
+    if len(slic_prob_fg) < np.max(slic):
+        raise ValueError('dims of probs %s and slic %s not match' % (len(slic_prob_fg), np.max(slic)))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     slic_points = superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
@@ -1419,13 +1422,11 @@ def prepare_graphcut_variables(
         and objects and among objects (second)
     :return:
     """
-    assert np.max(candidates) < len(slic_points), \
-        'max candidate idx: %d for %d centres' \
-        % (np.max(candidates), len(slic_points))
+    if np.max(candidates) >= len(slic_points):
+        raise ValueError('max candidate idx: %d for %d centres' % (np.max(candidates), len(slic_points)))
     max_slic_neighbours = max(max(lb) for lb in slic_neighbours)
-    assert max_slic_neighbours < len(slic_points), \
-        'max slic neighbours idx: %d for %d centres' \
-        % (max_slic_neighbours, len(slic_points))
+    if max_slic_neighbours >= len(slic_points):
+        raise ValueError('max slic neighbours idx: %d for %d centres' % (max_slic_neighbours, len(slic_points)))
     unary = np.zeros((len(candidates), nb_centres + 1))
     vertexes, edges = list(candidates), []
     for i, idx in enumerate(candidates):
@@ -1615,9 +1616,8 @@ def region_growing_shape_slic_graphcut(
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-    assert len(slic_prob_fg) >= np.max(slic), \
-        'dims of probs %s and slic %s not match' \
-        % (len(slic_prob_fg), np.max(slic))
+    if len(slic_prob_fg) < np.max(slic):
+        raise ValueError('dims of probs %s and slic %s not match' % (len(slic_prob_fg), np.max(slic)))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     slic_points = superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)

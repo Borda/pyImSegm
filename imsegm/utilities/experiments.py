@@ -31,13 +31,13 @@ RESULTS_CSV = 'results.csv'
 FILE_LOGS = 'logging.txt'
 
 
-def nb_workers(ratio):
+def get_nb_workers(ratio):
     """get fraction of of available CPUs
 
     :param float ratio: range (0, 1)
     :return int: number of workers with lower bound 1
 
-    >>> nb_workers(0)
+    >>> get_nb_workers(0)
     1
     """
     return max(1, int(CPU_COUNT * ratio))
@@ -53,7 +53,7 @@ class Experiment(object):
     >>> expt = Experiment(params)
     Traceback (most recent call last):
     ...
-    Exception: given folder "./my_experiments" does not exist!
+    FileNotFoundError: given folder "./my_experiments" does not exist!
     >>> os.mkdir(params['path_out'])
     >>> expt = Experiment(params, time_stamp=False)
     >>> expt.run()
@@ -65,7 +65,7 @@ class Experiment(object):
     def __init__(self, params, time_stamp=True):
         """ constructor
 
-        :param dict params: define experimenatl parameters
+        :param dict params: define experimental parameters
         :param bool time_stamp: add to experiment unique time stamp
         """
         self.params = copy.deepcopy(params)
@@ -106,10 +106,10 @@ class Experiment(object):
         """ Check all required paths in parameters whether they exist """
         for p in (self.params[n] for n in self.params if 'dir' in n.lower() or 'path' in n.lower()):
             if not os.path.exists(p):
-                raise Exception('given folder "%s" does not exist!' % p)
+                raise FileNotFoundError('given folder "%s" does not exist!' % p)
         for p in (self.params[n] for n in self.params if 'file' in n.lower()):
             if not os.path.exists(p):
-                raise Exception('given folder "%s" does not exist!' % p)
+                raise FileNotFoundError('given folder "%s" does not exist!' % p)
 
     def _create_folder(self, time_stamp=True):
         """ Create the experiment folder and iterate while there is no available
@@ -118,7 +118,7 @@ class Experiment(object):
         """
         # create results folder for experiments
         if not os.path.exists(self.params.get('path_out', 'NONE')):
-            raise ValueError('no results folder "%r"' % self.params.get('path_out', None))
+            raise FileNotFoundError('no results folder "%r"' % self.params.get('path_out', None))
         self.params = create_experiment_folder(self.params, self.__class__.__name__, time_stamp)
 
 
@@ -343,7 +343,7 @@ def create_subfolders(path_out, folders):
     count = 0
     for dir_name in folders:
         path_dir = os.path.join(path_out, dir_name)
-        if not os.path.exists(path_dir):
+        if not os.path.isdir(path_dir):
             try:
                 os.mkdir(path_dir)
                 count += 1

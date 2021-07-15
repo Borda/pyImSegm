@@ -26,7 +26,8 @@ from imsegm.descriptors import (
 from imsegm.graph_cuts import estim_class_model, segment_graph_cut_general
 from imsegm.labeling import histogram_regions_labels_norm
 from imsegm.superpixels import segment_slic_img2d, segment_slic_img3d_gray
-from imsegm.utilities.experiments import nb_workers, WrapExecuteSequence
+from imsegm.utilities import ImageDimensionError
+from imsegm.utilities.experiments import get_nb_workers, WrapExecuteSequence
 
 # from sklearn import mixture
 
@@ -39,7 +40,7 @@ CLUSTER_METHOD = DEFAULT_CLUSTERING
 #: define how many images will be left out during cross-validation training
 CROSS_VAL_LEAVE_OUT = 2
 #: default number of workers
-NB_WORKERS = nb_workers(0.6)
+NB_WORKERS = get_nb_workers(0.6)
 
 
 def pipe_color2d_slic_features_model_graphcut(
@@ -250,7 +251,8 @@ def compute_color2d_superpixels_features(image, dict_features, sp_size=30, sp_re
            and "1" nearly square segments
     :return list(list(int)), [[floats]]: superpixels and related of features
     """
-    assert sp_regul > 0., 'slic. regularisation must be positive'
+    if sp_regul <= 0.:
+        raise ValueError('slic. regularisation must be positive')
     logging.debug('run Superpixel clustering.')
     slic = segment_slic_img2d(image, sp_size=sp_size, relative_compact=sp_regul)
     # plt.figure(), plt.imshow(slic)
@@ -271,8 +273,8 @@ def wrapper_compute_color2d_slic_features_labels(img_annot, sp_size, sp_regul, d
     img, annot = img_annot
     # in case of binary annotation convert it to integers labels
     annot = annot.astype(int)
-    assert img.shape[:2] == annot.shape[:2], \
-        'image %r and annot %r should match' % (img.shape, annot.shape)
+    if img.shape[:2] != annot.shape[:2]:
+        raise ImageDimensionError('image %r and annot %r should match' % (img.shape, annot.shape))
     slic, features = compute_color2d_superpixels_features(img, dict_features, sp_size=sp_size, sp_regul=sp_regul)
     neg_label = np.max(annot) + 1 if np.sum(annot < 0) > 0 else None
     if neg_label is not None:
@@ -320,9 +322,8 @@ def train_classif_color2d_slic_features(
     :return:
     """
     logging.info('TRAIN Superpixels-Features-Classifier')
-    assert len(list_images) == len(list_annots), \
-        'size of images (%i) and annotations (%i) should match' \
-        % (len(list_images), len(list_annots))
+    if len(list_images) != len(list_annots):
+        raise ValueError('size of images (%i) and annotations (%i) should match' % (len(list_images), len(list_annots)))
 
     list_slic, list_features, list_labels = [], [], []
     _wrapper_compute = partial(

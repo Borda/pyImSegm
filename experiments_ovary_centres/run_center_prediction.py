@@ -166,11 +166,12 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running...')
 
-    params = run_train.arg_parse_params(DEFAULT_PARAMS)
+    cli_params = run_train.arg_parse_params(DEFAULT_PARAMS)
 
-    params['path_classif'] = params['path_centers']
-    assert os.path.isfile(params['path_classif']), 'missing classifier: %s' % params['path_classif']
+    cli_params['path_classif'] = cli_params['path_centers']
+    if not os.path.isfile(cli_params['path_classif']):
+        raise FileNotFoundError('missing classifier: %s' % cli_params['path_classif'])
 
-    main(params)
+    main(cli_params)
 
     logging.info('DONE')

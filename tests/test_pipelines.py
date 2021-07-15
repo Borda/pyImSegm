@@ -192,7 +192,7 @@ class TestPipelinesClassif(unittest.TestCase):
         img2 = resize(self.img2, output_shape=(256, 256))
 
         path_dir = os.path.join(PATH_OUTPUT, 'temp_segm-supervised_gc')
-        if not os.path.exists(path_dir):
+        if not os.path.isdir(path_dir):
             os.mkdir(path_dir)
 
         sp_size = 10

@@ -32,7 +32,7 @@ import imsegm.utilities.experiments as tl_expt
 NAME_CSV_RESULTS = 'info_ovary_images_ellipses.csv'
 OVERLAP_THRESHOLD = 0.
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))
 
 DEFAULT_PARAMS = {
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running...')
 
-    params = arg_parse_params(DEFAULT_PARAMS)
-    main(params)
+    cli_params = arg_parse_params(DEFAULT_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

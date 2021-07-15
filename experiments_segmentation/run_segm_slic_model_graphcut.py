@@ -33,6 +33,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -56,7 +58,7 @@ import imsegm.utilities.experiments as tl_expt
 # sometimes it freeze in "Cython: computing Colour means for image"
 seg_fts.USE_CYTHON = False
 
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_DUMP_MODEL = 'estimated_model.npz'
 NAME_CSV_ARS_CORES = 'metric_ARS.csv'
@@ -188,7 +190,8 @@ def arg_parse_params(params):
             continue
         args[k] = tl_data.update_path(args[k])
         p = os.path.dirname(args[k]) if k == 'path_predict_imgs' else args[k]
-        assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
+        if not os.path.exists(p):
+            raise FileNotFoundError('missing: (%s) "%s"' % (k, p))
     # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
     if os.path.isfile(args.get('path_config', '')):
@@ -206,10 +209,12 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
     :return ndarray:
     """
     path_img = tl_data.update_path(path_img)
-    assert os.path.isfile(path_img), 'missing: "%s"' % path_img
+    if not os.path.isfile(path_img):
+        raise FileNotFoundError('missing: "%s"' % path_img)
     if img_type == '2d_split':
         img, _ = tl_data.load_img_double_band_split(path_img)
-        assert img.ndim == 2, 'image dims: %r' % img.shape
+        if img.ndim != 2:
+            raise ImageDimensionError('image dims: %r' % img.shape)
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         # if img.max() > 1:
         #     img = (img / 255.)
@@ -529,7 +534,8 @@ def load_path_images(params):
 
 
 def write_skip_file(path_dir):
-    assert os.path.isdir(path_dir), 'missing: %s' % path_dir
+    if not os.path.isdir(path_dir):
+        raise FileNotFoundError('missing: %s' % path_dir)
     with open(os.path.join(path_dir, 'RESULTS'), 'w') as fp:
         fp.write('This particular experiment was skipped by user option.')
 
@@ -557,7 +563,8 @@ def main(params):
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
 
     paths_img = load_path_images(params)
-    assert paths_img, 'missing images'
+    if not paths_img:
+        raise FileNotFoundError('missing images')
 
     def _path_expt(n):
         return os.path.join(params['path_exp'], n)
@@ -593,8 +600,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params(SEGM_PARAMS)
+    cli_params = arg_parse_params(SEGM_PARAMS)
 
-    params = main(params)
+    main(cli_params)
 
     logging.info('DONE')

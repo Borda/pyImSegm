@@ -158,8 +158,10 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None, col_pref
         logging.debug('center missing "%s"', idx)
         return dict_row
 
-    assert all(c in df_annot.columns for c in tl_visu.COLUMNS_POSITION_EGG_ANNOT), \
-        'some required columns %r are missing for %s' % (tl_visu.COLUMNS_POSITION_EGG_ANNOT, df_annot.columns)
+    if not all(c in df_annot.columns for c in tl_visu.COLUMNS_POSITION_EGG_ANNOT):
+        raise ValueError(
+            'some required columns %r are missing for %s' % (tl_visu.COLUMNS_POSITION_EGG_ANNOT, df_annot.columns)
+        )
     mask_eggs = estimate_eggs_from_info(df_annot.loc[idx], img.shape[:2])
 
     try:
@@ -198,7 +200,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_workers=1)
     str_stage = '-'.join(map(str, stage))
 
     path_csv = os.path.join(path_out, NAME_CSV_ANNOT_STAGE % str_stage)
-    if not os.path.exists(path_csv) or FORCE_RELOAD:
+    if not os.path.isfile(path_csv) or FORCE_RELOAD:
         df_slices_info = seg_annot.load_info_group_by_slices(path_info, stage)
         logging.debug('export slices_info to "%s"', path_csv)
         df_slices_info.to_csv(path_csv)
@@ -273,7 +275,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running...')
 
-    params = run_train.arg_parse_params(DEFAULT_PARAMS)
-    main(params)
+    cli_params = run_train.arg_parse_params(DEFAULT_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

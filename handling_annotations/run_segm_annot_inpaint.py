@@ -25,7 +25,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
 
 PATH_IMAGES = os.path.join('data-images', 'drosophila_ovary_slice', 'segm', '*.png')
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 
 def parse_arg_params():
@@ -41,7 +41,8 @@ def parse_arg_params():
     parser.add_argument('--nb_workers', type=int, required=False, help='number of jobs in parallel', default=NB_WORKERS)
     args = vars(parser.parse_args())
     p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
-    assert os.path.isdir(p_dir), 'missing folder: %s' % args['path_images']
+    if not os.path.isdir(p_dir):
+        raise FileNotFoundError('missing folder: %s' % args['path_images'])
     args['path_images'] = os.path.join(p_dir, os.path.basename(args['path_images']))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args
@@ -74,8 +75,8 @@ def quantize_folder_images(path_images, label, nb_workers=1):
     :param list(str) path_images: list of image paths
     :param int nb_workers:
     """
-    assert os.path.isdir(os.path.dirname(path_images)), \
-        'input folder does not exist: %s' % os.path.dirname(path_images)
+    if not os.path.isdir(os.path.dirname(path_images)):
+        raise FileNotFoundError('input folder does not exist: %s' % os.path.dirname(path_images))
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
 
@@ -95,5 +96,5 @@ def main(params):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    params = parse_arg_params()
-    main(params)
+    cli_params = parse_arg_params()
+    main(cli_params)

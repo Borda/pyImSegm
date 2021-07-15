@@ -29,7 +29,7 @@ import imsegm.utilities.experiments as tl_expt
 PATH_INPUT = os.path.join('data-images', 'drosophila_ovary_slice', 'segm', '*.png')
 PATH_OUTPUT = os.path.join('data-images', 'drosophila_ovary_slice', 'segm_rgb')
 NAME_JSON_DICT = 'dictionary_label-color.json'
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 
 def parse_arg_params():
@@ -49,7 +49,8 @@ def parse_arg_params():
     args = vars(parser.parse_args())
     for n in ['path_images', 'path_out']:
         p_dir = tl_data.update_path(os.path.dirname(args[n]))
-        assert os.path.isdir(p_dir), 'missing: %s' % args[n]
+        if not os.path.isdir(p_dir):
+            raise FileNotFoundError('missing: %s' % args[n])
         args[n] = os.path.join(p_dir, os.path.basename(args[n]))
     if args['path_colors'] is not None:
         args['path_colors'] = tl_data.update_path(args['path_colors'])
@@ -131,13 +132,14 @@ def convert_folder_images(path_images, path_out, path_json=None, nb_workers=1):
     :param str path_json: path to json file
     :param int int nb_workers:
     """
-    assert os.path.isdir(os.path.dirname(path_images)), \
-        'input folder does not exist'
+    if not os.path.isdir(os.path.dirname(path_images)):
+        raise FileNotFoundError('input folder does not exist')
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
     if not os.path.exists(path_out):
-        assert os.path.isdir(os.path.dirname(path_out)), \
-            'missing folder: %s' % os.path.dirname(path_out)
+        dir_out = os.path.dirname(path_out)
+        if not os.path.isdir(dir_out):
+            raise FileNotFoundError('missing folder: %s' % dir_out)
         os.mkdir(path_out)
 
     dict_colors = load_dict_colours(path_json)
@@ -152,8 +154,9 @@ def main(params):
     logging.info('running...')
 
     if not os.path.exists(params['path_out']):
-        assert os.path.isdir(os.path.dirname(params['path_out'])), \
-            'missing folder: %s' % os.path.dirname(params['path_out'])
+        dir_out = os.path.dirname(params['path_out'])
+        if not os.path.isdir(dir_out):
+            raise FileNotFoundError('missing folder: %s' % dir_out)
         os.mkdir(params['path_out'])
 
     convert_folder_images(params['path_images'], params['path_out'], params['path_colors'], params['nb_workers'])
@@ -163,5 +166,5 @@ def main(params):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    params = parse_arg_params()
-    main(params)
+    cli_params = parse_arg_params()
+    main(cli_params)

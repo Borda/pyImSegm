@@ -22,6 +22,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -38,7 +40,7 @@ import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
 EXPORT_VUSIALISATION = False
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 NAME_DIR_VISUAL_1 = 'ALL_visualisation-1'
 NAME_DIR_VISUAL_2 = 'ALL_visualisation-2'
@@ -111,8 +113,9 @@ def arg_parse_params(paths):
             continue
         paths[k] = tl_data.update_path(arg_params[k], absolute=True)
         p = paths[k] if k == 'results' else os.path.dirname(paths[k])
-        assert os.path.exists(p), 'missing: %s' % p
-    logging.info('ARG PARAMETERS: \n %s', (paths))
+        if not os.path.exists(p):
+            raise FileNotFoundError('missing: %s' % p)
+    logging.info('ARG PARAMETERS: \n %s', paths)
     return paths, export_visual, arg_params['nb_workers']
 
 
@@ -125,8 +128,8 @@ def compute_metrics(row):
     logging.debug('loading annot "%s"\n and segm "%s"', row['path_annot'], row['path_egg-segm'])
     annot, _ = tl_data.load_image_2d(row['path_annot'])
     segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
-    assert annot.shape == segm.shape, 'dimension do mot match %r - %r' % \
-                                      (annot.shape, segm.shape)
+    if annot.shape != segm.shape:
+        raise ImageDimensionError('dimension do mot match %r - %r' % (annot.shape, segm.shape))
     jacobs = []
     segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=True)
     for lb in np.unique(annot)[1:]:

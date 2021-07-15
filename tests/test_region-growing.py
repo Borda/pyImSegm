@@ -99,7 +99,7 @@ class TestRegionGrowing(unittest.TestCase):
         #     pickle.dump({'name': 'set_cdfs',
         #                  'cdfs': list_mean_cdf,
         #                  'mix_model': model}, fp)
-        self.assertTrue(os.path.exists(PATH_PKL_MODEL))
+        self.assertTrue(os.path.isfile(PATH_PKL_MODEL))
 
         max_len = max([np.asarray(mc[1]).shape[1] for mc in list_mean_cdf])
 
@@ -119,7 +119,7 @@ class TestRegionGrowing(unittest.TestCase):
 
     def test_region_growing_greedy(self, name='insitu7545'):
         """    """
-        if not os.path.exists(PATH_PKL_MODEL):
+        if not os.path.isfile(PATH_PKL_MODEL):
             self.test_shape_modeling()
 
         # file_model = pickle.load(open(PATH_PKL_MODEL, 'r'))
@@ -166,7 +166,7 @@ class TestRegionGrowing(unittest.TestCase):
 
     def test_region_growing_graphcut(self, name='insitu7545'):
         """    """
-        if not os.path.exists(PATH_PKL_MODEL):
+        if not os.path.isfile(PATH_PKL_MODEL):
             self.test_shape_modeling()
 
         # file_model = pickle.load(open(PATH_PKL_MODEL, 'r'))

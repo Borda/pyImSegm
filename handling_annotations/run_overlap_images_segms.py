@@ -34,7 +34,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 BOOL_IMAGE_RESCALE_INTENSITY = False
 BOOL_SAVE_IMAGE_CONTOUR = False
 BOOL_SHOW_SEGM_BINARY = False
@@ -63,7 +63,8 @@ def parse_arg_params():
     for k in paths:
         p_dir = tl_data.update_path(os.path.dirname(paths[k]))
         paths[k] = os.path.join(p_dir, os.path.basename(paths[k]))
-        assert os.path.exists(p_dir), 'missing: %s' % paths[k]
+        if not os.path.isdir(p_dir):
+            raise FileNotFoundError('missing: %s' % paths[k])
     return paths, args
 
 
@@ -132,14 +133,16 @@ def perform_visu_overlap(path_img, paths, segm_alpha=MIDDLE_ALPHA_OVERLAP):
 
 def main(paths, nb_workers=NB_WORKERS, segm_alpha=MIDDLE_ALPHA_OVERLAP):
     logging.info('running...')
-    assert paths['segms'] != paths['output'], 'overwriting segmentation dir'
-    assert os.path.basename(paths['images']) != paths['output'], \
-        'overwriting image dir'
+    if paths['segms'] == paths['output']:
+        raise RuntimeError('overwriting segmentation dir')
+    if os.path.basename(paths['images']) == paths['output']:
+        raise RuntimeError('overwriting image dir')
 
     logging.info(tl_expt.string_dict(paths, desc='PATHS'))
     if not os.path.exists(paths['output']):
-        assert os.path.isdir(os.path.dirname(paths['output'])), \
-            'missing folder: %s' % os.path.dirname(paths['output'])
+        dir_out = os.path.dirname(paths['output'])
+        if not os.path.isdir(dir_out):
+            raise FileNotFoundError('missing folder: %s' % dir_out)
         os.mkdir(paths['output'])
 
     paths_imgs = glob.glob(paths['images'])

@@ -139,8 +139,8 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
     :param str path_out:
     :return dict:
     """
-    assert all(n in dict_row for n in ['path_points', 'path_image', 'path_segm']), \
-        'missing some required fields: %r' % dict_row
+    if not all(n in dict_row for n in ['path_points', 'path_image', 'path_segm']):
+        raise ValueError('missing some required fields: %r' % dict_row)
     name = os.path.splitext(os.path.basename(dict_row['path_points']))[0]
     points = tl_data.load_landmarks_csv(dict_row['path_points'])
     if not list(points):
@@ -225,7 +225,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running...')
 
-    params = run_train.arg_parse_params(DEFAULT_PARAMS)
-    main(params)
+    cli_params = run_train.arg_parse_params(DEFAULT_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

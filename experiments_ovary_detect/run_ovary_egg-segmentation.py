@@ -33,6 +33,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -58,7 +60,7 @@ import imsegm.utilities.experiments as tl_expt
 
 # from libs import chanvese
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 NAME_EXPERIMENT = 'experiment_egg-segment'
 TYPE_LOAD_IMAGE = '2d_struct'
 DIR_VISUAL_POSIX = '___visu'
@@ -160,11 +162,11 @@ def arg_parse_params(params):
         params['path_config'] = ''
     else:
         params['path_config'] = tl_data.update_path(params['path_config'])
-        assert os.path.isfile(params['path_config']), \
-            'missing file: %s' % params['path_config']
-        ext = os.path.splitext(params['path_config'])[-1]
-        assert (ext == '.yaml' or ext == '.yml'), \
-            '"%s" should be YAML file' % os.path.basename(params['path_config'])
+        if not os.path.isfile(params['path_config']):
+            raise FileNotFoundError('missing file: %s' % params['path_config'])
+        _, ext = os.path.splitext(params['path_config'])
+        if not (ext == '.yaml' or ext == '.yml'):
+            raise RuntimeError('"%s" should be YAML file' % os.path.basename(params['path_config']))
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
         params.update(arg_params)
@@ -172,7 +174,8 @@ def arg_parse_params(params):
         if not arg_params[k]:
             continue
         params[k] = tl_data.update_path(arg_params[k], absolute=True)
-        assert os.path.exists(params[k]), 'missing: %s' % params[k]
+        if not os.path.exists(params[k]):
+            raise FileNotFoundError('missing: %s' % params[k])
     # load saved configuration
     logging.info('ARG PARAMETERS: \n %r', params)
     return params
@@ -186,12 +189,14 @@ def load_image(path_img, img_type=TYPE_LOAD_IMAGE):
     :return ndarray:
     """
     path_img = os.path.abspath(os.path.expanduser(path_img))
-    assert os.path.isfile(path_img), 'missing: "%s"' % path_img
+    if not os.path.isfile(path_img):
+        raise FileNotFoundError('missing: "%s"' % path_img)
     if img_type == 'segm':
         img = tl_data.io_imread(path_img)
     elif img_type == '2d_struct':
         img, _ = tl_data.load_img_double_band_split(path_img)
-        assert img.ndim == 2, 'image can be only single color'
+        if img.ndim != 2:
+            raise ImageDimensionError('image can be only single color')
     else:
         logging.error('not supported loading img_type: %s', img_type)
         img = tl_data.io_imread(path_img)
@@ -219,8 +224,8 @@ def export_draw_image_segm(path_fig, img, segm=None, segm_obj=None, centers=None
         ax.contour(segm)
     if segm_obj is not None:
         ax.imshow(segm_obj, alpha=0.1)
-        assert len(np.unique(segm_obj)) < 1e2, \
-            'too many labeled objects - %i' % len(np.unique(segm_obj))
+        if len(np.unique(segm_obj)) >= 1e2:
+            raise ValueError('too many labeled objects - %i' % len(np.unique(segm_obj)))
         ax.contour(segm_obj, levels=np.unique(segm_obj).tolist(), cmap=plt.cm.jet_r, linewidths=(10, ))
     if centers is not None:
         ax.plot(np.array(centers)[:, 1], np.array(centers)[:, 0], 'o', color='r')
@@ -733,8 +738,8 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     # make the image like RGB
     img_rgb = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     seg = load_image(row_path['path_segm'], 'segm')
-    assert img_rgb.shape[:2] == seg.shape, \
-        'image %r and segm %r do not match' % (img_rgb.shape[:2], seg.shape)
+    if img_rgb.shape[:2] != seg.shape:
+        raise ImageDimensionError('image %r and segm %r do not match' % (img_rgb.shape[:2], seg.shape))
     if not os.path.isfile(row_path['path_centers']):
         logging.warning('no center was detected for "%s"', name)
         return name
@@ -844,7 +849,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params(SEGM_PARAMS)
-    main(params)
+    cli_params = arg_parse_params(SEGM_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

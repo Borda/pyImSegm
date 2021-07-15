@@ -36,7 +36,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 NAME_CVS_OVERALL = 'STATISTIC__%s___Overall.csv'
 NAME_CVS_PER_IMAGE = 'STATISTIC__%s___per-Image.csv'
 PATH_IMAGES = os.path.join(tl_data.update_path('data-images'), 'drosophila_ovary_slice')
@@ -107,8 +107,9 @@ def aparse_params(dict_paths):
     _fn_path = lambda k: os.path.join(tl_data.update_path(os.path.dirname(args[k])), os.path.basename(args[k]))
     dict_paths = {k.split('_')[-1]: _fn_path(k) for k in args if k.startswith('path_') and args[k] is not None}
     for k in dict_paths:
-        assert os.path.isdir(os.path.dirname(dict_paths[k])), \
-            'missing: (%s) "%s"' % (k, os.path.dirname(dict_paths[k]))
+        dir_p = os.path.dirname(dict_paths[k])
+        if not os.path.isdir(dir_p):
+            raise FileNotFoundError('missing: (%s) "%s"' % (k, dir_p))
     if not args['drop_labels']:
         args['drop_labels'] = []
     return dict_paths, args
@@ -184,8 +185,8 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True, segm_alpha=1.,
     :param bool relabel: whether relabel segmentation as sequential
     """
     if not os.path.isdir(dict_paths['output']):
-        assert os.path.isdir(os.path.dirname(dict_paths['output'])), \
-            'missing folder: %s' % dict_paths['output']
+        if not os.path.isdir(os.path.dirname(dict_paths['output'])):
+            raise FileNotFoundError('missing folder: %s' % dict_paths['output'])
         os.mkdir(dict_paths['output'])
 
     name = os.path.basename(os.path.dirname(dict_paths['segm']))
@@ -197,7 +198,8 @@ def main(dict_paths, visual=True, drop_labels=None, relabel=True, segm_alpha=1.,
     logging.info('found %i pairs', len(df_paths))
     df_paths.to_csv(path_csv)
 
-    assert not df_paths.empty, 'nothing to compare'
+    if df_paths.empty:
+        raise ValueError('nothing to compare')
 
     name_seg_dir = os.path.basename(os.path.dirname(dict_paths['segm']))
     path_visu = os.path.join(dict_paths['output'], name_seg_dir + SUFFIX_VISUAL)
