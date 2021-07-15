@@ -73,10 +73,9 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='', 
         path_show_in = os.path.join(path_output, FOLDER_INPUTS)
         name, img, segm, _ = run_train.load_image_segm_center((None, row), path_show_in, params['dict_relabel'])
         t_start = time.time()
-        _, slic, points, features, feature_names =\
-            run_train.estim_points_compute_features(name, img, segm, params)
+        _, slic, points, features, _ = run_train.estim_points_compute_features(name, img, segm, params)
         dict_detect = run_train.detect_center_candidates(
-            name, img, segm, None, slic, points, features, feature_names, params, path_output, classif
+            name, img, segm, None, slic, points, features, params, path_output, classif
         )
         dict_detect['time elapsed'] = time.time() - t_start
         dict_center.update(dict_detect)

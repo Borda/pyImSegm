@@ -91,7 +91,7 @@ class Experiment(object):
 
         :param bool gt: try to load ground truth
         """
-        logging.warning('Not implemented yet...')
+        logging.warning('Not implemented yet with `gt=%s`...' % gt)
 
     def _perform(self):
         logging.warning('Not implemented yet...')

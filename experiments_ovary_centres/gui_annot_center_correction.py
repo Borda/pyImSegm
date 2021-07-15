@@ -312,7 +312,7 @@ def onclick(event):
     # fig.canvas.draw()
 
 
-def onkey_release(widget, event, data=None):
+def onkey_release(_, event, __):
     """ register key press for arrows to move back and forward
 
     :param widget:
