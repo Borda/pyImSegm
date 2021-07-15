@@ -785,8 +785,8 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
 
             # also export ellipse params here or inside the segm fn
             if dict_export is not None:
-                for k in dict_export:
-                    export_partial(k, dict_export[k], path_dir, name)
+                for k, v in dict_export.items():
+                    export_partial(k, v, path_dir, name)
 
             logging.info('running time of %r on image "%s" is %d s', fn.__name__, image_name, time.time() - t)
             tl_data.io_imsave(path_segm, segm_obj.astype(np.uint8))
