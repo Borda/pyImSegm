@@ -165,7 +165,7 @@ def arg_parse_params(params):
         if not os.path.isfile(params['path_config']):
             raise FileNotFoundError('missing file: %s' % params['path_config'])
         _, ext = os.path.splitext(params['path_config'])
-        if not (ext == '.yaml' or ext == '.yml'):
+        if ext not in ('.yaml', '.yml'):
             raise RuntimeError('"%s" should be YAML file' % os.path.basename(params['path_config']))
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)

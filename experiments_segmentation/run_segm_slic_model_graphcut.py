@@ -186,7 +186,7 @@ def arg_parse_params(params):
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %r', args)
     for k in (k for k in args if 'path' in k):
-        if args[k] == '' or args[k] == 'none':
+        if args[k] in ('', 'none'):
             continue
         args[k] = tl_data.update_path(args[k])
         p = os.path.dirname(args[k]) if k == 'path_predict_imgs' else args[k]
