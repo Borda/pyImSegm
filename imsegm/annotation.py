@@ -87,7 +87,7 @@ def convert_img_colors_to_labels(img_rgb, lut_label_color):
            [1, 1, 0, 0, 1, 1, 1],
            [1, 0, 1, 0, 1, 0, 1]])
     """
-    dict_color_label = dict((lut_label_color[k], k) for k in lut_label_color)
+    dict_color_label = {lut_label_color[k]: k for k in lut_label_color}
     return convert_img_colors_to_labels_reverted(img_rgb, dict_color_label)
 
 
