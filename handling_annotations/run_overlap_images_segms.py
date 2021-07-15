@@ -161,5 +161,5 @@ def main(paths, nb_workers=NB_WORKERS, segm_alpha=MIDDLE_ALPHA_OVERLAP):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    paths, args = parse_arg_params()
-    main(paths, args.nb_workers, args.overlap)
+    cli_paths, cli_args = parse_arg_params()
+    main(cli_paths, cli_args.nb_workers, cli_args.overlap)

@@ -242,14 +242,14 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    dict_paths, args = aparse_params(PATHS)
+    cli_paths, cli_args = aparse_params(PATHS)
     main(
-        dict_paths,
-        nb_workers=args['nb_workers'],
-        visual=args['visual'],
-        drop_labels=args['drop_labels'],
-        relabel=args['relabel'],
-        segm_alpha=args['overlap'],
+        cli_paths,
+        nb_workers=cli_args['nb_workers'],
+        visual=cli_args['visual'],
+        drop_labels=cli_args['drop_labels'],
+        relabel=cli_args['relabel'],
+        segm_alpha=cli_args['overlap'],
     )
 
     logging.info('DONE')

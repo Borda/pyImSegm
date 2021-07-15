@@ -138,7 +138,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    dict_paths, args = arg_parse_params(PATHS)
-    main(dict_paths, args['padding'], args['mask'], args['background'], args['nb_workers'])
+    cli_paths, cli_args = arg_parse_params(PATHS)
+    main(cli_paths, cli_args['padding'], cli_args['mask'], cli_args['background'], cli_args['nb_workers'])
 
     logging.info('DONE')

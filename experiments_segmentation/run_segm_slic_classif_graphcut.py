@@ -867,7 +867,6 @@ if __name__ == '__main__':
     logging.info('running...')
 
     cli_params = arg_parse_params(SEGM_PARAMS)
-
     cli_params = main_train(cli_params)
 
     main_predict(

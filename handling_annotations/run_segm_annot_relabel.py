@@ -139,6 +139,5 @@ def main(params):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-
     cli_params = parse_arg_params()
     main(cli_params)
