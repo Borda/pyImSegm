@@ -64,33 +64,13 @@ COLOR_FALSE_POSITIVE = '#FF5733'
 COLOR_FALSE_NEGATIVE = 'w'
 
 POINT_MARKERS = [
-    {
-        'change': 0,
-        'label': 1,
-        'marker': 'o',
-        'color': 'y',
-    },
-    {
-        'change': 0,
-        'label': 0,
-        'marker': 'x',
-        'color': 'y',
-    },
-    {
-        'change': 1,
-        'label': 1,
-        'marker': 'o',
-        'color': COLOR_FALSE_NEGATIVE,
-    },
-    {
-        'change': 1,
-        'label': 0,
-        'marker': 'o',
-        'color': COLOR_FALSE_POSITIVE,
-    },
+    dict(change=0, label=1, marker='o', color='y'),
+    dict(change=0, label=0, marker='x', color='y'),
+    dict(change=1, label=1, marker='o', color=COLOR_FALSE_NEGATIVE),
+    dict(change=1, label=0, marker='o', color=COLOR_FALSE_POSITIVE),
 ]
 
-df_center_labeled, fig = None, None
+df_center_labeled, fig, paths_img_csv, actual_idx, df_info_all, img, segm_eggs = [None] * 7
 
 # TODO: add - swapping group of points not only one by one
 
@@ -230,7 +210,7 @@ def estimate_eggs_from_info(path_img):
 
 def canvas_load_image_centers():
     """ load image nad csv with centers and update canvas """
-    global paths_img_csv, actual_idx, df_center_labeled, img, mask_eggs
+    global paths_img_csv, actual_idx, df_center_labeled, img, segm_eggs
     path_img, path_csv = paths_img_csv[actual_idx]
     logging.info(
         'loading image (%i/%i): "%s"', actual_idx + 1, len(paths_img_csv),
@@ -238,20 +218,20 @@ def canvas_load_image_centers():
     )
 
     img = plt.imread(path_img)
-    mask_eggs = estimate_eggs_from_info(path_img)
-    df_center_labeled = load_csv_center_label(path_csv, mask_eggs)
+    segm_eggs = estimate_eggs_from_info(path_img)
+    df_center_labeled = load_csv_center_label(path_csv, segm_eggs)
 
     canvas_update_image_centers()
 
 
 def canvas_update_image_centers(marker_schema=POINT_MARKERS):
     """ according corredted points and loaded image update canvas """
-    global fig, df_center_labeled, img, mask_eggs
+    global fig, df_center_labeled, img, segm_eggs
 
     fig.clf()
     fig.gca().imshow(img)
-    if mask_eggs is not None:
-        fig.gca().contour(mask_eggs, colors='c', linestyles='dotted')
+    if segm_eggs is not None:
+        fig.gca().contour(segm_eggs, colors='c', linestyles='dotted')
 
     for dict_marker in marker_schema:
         filter_label = (df_center_labeled['change'] == dict_marker['change'])
