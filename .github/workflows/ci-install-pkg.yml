@@ -30,7 +30,7 @@ jobs:
 
       - name: Create package
         run: |
-          python setup.py sdist
+          python setup.py sdist bdist_wheel
 
       - name: Verify package
         run: |
@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macOS-10.15]  # , windows-2019
+        os: [ubuntu-20.04, macOS-10.15, windows-2019]
         python-version: [3.7]
     steps:
       - uses: actions/checkout@master
@@ -52,14 +52,11 @@ jobs:
 
       - name: Create package
         run: |
-          python setup.py sdist
+          pip install cython setuptools wheel
+          python setup.py sdist bdist_wheel
 
       - name: Install package
+        working-directory: ./dist
         run: |
-          pip install virtualenv
-          virtualenv vEnv
-          source vEnv/bin/activate
-          pip install dist/*
-          cd .. & python -c "import imsegm ; print(imsegm.__version__)"
-          deactivate
-          rm -rf vEnv
+          pip install $(python -c "import glob ; pkg = glob.glob('*.whl')[0] ; print(pkg)")
+          python -c "import imsegm ; print(imsegm.__version__)"
