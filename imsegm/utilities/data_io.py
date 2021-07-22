@@ -236,7 +236,7 @@ def save_landmarks_csv(path_file, landmarks, dtype=float):
     if not os.path.isdir(os.path.dirname(path_file)):
         raise FileNotFoundError('missing "%s"' % os.path.dirname(path_file))
     path_file = os.path.splitext(path_file)[0] + '.csv'
-    logging.debug(' save_landmarks_csv: -> creating CSV file: %s' % path_file)
+    logging.debug(' save_landmarks_csv: -> creating CSV file: %s', path_file)
     # create the results file in CSV
     landmarks = np.array(landmarks, dtype=dtype)
     if not landmarks.size:

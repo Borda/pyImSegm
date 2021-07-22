@@ -106,7 +106,7 @@ def main(params):
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     list_img_paths = sorted([p for p in glob.glob(params['path_images']) if os.path.isfile(p)])
-    logging.info('found images: %i' % len(list_img_paths))
+    logging.info('found images: %i', len(list_img_paths))
 
     if not os.path.isdir(params['path_output']):
         os.mkdir(params['path_output'])

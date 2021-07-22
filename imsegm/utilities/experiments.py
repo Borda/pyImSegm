@@ -172,7 +172,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
         path_expt += '_' + time.strftime(FORMAT_DT, date)
         if os.path.isdir(path_expt):
             logging.warning('particular out folder already exists')
-            path_expt += ':' + str(uuid.uuid4().hex)
+            path_expt += '+' + str(uuid.uuid4().hex)
 
     logging.info('creating experiment folder "{}"'.format(path_expt))
     if not os.path.exists(path_expt):

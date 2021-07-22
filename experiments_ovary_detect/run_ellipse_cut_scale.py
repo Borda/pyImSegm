@@ -81,7 +81,7 @@ def perform_stage(df_group, stage, path_images, path_out, nb_workers=1):
     :param str path_images: path to the image folder
     :param str path_out: path to the output folder
     """
-    logging.info('stage %i listing %i items' % (stage, len(df_group)))
+    logging.info('stage %i listing %i items', stage, len(df_group))
     stat_a = NORM_FUNC(df_group['ellipse_a'])
     stat_b = NORM_FUNC(df_group['ellipse_b'])
     norm_size = (int(stat_b), int(stat_a))

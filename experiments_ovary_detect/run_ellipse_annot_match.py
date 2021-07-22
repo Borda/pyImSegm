@@ -147,7 +147,7 @@ def filter_table(df_info, path_pattern):
     :return DF: filterd dataframe
     """
     list_name = [os.path.splitext(os.path.basename(p))[0] for p in glob.glob(path_pattern) if os.path.isfile(p)]
-    logging.info('loaded item in table %i and found %i in dir' % (len(df_info), len(list_name)))
+    logging.info('loaded item in table %i and found %i in dir', len(df_info), len(list_name))
 
     df_info['image_name'] = [os.path.splitext(p)[0] for p in df_info['image_path']]
     df_info = df_info[df_info['image_name'].isin(list_name)]
@@ -164,7 +164,7 @@ def main(params):
 
     df_info = pd.read_csv(params['path_infofile'], sep='\t', index_col=0)
     df_info = filter_table(df_info, params['path_ellipses'])
-    logging.info('filtered %i item in table' % len(df_info))
+    logging.info('filtered %i item in table', len(df_info))
     path_csv = os.path.join(params['path_output'], NAME_CSV_RESULTS)
 
     list_evals = []
