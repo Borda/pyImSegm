@@ -34,21 +34,21 @@ Here's the long and short of it:
 
    - Reviewers (the other developers and interested community members) will write inline and/or general comments on your Pull Request (PR) to help you improve its implementation, documentation and style.  Every single developer working on the project has their code reviewed, and we've come to see it as friendly conversation from which we all learn and the overall code quality benefits.  Therefore, please don't let the review discourage you from contributing: its only aim is to improve the quality of project, not to criticize (we are, after all, very grateful for the time you're donating!).
    - To update your pull request, make your changes on your local repository and commit. As soon as those changes are pushed up (to the same branch as before) the pull request will update automatically.
-   - `Travis-CI <http://travis-ci.org/>`\_\_, a continuous integration service, is triggered after each Pull Request update to build the code, run unit tests, measure code coverage and check coding style (PEP8) of your branch. The Travis tests must pass before your PR can be merged. If Travis fails, you can find out why by clicking on the "failed" icon (red cross) and inspecting the build and test log.
+   - [Travis-CI](http://travis-ci.org/), a continuous integration service, is triggered after each Pull Request update to build the code, run unit tests, measure code coverage and check coding style (PEP8) of your branch. The Travis tests must pass before your PR can be merged. If Travis fails, you can find out why by clicking on the "failed" icon (red cross) and inspecting the build and test log.
    - A pull request must be approved by two core team members before merging.
 
 ## Guidelines
 
-- All code should have tests (see `test coverage`\_ below for more details).
+- All code should have tests (see `test coverage` below for more details).
 - All code should be documented, to the same
-  `standard <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#docstring-standard>`\_ as NumPy and SciPy.
+  [standard](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#docstring-standard) as NumPy and SciPy.
 - For new functionality, always add an example to the gallery.
 - No changes are ever committed without review and approval by two core team members. **Never merge your own pull request.**
 - Examples in the gallery should have a maximum figure width of 8 inches.
 
 ## Stylistic Guidelines
 
-- Set up your editor to remove trailing whitespace.  Follow `PEP08 <http://www.python.org/dev/peps/pep-0008/>`\_\_.  Check code with pyflakes / flake8.
+- Set up your editor to remove trailing whitespace.  Follow [PEP08](http://www.python.org/dev/peps/pep-0008/).  Check code with pyflakes / flake8.
 - Use numpy data types instead of strings (`np.uint8` instead of `"uint8"`).
 - Use the following import conventions::
   ```
@@ -69,7 +69,7 @@ Here's the long and short of it:
 
 This package has an extensive test suite that ensures correct execution on your system.  The test suite has to pass before a pull request can be merged, and tests should be added to cover any modifications to the code base.
 
-We make use of the `pytest <https://docs.pytest.org/en/latest/>`\_\_ testing framework, with tests located in the various `tests` folders.
+We make use of the [pytest](https://docs.pytest.org/en/latest/) testing framework, with tests located in the various `tests` folders.
 
 To use `pytest`, ensure that Cython extensions are built and that
 the library is installed in development mode::
@@ -95,7 +95,7 @@ For example, run all tests and all doctests using::
 
 Tests for a module should ideally cover all code in that module, i.e., statement coverage should be at 100%.
 
-To measure the test coverage, install `pytest-cov <http://pytest-cov.readthedocs.io/en/latest/>`\_\_ (using `easy_install pytest-cov`) and then run::
+To measure the test coverage, install [pytest-cov](http://pytest-cov.readthedocs.io/en/latest/) (using `easy_install pytest-cov`) and then run::
 
 ```
   $ coverage report
@@ -114,4 +114,4 @@ detailing the test coverage::
 
 ## Bugs
 
-Please `report bugs on GitHub <https://github.com/Borda/pyImSegm/issues>`\_.
+Please [report bugs on GitHub](https://github.com/Borda/pyImSegm/issues).
