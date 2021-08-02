@@ -396,16 +396,19 @@ class WrapExecuteSequence:
             pooling = pool.imap if self.ordered else pool.imap_unordered
 
             for out in pooling(self.wrap_func, self.iterate_vals):
-                tqdm_bar.update() if tqdm_bar is not None else None
+                if tqdm_bar:
+                    tqdm_bar.update()
                 yield out
             pool.close()
             pool.join()
         else:
             for out in map(self.wrap_func, self.iterate_vals):
-                tqdm_bar.update() if tqdm_bar is not None else None
+                if tqdm_bar:
+                    tqdm_bar.update()
                 yield out
 
-        tqdm_bar.close() if tqdm_bar is not None else None
+        if tqdm_bar:
+            tqdm_bar.close()
 
     def __len__(self):
         return len(self.iterate_vals)

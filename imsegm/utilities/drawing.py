@@ -330,10 +330,10 @@ def figure_overlap_annot_segm_image(annot, segm, img=None, subfig_size=9, drop_l
     # axarr[2].contour(annot, levels=np.unique(annot), linewidths=1, colors='g')
     # axarr[2].contour(segm, levels=np.unique(segm), linewidths=1, colors='b')
 
-    for i in range(len(axarr)):
-        axarr[i].axis('off')
-        axarr[i].axes.get_xaxis().set_ticklabels([])
-        axarr[i].axes.get_yaxis().set_ticklabels([])
+    for ax in axarr:
+        ax.axis('off')
+        ax.axes.get_xaxis().set_ticklabels([])
+        ax.axes.get_yaxis().set_ticklabels([])
 
     fig.subplots_adjust(wspace=0.01, hspace=0.01)
     fig.tight_layout()
