@@ -8,24 +8,24 @@ Here's the long and short of it:
 
 1. Develop your contribution:
 
-   - Pull the latest changes from upstream::
+   - Pull the latest changes from upstream:
 
-   ```
-      git checkout master
-      git pull upstream master
+   ```bash
+    $ git checkout master
+    $ git pull upstream master
    ```
 
-   - Create a branch for the feature you want to work on. Since the branch name will appear in the merge message, use a sensible name such as 'transform-speedups'::
-     ```
-      git checkout -b transform-speedups
+   - Create a branch for the feature you want to work on. Since the branch name will appear in the merge message, use a sensible name such as 'transform-speedups':
+     ```bash
+      $ git checkout -b transform-speedups
      ```
    - Commit locally as you progress (`git add` and `git commit`)
 
 1. To submit your contribution:
 
-   - Push your changes back to your fork on GitHub::
-     ```
-      git push origin transform-speedups
+   - Push your changes back to your fork on GitHub:
+     ```bash
+      $ git push origin transform-speedups
      ```
    - Enter your GitHub username and password (repeat contributors or advanced users can remove this step by connecting to GitHub with SSH. See detailed instructions below if desired).
    - Go to GitHub. The new branch will show up with a green Pull Request  button - click it.
@@ -50,13 +50,13 @@ Here's the long and short of it:
 
 - Set up your editor to remove trailing whitespace.  Follow [PEP08](http://www.python.org/dev/peps/pep-0008/).  Check code with pyflakes / flake8.
 - Use numpy data types instead of strings (`np.uint8` instead of `"uint8"`).
-- Use the following import conventions::
-  ```
-   import numpy as np
-   import matplotlib.pyplot as plt
-   from scipy import ndimage as ndi
+- Use the following import conventions:
+  ```python
+  import numpy as np
+  import matplotlib.pyplot as plt
+  from scipy import ndimage as ndi
 
-   cimport numpy as cnp  # in Cython code
+  cimport numpy as cnp  # in Cython code
   ```
 - When documenting array parameters, use `image : (M, N) ndarray` and then refer to `M` and `N` in the docstring, if necessary.
 - Refer to array dimensions as (plane), row, column, not as x, y, z. See :ref:`Coordinate conventions <numpy-images-coordinate-conventions>` in the user guide for more information.
@@ -72,44 +72,44 @@ This package has an extensive test suite that ensures correct execution on your 
 We make use of the [pytest](https://docs.pytest.org/en/latest/) testing framework, with tests located in the various `tests` folders.
 
 To use `pytest`, ensure that Cython extensions are built and that
-the library is installed in development mode::
+the library is installed in development mode:
 
-```
-    $ pip install -e .
+```bash
+$ pip install -e .
 ```
 
-Now, run all tests using::
+Now, run all tests using:
 
-```
-    $ pytest -v pyImSegm
+```bash
+$ pytest -v pyImSegm
 ```
 
 Use `--doctest-modules` to run doctests.
-For example, run all tests and all doctests using::
+For example, run all tests and all doctests using:
 
-```
-    $ pytest -v --doctest-modules --with-xunit --with-coverage pyImSegm
+```bash
+$ pytest -v --doctest-modules --with-xunit --with-coverage pyImSegm
 ```
 
 ## Test coverage
 
 Tests for a module should ideally cover all code in that module, i.e., statement coverage should be at 100%.
 
-To measure the test coverage, install [pytest-cov](http://pytest-cov.readthedocs.io/en/latest/) (using `easy_install pytest-cov`) and then run::
+To measure the test coverage, install [pytest-cov](http://pytest-cov.readthedocs.io/en/latest/) (using `easy_install pytest-cov`) and then run:
 
-```
-  $ coverage report
+```bash
+$ coverage report
 ```
 
 This will print a report with one line for each file in `imsegm`,
-detailing the test coverage::
+detailing the test coverage:
 
 ```
-  Name                             Stmts   Exec  Cover   Missing
-  --------------------------------------------------------------
-  package/module1                     77     77   100%
-  package/__init__                     1      1   100%
-  ...
+Name                             Stmts   Exec  Cover   Missing
+--------------------------------------------------------------
+package/module1                     77     77   100%
+package/__init__                     1      1   100%
+...
 ```
 
 ## Bugs
