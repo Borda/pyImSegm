@@ -123,7 +123,7 @@ def main(params):
     df_info = r_match.filter_table(df_info, params['path_images'])
     df_info.dropna(inplace=True)
     df_info = df_info[df_info['ellipse_Jaccard'] >= OVERLAP_THRESHOLD]
-    logging.info('filtered %i item in table' % len(df_info))
+    logging.info('filtered %i item in table', len(df_info))
 
     # execute over groups per stage
     path_dir_imgs = os.path.dirname(params['path_images'])
