@@ -3,6 +3,7 @@
 clean:
 	# clean all temp runs
 	rm -rf .pytest_cache
+	rm -rf ./imsegm/*.c*
 	rm -rf ./docs/build
 	rm -rf ./docs/source/*.md
 	rm -rf ./docs/source/api

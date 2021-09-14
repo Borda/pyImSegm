@@ -75,7 +75,7 @@ with open('readme.md', 'w') as fp:
 
 # If your documentation needs a minimal Sphinx version, state it here.
 
-needs_sphinx = '4.2'
+needs_sphinx = '4.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -133,7 +133,6 @@ exclude_patterns = [
     '*.so',
     '*.dll',
     'api/modules.rst',
-    'api/imsegm.features_cython.*'
     '*/transform-img-plane_inter-circle.ipynb',
 ]
 
