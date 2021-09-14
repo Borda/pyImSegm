@@ -1,7 +1,7 @@
-sphinx>=2.0, <3.0
+sphinx>=4.0
 m2r  # fails with multi-line text
 myst-parser
-nbsphinx>=0.8.5
+nbsphinx==0.8.6  # freeze for some "Unexpected indentation" in notebooks
 pandoc
 docutils
 ipython
