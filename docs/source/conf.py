@@ -133,6 +133,7 @@ exclude_patterns = [
     '*.so',
     '*.dll',
     'api/modules.rst',
+    'api/imsegm.features_cython.*'
     '*/transform-img-plane_inter-circle.ipynb',
 ]
 
