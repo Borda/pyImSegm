@@ -40,8 +40,8 @@ jobs:
       - name: Test Documentation
         run: |
           # First run the same pipeline as Read-The-Docs
-          cd docs
           make doctest
+        working-directory: ./docs
 
   make-docs:
     runs-on: ubuntu-20.04
@@ -75,10 +75,10 @@ jobs:
 
       - name: Make Documentation
         run: |
-          cd docs
           make clean
           make html --debug --jobs 2 SPHINXOPTS="-W"
           make latexpdf
+        working-directory: ./docs
 
       - name: Upload built docs
         uses: actions/upload-artifact@v2

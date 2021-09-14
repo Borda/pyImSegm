@@ -1,7 +1,9 @@
-sphinx>=4.0, <4.1
+sphinx>=4.0
 m2r  # fails with multi-line text
 myst-parser
 nbsphinx==0.8.6  # freeze for some "Unexpected indentation" in notebooks
-pandoc
-docutils
+pandoc>=1.0
+docutils>=0.16
+sphinx-copybutton>=0.3
 ipython
+furo
