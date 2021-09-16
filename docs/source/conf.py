@@ -75,7 +75,7 @@ with open('readme.md', 'w') as fp:
 
 # If your documentation needs a minimal Sphinx version, state it here.
 
-needs_sphinx = '4.2'
+needs_sphinx = '4.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -249,11 +249,20 @@ todo_include_todos = True
 PACKAGES = [imsegm.__name__]
 
 
-def run_apidoc(_):
+def run_apidoc(app):
+    """Generage API documentation"""
     for pkg in PACKAGES:
-        argv = ['-e', '-o', os.path.join(PATH_HERE, 'api'), os.path.join(PATH_ROOT, pkg), 'tests/*', '*.pyx', '--force']
-        from sphinx.ext import apidoc
-        apidoc.main(argv)
+        import better_apidoc
+        better_apidoc.APP = app
+        better_apidoc.main([
+            'better-apidoc',
+            '--force',
+            '--no-toc',
+            '--separate',
+            '-o',
+            os.path.join(PATH_HERE, 'api'),
+            os.path.join(PATH_ROOT, pkg),
+        ])
 
 
 def setup(app):
