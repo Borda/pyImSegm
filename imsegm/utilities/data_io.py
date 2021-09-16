@@ -107,8 +107,8 @@ def update_path(path_file, lim_depth=5, absolute=True):
 def swap_coord_x_y(points):
     """ swap X and Y coordinates in vector of possitions
 
-    :param [[int, int]] points:
-    :return [[int, int]]:
+    :param list(tuple(int,int)) points:
+    :return list(tuple(int,int)):
 
     >>> swap_coord_x_y(np.array([[1, 2], [2, 4], [5, 6]]))
     [[2, 1], [4, 2], [6, 5]]
@@ -787,7 +787,7 @@ def scale_image_size(path_img, size, path_out=None):
     """ load image - scale image - export image on the same path
 
     :param str path_img: path to the image
-    :param [int, int] size: new image size
+    :param tuple(int,int) size: new image size
     :param str path_out: path to output image, if none overwrite the input
     :return str: path to output image
 
@@ -839,7 +839,7 @@ def load_images_list(path_imgs, im_range=255):
 
     :param list(str) path_imgs: paths to input images
     :param im_range: range to scale image values (1. or 255)
-    :return [ndarray], list(str):
+    :return list(ndarray), list(str):
 
     >>> np.random.seed(0)
     >>> path_in = './temp_sample-image.png'

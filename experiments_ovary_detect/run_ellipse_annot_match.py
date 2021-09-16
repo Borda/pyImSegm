@@ -158,7 +158,7 @@ def filter_table(df_info, path_pattern):
 def main(params):
     """ PIPELINE for matching
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     """
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 

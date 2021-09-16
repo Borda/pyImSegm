@@ -67,7 +67,7 @@ def load_correct_segm(path_img):
     """ load segmentation and correct it with simple morphological operations
 
     :param str path_img:
-    :return (ndarray, ndarray):
+    :return tuple(ndarray, ndarray):
     """
     if not os.path.isfile(path_img):
         raise FileNotFoundError('missing: %s' % path_img)
@@ -84,9 +84,9 @@ def load_correct_segm(path_img):
 def draw_circle(pos_center, radius, img_shape):
     """ create empty image and draw a circle with specific radius
 
-    :param [int, int] pos_center:
+    :param tuple(int,int) pos_center:
     :param int radius:
-    :param [int, int] img_shape:
+    :param tuple(int,int) img_shape:
     :return ndarray:
     """
     im = np.zeros(img_shape)
@@ -101,7 +101,7 @@ def segm_set_center_levels(name, seg_labels, path_out, levels=DISTANCE_LEVELS):
     :param str name: image name
     :param ndarray seg_labels:
     :param str path_out: path for output
-    :param [float] levels: distance levels fro segmentation levels
+    :param list(float) levels: distance levels fro segmentation levels
     """
     seg = np.zeros_like(seg_labels)
 

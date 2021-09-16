@@ -199,9 +199,9 @@ def compute_multivarian_otsu(features):
 #     each cluster is a single class compute probability that each feature
 #     belongs to each class
 #
-#     :param [[float]] features: list of features per segment
+#     :param list(list(float)) features: list of features per segment
 #     :param int nb_classes: number of classes
-#     :return [[float]]: probabilities that each feature belongs to each class
+#     :return list(list(float)): probabilities that each feature belongs to each class
 #     """
 #     logging.debug('estimate GMM for all given features %s and %i component',
 #                   repr(features.shape), nb_classes)
@@ -223,10 +223,10 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     each cluster is a single class compute probability that each feature
     belongs to each class
 
-    :param [[float]] features: list of features per segment
+    :param list(list(float)) features: list of features per segment
     :param int nb_classes: number of classes
     :param int init: initialisation
-    :return [[float]]: probabilities that each feature belongs to each class
+    :return list(list(float)): probabilities that each feature belongs to each class
 
     >>> np.random.seed(0)
     >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
@@ -252,11 +252,11 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
 def estim_class_model_kmeans(features, nb_classes, init_type='k-means++', max_iter=99):
     """ from all features estimate Gaussian from k-means clustering
 
-    :param [[float]] features: list of features per segment
+    :param list(list(float)) features: list of features per segment
     :param int nb_classes: number of classes
     :param str init_type: initialization
     :param int max_iter: maximal number of iterations
-    :return [[float]]: probabilities that each feature belongs to each class
+    :return list(list(float)): probabilities that each feature belongs to each class
 
     >>> np.random.seed(0)
     >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
@@ -303,8 +303,8 @@ def get_vertexes_edges(segments):
 def compute_spatial_dist(centres, edges, relative=False):
     """ compute spatial distance between all neighbouring segments
 
-    :param [[int, int]] centres: superpixel centres
-    :param [[int, int]] edges:
+    :param list(tuple(int,int)) centres: superpixel centres
+    :param list(tuple(int,int)) edges:
     :param bool relative: normalise the distances to mean distance
     :return:
 
@@ -391,8 +391,8 @@ def compute_edge_model(edges, proba, metric='l_T'):
      and 2. diff and zero in 3 leading to weights [0.5, 0.4, 0.9]
      and so we take the min values
 
-    :param [(int, int)] edges: edges
-    :param [[float]] proba: probablilitirs
+    :param list(tuple(int,int)) edges: edges
+    :param list(list(float)) proba: probablilitirs
     :param str metric: define metric
     :return list(float):
 
@@ -582,7 +582,7 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
     :param ndarry proba: probability of each superpixel and class
     :param str edge_type: contains edge type, if 'model', after '_' you can
         specify the metric, eg. 'model_l2'
-    :return [[int, int]], [float]:
+    :return list(tuple(int,int)), list(float):
 
     >>> segments = np.array([[0] * 3 + [1] * 5 + [2] * 4,
     ...                      [4] * 4 + [5] * 5 + [6] * 3])

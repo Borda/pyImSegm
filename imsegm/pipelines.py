@@ -70,7 +70,7 @@ def pipe_color2d_slic_features_model_graphcut(
     :param float gc_regul: GC regularisation
     :param str gc_edge_type: graphCut edge type
     :param bool use_scaler: using scaler block in pipeline
-    :param debug_visual: dict
+    :param dict l:
     :return list(list(int)): segmentation matrix maping each pixel into a class
 
     >>> np.random.seed(0)
@@ -123,7 +123,7 @@ def estim_model_classes_group(
 ):
     """ estimate a model from sequence of input images and return it as result
 
-    :param [ndarray] list_images:
+    :param list(ndarray) list_images:
     :param int nb_classes: number of classes
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
@@ -306,8 +306,8 @@ def train_classif_color2d_slic_features(
 ):
     """ train classifier on list of annotated images
 
-    :param [ndarray] list_images:
-    :param [ndarray] list_annots:
+    :param list(ndarray) list_images:
+    :param list(ndarray) list_annots:
     :param int sp_size: initial size of a superpixel(meaning edge lenght)
     :param float sp_regul: regularisation in range(0;1) where "0" gives elastic
         and "1" nearly square segments

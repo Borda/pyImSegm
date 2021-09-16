@@ -89,12 +89,12 @@ def perform_image_relabel(path_img, path_out, labels_old, labels_new):
 def relabel_folder_images(path_images, path_out, labels_old, labels_new, nb_workers=1):
     """ perform single or multi thread image quantisation
 
-    :param [int] labels_old:
-    :param [int] labels_new:
+    :param list(int) labels_old:
+    :param list(int) labels_new:
     :param list(str) path_images: list of input images
     :param path_out: output directory
-    :param [int] labels_old: list of labels to be replaced
-    :param [int] labels_new: list of new labels
+    :param list(int) labels_old: list of labels to be replaced
+    :param list(int) labels_new: list of new labels
     :param int nb_workers:
     """
     if not os.path.isdir(os.path.dirname(path_images)):

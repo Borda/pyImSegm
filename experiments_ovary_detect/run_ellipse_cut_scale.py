@@ -110,7 +110,7 @@ def perform_stage(df_group, stage, path_images, path_out, nb_workers=1):
 def main(params):
     """ PIPELINE for matching
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     """
     # tl_expt.set_experiment_logger(params['path_expt'])
     # tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)

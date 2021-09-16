@@ -135,7 +135,7 @@ def get_segment_diffs_2d_conn4(grid):
     """ wrapper for getting 4-connected in 2D image plane
 
     :param ndarray grid: segmentation
-    :return [(int, int)]:
+    :return list(tuple(int,int)):
     """
     down = np.c_[grid[:-1, :].ravel(), grid[1:, :].ravel()]
     right = np.c_[grid[:, :-1].ravel(), grid[:, 1:].ravel()]
@@ -146,7 +146,7 @@ def get_segment_diffs_3d_conn6(grid):
     """ wrapper for getting 6-connected in 3D image plane
 
     :param ndarray grid: segmentation
-    :return [(int, int, int)]:
+    :return list(tuple(int,int,int)):
     """
     bellow = np.c_[grid[:-1, :, :].ravel(), grid[1:, :, :].ravel()]
     down = np.c_[grid[:, :-1, :].ravel(), grid[:, 1:, :].ravel()]
@@ -158,7 +158,7 @@ def make_graph_segm_connect_grid2d_conn4(grid):
     """ construct graph of connected components
 
     :param ndarray grid: segmentation
-    :return [int], [(int, int)]:
+    :return list(int), list(tuple(int,int)):
 
     >>> grid = np.array([[0] * 5 + [1] * 5, [2] * 5 + [3] * 5])
     >>> v, edges = make_graph_segm_connect_grid2d_conn4(grid)
@@ -181,7 +181,7 @@ def make_graph_segm_connect_grid3d_conn6(grid):
     """ construct graph of connected components
 
     :param ndarray grid: segmentation
-    :return [int], [(int, int)]:
+    :return list(int), list(tuple(int,int)):
 
     >>> grid_2d = np.array([[0] * 5 + [1] * 5, [2] * 5 + [3] * 5])
     >>> grid = np.array([grid_2d, grid_2d + 4])
@@ -206,7 +206,7 @@ def superpixel_centers(segments):
     """ estimate centers of each superpixel
 
     :param ndarray segments: segmentation np.array<height, width>
-    :return [(float, float)]:
+    :return list(tuple(float,float)):
 
     >>> segm = np.array([[0] * 6 + [1] * 5, [0] * 6 + [2] * 5])
     >>> superpixel_centers(segm)
@@ -243,8 +243,8 @@ def get_neighboring_segments(edges):
     """ get the indexes of neighboring superpixels for each superpixel
     the input is list edges of all neighboring segments
 
-    :param [[int, int]] edges:
-    :return [[int]]:
+    :param list(tuple(int,int)) edges:
+    :return list(list(int)):
 
     >>> get_neighboring_segments([[0, 1], [1, 2], [1, 3], [2, 3]])
     [[1], [0, 2, 3], [1, 3], [1, 2]]

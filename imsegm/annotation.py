@@ -47,7 +47,7 @@ def unique_image_colors(img):
     """ find all unique color in image and return its list
 
     :param ndarray img: np.array<height, width, 3>
-    :return: [(int, int, int)]
+    :return: list(tuple(int,int,int))
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (50, 50, 3))
@@ -73,7 +73,7 @@ def convert_img_colors_to_labels(img_rgb, lut_label_color):
     it returns relabels image according given dictionary
 
     :param ndarray img_rgb: np.array<height, width, 3> input RGB image
-    :param {int: (int, int, int)} lut_label_color:
+    :param dict(int,tuple(int,int,int)) lut_label_color:
     :return ndarray: np.array<height, width> labeling
 
     >>> np.random.seed(0)
@@ -96,7 +96,7 @@ def convert_img_colors_to_labels_reverted(img_rgb, dict_color_label):
     it returns relabels image according given dictionary
 
     :param ndarray img_rgb: np.array<height, width, 3> input RGB image
-    :param {(int, int, int): int} dict_color_label:
+    :param {tuple(int,int,int): int} dict_color_label:
     :return ndarray: np.array<height, width> labeling
 
     >>> np.random.seed(0)
@@ -129,7 +129,7 @@ def convert_img_labels_to_colors(segm, lut_label_colors):
     """ convert labeling according given dictionary of colors
 
     :param ndarray segm: np.array<height, width>
-    :param {int: (int, int, int)} lut_label_colors:
+    :param dict(int,tuple(int,int,int)) lut_label_colors:
     :return ndarray: np.array<height, width, 3>
 
     >>> np.random.seed(0)
@@ -166,7 +166,7 @@ def image_frequent_colors(img, ratio_threshold=1e-3):
     :param ndarray img: np.array<height, width, 3>
     :param float ratio_threshold: percentage of nb color pixels to be assumed
         as important
-    :return {(int, int, int) int}:
+    :return {tuple(int,int,int) int}:
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (50, 50, 3)).astype(np.uint8)
@@ -227,7 +227,7 @@ def image_color_2_labels(img, colors=None):
     """ quantize input image according given list of possible colours
 
     :param ndarray img: np.array<height, width, 3>, input image
-    :param [(int, int, int)] colors: list of possible colours
+    :param list(tuple(int,int,int)) colors: list of possible colours
     :return ndarray: np.array<height, width>
 
     >>> np.random.seed(0)
@@ -253,7 +253,7 @@ def quantize_image_nearest_color(img, colors):
     """ quantize input image according given list of possible colours
 
     :param ndarray img: np.array<height, width, 3>, input image
-    :param [(int, int, int)] colors: list of possible colours
+    :param list(tuple(int,int,int)) colors: list of possible colours
     :return ndarray: np.array<height, width, 3>
 
     >>> np.random.seed(0)
@@ -290,7 +290,7 @@ def quantize_image_nearest_pixel(img, colors):
     """ quantize input image according given list of possible colours
 
     :param ndarray img: np.array<height, width, 3>, input image
-    :param [(int, int, int)] colors: list of possible colours
+    :param list(tuple(int,int,int)) colors: list of possible colours
     :return ndarray: np.array<height, width, 3>
 
     >>> np.random.seed(0)

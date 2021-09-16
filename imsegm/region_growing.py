@@ -56,7 +56,7 @@ def object_segmentation_graphcut_slic(
 
     :param ndarray slic: superpixel pre-segmentation
     :param ndarray segm: input structure segmentation
-    :param [(int, int)] centres: superpixel centres
+    :param list(tuple(int,int)) centres: superpixel centres
     :param list(float) labels_fg_prob: weight for particular label belongs to FG
     :param float gc_regul: regularisation for GC
     :param float edge_coef: weight og edges on GC
@@ -170,7 +170,7 @@ def object_segmentation_graphcut_pixels(
 
     :param ndarray centres:
     :param ndarray segm: input structure segmentation
-    :param [(int, int)] centres: superpixel centres
+    :param list(tuple(int,int)) centres: superpixel centres
     :param list(float) labels_fg_prob: set how much particular label belongs to foreground
     :param float gc_regul: regularisation for GC
     :param int seed_size: create circular neighborhood around initial centre
@@ -335,11 +335,11 @@ def compute_cumulative_distrib(means, stds, weights, max_dist):
     """ compute invers cumulative distribution based given means,
     covariance and weights for each segment
 
-    :param [[float]] means: mean values for each model and ray direction
-    :param [[float]] stds: STD for each model and ray direction
-    :param [float] weights: model wights
+    :param list(list(float)) means: mean values for each model and ray direction
+    :param list(list(float)) stds: STD for each model and ray direction
+    :param list(float) weights: model wights
     :param float max_dist: maxim distance for shape model
-    :return [[float]]:
+    :return list(list(float)):
 
     >>> cdist = compute_cumulative_distrib(
     ...     np.array([[1, 2]]), np.array([[1.5, 0.5], [0.5, 1]]), np.array([0.5]), 6)
@@ -594,7 +594,7 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 
     :param tuple(int,int) point: single points
     :param tuple(int,int) centre: center of model
-    :param [[float]] cum_distribution: cumulative histogram
+    :param list(list(float)) cum_distribution: cumulative histogram
     :param float angle_shift:
     :return float:
 
@@ -658,7 +658,7 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 #
 #     :param tuple(int,int) point:
 #     :param tuple(int,int) centre:
-#     :param [[float]] cum_hist:
+#     :param list(list(float)) cum_hist:
 #     :param float shift:
 #     :return float:
 #
@@ -704,7 +704,7 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 def compute_centre_moment_points(points):
     """ compute centre and moment from set of points
 
-    :param [(float, float)] points:
+    :param list((float,float)) points:
     :return:
 
     >>> points = list(zip([0] * 10, np.arange(10))) + [(0, 0)] * 5
@@ -764,11 +764,11 @@ def compute_update_shape_costs_points_table_cdf(
     set of points and cumulative histogram representing the shape model
 
     :param lut_shape_cost: look-up-table for shape cost for GC
-    :param [[int, int]] points: subsample space, points = superpixel centres
+    :param list(tuple(int,int)) points: subsample space, points = superpixel centres
     :param list(int) labels: labels for points to be assigned to an object
-    :param [[int, int]] init_centres: initial centre position for compute
+    :param list(tuple(int,int)) init_centres: initial centre position for compute
         center shift during the iteretions
-    :param [[int, int]] centres: actual centre postion
+    :param list(tuple(int,int)) centres: actual centre postion
     :param list(int) shifts: orientation for each region / object
     :param list(int) volumes: size / volume for each region
     :param shape_chist: represent the shape prior and histograms
@@ -871,11 +871,11 @@ def compute_update_shape_costs_points_close_mean_cdf(
 
     :param lut_shape_cost: look-up-table for shape cost for GC
     :param ndarray slic: superpixel segmentation
-    :param [[int, int]] points: subsample space, points = superpixel centres
+    :param list(tuple(int,int)) points: subsample space, points = superpixel centres
     :param list(int) labels: labels for points to be assigned to an object
-    :param [[int, int]] init_centres: initial centre position for compute
+    :param list(tuple(int,int)) init_centres: initial centre position for compute
         center shift during the iterations
-    :param [[int, int]] centres: actual centre position
+    :param list(tuple(int,int)) centres: actual centre position
     :param list(int) shifts: orientation for each region / object
     :param list(int) volumes: size / volume for each region
     :param shape_model_cdfs: represent the shape prior and histograms
@@ -995,7 +995,7 @@ def compute_data_costs_points(slic, slic_prob_fg, centres, labels):
 
     :param nadarray slic: superpixel segmentation
     :param list(float) slic_prob_fg: weight for particular pixel belongs to FG
-    :param [[int, int]] centres: actual centre position
+    :param list(tuple(int,int)) centres: actual centre position
     :param list(int) labels: labels for points to be assigned to an object
     :return:
     """
@@ -1031,16 +1031,16 @@ def update_shape_costs_points(
 
     :param lut_shape_cost: look-up-table for shape cost for GC
     :param nadarray slic: superpixel segmentation
-    :param [[int, int]] points: subsample space, points = superpixel centres
+    :param list(tuple(int,int)) points: subsample space, points = superpixel centres
     :param list(int) labels: labels for points to be assigned to an object
-    :param [[int, int]] init_centres: initial centre position for compute
+    :param list(tuple(int,int)) init_centres: initial centre position for compute
         center shift during the iteretions
-    :param [[int, int]] centres: actual centre postion
+    :param list(tuple(int,int)) centres: actual centre postion
     :param list(int) shifts: orientation for each region / object
-    :param [int] volumes: size / volume for each region
+    :param list(int) volumes: size / volume for each region
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: type or shape model
-    :param [int] selected_idx: selected object for update
+    :param list(int) selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optima
     :param dict dict_thresholds: configuration with thresholds
@@ -1065,8 +1065,8 @@ def update_shape_costs_points(
 def compute_pairwise_penalty(edges, labels, prob_bg_fg=0.05, prob_fg1_fg2=0.01):
     """ compute cost of neighboring labels pionts
 
-    :param [(int, int)] edges: graph edges, connectivity
-    :param [int] labels: labels for vertexes
+    :param list(tuple(int,int)) edges: graph edges, connectivity
+    :param list(int) labels: labels for vertexes
     :param float prob_bg_fg: penalty between background and foreground
     :param float prob_fg1_fg2: penaly between two different foreground classes
     :return:
@@ -1089,11 +1089,11 @@ def get_neighboring_candidates(slic_neighbours, labels, object_idx, use_other_ob
     """ get neighboring candidates from background
     and optionally also from foreground if it is allowed
 
-    :param [[int]] slic_neighbours: list of neighboring superpixel for each one
-    :param [int] labels: labels for each superpixel
+    :param list(list(int)) slic_neighbours: list of neighboring superpixel for each one
+    :param list(int) labels: labels for each superpixel
     :param int object_idx:
     :param bool use_other_obj: allowing use another foreground object
-    :return [int]:
+    :return list(int):
 
     >>> neighbours = [[1], [0, 2, 3], [1, 3], [1, 2]]
     >>> labels = np.array([0, 0, 1, 1])
@@ -1173,7 +1173,7 @@ def region_growing_shape_slic_greedy(
 
     :param ndarray slic: superpixel segmentation
     :param list(float) slic_prob_fg: weight for particular superpixel belongs to FG
-    :param [(int, int)] centres: list of initial centres
+    :param list(tuple(int,int)) centres: list of initial centres
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: identification of used shape model
     :param float coef_data: weight for data prior
@@ -1405,11 +1405,11 @@ def prepare_graphcut_variables(
     """ for boundary get connected points in BG and FG
     construct graph and set potentials and hard connect BG and FG in unary
 
-    :param [int] candidates: list of candidates, neighbours of actual objects
-    :param [(int, int)] slic_points:
-    :param [[int]] slic_neighbours: list of neighboring superpixel for each one
+    :param list(int) candidates: list of candidates, neighbours of actual objects
+    :param list(tuple(int,int)) slic_points:
+    :param list(list(int)) slic_neighbours: list of neighboring superpixel for each one
     :param list(float) slic_weights: weight for each superpixel
-    :param [int] labels: labels for each superpixel
+    :param list(int) labels: labels for each superpixel
     :param int nb_centres: number of centres - classes
     :param ndarray lut_data_cost: look-up-table for data cost for each
         object (class) with superpixel as first index
@@ -1500,7 +1500,7 @@ def region_growing_shape_slic_graphcut(
 
     :param ndarray slic: superpixel segmentation
     :param list(float) slic_prob_fg: weight for particular superpixel belongs to FG
-    :param [(int, int)] centres: list of initial centres
+    :param list(tuple(int,int)) centres: list of initial centres
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: identification of used shape model
     :param float coef_data: weight for data prior

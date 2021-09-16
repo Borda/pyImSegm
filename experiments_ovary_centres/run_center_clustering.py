@@ -61,10 +61,10 @@ DEFAULT_PARAMS.update({
 def cluster_center_candidates(points, max_dist=100, min_samples=1):
     """ cluster center candidates by given density clustering
 
-    :param [[float]] points: points
+    :param list(list(float)) points: points
     :param float max_dist: maximal distance among points
     :param int min_samples: minimal number od samples
-    :return (ndarray, [int]):
+    :return tuple(ndarray, list(int)):
     """
     points = np.array(points)
     if not list(points):
@@ -100,8 +100,8 @@ def export_draw_image_centers_clusters(
     :param str name:
     :param ndarray img:
     :param centres:
-    :param [[float]] points:
-    :param [int] clust_labels:
+    :param list(list(float)) points:
+    :param list(int) clust_labels:
     :param ndarray segm:
     :param str fig_suffix:
     :param int max_fig_size:
@@ -196,7 +196,7 @@ def cluster_points_draw_export(dict_row, params, path_out=None):
 def main(params):
     """ PIPELINE candidate clustering
 
-    :param {str: any} params:
+    :param dict(str,any) params:
     """
     params['path_expt'] = os.path.join(params['path_output'], FOLDER_EXPERIMENT % params['name'])
     tl_expt.save_config_yaml(os.path.join(params['path_expt'], NAME_YAML_PARAMS), params)

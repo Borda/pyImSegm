@@ -101,7 +101,7 @@ def compute_mean_image(list_img_paths):
 def main(params):
     """ PIPELINE for rotation
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     """
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 

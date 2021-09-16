@@ -37,7 +37,7 @@ PATHS = {
 def arg_parse_params(dict_paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return ({str: str}, int):
+    :return tuple(dict(str,str),int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(

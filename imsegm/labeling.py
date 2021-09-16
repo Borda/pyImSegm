@@ -85,7 +85,7 @@ def contour_coords(seg, label=1, include_boundary=False):
     :param ndarray seg: integer images, typically a segmentation
     :param int label: selected singe label in segmentation
     :param bool include_boundary: assume that the object end with image boundary
-    :return [[int, int]]:
+    :return list(tuple(int,int)):
 
     >>> img = np.zeros((6, 6), dtype=int)
     >>> img[1:5, 2:] = 1
@@ -350,7 +350,7 @@ def convert_segms_2_list(segms):
     """ convert segmentation to a list tha can be simpy user for standard
     evaluation (classification or clustering metrics)
 
-    :param [ndarray] segms: list of segmentation
+    :param list(ndarray) segms: list of segmentation
     :return list(int):
 
     >>> seg_pipe = np.ones((2, 3), dtype=int)
@@ -405,7 +405,7 @@ def sequence_labels_merge(labels_stack, dict_colors, labels_free, change_label=-
     - 00000000 -> CHANGE_LABEL
 
     :param ndarray labels_stack: np.array<date, height, width> input stack of labeled images
-    :param {int: (int, int, int)} dict_colors: dictionary of labels-colors
+    :param dict(int,tuple(int,int,int)) dict_colors: dictionary of labels-colors
     :param list(int) labels_free: list of free labels
     :param int change_label: label that is set for non constant time series
     :return ndarray: np.array<height, width>

@@ -56,7 +56,7 @@ FIGURE_SIZE = 12
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return ({str: str}, int):
+    :return tuple(dict(str,str),int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -117,7 +117,7 @@ def figure_draw_img_centre_segm(fig, img, centres, segm, subfig_size=FIGURE_SIZE
 
     :param obj fig:
     :param ndarray img:
-    :param [[int]] centres:
+    :param list(list(int)) centres:
     :param ndarray segm:
     :param int subfig_size:
     :return obj:

@@ -360,12 +360,12 @@ def prepare_boundary_points_ray_join(
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param float close_points: remove closest point then a given threshold
     :param int min_diam: minimal size of expected objest
     :param int sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
@@ -454,12 +454,12 @@ def prepare_boundary_points_ray_edge(
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param float close_points: remove closest point then a given threshold
     :param int min_diam: minimal size of expected objest
     :param int sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
@@ -505,12 +505,12 @@ def prepare_boundary_points_ray_mean(
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param float close_points: remove closest point then a given threshold
     :param int min_diam: minimal size of expected objest
     :param int sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
@@ -553,11 +553,11 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1, sel_bg=STRUC_
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param float close_points: remove closest point then a given threshold
     :param int sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
@@ -625,9 +625,9 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, relative_compact=0.3
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param int sp_size: superpixel size
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((100, 200), dtype=int)
     >>> ell_params = 50, 100, 40, 60, np.deg2rad(30)
@@ -666,8 +666,8 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, relative_compact=0.3
 #     """ extract some point around foreground boundaries
 #
 #     :param ndarray seg: input segmentation
-#     :param [(int, int)] centers: list of centers
-#     :return [ndarray]:
+#     :param list(tuple(int,int)) centers: list of centers
+#     :return list(ndarray):
 #
 #     >>> seg = np.zeros((100, 200), dtype=int)
 #     >>> ell_params = 50, 100, 40, 60, 30

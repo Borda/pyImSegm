@@ -261,7 +261,7 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
     :param (int, DF:row) idx_row: tuple of index and row
     :param str path_out: path to output directory
     :param dict dict_relabel: look-up table for relabeling
-    :return(str, ndarray, ndarray, [[int, int]]): idx_name, img_rgb, segm, centers
+    :return(str, ndarray, ndarray, list(tuple(int,int))): idx_name, img_rgb, segm, centers
     """
     idx, row_path = idx_row
     for k in ['path_image', 'path_segm', 'path_centers']:
@@ -315,7 +315,7 @@ def export_visual_input_image_segm(path_out, img_name, img, segm, centers=None):
     :param str img_name: image name
     :param ndarray img: np.array
     :param ndarray segm: np.array
-    :param centers: [(int, int)] or np.array
+    :param centers: list(tuple(int,int)) or np.array
     """
     fig = tl_visu.figure_image_segm_centres(img, segm, centers)
     fig.savefig(os.path.join(path_out, img_name + '.png'), bbox_inches='tight', pad_inches=0)
@@ -325,9 +325,9 @@ def export_visual_input_image_segm(path_out, img_name, img, segm, centers=None):
 def compute_min_dist_2_centers(centers, points):
     """ compute distance toclosestt center and mark which center it is
 
-    :param [int, int] centers:
-    :param [int, int] points:
-    :return (float, int):
+    :param tuple(int,int) centers:
+    :param tuple(int,int) points:
+    :return tuple(float, int):
     """
     dists = spatial.distance.cdist(np.array(points), np.array(centers), metric='euclidean')
     dist = np.min(dists, axis=1)
@@ -353,8 +353,8 @@ def export_show_image_points_labels(
     :param str img_name:
     :param img: np.array
     :param seg: np.array
-    :param [(int, int)] points:
-    :param [int] labels:
+    :param list(tuple(int,int)) points:
+    :param list(int) labels:
     :param slic: np.array
     :param seg_centers:
     :param str fig_suffix:
@@ -382,8 +382,8 @@ def estim_points_compute_features(name, img, segm, params):
     :param str name:
     :param ndarray img:
     :param ndarray segm:
-    :param {str: any} params:
-    :return (str, ndarray, [(int, int)], [[float]], list(str)):
+    :param dict(str,any) params:
+    :return tuple(str, ndarray, list(tuple(int,int)), list(list(float)), list(str)):
     """
     # superpixels on image
     if img.shape[:2] != segm.shape[:2]:
@@ -401,9 +401,9 @@ def compute_points_features(segm, points, params):
     """ for each point in segmentation compute relevant features according params
 
     :param ndarray segm: segmentations
-    :param [(int, int)] points: positions in image
-    :param {str: any} params: parameters
-    :return ([[float]], list(str)): [[float] * nb_features] * nb_points, list(str) * nb_features
+    :param list(tuple(int,int)) points: positions in image
+    :param dict(str,any) params: parameters
+    :return tuple(list(list(float)), list(str)): [list(float) * nb_features] * nb_points, list(str) * nb_features
     """
     features, feature_names = np.empty((len(points), 0)), []
 
@@ -457,10 +457,10 @@ def label_close_points(centers, points, params):
     """ label points whether they are close to center by distance to real center
     or from annotation of close center regions
 
-    :param ndarray|[(int, int)] centers:
-    :param [(int, int)] points: positions in image
-    :param {str: any} params: parameters
-    :return [int]:
+    :param ndarray|list(tuple(int,int)) centers:
+    :param list(tuple(int,int)) points: positions in image
+    :param dict(str,any) params: parameters
+    :return list(int):
     """
     if isinstance(centers, list):
         min_dist, _ = compute_min_dist_2_centers(centers, points)
@@ -484,7 +484,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_W
     """ create whole dataset composed from loading input data, computing features
     and label points by label whether its positive or negative center candidate
 
-    :param {str: any} params: parameters
+    :param dict(str,any) params: parameters
     :param DF df_paths: DataFrame
     :param int nb_workers: parallel
     :return dict:
@@ -537,11 +537,11 @@ def export_dataset_visual(
     """ visualise complete training dataset by marking labeld points
     over image and input segmentation
 
-    :param {str: ndarray} dict_imgs:
-    :param {str: ndarray} dict_segms:
-    :param {str: ndarray} dict_slics:
-    :param {str: ndarray} dict_points:
-    :param {str: ndarray} dict_labels:
+    :param dict(str,ndarray) dict_imgs:
+    :param dict(str,ndarray) dict_segms:
+    :param dict(str,ndarray) dict_slics:
+    :param dict(str,ndarray) dict_points:
+    :param dict(str,ndarray) dict_labels:
     :param int nb_workers: number processing in parallel
     """
     logging.info('export training visualisations')
@@ -567,7 +567,7 @@ def export_dataset_visual(
 def compute_statistic_centers(dict_stat, img, segm, center, slic, points, labels, params, path_out=''):
     """ compute statistic on centers
 
-    :param {str: float} dict_stat:
+    :param dict(str,float) dict_stat:
     :param ndarray img:
     :param ndarray segm:
     :param center:
@@ -612,7 +612,7 @@ def detect_center_candidates(name, image, segm, centers_gt, slic, points, featur
     :param ndarray segm:
     :param centers_gt:
     :param slic: np.array
-    :param [(int, int)] points:
+    :param list(tuple(int,int)) points:
     :param features:
     :param dict params:
     :param str path_out:
@@ -741,7 +741,7 @@ def main_train(params):
     2) train classifier with hyper-parameters
     3) perform Leave-One-Out experiment
 
-    :param {str: any} params:
+    :param dict(str,any) params:
     """
     params = prepare_experiment_folder(params, FOLDER_EXPERIMENT)
 

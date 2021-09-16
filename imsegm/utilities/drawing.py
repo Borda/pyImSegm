@@ -501,7 +501,7 @@ def figure_ray_feature(segm, points, ray_dist_raw=None, ray_dist=None, points_re
     """ visualise the segmentation with specific point and estimated ray dist.
 
     :param ndarray segm: segmentation
-    :param [(float, float)] points: collection of points
+    :param list(tuple(float,float)) points: collection of points
     :param list(float) ray_dist_raw:
     :param list(float) ray_dist: Ray feature distances
     :param ndarray points_reconst: collection of reconstructed points
@@ -708,7 +708,7 @@ def draw_eggs_rectangle(mask_shape, pos_ant, pos_lat, pos_post):
     :param [tuple(int,int)] pos_ant: points
     :param [tuple(int,int)] pos_lat: points
     :param [tuple(int,int)] pos_post: points
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> pos_ant, pos_lat, pos_post = [10, 10], [20, 20], [35, 20]
     >>> points = np.array([pos_ant, pos_lat, pos_post])
@@ -742,7 +742,7 @@ def draw_eggs_rectangle(mask_shape, pos_ant, pos_lat, pos_post):
 def merge_object_masks(masks, overlap_thr=0.7):
     """ merge several mask into one multi-class segmentation
 
-    :param [ndarray] masks: collection of masks
+    :param list(ndarray) masks: collection of masks
     :param float overlap_thr: threshold for overlap
     :return ndarray:
 
@@ -1021,7 +1021,7 @@ def figure_rg2sp_debug_complete(seg, slic, debug_rg2sp, iter_index=-1, max_size=
 def make_overlap_images_optical(images):
     """ overlap images and show them
 
-    :param [ndarray] images: collection of images
+    :param list(ndarray) images: collection of images
     :return ndarray: combined image
 
     >>> im1 = np.zeros((5, 8), dtype=float)
@@ -1053,7 +1053,7 @@ def make_overlap_images_optical(images):
 def make_overlap_images_chess(images, chess_field=SIZE_CHESS_FIELD):
     """ overlap images and show them
 
-    :param [ndarray] images: collection of images
+    :param list(ndarray) images: collection of images
     :param int chess_field: size of chess field size
     :return ndarray: combined image
 

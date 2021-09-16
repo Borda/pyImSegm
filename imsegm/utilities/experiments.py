@@ -229,8 +229,8 @@ def append_final_stat(out_dir, y_true, y_pred, time_sec, file_name=RESULTS_TXT):
     """ append (export) statistic to existing default file
 
     :param str out_dir:
-    :param [int] y_true: annotation
-    :param [int] y_pred: predictions
+    :param list(int) y_true: annotation
+    :param list(int) y_pred: predictions
     :param int time_sec:
     :param str file_name:
     :return str:

@@ -238,7 +238,7 @@ def load_model(path_model):
     """ load exported segmentation model
 
     :param str path_model:
-    :return (obj, obj, obj, {}, list(str)):
+    :return tuple(obj, obj, obj, {}, list(str)):
     """
     logging.info('loading dumped model "%s"', path_model)
     with open(path_model, 'rb') as f:
@@ -272,7 +272,7 @@ def parse_imgs_idx_path(imgs_idx_path):
     """ general parser for splitting all possible input combination
 
     :param imgs_idx_path: set of image index and path
-    :return (int, str): split index and name
+    :return tuple(int, str): split index and name
     """
     if isinstance(imgs_idx_path, tuple):
         idx, path_img = imgs_idx_path
@@ -339,7 +339,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None, sh
     :param dict params: segmentation parameters
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
-    :return (str, ndarray):
+    :return tuple(str, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(img_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
@@ -389,7 +389,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None, path_visu=N
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
     :param bool show_debug_imgs: whether show debug images
-    :return (str, ndarray):
+    :return tuple(str, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
@@ -430,8 +430,8 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None, path_visu=N
 def compare_segms_metric_ars(dict_segm_a, dict_segm_b, suffix=''):
     """ compute ARS for each pair of segmentation
 
-    :param {str: ndarray} dict_segm_a:
-    :param {str: ndarray} dict_segm_b:
+    :param dict(str,ndarray) dict_segm_a:
+    :param dict(str,ndarray) dict_segm_b:
     :param str suffix:
     :return DF:
     """
