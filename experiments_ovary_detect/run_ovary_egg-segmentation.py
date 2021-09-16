@@ -136,7 +136,7 @@ SEGM_PARAMS = {
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return {str: str}:
+    :return dict(str,str):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -241,9 +241,9 @@ def segment_watershed(seg, centers, post_morph=False):
     and optionally run some postprocessing using morphological operations
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param bool post_morph: apply morphological postprocessing
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return ndarray, list(tuple(int,int)): resulting segmentation, updated centres
     """
     logging.debug('segment: watershed...')
     seg_binary = (seg > 0)
@@ -279,7 +279,7 @@ def create_circle_center(img_shape, centers, radius=10):
     """ create initialisation from centres as small circles
 
     :param img_shape:
-    :param [[int, int]] centers:
+    :param list(tuple(int,int)) centers:
     :param int radius:
     :return:
     """
@@ -299,8 +299,8 @@ def segment_active_contour(img, centers):
     """ segmentation using acive contours
 
     :param ndarray img: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :param list(tuple(int,int)) centers: position of centres / seeds
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     logging.debug('segment: active_contour...')
     # http://scikit-image.org/docs/dev/auto_examples/edges/plot_active_contours.html
@@ -336,12 +336,12 @@ def segment_morphsnakes(img, centers, init_center=True, smoothing=5, lambdas=(3,
     """ segmentation using morphological snakes with some parameters
 
     :param ndarray img: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param bool init_center:
     :param int smoothing:
-    :param [int, int] lambdas:
+    :param tuple(int,int) lambdas:
     :param float bb_dist:
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     logging.debug('segment: morph-snakes...')
     if img.ndim == 3:
@@ -382,10 +382,10 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points, thr_overlap=SEGM_OVERLA
     """ segment eggs using ellipse fitting
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param fn_preproc_points: function for detection boundary points
     :param float thr_overlap: threshold for removing overlapping segmentation
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     points_centers = fn_preproc_points(seg, centers)
 
@@ -412,11 +412,11 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6, 
     """ segment eggs using ellipse fitting and RANDSAC strategy
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param fn_preproc_points: function for detection boundary points
     :param float nb_inliers: ratio of inliers for RANSAC
     :param float thr_overlap: threshold for removing overlapping segmentations
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     points_centers = fn_preproc_points(seg, centers)
 
@@ -447,12 +447,12 @@ def segment_fit_ellipse_ransac_segm(
     """ segment eggs using ellipse fitting and RANDSAC strategy on segmentation
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param fn_preproc_points: function for detection boundary points
-    :param [[float]] table_p: table of probabilities being foreground / background
+    :param list(list(float)) table_p: table of probabilities being foreground / background
     :param float nb_inliers: ratio of inliers for RANSAC
     :param float thr_overlap: threshold for removing overlapping segmentations
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     slic, points_all, labels = ell_fit.get_slic_points_labels(seg, slic_size=15, slic_regul=0.1)
     points_centers = fn_preproc_points(seg, centers)
@@ -492,13 +492,13 @@ def segment_graphcut_pixels(
     """ wrapper for segment global GraphCut optimisations
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param labels_fg_prob:
     :param float gc_regul:
     :param int seed_size:
     :param float coef_shape:
     :param (float, float) shape_mean_std:
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     segm_obj = seg_rg.object_segmentation_graphcut_pixels(
         seg, centers, labels_fg_prob, gc_regul, seed_size, coef_shape, shape_mean_std=shape_mean_std
@@ -521,14 +521,14 @@ def segment_graphcut_slic(
 
     :param ndarray slic:
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param labels_fg_prob:
     :param float gc_regul:
     :param bool multi_seed:
     :param float coef_shape:
     :param float edge_weight:
     :param shape_mean_std:
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     gc_labels = seg_rg.object_segmentation_graphcut_slic(
         slic,
@@ -643,7 +643,7 @@ def simplify_segm_3cls(seg, lut=(0., 0.8, 1.), smooth=True):
     """ simple segmentation into 3 classes
 
     :param ndarray seg: input image / segmentation
-    :param [float] lut:
+    :param list(float) lut:
     :param bool smooth:
     :return ndarray:
     """
@@ -664,7 +664,7 @@ def create_dict_segmentation(params, slic, segm, img, centers):
     :param dict params:
     :param ndarray slic:
     :param ndarray segm:
-    :param [[float]] centers:
+    :param list(list(float)) centers:
     :return {str: (function, (...))}:
     """
     # parameters for Region Growing

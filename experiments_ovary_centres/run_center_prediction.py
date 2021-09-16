@@ -60,7 +60,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='', 
     :param obj classif:
     :param str path_classif:
     :param str path_output:
-    :return {str: float}:
+    :return dict(str,float):
     """
     _, row = idx_row
     dict_center = dict(row)
@@ -122,7 +122,7 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs, path_centers=
 def main(params):
     """ PIPELINE for new detections
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     """
     params = run_train.prepare_experiment_folder(params, FOLDER_EXPERIMENT)
 

@@ -111,7 +111,7 @@ def compute_boundary_distance(idx_row, params, path_out=''):
     :param (int, str) idx_row:
     :param dict params:
     :param str path_out:
-    :return (str, float):
+    :return tuple(str, float):
     """
     _, row = idx_row
     name = os.path.splitext(os.path.basename(row['path_image']))[0]

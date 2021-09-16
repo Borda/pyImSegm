@@ -87,7 +87,7 @@ def create_classifiers(nb_workers=-1):
     """ create all classifiers with default parameters
 
     :param int nb_workers: number of parallel if possible
-    :return dict: {str: clf}
+    :return dict(str,clf) dict:
 
     >>> classifs = create_classifiers()
     >>> classifs  # doctest: +ELLIPSIS
@@ -424,8 +424,8 @@ def compute_classif_stat_segm_annot(annot_segm_name, drop_labels=None, relabel=F
 def compute_stat_per_image(segms, annots, names=None, nb_workers=2, drop_labels=None, relabel=False):
     """ compute statistic over multiple segmentations with annotation
 
-    :param [ndarray] segms: segmntations
-    :param [ndarray] annots: annotations
+    :param list(ndarray) segms: segmntations
+    :param list(ndarray) annots: annotations
     :param list(str) names: list of names
     :param list(int) drop_labels: labels to be ignored
     :param bool relabel: whether relabel
@@ -1055,7 +1055,7 @@ def convert_dict_label_features_2_vectors(dict_features):
     """ convert dictionary of features where key is the labels
     to vector of all features and related labels
 
-    :param {int: [list(float)]} dict_features: {int: [list(float) * nb_features] * nb_samples}
+    :param dict(int,list(list(float))) dict_features: {int: [list(float) * nb_features] * nb_samples}
     :return tuple(ndarray,list(int)): np.array<nb_samples, nb_features>, list(int)
     """
     features, labels = [], []
@@ -1071,7 +1071,7 @@ def compose_dict_label_features(features, labels):
 
     :param ndarray features: features in dimension nb_samples x nb_features
     :param list(int) labels: annotation for samples
-    :return {int: ndarray}: {int: np.array<nb, nb_features>}
+    :return dict(int,ndarray): {int: np.array<nb, nb_features>}
     """
     dict_features = {}
     features = np.array(features)
@@ -1220,8 +1220,8 @@ def convert_set_features_labels_2_dataset(imgs_features, imgs_labels, drop_label
     """ with dictionary for each image we concentrate all features over images
     and labels into simple form
 
-    :param {str: ndarray} imgs_features: dictionary of name and features
-    :param {str: ndarray} imgs_labels: dictionary of name and labels
+    :param dict(str,ndarray) imgs_features: dictionary of name and features
+    :param dict(str,ndarray) imgs_labels: dictionary of name and labels
     :param list(int) drop_labels: labels to be ignored
     :param bool balance_type: whether balance_type number of sampler per class
     :return tuple(ndarray,ndarray,ndarray):

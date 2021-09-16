@@ -67,7 +67,7 @@ LUT_COLOR = np.array([
 def arg_parse_params(paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return ({str: ...}, bool, int):
+    :return tuple(dict(str,...), bool, int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -123,7 +123,7 @@ def compute_metrics(row):
     """ load segmentation and compute similarity metrics
 
     :param dict row:
-    :return {str: float}:
+    :return dict(str,float):
     """
     logging.debug('loading annot "%s"\n and segm "%s"', row['path_annot'], row['path_egg-segm'])
     annot, _ = tl_data.load_image_2d(row['path_annot'])
@@ -216,9 +216,9 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
     against annotation and export some visualisations, return computed stat.
 
     :param str path_dir:
-    :param {str, str} dict_paths:
+    :param dict(str,str) dict_paths:
     :param bool export_visual:
-    :return {str: float}:
+    :return dict(str,float):
     """
     logging.info('evaluate folder: %s', path_dir)
     name = os.path.basename(path_dir)
@@ -269,7 +269,7 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
 def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_workers=NB_WORKERS):
     """ evaluate all segmentations in experiment folder
 
-    :param {str: str} paths: path to all required directories
+    :param dict(str,str) paths: path to all required directories
     :param bool export_visual: export visualisations
     :param int nb_workers: number threads in parralel
     """

@@ -187,7 +187,7 @@ def load_image_annot_compute_features_labels(idx_row, params, show_debug_imgs=SH
     :param (int, {...}) idx_row: row from table with paths
     :param dict params: segmentation parameters
     :param bool show_debug_imgs: whether show debug images
-    :return (...):
+    :return tuple(...):
     """
 
     def _path_out_img(params, dir_name, name):
@@ -234,7 +234,7 @@ def dataset_load_images_annot_compute_features(params, show_debug_imgs=SHOW_DEBU
 
     :param dict params: segmentation parameters
     :param bool show_debug_imgs: whether show debug images
-    :return ({str: ndarray} * 6, list(str)):
+    :return tuple(dict(str,ndarray) * 6, list(str)):
     """
     dict_images, dict_annots = {}, {}
     dict_slics, dict_features, dict_labels, dict_label_hist = {}, {}, {}, {}
@@ -272,7 +272,7 @@ def load_dump_data(path_dump_data):
     """ load dumped data from previous run of experiment
 
     :param str path_dump_data:
-    :return ({str: ndarray} * 6, list(str)):
+    :return tuple(dict(str,ndarray) * 6, list(str)):
     """
     logging.info('loading dumped data "%s"', path_dump_data)
     # with open(os.path.join(path_out, NAME_DUMP_TRAIN_DATA), 'r') as f:
@@ -292,12 +292,12 @@ def save_dump_data(path_dump_data, imgs, annot, slics, features, labels, label_h
     """
 
     :param str path_dump_data:
-    :param {str: ndarray} imgs: dictionary {name: data} of images
-    :param {str: ndarray} annot: dictionary {name: data} of annotation
-    :param {str: ndarray} slics: dictionary {name: data} of superpixels
-    :param {str: ndarray} features: dictionary {name: data} of features
-    :param {str: ndarray} labels: dictionary {name: data} of lables
-    :param {str: ndarray} label_hist: dictionary {name: data} of
+    :param dict(str,ndarray) imgs: dictionary {name: data} of images
+    :param dict(str,ndarray) annot: dictionary {name: data} of annotation
+    :param dict(str,ndarray) slics: dictionary {name: data} of superpixels
+    :param dict(str,ndarray) features: dictionary {name: data} of features
+    :param dict(str,ndarray) labels: dictionary {name: data} of lables
+    :param dict(str,ndarray) label_hist: dictionary {name: data} of
     :param list(str) feature_names: list of feature names
     """
     logging.info('save (dump) data to "%s"', path_dump_data)
@@ -330,7 +330,7 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None, show
     :param str path_out: path for output
     :param str path_visu: the existing patch means export also visualisation
     :param bool show_debug_imgs: whether show debug images
-    :return (str, ndarray, ndarray):
+    :return tuple(str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
@@ -396,9 +396,9 @@ def eval_segment_with_annot(
     """ evaluate the segmentation results according given annotation
 
     :param dict params:
-    :param {str: ndarray} dict_annot:
-    :param {str: ndarray} dict_segm:
-    :param {str: ndarray} dict_label_hist:
+    :param dict(str,ndarray) dict_annot:
+    :param dict(str,ndarray) dict_segm:
+    :param dict(str,ndarray) dict_label_hist:
     :param str name_csv:
     :param int nb_workers:
     :return:
@@ -439,7 +439,7 @@ def retrain_lpo_segment_image(
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
     :param bool show_debug_imgs: whether show debug images
-    :return (str, ndarray, ndarray):
+    :return tuple(str, ndarray, ndarray):
     """
     dict_imgs, _, _, dict_features, dict_labels, _, _ = load_dump_data(path_dump)
     dict_classif = seg_clf.load_classifier(path_classif)
@@ -482,7 +482,7 @@ def get_summary(df, name, list_stat=('mean', 'std', 'median')):
     :param df:
     :param str name:
     :param [] list_stat:
-    :return {str: float}:
+    :return dict(str,float):
     """
     df_summary = df.describe()
     cols = df.columns.tolist()
@@ -531,7 +531,7 @@ def experiment_lpo(
 
     :param dict params:
     :param DF df_stat:
-    :param {str: ndarray} dict_annot:
+    :param dict(str,ndarray) dict_annot:
     :param list(str) paths_img:
     :param str path_classif:
     :param str path_dump:
@@ -784,7 +784,7 @@ def prepare_output_dir(path_pattern_imgs, path_out, name, visual=True):
     :param str path_pattern_imgs:
     :param str path_out:
     :param str name:
-    :return (str, str):
+    :return tuple(str, str):
     """
     # add last 2 dir names
     name += '_'.join(path_pattern_imgs.split(os.sep)[-3:-1])

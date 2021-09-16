@@ -53,7 +53,7 @@ PATHS = {
 def aparse_params(dict_paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return ({str: str}, obj):
+    :return tuple(dict(str,str), obj):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -130,7 +130,7 @@ def export_visual(name, annot, segm, img, path_out, drop_labels, segm_alpha=1.):
 
     :param dict df_row:
     :param str path_out: path to the visualisation directory
-    :param [int] drop_labels: whether skip some labels
+    :param list(int) drop_labels: whether skip some labels
     """
     # relabel for simpler visualisations of class differences
     if np.sum(annot < 0) > 0:
@@ -180,7 +180,7 @@ def stat_single_set(idx_row, drop_labels=None, relabel=False, path_visu='', segm
 def main(dict_paths, visual=True, drop_labels=None, relabel=True, segm_alpha=1., nb_workers=NB_WORKERS):
     """ main evaluation
 
-    :param {str: str} dict_paths:
+    :param dict(str,str) dict_paths:
     :param int nb_workers: number of thred running in parallel
     :param bool relabel: whether relabel segmentation as sequential
     """

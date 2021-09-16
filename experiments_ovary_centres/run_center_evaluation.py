@@ -90,14 +90,14 @@ def compute_statistic_eggs_centres(
     inside single egg
 
     :param dict_case:
-    :param [[float]] points:
-    :param [int] labels:
+    :param list(list(float)) points:
+    :param list(int) labels:
     :param ndarray mask_eggs:
     :param ndarray img: optional for visualisation purposes
     :param ndarray segm: optional for visualisation purposes
     :param str path_out: path to the output directory
     :param str col_prefix: column prefix
-    :return {str: int}:
+    :return dict(str,int):
     """
     unique_eggs = [int(lb) for lb in np.unique(mask_eggs) if lb != 0]
     dict_case[col_prefix + 'eggs annot.'] = len(unique_eggs)
@@ -143,7 +143,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None, col_pref
     :param str path_annot:
     :param str path_visu:
     :param str col_prefix:
-    :return {str: float}:
+    :return dict(str,float):
     """
     idx, row = idx_row
     dict_row = dict(row)
@@ -190,7 +190,7 @@ def evaluate_detection_stage(df_paths, stage, path_info, path_out, nb_workers=1)
     """ evaluate center detection for particular list of stages
 
     :param df_paths:
-    :param [int] stage:
+    :param list(int) stage:
     :param str path_info:
     :param str path_out:
     :param int nb_workers:

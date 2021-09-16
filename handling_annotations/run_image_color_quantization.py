@@ -90,7 +90,7 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     """ perform the quantization together with loading and exporting
 
     :param str path_image:
-    :param [(int, int, int)] list_colors: list of possible colours
+    :param list(tuple(int,int,int)) list_colors: list of possible colours
     """
     logging.debug('quantize img: "%s"', path_image)
     im = tl_data.io_imread(path_image)
@@ -120,7 +120,7 @@ def quantize_folder_images(
     """ perform single or multi thread image quantisation
 
     :param str path_images:, input directory and image pattern for loading
-    :param colors: [(int, int, int)], list of possible colours
+    :param list(tuple(int,int,int)) colors: list of possible colours
     :param str method: interpolation method
     :param float px_threshold: pixel threshold
     :param int nb_workers: number of jobs

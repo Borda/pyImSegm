@@ -15,18 +15,20 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.8
 
       - name: Install dependenies
         run: |
-          pip install --upgrade cython setuptools wheel check-manifest "twine==3.2"
+          pip install --upgrade cython "setuptools>=42" wheel check-manifest "twine==3.2"
 
       - name: Check package
         run: |
           check-manifest
           python setup.py check --metadata --strict
-          python setup.py build_ext --inplace
-          python setup.py install --dry-run --user
+
+      #- name: Fake install
+      #  run: |
+      #    python setup.py install --dry-run --user
 
       - name: Create package
         run: |
@@ -43,7 +45,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04, macOS-10.15, windows-2019]
-        python-version: [3.7]
+        python-version: [3.8]
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v2

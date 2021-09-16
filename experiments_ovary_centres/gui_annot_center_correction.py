@@ -107,7 +107,7 @@ def load_paths_image_csv(params, skip_csv=POSIX_CSV_LABEL):
     of images and csv with centers, then it find the intersection between them
     according their unique names
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     :param str skip_csv: pattern in csv name that skips the file
     :return [(str, str)]:
     """

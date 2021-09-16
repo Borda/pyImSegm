@@ -39,7 +39,7 @@ NAME_NPZ_MODEL_MIXTURE = 'RG2SP_eggs_mixture-model.npz'
 def arg_parse_params():
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return {str: str}:
+    :return dict(str,str):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(

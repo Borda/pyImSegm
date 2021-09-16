@@ -951,9 +951,9 @@ def create_filter_bank_lm_2d(radius=16, sigmas=DEFAULT_FILTERS_SIGMAS, nb_orient
 def compute_img_filter_response2d(img, filter_battery):
     """ compute image filter response in 2D
 
-    :param [[float]] img: image
-    :param [[[float]]] filter_battery: filters
-    :return [[float]]:
+    :param list(list(float)) img: image
+    :param list(list(list(float))) filter_battery: filters
+    :return list(list(float)):
     """
     if filter_battery.ndim != 3:
         raise ValueError('wrong battery dim %r' % filter_battery.shape)
@@ -998,8 +998,8 @@ def compute_texture_desc_lm_img3d_val(img, seg, feature_flags, bank_type='normal
     """ compute texture descriptors as mean / std / ...
     on Lewen-Malik filter bank response
 
-    :param [[[float]]] img: image
-    :param [[[int]]] seg: segmentation
+    :param list(list(list(float))) img: image
+    :param list(list(list(int))) seg: segmentation
     :param list(str) feature_flags: list of feature flags
     :param str bank_type: define used LM filter bank ['short', 'normal']
     :return tuple(ndarray,list(str)): np.ndarray<nb_samples, nb_features>, names
@@ -1290,7 +1290,7 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
     of inter circle neighbouring around given points in the segmentation
 
     :param ndarray segm: np.array<height, width>
-    :param [(int, int)] positions: list of positions
+    :param list(tuple(int,int)) positions: list of positions
     :param list(int) diameters: circular diameters
     :param int nb_labels:
     :return tuple(ndarray,list(str)): ndarray<nb_samples, nb_features>, names
@@ -1372,9 +1372,9 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
 def adjust_bounding_box_crop(image_size, bbox_size, position):
     """ adjust the bounding box according image sizes and position
 
-    :param tuple(int,int)|[int, int] image_size: image size
-    :param tuple(int,int)|[int, int] bbox_size: size of the bounding box
-    :param tuple(int,int)|[int, int] position: position in yhe image
+    :param tuple(int,int) image_size: image size
+    :param tuple(int,int) bbox_size: size of the bounding box
+    :param tuple(int,int) position: position in yhe image
     :return (), (), (), (): im_begin, im_end, bb_begin, bb_end
 
     >>> adjust_bounding_box_crop((50, 50), (7, 7), (20, 20))
@@ -1816,7 +1816,7 @@ def compute_ray_features_positions(
     with given boundary labels and step angle
 
     :param ndarray segm: np.array<height, width>
-    :param [(int, int)] list_positions:
+    :param list(tuple(int,int)) list_positions:
     :param float angle_step:
     :param list(int) border_labels: all labels to be set as boundaries
     :param int segm_open:
