@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependenies
         run: |
-          pip install --upgrade cython setuptools wheel check-manifest "twine==3.2"
+          pip install --upgrade cython "setuptools>=42" wheel check-manifest "twine==3.2"
 
       - name: Check package
         run: |
