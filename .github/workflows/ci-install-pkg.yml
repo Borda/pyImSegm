@@ -26,9 +26,9 @@ jobs:
           check-manifest
           python setup.py check --metadata --strict
 
-      - name: Fake install
-        run: |
-          python setup.py install --dry-run --user
+      #- name: Fake install
+      #  run: |
+      #    python setup.py install --dry-run --user
 
       - name: Create package
         run: |
