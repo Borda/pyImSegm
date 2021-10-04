@@ -1127,7 +1127,7 @@ def down_sample_dict_features_kmean(dict_features, nb_samples):
         if len(features) <= nb_samples:
             dict_features_new[label] = features.copy()
             continue
-        kmeans = cluster.KMeans(n_clusters=nb_samples, init='random', n_init=3, max_iter=5, n_jobs=-1)
+        kmeans = cluster.KMeans(n_clusters=nb_samples, init='random', n_init=3, max_iter=5)
         dist = kmeans.fit_transform(features)
         find_min = np.argmin(dist, axis=0)
         dict_features_new[label] = features[find_min, :]

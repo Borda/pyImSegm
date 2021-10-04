@@ -127,7 +127,7 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None, us
         if init_type == 'kmeans':
             mm.set_params(n_init=1)
             # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-            kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
+            kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++')
             y = kmeans.fit_predict(features)
         elif init_type == 'Otsu':
             mm.set_params(n_init=1)
@@ -209,7 +209,7 @@ def compute_multivarian_otsu(features):
 #     mm = mixture.GMM(n_components=nb_classes, covariance_type='full', n_iter=999)
 #     if init == 'kmeans':
 #         # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-#         kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
+#         kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++')
 #         y = kmeans.fit_predict(features)
 #         mm.fit(features, y)
 #     else:
@@ -240,7 +240,7 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     gmm = mixture.GaussianMixture(n_components=nb_classes, covariance_type='full', max_iter=99)
     if init == 'kmeans':
         # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-        kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
+        kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++')
         y = kmeans.fit_predict(features)
         gmm.fit(features, y)
     else:
@@ -275,10 +275,10 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++', max_it
     if init_type == 'quantiles':
         quntiles = np.linspace(5, 95, nb_classes).tolist()
         init_perc = np.array(np.percentile(features, quntiles, axis=0))
-        kmeans = cluster.KMeans(nb_classes, init=init_perc, max_iter=2, n_jobs=-1)
+        kmeans = cluster.KMeans(nb_classes, init=init_perc, max_iter=2)
     else:
         nb_inits = max(1, int(np.sqrt(max_iter)))
-        kmeans = cluster.KMeans(nb_classes, init=init_type, max_iter=max_iter, n_init=nb_inits, n_jobs=-1)
+        kmeans = cluster.KMeans(nb_classes, init=init_type, max_iter=max_iter, n_init=nb_inits)
     y = kmeans.fit_predict(features)
     gmm = mixture.GaussianMixture(n_components=nb_classes, covariance_type='full', max_iter=1)
     gmm.fit(features, y)
