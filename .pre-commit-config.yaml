@@ -4,7 +4,7 @@ default_language_version:
 ci:
   autofix_prs: true
   autoupdate_commit_msg: '[pre-commit.ci] pre-commit suggestions'
-  # autoupdate_schedule: quarterly
+  autoupdate_schedule: quarterly
   # submodules: true
 
 repos:
@@ -52,7 +52,7 @@ repos:
       - id: yesqa
 
   - repo: https://github.com/PyCQA/flake8
-    rev: 3.9.2
+    rev: 4.0.1
     hooks:
       - id: flake8
         name: PEP8
