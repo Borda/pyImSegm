@@ -33,6 +33,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -58,7 +60,7 @@ import imsegm.utilities.experiments as tl_expt
 
 # from libs import chanvese
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 NAME_EXPERIMENT = 'experiment_egg-segment'
 TYPE_LOAD_IMAGE = '2d_struct'
 DIR_VISUAL_POSIX = '___visu'
@@ -134,7 +136,7 @@ SEGM_PARAMS = {
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return {str: str}:
+    :return dict(str,str):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -160,11 +162,11 @@ def arg_parse_params(params):
         params['path_config'] = ''
     else:
         params['path_config'] = tl_data.update_path(params['path_config'])
-        assert os.path.isfile(params['path_config']), \
-            'missing file: %s' % params['path_config']
-        ext = os.path.splitext(params['path_config'])[-1]
-        assert (ext == '.yaml' or ext == '.yml'), \
-            '"%s" should be YAML file' % os.path.basename(params['path_config'])
+        if not os.path.isfile(params['path_config']):
+            raise FileNotFoundError('missing file: %s' % params['path_config'])
+        _, ext = os.path.splitext(params['path_config'])
+        if ext not in ('.yaml', '.yml'):
+            raise RuntimeError('"%s" should be YAML file' % os.path.basename(params['path_config']))
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
         params.update(arg_params)
@@ -172,7 +174,8 @@ def arg_parse_params(params):
         if not arg_params[k]:
             continue
         params[k] = tl_data.update_path(arg_params[k], absolute=True)
-        assert os.path.exists(params[k]), 'missing: %s' % params[k]
+        if not os.path.exists(params[k]):
+            raise FileNotFoundError('missing: %s' % params[k])
     # load saved configuration
     logging.info('ARG PARAMETERS: \n %r', params)
     return params
@@ -186,12 +189,14 @@ def load_image(path_img, img_type=TYPE_LOAD_IMAGE):
     :return ndarray:
     """
     path_img = os.path.abspath(os.path.expanduser(path_img))
-    assert os.path.isfile(path_img), 'missing: "%s"' % path_img
+    if not os.path.isfile(path_img):
+        raise FileNotFoundError('missing: "%s"' % path_img)
     if img_type == 'segm':
         img = tl_data.io_imread(path_img)
     elif img_type == '2d_struct':
         img, _ = tl_data.load_img_double_band_split(path_img)
-        assert img.ndim == 2, 'image can be only single color'
+        if img.ndim != 2:
+            raise ImageDimensionError('image can be only single color')
     else:
         logging.error('not supported loading img_type: %s', img_type)
         img = tl_data.io_imread(path_img)
@@ -219,8 +224,8 @@ def export_draw_image_segm(path_fig, img, segm=None, segm_obj=None, centers=None
         ax.contour(segm)
     if segm_obj is not None:
         ax.imshow(segm_obj, alpha=0.1)
-        assert len(np.unique(segm_obj)) < 1e2, \
-            'too many labeled objects - %i' % len(np.unique(segm_obj))
+        if len(np.unique(segm_obj)) >= 1e2:
+            raise ValueError('too many labeled objects - %i' % len(np.unique(segm_obj)))
         ax.contour(segm_obj, levels=np.unique(segm_obj).tolist(), cmap=plt.cm.jet_r, linewidths=(10, ))
     if centers is not None:
         ax.plot(np.array(centers)[:, 1], np.array(centers)[:, 0], 'o', color='r')
@@ -236,9 +241,9 @@ def segment_watershed(seg, centers, post_morph=False):
     and optionally run some postprocessing using morphological operations
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param bool post_morph: apply morphological postprocessing
-    :return ndarray, [[int, int]]: resulting segmentation, updated centres
+    :return ndarray, list(tuple(int,int)): resulting segmentation, updated centres
     """
     logging.debug('segment: watershed...')
     seg_binary = (seg > 0)
@@ -249,6 +254,8 @@ def segment_watershed(seg, centers, post_morph=False):
     markers = np.zeros_like(seg)
     for i, pos in enumerate(centers):
         markers[int(pos[0]), int(pos[1])] = i + 1
+    if not distance or isinstance(distance, tuple):
+        raise TypeError
     segm = morphology.watershed(-distance, markers, mask=seg_binary)
 
     # if morphological postprocessing was not selected, ends here
@@ -272,13 +279,13 @@ def create_circle_center(img_shape, centers, radius=10):
     """ create initialisation from centres as small circles
 
     :param img_shape:
-    :param [[int, int]] centers:
+    :param list(tuple(int,int)) centers:
     :param int radius:
     :return:
     """
     mask_circle = np.zeros(img_shape, dtype=int)
     mask_perimeter = np.zeros(img_shape, dtype=int)
-    center_circles = list()
+    center_circles = []
     for i, pos in enumerate(centers):
         rr, cc = draw.circle(int(pos[0]), int(pos[1]), radius, shape=img_shape[:2])
         mask_circle[rr, cc] = i + 1
@@ -292,8 +299,8 @@ def segment_active_contour(img, centers):
     """ segmentation using acive contours
 
     :param ndarray img: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :param list(tuple(int,int)) centers: position of centres / seeds
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     logging.debug('segment: active_contour...')
     # http://scikit-image.org/docs/dev/auto_examples/edges/plot_active_contours.html
@@ -329,12 +336,12 @@ def segment_morphsnakes(img, centers, init_center=True, smoothing=5, lambdas=(3,
     """ segmentation using morphological snakes with some parameters
 
     :param ndarray img: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param bool init_center:
     :param int smoothing:
-    :param [int, int] lambdas:
+    :param tuple(int,int) lambdas:
     :param float bb_dist:
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     logging.debug('segment: morph-snakes...')
     if img.ndim == 3:
@@ -375,10 +382,10 @@ def segment_fit_ellipse(seg, centers, fn_preproc_points, thr_overlap=SEGM_OVERLA
     """ segment eggs using ellipse fitting
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param fn_preproc_points: function for detection boundary points
     :param float thr_overlap: threshold for removing overlapping segmentation
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     points_centers = fn_preproc_points(seg, centers)
 
@@ -405,11 +412,11 @@ def segment_fit_ellipse_ransac(seg, centers, fn_preproc_points, nb_inliers=0.6, 
     """ segment eggs using ellipse fitting and RANDSAC strategy
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param fn_preproc_points: function for detection boundary points
     :param float nb_inliers: ratio of inliers for RANSAC
     :param float thr_overlap: threshold for removing overlapping segmentations
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     points_centers = fn_preproc_points(seg, centers)
 
@@ -440,12 +447,12 @@ def segment_fit_ellipse_ransac_segm(
     """ segment eggs using ellipse fitting and RANDSAC strategy on segmentation
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param fn_preproc_points: function for detection boundary points
-    :param [[float]] table_p: table of probabilities being foreground / background
+    :param list(list(float)) table_p: table of probabilities being foreground / background
     :param float nb_inliers: ratio of inliers for RANSAC
     :param float thr_overlap: threshold for removing overlapping segmentations
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     slic, points_all, labels = ell_fit.get_slic_points_labels(seg, slic_size=15, slic_regul=0.1)
     points_centers = fn_preproc_points(seg, centers)
@@ -485,13 +492,13 @@ def segment_graphcut_pixels(
     """ wrapper for segment global GraphCut optimisations
 
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param labels_fg_prob:
     :param float gc_regul:
     :param int seed_size:
     :param float coef_shape:
     :param (float, float) shape_mean_std:
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     segm_obj = seg_rg.object_segmentation_graphcut_pixels(
         seg, centers, labels_fg_prob, gc_regul, seed_size, coef_shape, shape_mean_std=shape_mean_std
@@ -514,14 +521,14 @@ def segment_graphcut_slic(
 
     :param ndarray slic:
     :param ndarray seg: input image / segmentation
-    :param [[int, int]] centers: position of centres / seeds
+    :param list(tuple(int,int)) centers: position of centres / seeds
     :param labels_fg_prob:
     :param float gc_regul:
     :param bool multi_seed:
     :param float coef_shape:
     :param float edge_weight:
     :param shape_mean_std:
-    :return (ndarray, [[int, int]]): resulting segmentation, updated centres
+    :return tuple(ndarray, list(tuple(int,int))): resulting segmentation, updated centres
     """
     gc_labels = seg_rg.object_segmentation_graphcut_slic(
         slic,
@@ -556,7 +563,7 @@ def segment_rg2sp_greedy(
         shape_model = np.load(path_model, allow_pickle=True)
     else:
         shape_model = pickle.load(open(path_model, 'rb'))
-    dict_debug = dict() if os.path.isdir(debug_export) else None
+    dict_debug = {} if os.path.isdir(debug_export) else None
 
     slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, labels_fg_prob)
     labels_greedy = seg_rg.region_growing_shape_slic_greedy(
@@ -603,7 +610,7 @@ def segment_rg2sp_graphcut(
         shape_model = np.load(path_model, allow_pickle=True)
     else:
         shape_model = pickle.load(open(path_model, 'rb'))
-    dict_debug = dict() if os.path.isdir(debug_export) else None
+    dict_debug = {} if os.path.isdir(debug_export) else None
 
     slic_prob_fg = seg_rg.compute_segm_prob_fg(slic, seg, labels_fg_prob)
     labels_gc = seg_rg.region_growing_shape_slic_graphcut(
@@ -636,7 +643,7 @@ def simplify_segm_3cls(seg, lut=(0., 0.8, 1.), smooth=True):
     """ simple segmentation into 3 classes
 
     :param ndarray seg: input image / segmentation
-    :param [float] lut:
+    :param list(float) lut:
     :param bool smooth:
     :return ndarray:
     """
@@ -657,7 +664,7 @@ def create_dict_segmentation(params, slic, segm, img, centers):
     :param dict params:
     :param ndarray slic:
     :param ndarray segm:
-    :param [[float]] centers:
+    :param list(list(float)) centers:
     :return {str: (function, (...))}:
     """
     # parameters for Region Growing
@@ -733,8 +740,8 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
     # make the image like RGB
     img_rgb = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
     seg = load_image(row_path['path_segm'], 'segm')
-    assert img_rgb.shape[:2] == seg.shape, \
-        'image %r and segm %r do not match' % (img_rgb.shape[:2], seg.shape)
+    if img_rgb.shape[:2] != seg.shape:
+        raise ImageDimensionError('image %r and segm %r do not match' % (img_rgb.shape[:2], seg.shape))
     if not os.path.isfile(row_path['path_centers']):
         logging.warning('no center was detected for "%s"', name)
         return name
@@ -778,8 +785,8 @@ def image_segmentation(idx_row, params, debug_export=DEBUG_EXPORT):
 
             # also export ellipse params here or inside the segm fn
             if dict_export is not None:
-                for k in dict_export:
-                    export_partial(k, dict_export[k], path_dir, name)
+                for k, v in dict_export.items():
+                    export_partial(k, v, path_dir, name)
 
             logging.info('running time of %r on image "%s" is %d s', fn.__name__, image_name, time.time() - t)
             tl_data.io_imsave(path_segm, segm_obj.astype(np.uint8))
@@ -826,7 +833,7 @@ def main(params, debug_export=DEBUG_EXPORT):
     dict_segment = create_dict_segmentation(params, None, None, None, None)
     dirs_center = [n + DIR_CENTRE_POSIX for n in dict_segment]
     dirs_visu = [n + DIR_VISUAL_POSIX for n in dict_segment]
-    tl_expt.create_subfolders(params['path_exp'], [n for n in dict_segment] + dirs_center + dirs_visu)
+    tl_expt.create_subfolders(params['path_exp'], list(dict_segment) + dirs_center + dirs_visu)
     if debug_export:
         list_dirs = [n + DIR_DEBUG_POSIX for n in dict_segment if 'rg2sp' in n]
         tl_expt.create_subfolders(params['path_exp'], list_dirs)
@@ -844,7 +851,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params(SEGM_PARAMS)
-    main(params)
+    cli_params = arg_parse_params(SEGM_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

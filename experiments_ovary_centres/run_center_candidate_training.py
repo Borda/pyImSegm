@@ -37,6 +37,8 @@ import pandas as pd
 import tqdm
 from scipy import spatial
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -72,7 +74,7 @@ NAME_CSV_STAT_TRAIN = 'statistic_train_centers.csv'
 NAME_YAML_PARAMS = 'configuration.yaml'
 NAME_DUMP_TRAIN_DATA = 'dump_training_data.npz'
 
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 # position is label in loaded segm and nb are out labels
 LUT_ANNOT_CENTER_RELABEL = [0, 0, -1, 1]
 CROSS_VAL_LEAVE_OUT_SEARCH = 0.2
@@ -191,11 +193,13 @@ def arg_parse_params(params):
         else:
             paths[k] = tl_data.update_path(params[k], absolute=True)
             p_dir = paths[k]
-        assert os.path.exists(p_dir), 'missing (%s) %s' % (k, p_dir)
+        if not os.path.exists(p_dir):
+            raise FileNotFoundError('missing (%s) %s' % (k, p_dir))
     # load saved configuration
     if params['path_config'] is not None:
         ext = os.path.splitext(params['path_config'])[-1]
-        assert ext in ('.yaml', '.yml'), 'wrong extension for %s' % params['path_config']
+        if ext not in ('.yaml', '.yml'):
+            raise TypeError('wrong extension for %s' % params['path_config'])
         data = tl_expt.load_config_yaml(params['path_config'])
         params.update(data)
     params.update(paths)
@@ -209,7 +213,7 @@ def is_drawing(path_out):
     :param str path_out:
     :return bool:
     # """
-    bool_res = path_out is not None and os.path.exists(path_out) and logging.getLogger().isEnabledFor(logging.DEBUG)
+    bool_res = path_out is not None and os.path.isdir(path_out) and logging.getLogger().isEnabledFor(logging.DEBUG)
     return bool_res
 
 
@@ -247,8 +251,7 @@ def get_idx_name(idx, path_img):
     im_name = os.path.splitext(os.path.basename(path_img))[0]
     if idx is not None:
         return '%03d_%s' % (idx, im_name)
-    else:
-        return im_name
+    return im_name
 
 
 def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
@@ -258,12 +261,13 @@ def load_image_segm_center(idx_row, path_out=None, dict_relabel=None):
     :param (int, DF:row) idx_row: tuple of index and row
     :param str path_out: path to output directory
     :param dict dict_relabel: look-up table for relabeling
-    :return(str, ndarray, ndarray, [[int, int]]): idx_name, img_rgb, segm, centers
+    :return(str, ndarray, ndarray, list(tuple(int,int))): idx_name, img_rgb, segm, centers
     """
     idx, row_path = idx_row
     for k in ['path_image', 'path_segm', 'path_centers']:
         row_path[k] = tl_data.update_path(row_path[k])
-        assert os.path.exists(row_path[k]), 'missing %s' % row_path[k]
+        if not os.path.exists(row_path[k]):
+            raise FileNotFoundError('missing %s' % row_path[k])
 
     idx_name = get_idx_name(idx, row_path['path_image'])
     img_struc, img_gene = tl_data.load_img_double_band_split(row_path['path_image'], im_range=None)
@@ -311,7 +315,7 @@ def export_visual_input_image_segm(path_out, img_name, img, segm, centers=None):
     :param str img_name: image name
     :param ndarray img: np.array
     :param ndarray segm: np.array
-    :param centers: [(int, int)] or np.array
+    :param centers: list(tuple(int,int)) or np.array
     """
     fig = tl_visu.figure_image_segm_centres(img, segm, centers)
     fig.savefig(os.path.join(path_out, img_name + '.png'), bbox_inches='tight', pad_inches=0)
@@ -321,9 +325,9 @@ def export_visual_input_image_segm(path_out, img_name, img, segm, centers=None):
 def compute_min_dist_2_centers(centers, points):
     """ compute distance toclosestt center and mark which center it is
 
-    :param [int, int] centers:
-    :param [int, int] points:
-    :return (float, int):
+    :param tuple(int,int) centers:
+    :param tuple(int,int) points:
+    :return tuple(float, int):
     """
     dists = spatial.distance.cdist(np.array(points), np.array(centers), metric='euclidean')
     dist = np.min(dists, axis=1)
@@ -349,8 +353,8 @@ def export_show_image_points_labels(
     :param str img_name:
     :param img: np.array
     :param seg: np.array
-    :param [(int, int)] points:
-    :param [int] labels:
+    :param list(tuple(int,int)) points:
+    :param list(int) labels:
     :param slic: np.array
     :param seg_centers:
     :param str fig_suffix:
@@ -378,11 +382,12 @@ def estim_points_compute_features(name, img, segm, params):
     :param str name:
     :param ndarray img:
     :param ndarray segm:
-    :param {str: any} params:
-    :return (str, ndarray, [(int, int)], [[float]], list(str)):
+    :param dict(str,any) params:
+    :return tuple(str, ndarray, list(tuple(int,int)), list(list(float)), list(str)):
     """
     # superpixels on image
-    assert img.shape[:2] == segm.shape[:2], 'not matching shapes: %r : %r' % (img.shape, segm.shape)
+    if img.shape[:2] != segm.shape[:2]:
+        raise ImageDimensionError('not matching shapes: %r : %r' % (img.shape, segm.shape))
     slic = seg_spx.segment_slic_img2d(img, params['slic_size'], params['slic_regul'])
     slic_centers = seg_spx.superpixel_centers(slic)
     # slic_edges = seg_spx.make_graph_segm_connect_grid2d_conn4(slic)
@@ -396,11 +401,11 @@ def compute_points_features(segm, points, params):
     """ for each point in segmentation compute relevant features according params
 
     :param ndarray segm: segmentations
-    :param [(int, int)] points: positions in image
-    :param {str: any} params: parameters
-    :return ([[float]], list(str)): [[float] * nb_features] * nb_points, list(str) * nb_features
+    :param list(tuple(int,int)) points: positions in image
+    :param dict(str,any) params: parameters
+    :return tuple(list(list(float)), list(str)): [list(float) * nb_features] * nb_points, list(str) * nb_features
     """
-    features, feature_names = np.empty((len(points), 0)), list()
+    features, feature_names = np.empty((len(points), 0)), []
 
     # segmentation histogram
     if 'fts_hist_diams' in params and params['fts_hist_diams'] is not None:
@@ -410,7 +415,7 @@ def compute_points_features(segm, points, params):
         features = np.hstack((features, features_hist))
         feature_names += names_hist
 
-    names_ray = list()  # default empty, require some at leas one compute
+    names_ray = []  # default empty, require some at leas one compute
     # Ray features
     if 'fts_ray_step' in params and params['fts_ray_step'] is not None:
         list_features_ray = []
@@ -452,10 +457,10 @@ def label_close_points(centers, points, params):
     """ label points whether they are close to center by distance to real center
     or from annotation of close center regions
 
-    :param ndarray|[(int, int)] centers:
-    :param [(int, int)] points: positions in image
-    :param {str: any} params: parameters
-    :return [int]:
+    :param ndarray|list(tuple(int,int)) centers:
+    :param list(tuple(int,int)) points: positions in image
+    :param dict(str,any) params: parameters
+    :return list(int):
     """
     if isinstance(centers, list):
         min_dist, _ = compute_min_dist_2_centers(centers, points)
@@ -466,7 +471,8 @@ def label_close_points(centers, points, params):
     else:
         logging.warning('not relevant centers info of type "%s"', type(centers))
         labels = [-1] * len(points)
-    assert len(points) == len(labels), 'not equal lenghts of points (%i) and labels (%i)' % (len(points), len(labels))
+    if len(points) != len(labels):
+        raise RuntimeError('not equal lengths of points (%i) and labels (%i)' % (len(points), len(labels)))
     return labels
 
 
@@ -478,12 +484,12 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_W
     """ create whole dataset composed from loading input data, computing features
     and label points by label whether its positive or negative center candidate
 
-    :param {str: any} params: parameters
+    :param dict(str,any) params: parameters
     :param DF df_paths: DataFrame
     :param int nb_workers: parallel
     :return dict:
     """
-    dict_imgs, dict_segms, dict_center = dict(), dict(), dict()
+    dict_imgs, dict_segms, dict_center = {}, {}, {}
     logging.info('loading input data (images, segmentation and centers)')
     path_show_in = os.path.join(params['path_expt'], FOLDER_INPUT)
     _wrapper_load = partial(load_image_segm_center, path_out=path_show_in, dict_relabel=params['dict_relabel'])
@@ -495,7 +501,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_W
         dict_segms[name] = seg
         dict_center[name] = center
 
-    dict_slics, dict_points, dict_features = dict(), dict(), dict()
+    dict_slics, dict_points, dict_features = {}, {}, {}
     logging.info('estimate candidate points and compute features')
     gene_name_img_seg = ((name, dict_imgs[name], dict_segms[name]) for name in dict_imgs)
     _wrapper_pnt_features = partial(wrapper_estim_points_compute_features, params=params)
@@ -509,7 +515,7 @@ def dataset_load_images_segms_compute_features(params, df_paths, nb_workers=NB_W
         dict_features[name] = features
     logging.debug('computed features:\n %r', feature_names)
 
-    dict_labels = dict()
+    dict_labels = {}
     logging.info('assign labels according close distance to center')
     path_points_train = os.path.join(params['path_expt'], FOLDER_POINTS_TRAIN)
     tqdm_bar = tqdm.tqdm(total=len(dict_center), desc='labels assignment')
@@ -531,11 +537,11 @@ def export_dataset_visual(
     """ visualise complete training dataset by marking labeld points
     over image and input segmentation
 
-    :param {str: ndarray} dict_imgs:
-    :param {str: ndarray} dict_segms:
-    :param {str: ndarray} dict_slics:
-    :param {str: ndarray} dict_points:
-    :param {str: ndarray} dict_labels:
+    :param dict(str,ndarray) dict_imgs:
+    :param dict(str,ndarray) dict_segms:
+    :param dict(str,ndarray) dict_slics:
+    :param dict(str,ndarray) dict_points:
+    :param dict(str,ndarray) dict_labels:
     :param int nb_workers: number processing in parallel
     """
     logging.info('export training visualisations')
@@ -561,7 +567,7 @@ def export_dataset_visual(
 def compute_statistic_centers(dict_stat, img, segm, center, slic, points, labels, params, path_out=''):
     """ compute statistic on centers
 
-    :param {str: float} dict_stat:
+    :param dict(str,float) dict_stat:
     :param ndarray img:
     :param ndarray segm:
     :param center:
@@ -597,9 +603,7 @@ def compute_statistic_centers(dict_stat, img, segm, center, slic, points, labels
     return dict_stat
 
 
-def detect_center_candidates(
-    name, image, segm, centers_gt, slic, points, features, feature_names, params, path_out, classif
-):
+def detect_center_candidates(name, image, segm, centers_gt, slic, points, features, params, path_out, classif):
     """ for loaded or computer all necessary data, classify centers_gt candidates
     and if we have annotation validate this results
 
@@ -608,9 +612,8 @@ def detect_center_candidates(
     :param ndarray segm:
     :param centers_gt:
     :param slic: np.array
-    :param [(int, int)] points:
+    :param list(tuple(int,int)) points:
     :param features:
-    :param list(str) feature_names:
     :param dict params:
     :param str path_out:
     :param classif: obj
@@ -637,10 +640,8 @@ def detect_center_candidates(
 
 
 def wrapper_detect_center_candidates(data, params, path_output, classif):
-    name, img, segm, center, slic, points, features, feature_names = data
-    return detect_center_candidates(
-        name, img, segm, center, slic, points, features, feature_names, params, path_output, classif
-    )
+    name, img, segm, center, slic, points, features, _ = data
+    return detect_center_candidates(name, img, segm, center, slic, points, features, params, path_output, classif)
 
 
 def load_dump_data(path_dump_data):
@@ -707,8 +708,10 @@ def experiment_loo(
 
 def prepare_experiment_folder(params, dir_template):
     params['path_expt'] = os.path.join(params['path_output'], dir_template % params['name'])
-    if not os.path.exists(params['path_expt']):
-        assert os.path.isdir(os.path.dirname(params['path_expt'])), 'missing: %s' % os.path.dirname(params['path_expt'])
+    if not os.path.isdir(params['path_expt']):
+        dir_expt = os.path.dirname(params['path_expt'])
+        if not os.path.isdir(dir_expt):
+            raise FileNotFoundError('missing: %s' % dir_expt)
         logging.debug('creating missing folder: %s', params['path_expt'])
         os.mkdir(params['path_expt'])
     return params
@@ -738,7 +741,7 @@ def main_train(params):
     2) train classifier with hyper-parameters
     3) perform Leave-One-Out experiment
 
-    :param {str: any} params:
+    :param dict(str,any) params:
     """
     params = prepare_experiment_folder(params, FOLDER_EXPERIMENT)
 
@@ -753,7 +756,8 @@ def main_train(params):
     if not os.path.isfile(path_dump_data) or FORCE_RECOMP_DATA:
         dict_imgs, dict_segms, dict_slics, dict_points, dict_centers, dict_features, dict_labels, feature_names = \
             dataset_load_images_segms_compute_features(params, df_paths, params['nb_workers'])
-        assert len(dict_imgs) > 0, 'missing images'
+        if not dict_imgs:
+            raise FileNotFoundError('missing images')
         save_dump_data(
             path_dump_data,
             dict_imgs,
@@ -781,7 +785,8 @@ def main_train(params):
     # remove all bad values from features space
     features[np.isnan(features)] = 0
     features[np.isinf(features)] = -1
-    assert np.sum(sizes) == len(labels), 'not equal sizes (%d) and labels (%i)' % (int(np.sum(sizes)), len(labels))
+    if np.sum(sizes) != len(labels):
+        raise ValueError('not equal sizes (%d) and labels (%i)' % (int(np.sum(sizes)), len(labels)))
 
     # feature norm & train classification
     nb_holdout = int(np.ceil(len(sizes) * CROSS_VAL_LEAVE_OUT_SEARCH))
@@ -817,7 +822,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('run TRAINING...')
 
-    params = arg_parse_params(CENTER_PARAMS)
-    main_train(params)
+    cli_params = arg_parse_params(CENTER_PARAMS)
+    main_train(cli_params)
 
     logging.info('DONE')

@@ -104,17 +104,19 @@ class EllipseModelSegm(sk_fit.EllipseModel):
         >>> el.criterion(np.array([r.ravel(), c.ravel()]).T, weights, seg.ravel(), table_prob)   # doctest: +ELLIPSIS
         -70.311...
         """
-        assert len(points) == len(weights) == len(labels), \
-            'different sizes for points %i and weights %i and labels %i' \
-            % (len(points), len(weights), len(labels))
+        if not len(points) == len(weights) == len(labels):
+            raise ValueError(
+                'different sizes for points %i and weights %i and labels %i' % (len(points), len(weights), len(labels))
+            )
         table_prob = np.array(table_prob)
-        if table_prob.ndim == 1 or table_prob.shape[0] == 1:
+        if 1 in (table_prob.ndim, table_prob.shape[0]):
             if table_prob.shape[0] == 1:
                 table_prob = table_prob[0]
             table_prob = np.array([table_prob, 1. - table_prob])
-        assert table_prob.shape[0] == 2, 'table shape %r' % table_prob.shape
-        assert np.max(labels) < table_prob.shape[1], \
-            'labels (%i) exceed the table %r' % (np.max(labels), table_prob.shape)
+        if table_prob.shape[0] != 2:
+            raise ValueError('table shape %r' % table_prob.shape)
+        if np.max(labels) >= table_prob.shape[1]:
+            raise ValueError('labels (%i) exceed the table %r' % (np.max(labels), table_prob.shape))
 
         r_pos, c_pos = points[:, 0], points[:, 1]
         r_org, c_org, r_rad, c_rad, phi = self.params
@@ -211,10 +213,10 @@ def ransac_segm(
     best_inliers = None
 
     if isinstance(min_samples, float):
-        if not (0 < min_samples <= 1):
+        if not 0 < min_samples <= 1:
             raise ValueError("`min_samples` as ration must be in range (0, 1]")
         min_samples = int(min_samples * len(points))
-    if not (0 < min_samples <= len(points)):
+    if not 0 < min_samples <= len(points):
         raise ValueError("`min_samples` must be in range (0, <nb-samples>]")
 
     if max_trials < 0:
@@ -233,10 +235,9 @@ def ransac_segm(
         # estimate model for current random sample set
         model = model_class()
         success = model.estimate(samples)
-
-        if success is not None:  # backwards compatibility
-            if not success:
-                continue
+        # backwards compatibility
+        if success is not None and not success:
+            continue
 
         model_residuals = np.abs(model.residuals(points))
         # consensus set / inliers
@@ -359,12 +360,12 @@ def prepare_boundary_points_ray_join(
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param float close_points: remove closest point then a given threshold
     :param int min_diam: minimal size of expected objest
     :param int sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
@@ -453,12 +454,12 @@ def prepare_boundary_points_ray_edge(
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param float close_points: remove closest point then a given threshold
     :param int min_diam: minimal size of expected objest
     :param int sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
@@ -504,12 +505,12 @@ def prepare_boundary_points_ray_mean(
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param float close_points: remove closest point then a given threshold
     :param int min_diam: minimal size of expected objest
     :param int sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
@@ -552,11 +553,11 @@ def prepare_boundary_points_ray_dist(seg, centers, close_points=1, sel_bg=STRUC_
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param float close_points: remove closest point then a given threshold
     :param int sel_bg: smoothing background with morphological operation
     :param int sel_fg: smoothing foreground with morphological operation
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((10, 20), dtype=int)
     >>> ell_params = 5, 10, 4, 6, np.deg2rad(30)
@@ -624,9 +625,9 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, relative_compact=0.3
     """ extract some point around foreground boundaries
 
     :param ndarray seg: input segmentation
-    :param [(int, int)] centers: list of centers
+    :param list(tuple(int,int)) centers: list of centers
     :param int sp_size: superpixel size
-    :return [ndarray]:
+    :return list(ndarray):
 
     >>> seg = np.zeros((100, 200), dtype=int)
     >>> ell_params = 50, 100, 40, 60, np.deg2rad(30)
@@ -665,8 +666,8 @@ def prepare_boundary_points_close(seg, centers, sp_size=25, relative_compact=0.3
 #     """ extract some point around foreground boundaries
 #
 #     :param ndarray seg: input segmentation
-#     :param [(int, int)] centers: list of centers
-#     :return [ndarray]:
+#     :param list(tuple(int,int)) centers: list of centers
+#     :return list(ndarray):
 #
 #     >>> seg = np.zeros((100, 200), dtype=int)
 #     >>> ell_params = 50, 100, 40, 60, 30

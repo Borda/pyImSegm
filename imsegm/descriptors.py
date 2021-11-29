@@ -17,6 +17,7 @@ from scipy.ndimage.filters import gaussian_filter, gaussian_filter1d, gaussian_l
 from skimage import morphology
 from sklearn import preprocessing
 
+from imsegm.utilities import ImageDimensionError
 from imsegm.utilities.data_io import convert_img_color_from_rgb
 
 # from numba.decorators import jit
@@ -135,10 +136,10 @@ def _check_color_image_segm(image, segm):
     >>> _check_color_image_segm(np.zeros((125, 150, 3)), np.zeros((150, 125)))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    ValueError: ndarrays - image and segmentation do not match (125, 150, 3) vs (150, 125)
+    imsegm.utilities.ImageDimensionError: ndarrays - image and segmentation do not match (125, 150, 3) vs (150, 125)
     """
     if image.shape[:2] != segm.shape:
-        raise ValueError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
+        raise ImageDimensionError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
     return True
 
 
@@ -152,10 +153,10 @@ def _check_gray_image_segm(image, segm):
     >>> _check_gray_image_segm(np.zeros((125, 150)), np.zeros((150, 125)))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    ValueError: ndarrays - image and segmentation do not match (125, 150) vs (150, 125)
+    imsegm.utilities.ImageDimensionError: ndarrays - image and segmentation do not match (125, 150) vs (150, 125)
     """
     if image.shape != segm.shape:
-        raise ValueError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
+        raise ImageDimensionError('ndarrays - image and segmentation do not match %r vs %r' % (image.shape, segm.shape))
     return True
 
 
@@ -168,10 +169,10 @@ def _check_color_image(image):
     >>> _check_color_image(np.zeros((200, 250, 1)))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    ValueError: image is not RGB with dims (200, 250, 1)
+    imsegm.utilities.ImageDimensionError: image is not RGB with dims (200, 250, 1)
     """
     if image.ndim != 3 or image.shape[2] != 3:
-        raise ValueError('image is not RGB with dims %s' % repr(image.shape))
+        raise ImageDimensionError('image is not RGB with dims %s' % repr(image.shape))
     return True
 
 
@@ -360,9 +361,8 @@ def numpy_img2d_color_std(img, seg, means=None):
         means = numpy_img2d_color_mean(img, seg)
 
     nb_labels = np.max(seg) + 1
-    assert len(means) >= nb_labels, \
-        'number of means (%i) should be equal to number of labels (%i)' \
-        % (len(means), nb_labels)
+    if len(means) < nb_labels:
+        raise ValueError('number of means (%i) should be equal to number of labels (%i)' % (len(means), nb_labels))
     variations = np.zeros((nb_labels, 3))
     counts = np.zeros(nb_labels)
     for i in range(seg.shape[0]):
@@ -612,9 +612,8 @@ def numpy_img3d_gray_std(img, seg, means=None):
         means = numpy_img3d_gray_mean(img, seg)
 
     nb_labels = np.max(seg) + 1
-    assert len(means) >= nb_labels, \
-        'number of means (%i) should be equal to number of labels (%i)' \
-        % (len(means), nb_labels)
+    if len(means) < nb_labels:
+        raise ValueError('number of means (%i) should be equal to number of labels (%i)' % (len(means), nb_labels))
     variances = np.zeros(nb_labels)
     counts = np.zeros(nb_labels)
     for i in range(seg.shape[0]):
@@ -738,7 +737,8 @@ def compute_image3d_gray_statistic(image, segm, feature_flags=NAMES_FEATURE_FLAG
     """
     _check_gray_image_segm(image, segm)
 
-    assert list(feature_flags), 'some features has to be selected'
+    if not list(feature_flags):
+        raise ValueError('some features has to be selected')
     image = np.nan_to_num(image)
     features = []
     # nb_fts = image.shape[0]
@@ -779,8 +779,8 @@ def compute_image3d_gray_statistic(image, segm, feature_flags=NAMES_FEATURE_FLAG
     features = np.nan_to_num(features).T
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    assert features.shape[1] == len(names), \
-        'features: %r and names %r' % (features.shape, names)
+    if features.shape[1] != len(names):
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -858,8 +858,8 @@ def compute_image2d_color_statistic(image, segm, feature_flags=NAMES_FEATURE_FLA
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    assert features.shape[1] == len(names), \
-        'features: %r and names %r' % (features.shape, names)
+    if features.shape[1] != len(names):
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -951,9 +951,9 @@ def create_filter_bank_lm_2d(radius=16, sigmas=DEFAULT_FILTERS_SIGMAS, nb_orient
 def compute_img_filter_response2d(img, filter_battery):
     """ compute image filter response in 2D
 
-    :param [[float]] img: image
-    :param [[[float]]] filter_battery: filters
-    :return [[float]]:
+    :param list(list(float)) img: image
+    :param list(list(list(float))) filter_battery: filters
+    :return list(list(float)):
     """
     if filter_battery.ndim != 3:
         raise ValueError('wrong battery dim %r' % filter_battery.shape)
@@ -998,8 +998,8 @@ def compute_texture_desc_lm_img3d_val(img, seg, feature_flags, bank_type='normal
     """ compute texture descriptors as mean / std / ...
     on Lewen-Malik filter bank response
 
-    :param [[[float]]] img: image
-    :param [[[int]]] seg: segmentation
+    :param list(list(list(float))) img: image
+    :param list(list(list(int))) seg: segmentation
     :param list(str) feature_flags: list of feature flags
     :param str bank_type: define used LM filter bank ['short', 'normal']
     :return tuple(ndarray,list(str)): np.ndarray<nb_samples, nb_features>, names
@@ -1033,8 +1033,8 @@ def compute_texture_desc_lm_img3d_val(img, seg, feature_flags, bank_type='normal
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
     names = ['tLM_%s' % name for name in names]
-    assert features.shape[1] == len(names), \
-        'features: %r and names %r' % (features.shape, names)
+    if features.shape[1] != len(names):
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1101,8 +1101,8 @@ def compute_texture_desc_lm_img2d_clr(img, seg, feature_flags, bank_type='normal
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
     names = ['tLM_%s' % name for name in names]
-    assert features.shape[1] == len(names), \
-        'features: %r and names %r' % (features.shape, names)
+    if features.shape[1] != len(names):
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1136,7 +1136,8 @@ def compute_selected_features_gray3d(img, segments, feature_flags=FEATURES_SET_C
 
     """
     _check_gray_image_segm(img, segments)
-    assert feature_flags, 'some features has to be selected'
+    if not feature_flags:
+        raise ValueError('some features has to be selected')
 
     features, names = [], []
     # COLOR FEATURES
@@ -1162,8 +1163,8 @@ def compute_selected_features_gray3d(img, segments, feature_flags=FEATURES_SET_C
     features = np.nan_to_num(features)
     # normalise +/- zeros as set all as positive
     features[features == 0] = 0
-    assert features.shape[1] == len(names), \
-        'features: %r and names %r' % (features.shape, names)
+    if features.shape[1] != len(names):
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1198,8 +1199,8 @@ def compute_selected_features_gray2d(img, segments, features_flags=FEATURES_SET_
     _check_gray_image_segm(img, segments)
 
     features, names = compute_selected_features_gray3d(img[np.newaxis, ...], segments[np.newaxis, ...], features_flags)
-    assert features.shape[1] == len(names), \
-        'features: %r and names %r' % (features.shape, names)
+    if features.shape[1] != len(names):
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1264,8 +1265,8 @@ def compute_selected_features_color2d(img, segments, feature_flags=FEATURES_SET_
     features[features == 0] = 0
     if not features.size:
         logging.error('not supported features: %r', feature_flags)
-    assert features.shape[1] == len(names), \
-        'features: %r and names %r' % (features.shape, names)
+    if features.shape[1] != len(names):
+        raise ValueError('features: %r and names %r' % (features.shape, names))
     return features, names
 
 
@@ -1279,10 +1280,9 @@ def compute_selected_features_img2d(image, segm, features_flags=FEATURES_SET_COL
     """
     if image.ndim == 3 and image.shape[2] == 3:
         return compute_selected_features_color2d(image, segm, features_flags)
-    elif image.ndim == 2:
+    if image.ndim == 2:
         return compute_selected_features_gray2d(image, segm, features_flags)
-    else:
-        logging.error('invalid image size - %r', image.shape)
+    logging.error('invalid image size - %r', image.shape)
 
 
 def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DIAGONALS, nb_labels=None):
@@ -1290,7 +1290,7 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
     of inter circle neighbouring around given points in the segmentation
 
     :param ndarray segm: np.array<height, width>
-    :param [(int, int)] positions: list of positions
+    :param list(tuple(int,int)) positions: list of positions
     :param list(int) diameters: circular diameters
     :param int nb_labels:
     :return tuple(ndarray,list(str)): ndarray<nb_samples, nb_features>, names
@@ -1323,8 +1323,8 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
            [ 1.  ,  0.2 ,  1.  ,  0.25,  1.  ,  0.15]])
     """
     pos_dim = np.asarray(positions).shape[1]
-    assert (segm.ndim - pos_dim) in (0, 1), \
-        'dimension %r and %r difference should be 0 or 1' % (segm.ndim, pos_dim)
+    if (segm.ndim - pos_dim) not in (0, 1):
+        raise ValueError('dimension %r and %r difference should be 0 or 1' % (segm.ndim, pos_dim))
 
     if nb_labels is None:
         if segm.ndim == pos_dim:
@@ -1337,11 +1337,11 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
     logging.debug('prepare extended segm. and struc. elements')
     list_struct_elems = [morphology.disk(d) for d in diameters]
 
-    pos_hists = list()
+    pos_hists = []
     logging.debug('compute circular histogram')
     # for each position compute features
     for pos in positions:
-        hist_inter = list()
+        hist_inter = []
         hist_last = np.zeros(nb_labels)
         sel_size_last = np.zeros(1)
         for sel in list_struct_elems:
@@ -1351,10 +1351,12 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
             else:
                 hist, sel_size = compute_label_hist_proba(segm, pos, sel)
             inter_size = sel_size - sel_size_last
-            assert inter_size > 0, 'norm or element should be positive'
-            assert np.all(hist >= hist_last), \
-                'outer elem should have more labels %r then the inter %r' \
-                % (hist.tolist(), hist_last.tolist())
+            if inter_size <= 0:
+                raise ValueError('norm or element should be positive')
+            if not np.all(hist >= hist_last):
+                raise ValueError(
+                    'outer elem should have more labels %r then the inter %r' % (hist.tolist(), hist_last.tolist())
+                )
             hist_inter += ((hist - hist_last) / float(inter_size)).tolist()
             hist_last = hist
             sel_size_last = sel_size
@@ -1362,17 +1364,17 @@ def compute_label_histograms_positions(segm, positions, diameters=HIST_CIRCLE_DI
 
     feature_names = ['hist-d_%i-lb_%i' % (d, lb) for d in diameters for lb in range(nb_labels)]
     pos_hists = np.array(pos_hists)
-    assert pos_hists.shape[1] == len(feature_names), \
-        'histogram: %r and names %r' % (pos_hists.shape, feature_names)
+    if pos_hists.shape[1] != len(feature_names):
+        raise ValueError('histogram: %r and names %r' % (pos_hists.shape, feature_names))
     return np.array(pos_hists), feature_names
 
 
 def adjust_bounding_box_crop(image_size, bbox_size, position):
     """ adjust the bounding box according image sizes and position
 
-    :param tuple(int,int)|[int, int] image_size: image size
-    :param tuple(int,int)|[int, int] bbox_size: size of the bounding box
-    :param tuple(int,int)|[int, int] position: position in yhe image
+    :param tuple(int,int) image_size: image size
+    :param tuple(int,int) bbox_size: size of the bounding box
+    :param tuple(int,int) position: position in yhe image
     :return (), (), (), (): im_begin, im_end, bb_begin, bb_end
 
     >>> adjust_bounding_box_crop((50, 50), (7, 7), (20, 20))
@@ -1384,8 +1386,8 @@ def adjust_bounding_box_crop(image_size, bbox_size, position):
     >>> adjust_bounding_box_crop((50, 50), (80, 80), (20, 20))
     ((0, 0), (50, 50), (20, 20), (70, 70))
     """
-    assert len(image_size) == len(bbox_size), \
-        'incompatible sizes %r != %r' % (image_size, bbox_size)
+    if len(image_size) != len(bbox_size):
+        raise ValueError('incompatible sizes %r != %r' % (image_size, bbox_size))
     im_size, pos = np.asarray(image_size), np.asarray(position)
     bb_size = np.asarray(bbox_size)
 
@@ -1401,9 +1403,10 @@ def adjust_bounding_box_crop(image_size, bbox_size, position):
         if im_end[i] == im_size[i]:
             bb_end[i] = (np.floor(bb / 2.) + (im_size[i] - pos[i])).astype(int)
 
-    assert np.array_equal((im_end - im_begin), (bb_end - bb_begin)), \
-        'different sizes of image %r and bounding box %r mask' \
-        % (im_end - im_begin, bb_end - bb_begin)
+    if not np.array_equal((im_end - im_begin), (bb_end - bb_begin)):
+        raise ValueError(
+            'different sizes of image %r and bounding box %r mask' % (im_end - im_begin, bb_end - bb_begin)
+        )
     return tuple(im_begin), tuple(im_end), tuple(bb_begin), tuple(bb_end)
 
 
@@ -1437,16 +1440,15 @@ def compute_label_hist_segm(segm, position, struc_elem, nb_labels):
     >>> compute_label_hist_segm(segm, [4, 4], np.ones((5, 5)), 3)
     (array([  0.,  17.,   8.]), 25.0)
     """
-    assert segm.ndim == len(position), \
-        'dim of position %r should match the segmentation %r dim' % (position, segm.shape)
+    if segm.ndim != len(position):
+        raise ValueError('dim of position %r should match the segmentation %r dim' % (position, segm.shape))
     position = [int(p) for p in position]
     # take selection around point with size of struc. element
-    im_begin, im_end, bb_begin, bb_end = \
-        adjust_bounding_box_crop(segm.shape, struc_elem.shape, position)
+    im_begin, im_end, bb_begin, bb_end = adjust_bounding_box_crop(segm.shape, struc_elem.shape, position)
     segm_select = segm[im_begin[0]:im_end[0], im_begin[1]:im_end[1]]
     struc_elem = struc_elem[bb_begin[0]:bb_end[0], bb_begin[1]:bb_end[1]]
-    assert segm_select.shape == struc_elem.shape, \
-        'segmentation %s and element %s should match' % (segm_select.shape, struc_elem.shape)
+    if segm_select.shape != struc_elem.shape:
+        raise ValueError('segmentation %s and element %s should match' % (segm_select.shape, struc_elem.shape))
     if USE_CYTHON:
         hist = cython_label_hist_seg2d(segm_select, struc_elem, nb_labels)
     else:  # use standard python code
@@ -1482,8 +1484,8 @@ def cython_label_hist_seg2d(segm_select, struc_elem, nb_labels):
     >>> cython_label_hist_seg2d(segm[1:6, 3:8], np.ones((5, 5)), 3)
     array([  0.,  19.,   6.])
     """
-    assert np.array_equal(segm_select.shape, struc_elem.shape), \
-        'segm. %r and mask %r sizes do not match' % (segm_select.shape, struc_elem.shape)
+    if not np.array_equal(segm_select.shape, struc_elem.shape):
+        raise ValueError('segm. %r and mask %r sizes do not match' % (segm_select.shape, struc_elem.shape))
     # removing NaN which are converted as 0
     segm_select[np.isnan(segm_select)] = -1
     # assert nb_labels >= (np.nanmax(segm_select) + 1)
@@ -1508,9 +1510,8 @@ def compute_label_hist_proba(segm, position, struc_elem):
     >>> compute_label_hist_proba(seg, (15, 20), np.ones((12, 13), dtype=int))
     (array([ 114.,   42.]), 156)
     """
-    assert segm.ndim == (len(position) + 1), \
-        'segment. (%r) should have larger (+1) dim than position %i' \
-        % (segm.shape, len(position))
+    if segm.ndim != (len(position) + 1):
+        raise ValueError('segment. (%r) should have larger (+1) dim than position %i' % (segm.shape, len(position)))
     position = list(map(int, position))
     # take selection around point with size of struc. element
     im_begin, im_end, bb_begin, bb_end = adjust_bounding_box_crop(
@@ -1518,9 +1519,8 @@ def compute_label_hist_proba(segm, position, struc_elem):
     )
     segm_select = segm[im_begin[0]:im_end[0], im_begin[1]:im_end[1], :]
     struc_elem = struc_elem[bb_begin[0]:bb_end[0], bb_begin[1]:bb_end[1]]
-    assert segm_select.shape[:-1] == struc_elem.shape, \
-        'initial dim of segmentation %r should match element %r' \
-        % (segm_select.shape, struc_elem)
+    if segm_select.shape[:-1] != struc_elem.shape:
+        raise ValueError('initial dim of segmentation %r should match element %r' % (segm_select.shape, struc_elem))
     tile_struc_elem = np.tile(struc_elem, (segm_select.shape[-1], 1, 1))
     segm_mask = np.rollaxis(segm_select, -1, 0) * tile_struc_elem
     hist = np.sum(segm_mask, axis=tuple(range(1, segm_mask.ndim)))
@@ -1744,9 +1744,8 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5., smooth_coe
     [54.0, 57.0, 59.0, 55.0, 51.0, 44.0, 38.0, 31.0, 27.0, 24.0, 22.0, 22.0,
      23.0, 26.0, 29.0, 35.0, 42.0, 49.0]
     """
-    assert seg_binary.ndim == len(position), \
-        'Segmentation dim of %r and position (%i) does not match' \
-        % (seg_binary.ndim, len(position))
+    if seg_binary.ndim != len(position):
+        raise ValueError('Segmentation dim of %r and position (%i) does not match' % (seg_binary.ndim, len(position)))
     seg_binary = seg_binary.astype(bool)
     position = tuple(map(int, position))
 
@@ -1817,7 +1816,7 @@ def compute_ray_features_positions(
     with given boundary labels and step angle
 
     :param ndarray segm: np.array<height, width>
-    :param [(int, int)] list_positions:
+    :param list(tuple(int,int)) list_positions:
     :param float angle_step:
     :param list(int) border_labels: all labels to be set as boundaries
     :param int segm_open:
@@ -1860,8 +1859,8 @@ def compute_ray_features_positions(
     """
     logging.debug('compute Ray features with border label=%r and angle step=%f', border_labels, angle_step)
     pos_dim = np.asarray(list_positions).shape[1]
-    assert (segm.ndim - pos_dim) in (0, 1), \
-        'dimension %s and %s difference should be 0 or 1' % (segm.ndim, pos_dim)
+    if (segm.ndim - pos_dim) not in (0, 1):
+        raise ValueError('dimension %s and %s difference should be 0 or 1' % (segm.ndim, pos_dim))
     border_labels = border_labels if border_labels is not None else [0]
     if segm.ndim > pos_dim:
         # set label segment from probab
@@ -1891,8 +1890,8 @@ def compute_ray_features_positions(
         for a in np.linspace(0, 360 - angle_step, len(ray_dist))
     ]
     pos_rays = np.array(pos_rays)
-    assert pos_rays.shape[1] == len(feature_names), \
-        'Ray features: %r and names %r' % (pos_rays.shape, feature_names)
+    if pos_rays.shape[1] != len(feature_names):
+        raise ValueError('Ray features: %r and names %r' % (pos_rays.shape, feature_names))
     return pos_rays, pos_shift, feature_names
 
 
@@ -1982,8 +1981,10 @@ def reconstruct_ray_features_2d(position, ray_features, shift=0):
     array([[ 10.,  10.],
            [ 10.,   9.]])
     """
-    assert len(position) == 2, 'positions has to have 2 coordinates'
-    assert len(ray_features) > 2, 'required at least 2 features'
+    if len(position) != 2:
+        raise ValueError('positions has to have 2 coordinates')
+    if len(ray_features) <= 2:
+        raise ValueError('required at least 2 features')
 
     angles = np.linspace(0, 2 * np.pi, len(ray_features), endpoint=False)
     angles = (np.pi / 2.) - angles - np.deg2rad(shift)
@@ -2023,7 +2024,8 @@ def reduce_close_points(points, dist_thr):
     >>> reduce_close_points(np.ones((10, 2)), 2)
     array([[ 1.,  1.]])
     """
-    assert len(points) > 2, 'too few point to be reduced'
+    if len(points) <= 2:
+        raise ValueError('too few point to be reduced')
 
     dist = spatial.distance.cdist(points, points, metric='euclidean')
     for i in range(len(points)):

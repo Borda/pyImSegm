@@ -32,7 +32,7 @@ import imsegm.utilities.experiments as tl_expt
 NAME_CSV_RESULTS = 'info_ovary_images_ellipses.csv'
 OVERLAP_THRESHOLD = 0.
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))
 
 DEFAULT_PARAMS = {
@@ -147,7 +147,7 @@ def filter_table(df_info, path_pattern):
     :return DF: filterd dataframe
     """
     list_name = [os.path.splitext(os.path.basename(p))[0] for p in glob.glob(path_pattern) if os.path.isfile(p)]
-    logging.info('loaded item in table %i and found %i in dir' % (len(df_info), len(list_name)))
+    logging.info('loaded item in table %i and found %i in dir', len(df_info), len(list_name))
 
     df_info['image_name'] = [os.path.splitext(p)[0] for p in df_info['image_path']]
     df_info = df_info[df_info['image_name'].isin(list_name)]
@@ -158,13 +158,13 @@ def filter_table(df_info, path_pattern):
 def main(params):
     """ PIPELINE for matching
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     """
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     df_info = pd.read_csv(params['path_infofile'], sep='\t', index_col=0)
     df_info = filter_table(df_info, params['path_ellipses'])
-    logging.info('filtered %i item in table' % len(df_info))
+    logging.info('filtered %i item in table', len(df_info))
     path_csv = os.path.join(params['path_output'], NAME_CSV_RESULTS)
 
     list_evals = []
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running...')
 
-    params = arg_parse_params(DEFAULT_PARAMS)
-    main(params)
+    cli_params = arg_parse_params(DEFAULT_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

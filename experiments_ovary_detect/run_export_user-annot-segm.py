@@ -37,7 +37,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 DEFAULT_PARAMS = {
@@ -56,7 +56,7 @@ FIGURE_SIZE = 12
 def arg_parse_params(params):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return ({str: str}, int):
+    :return tuple(dict(str,str),int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -117,7 +117,7 @@ def figure_draw_img_centre_segm(fig, img, centres, segm, subfig_size=FIGURE_SIZE
 
     :param obj fig:
     :param ndarray img:
-    :param [[int]] centres:
+    :param list(list(int)) centres:
     :param ndarray segm:
     :param int subfig_size:
     :return obj:
@@ -228,9 +228,10 @@ def main(params):
     df_paths.columns = ['path_image', 'path_segm', 'path_centers']
     df_paths.index = range(1, len(df_paths) + 1)
 
-    if not os.path.exists(params['path_output']):
-        assert os.path.exists(os.path.dirname(params['path_output'])), \
-            'missing folder: "%s"' % os.path.dirname(params['path_output'])
+    if not os.path.isdir(params['path_output']):
+        p_out = os.path.dirname(params['path_output'])
+        if not os.path.isdir(p_out):
+            raise FileNotFoundError('missing folder: "%s"' % p_out)
         os.mkdir(params['path_output'])
 
     df_slices_info = seg_annot.load_info_group_by_slices(params['path_infofile'], params['stages'])
@@ -251,7 +252,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running...')
 
-    params = arg_parse_params(DEFAULT_PARAMS)
-    main(params)
+    cli_params = arg_parse_params(DEFAULT_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

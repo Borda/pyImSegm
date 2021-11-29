@@ -56,7 +56,7 @@ def object_segmentation_graphcut_slic(
 
     :param ndarray slic: superpixel pre-segmentation
     :param ndarray segm: input structure segmentation
-    :param [(int, int)] centres: superpixel centres
+    :param list(tuple(int,int)) centres: superpixel centres
     :param list(float) labels_fg_prob: weight for particular label belongs to FG
     :param float gc_regul: regularisation for GC
     :param float edge_coef: weight og edges on GC
@@ -75,16 +75,18 @@ def object_segmentation_graphcut_slic(
     >>> object_segmentation_graphcut_slic(slic, segm, [(1, 7)], gc_regul=1., edge_coef=1., debug_visual={})
     array([0, 0, 0, 0, 0, 1, 1, 1, 1, 0], dtype=int32)
     """
-    assert np.min(labels_fg_prob) < 1, 'non label can ce strictly 1'
+    if np.min(labels_fg_prob) >= 1:
+        raise ValueError('non label can ce strictly 1')
     label_hist = histogram_regions_labels_norm(slic, segm)
     labels = np.argmax(label_hist, axis=1)
 
-    assert segm.max() <= len(labels_fg_prob), \
-        'table of label proba is shorter then the nb of labels in segmentation'
+    if segm.max() > len(labels_fg_prob):
+        raise ValueError('table of label prob is shorter then the nb of labels in segmentation')
     labels_fg_prob = np.array(labels_fg_prob)
     labels_bg_prob = 1. - labels_fg_prob
 
-    assert list(centres), 'at least one center has to be given'
+    if not list(centres):
+        raise ValueError('at least one center has to be given')
     centres = [np.round(c).astype(int) for c in centres]
     slic_points = superpixel_centers(slic)
 
@@ -168,7 +170,7 @@ def object_segmentation_graphcut_pixels(
 
     :param ndarray centres:
     :param ndarray segm: input structure segmentation
-    :param [(int, int)] centres: superpixel centres
+    :param list(tuple(int,int)) centres: superpixel centres
     :param list(float) labels_fg_prob: set how much particular label belongs to foreground
     :param float gc_regul: regularisation for GC
     :param int seed_size: create circular neighborhood around initial centre
@@ -197,14 +199,16 @@ def object_segmentation_graphcut_pixels(
            [0, 0, 0, 0, 0, 2, 2, 2, 2, 2],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=int32)
     """
-    assert np.min(labels_fg_prob) < 1, 'non label can ce strictly 1'
-    assert segm.max() <= len(labels_fg_prob), \
-        'table of label proba is shorter then the nb of labels in segmentation'
+    if np.min(labels_fg_prob) >= 1:
+        raise ValueError('non label can ce strictly 1')
+    if segm.max() > len(labels_fg_prob):
+        raise ValueError('table of label proba is shorter then the nb of labels in segmentation')
     height, width = segm.shape
     labels_fg_prob = np.array(labels_fg_prob)
     labels_bg_prob = 1. - labels_fg_prob
 
-    assert list(centres), 'at least one center has to be given'
+    if not list(centres):
+        raise ValueError('at least one center has to be given')
     centres = [np.round(c).astype(int) for c in centres]
 
     proba = np.ones((height, width, len(centres) + 1))
@@ -331,11 +335,11 @@ def compute_cumulative_distrib(means, stds, weights, max_dist):
     """ compute invers cumulative distribution based given means,
     covariance and weights for each segment
 
-    :param [[float]] means: mean values for each model and ray direction
-    :param [[float]] stds: STD for each model and ray direction
-    :param [float] weights: model wights
+    :param list(list(float)) means: mean values for each model and ray direction
+    :param list(list(float)) stds: STD for each model and ray direction
+    :param list(float) weights: model wights
     :param float max_dist: maxim distance for shape model
-    :return [[float]]:
+    :return list(list(float)):
 
     >>> cdist = compute_cumulative_distrib(
     ...     np.array([[1, 2]]), np.array([[1.5, 0.5], [0.5, 1]]), np.array([0.5]), 6)
@@ -590,7 +594,7 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 
     :param tuple(int,int) point: single points
     :param tuple(int,int) centre: center of model
-    :param [[float]] cum_distribution: cumulative histogram
+    :param list(list(float)) cum_distribution: cumulative histogram
     :param float angle_shift:
     :return float:
 
@@ -632,11 +636,11 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
         return cum_distribution[int(round(angle_norm)), -1]
 
     a0 = int(np.floor(angle_norm))
-    assert a0 < (cum_distribution.shape[0] - 1), \
-        'angle %i is larger then size %i' % (a0, cum_distribution.shape[0])
+    if a0 >= (cum_distribution.shape[0] - 1):
+        raise ValueError('angle %i is larger then size %i' % (a0, cum_distribution.shape[0]))
     d0 = int(np.floor(dist))
-    assert d0 < (cum_distribution.shape[1] - 1), \
-        'distance %i is larger then size %i' % (d0, cum_distribution.shape[1])
+    if d0 >= (cum_distribution.shape[1] - 1):
+        raise ValueError('distance %i is larger then size %i' % (d0, cum_distribution.shape[1]))
     interp = interpolate.interp2d(
         np.array([[a0, a0 + 1], [a0, a0 + 1]]).T,
         np.array([[d0, d0 + 1], [d0, d0 + 1]]),
@@ -654,7 +658,7 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 #
 #     :param tuple(int,int) point:
 #     :param tuple(int,int) centre:
-#     :param [[float]] cum_hist:
+#     :param list(list(float)) cum_hist:
 #     :param float shift:
 #     :return float:
 #
@@ -700,7 +704,7 @@ def compute_shape_prior_table_cdf(point, cum_distribution, centre, angle_shift=0
 def compute_centre_moment_points(points):
     """ compute centre and moment from set of points
 
-    :param [(float, float)] points:
+    :param list((float,float)) points:
     :return:
 
     >>> points = list(zip([0] * 10, np.arange(10))) + [(0, 0)] * 5
@@ -760,11 +764,11 @@ def compute_update_shape_costs_points_table_cdf(
     set of points and cumulative histogram representing the shape model
 
     :param lut_shape_cost: look-up-table for shape cost for GC
-    :param [[int, int]] points: subsample space, points = superpixel centres
+    :param list(tuple(int,int)) points: subsample space, points = superpixel centres
     :param list(int) labels: labels for points to be assigned to an object
-    :param [[int, int]] init_centres: initial centre position for compute
+    :param list(tuple(int,int)) init_centres: initial centre position for compute
         center shift during the iteretions
-    :param [[int, int]] centres: actual centre postion
+    :param list(tuple(int,int)) centres: actual centre postion
     :param list(int) shifts: orientation for each region / object
     :param list(int) volumes: size / volume for each region
     :param shape_chist: represent the shape prior and histograms
@@ -801,8 +805,8 @@ def compute_update_shape_costs_points_table_cdf(
     >>> np.round(centres, 1)
     array([[  7.5,  17.1]])
     """
-    assert len(points) == len(labels), \
-        'number of points (%i) and labels (%i) should match' % (len(points), len(labels))
+    if len(points) != len(labels):
+        raise ValueError('number of points (%i) and labels (%i) should match' % (len(points), len(labels)))
     if selected_idx is None:
         selected_idx = list(range(len(points)))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
@@ -867,11 +871,11 @@ def compute_update_shape_costs_points_close_mean_cdf(
 
     :param lut_shape_cost: look-up-table for shape cost for GC
     :param ndarray slic: superpixel segmentation
-    :param [[int, int]] points: subsample space, points = superpixel centres
+    :param list(tuple(int,int)) points: subsample space, points = superpixel centres
     :param list(int) labels: labels for points to be assigned to an object
-    :param [[int, int]] init_centres: initial centre position for compute
+    :param list(tuple(int,int)) init_centres: initial centre position for compute
         center shift during the iterations
-    :param [[int, int]] centres: actual centre position
+    :param list(tuple(int,int)) centres: actual centre position
     :param list(int) shifts: orientation for each region / object
     :param list(int) volumes: size / volume for each region
     :param shape_model_cdfs: represent the shape prior and histograms
@@ -923,9 +927,8 @@ def compute_update_shape_costs_points_close_mean_cdf(
            ...
            [ 0.   ,  4.605]])
     """
-    assert len(points) == len(labels), \
-        'number of points (%i) and labels (%i) should match' \
-        % (len(points), len(labels))
+    if len(points) != len(labels):
+        raise ValueError('number of points (%i) and labels (%i) should match' % (len(points), len(labels)))
     selected_idx = range(len(points)) if selected_idx is None else selected_idx
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     segm_obj = labels[slic]
@@ -992,7 +995,7 @@ def compute_data_costs_points(slic, slic_prob_fg, centres, labels):
 
     :param nadarray slic: superpixel segmentation
     :param list(float) slic_prob_fg: weight for particular pixel belongs to FG
-    :param [[int, int]] centres: actual centre position
+    :param list(tuple(int,int)) centres: actual centre position
     :param list(int) labels: labels for points to be assigned to an object
     :return:
     """
@@ -1028,16 +1031,16 @@ def update_shape_costs_points(
 
     :param lut_shape_cost: look-up-table for shape cost for GC
     :param nadarray slic: superpixel segmentation
-    :param [[int, int]] points: subsample space, points = superpixel centres
+    :param list(tuple(int,int)) points: subsample space, points = superpixel centres
     :param list(int) labels: labels for points to be assigned to an object
-    :param [[int, int]] init_centres: initial centre position for compute
+    :param list(tuple(int,int)) init_centres: initial centre position for compute
         center shift during the iteretions
-    :param [[int, int]] centres: actual centre postion
+    :param list(tuple(int,int)) centres: actual centre postion
     :param list(int) shifts: orientation for each region / object
-    :param [int] volumes: size / volume for each region
+    :param list(int) volumes: size / volume for each region
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: type or shape model
-    :param [int] selected_idx: selected object for update
+    :param list(int) selected_idx: selected object for update
     :param bool swap_shift: allow swapping orientation by 90 degree,
         try to get out from local optima
     :param dict dict_thresholds: configuration with thresholds
@@ -1050,21 +1053,20 @@ def update_shape_costs_points(
             lut_shape_cost, points, labels, init_centres, centres, shifts, volumes, shape_model, selected_idx,
             swap_shift, thresholds
         )
-    elif shape_type == 'set_cdfs':
+    if shape_type == 'set_cdfs':
         # select closest by distance and use cdf
         return compute_update_shape_costs_points_close_mean_cdf(
             lut_shape_cost, slic, points, labels, init_centres, centres, shifts, volumes, shape_model, selected_idx,
             swap_shift, thresholds
         )
-    else:
-        raise NameError('Not supported type of shape model "%s"' % shape_type)
+    raise NameError('Not supported type of shape model "%s"' % shape_type)
 
 
 def compute_pairwise_penalty(edges, labels, prob_bg_fg=0.05, prob_fg1_fg2=0.01):
     """ compute cost of neighboring labels pionts
 
-    :param [(int, int)] edges: graph edges, connectivity
-    :param [int] labels: labels for vertexes
+    :param list(tuple(int,int)) edges: graph edges, connectivity
+    :param list(int) labels: labels for vertexes
     :param float prob_bg_fg: penalty between background and foreground
     :param float prob_fg1_fg2: penaly between two different foreground classes
     :return:
@@ -1087,11 +1089,11 @@ def get_neighboring_candidates(slic_neighbours, labels, object_idx, use_other_ob
     """ get neighboring candidates from background
     and optionally also from foreground if it is allowed
 
-    :param [[int]] slic_neighbours: list of neighboring superpixel for each one
-    :param [int] labels: labels for each superpixel
+    :param list(list(int)) slic_neighbours: list of neighboring superpixel for each one
+    :param list(int) labels: labels for each superpixel
     :param int object_idx:
     :param bool use_other_obj: allowing use another foreground object
-    :return [int]:
+    :return list(int):
 
     >>> neighbours = [[1], [0, 2, 3], [1, 3], [1, 2]]
     >>> labels = np.array([0, 0, 1, 1])
@@ -1171,7 +1173,7 @@ def region_growing_shape_slic_greedy(
 
     :param ndarray slic: superpixel segmentation
     :param list(float) slic_prob_fg: weight for particular superpixel belongs to FG
-    :param [(int, int)] centres: list of initial centres
+    :param list(tuple(int,int)) centres: list of initial centres
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: identification of used shape model
     :param float coef_data: weight for data prior
@@ -1289,8 +1291,8 @@ def region_growing_shape_slic_greedy(
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
 
     """
-    assert len(slic_prob_fg) >= np.max(slic), 'dims of probs %s and slic %s not match' \
-                                              % (len(slic_prob_fg), np.max(slic))
+    if len(slic_prob_fg) < np.max(slic):
+        raise ValueError('dims of probs %s and slic %s not match' % (len(slic_prob_fg), np.max(slic)))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     slic_points = superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
@@ -1403,11 +1405,11 @@ def prepare_graphcut_variables(
     """ for boundary get connected points in BG and FG
     construct graph and set potentials and hard connect BG and FG in unary
 
-    :param [int] candidates: list of candidates, neighbours of actual objects
-    :param [(int, int)] slic_points:
-    :param [[int]] slic_neighbours: list of neighboring superpixel for each one
+    :param list(int) candidates: list of candidates, neighbours of actual objects
+    :param list(tuple(int,int)) slic_points:
+    :param list(list(int)) slic_neighbours: list of neighboring superpixel for each one
     :param list(float) slic_weights: weight for each superpixel
-    :param [int] labels: labels for each superpixel
+    :param list(int) labels: labels for each superpixel
     :param int nb_centres: number of centres - classes
     :param ndarray lut_data_cost: look-up-table for data cost for each
         object (class) with superpixel as first index
@@ -1420,13 +1422,11 @@ def prepare_graphcut_variables(
         and objects and among objects (second)
     :return:
     """
-    assert np.max(candidates) < len(slic_points), \
-        'max candidate idx: %d for %d centres' \
-        % (np.max(candidates), len(slic_points))
+    if np.max(candidates) >= len(slic_points):
+        raise ValueError('max candidate idx: %d for %d centres' % (np.max(candidates), len(slic_points)))
     max_slic_neighbours = max(max(lb) for lb in slic_neighbours)
-    assert max_slic_neighbours < len(slic_points), \
-        'max slic neighbours idx: %d for %d centres' \
-        % (max_slic_neighbours, len(slic_points))
+    if max_slic_neighbours >= len(slic_points):
+        raise ValueError('max slic neighbours idx: %d for %d centres' % (max_slic_neighbours, len(slic_points)))
     unary = np.zeros((len(candidates), nb_centres + 1))
     vertexes, edges = list(candidates), []
     for i, idx in enumerate(candidates):
@@ -1500,7 +1500,7 @@ def region_growing_shape_slic_graphcut(
 
     :param ndarray slic: superpixel segmentation
     :param list(float) slic_prob_fg: weight for particular superpixel belongs to FG
-    :param [(int, int)] centres: list of initial centres
+    :param list(tuple(int,int)) centres: list of initial centres
     :param shape_model: represent the shape prior and histograms
     :param str shape_type: identification of used shape model
     :param float coef_data: weight for data prior
@@ -1616,9 +1616,8 @@ def region_growing_shape_slic_graphcut(
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
     """
-    assert len(slic_prob_fg) >= np.max(slic), \
-        'dims of probs %s and slic %s not match' \
-        % (len(slic_prob_fg), np.max(slic))
+    if len(slic_prob_fg) < np.max(slic):
+        raise ValueError('dims of probs %s and slic %s not match' % (len(slic_prob_fg), np.max(slic)))
     thresholds = RG2SP_THRESHOLDS if dict_thresholds is None else dict_thresholds
     slic_points = superpixel_centers(slic)
     slic_points = np.round(slic_points).astype(int)
@@ -1690,11 +1689,10 @@ def region_growing_shape_slic_graphcut(
                 shape_type, None, list_swap_shift[-1], thresholds
             )
 
-            gc_vestexes, gc_edges, edge_weights, unary, pairwise = \
-                prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
-                                           slic_weights, labels, len(centres),
-                                           lut_data_cost, lut_shape_cost, coef_data,
-                                           coef_shape, coef_pairwise, prob_label_trans)
+            gc_vestexes, gc_edges, edge_weights, unary, pairwise = prepare_graphcut_variables(
+                candidates, slic_points, slic_neighbours, slic_weights, labels, len(centres), lut_data_cost,
+                lut_shape_cost, coef_data, coef_shape, coef_pairwise, prob_label_trans
+            )
             # run GraphCut
             if len(gc_edges) > 0:
                 graph_labels = cut_general_graph(np.array(gc_edges), edge_weights, unary, pairwise, n_iter=999)
@@ -1709,11 +1707,10 @@ def region_growing_shape_slic_graphcut(
                     shape_type, None, list_swap_shift[-1], thresholds
                 )
 
-                gc_vestexes, gc_edges, edge_weights, unary, pairwise = \
-                    prepare_graphcut_variables(candidates, slic_points, slic_neighbours,
-                                               slic_weights, labels, len(centres),
-                                               lut_data_cost, lut_shape_cost, coef_data,
-                                               coef_shape, coef_pairwise, prob_label_trans)
+                gc_vestexes, gc_edges, edge_weights, unary, pairwise = prepare_graphcut_variables(
+                    candidates, slic_points, slic_neighbours, slic_weights, labels, len(centres), lut_data_cost,
+                    lut_shape_cost, coef_data, coef_shape, coef_pairwise, prob_label_trans
+                )
                 # run GraphCut
                 graph_labels = cut_general_graph(np.array(gc_edges), edge_weights, unary, pairwise, n_iter=999)
                 labels_gc[gc_vestexes] = graph_labels

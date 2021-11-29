@@ -28,7 +28,7 @@ class TestLabels(unittest.TestCase):
         logging.debug('matrix seg_pipe \n%r', seg)
         labs = list(np.unique(seg))
         path_dir = os.path.join(PATH_OUTPUT, 'temp_labels')
-        if not os.path.exists(path_dir):
+        if not os.path.isdir(path_dir):
             os.mkdir(path_dir)
         for lb in labs:
             fig, axarr = plt.subplots(nrows=2)

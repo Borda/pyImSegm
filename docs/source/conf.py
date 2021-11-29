@@ -26,7 +26,7 @@ PATH_HERE = os.path.abspath(os.path.dirname(__file__))
 PATH_ROOT = os.path.realpath(os.path.join(PATH_HERE, PATH_UP))
 sys.path.insert(0, os.path.abspath(PATH_ROOT))
 
-import imsegm  # noqa: E402
+import imsegm
 
 # -- Project information -----------------------------------------------------
 
@@ -75,7 +75,7 @@ with open('readme.md', 'w') as fp:
 
 # If your documentation needs a minimal Sphinx version, state it here.
 
-needs_sphinx = '2.4'
+needs_sphinx = '4.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -90,7 +90,6 @@ extensions = [
     'sphinx.ext.linkcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
-    # 'sphinxcontrib.rsvgconverter'
     'myst_parser',
     'nbsphinx',
 ]
@@ -144,7 +143,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # http://www.sphinx-doc.org/en/master/usage/theming.html#builtin-themes
-html_theme = 'nature'
+html_theme = 'furo'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -250,18 +249,20 @@ todo_include_todos = True
 PACKAGES = [imsegm.__name__]
 
 
-def run_apidoc(_):
+def run_apidoc(app):
+    """Generage API documentation"""
     for pkg in PACKAGES:
-        argv = ['-e', '-o', os.path.join(PATH_HERE, 'api'), os.path.join(PATH_ROOT, pkg), 'tests/*', '--force']
-        try:
-            # Sphinx 1.7+
-            from sphinx.ext import apidoc
-            apidoc.main(argv)
-        except ImportError:
-            # Sphinx 1.6 (and earlier)
-            from sphinx import apidoc
-            argv.insert(0, apidoc.__file__)
-            apidoc.main(argv)
+        import better_apidoc
+        better_apidoc.APP = app
+        better_apidoc.main([
+            'better-apidoc',
+            '--force',
+            '--no-toc',
+            '--separate',
+            '-o',
+            os.path.join(PATH_HERE, 'api'),
+            os.path.join(PATH_ROOT, pkg),
+        ])
 
 
 def setup(app):
@@ -309,7 +310,7 @@ def linkcode_resolve(domain, info):
             obj = getattr(obj, part)
         fname = inspect.getsourcefile(obj)
         # https://github.com/rtfd/readthedocs.org/issues/5735
-        if any([s in fname for s in ('readthedocs', 'rtfd', 'checkouts')]):
+        if any(s in fname for s in ('readthedocs', 'rtfd', 'checkouts')):
             path_top = os.path.abspath(os.path.join('..', '..', '..'))
             fname = os.path.relpath(fname, start=path_top)
         else:

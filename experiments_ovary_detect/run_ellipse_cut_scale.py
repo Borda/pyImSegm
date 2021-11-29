@@ -32,7 +32,7 @@ COLUMNS_ELLIPSE = ['ellipse_xc', 'ellipse_yc', 'ellipse_a', 'ellipse_b', 'ellips
 OVERLAP_THRESHOLD = 0.45
 NORM_FUNC = np.median  # other options - mean, max, ...
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 PATH_IMAGES = tl_data.update_path(os.path.join('data-images', 'drosophila_ovary_slice'))
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 
@@ -72,7 +72,7 @@ def extract_ellipse_object(idx_row, path_images, path_out, norm_size):
     tl_data.export_image(path_img, img_norm)
 
 
-def perform_stage(df_group, stage, path_images, path_out):
+def perform_stage(df_group, stage, path_images, path_out, nb_workers=1):
     """ perform cutting images for a particular development stage
     and nom them into common image size
 
@@ -81,7 +81,7 @@ def perform_stage(df_group, stage, path_images, path_out):
     :param str path_images: path to the image folder
     :param str path_out: path to the output folder
     """
-    logging.info('stage %i listing %i items' % (stage, len(df_group)))
+    logging.info('stage %i listing %i items', stage, len(df_group))
     stat_a = NORM_FUNC(df_group['ellipse_a'])
     stat_b = NORM_FUNC(df_group['ellipse_b'])
     norm_size = (int(stat_b), int(stat_a))
@@ -101,7 +101,7 @@ def perform_stage(df_group, stage, path_images, path_out):
     iterate = tl_expt.WrapExecuteSequence(
         _wrapper_object,
         df_group.iterrows(),
-        nb_workers=params['nb_workers'],
+        nb_workers=nb_workers,
         desc=desc,
     )
     list(iterate)
@@ -110,7 +110,7 @@ def perform_stage(df_group, stage, path_images, path_out):
 def main(params):
     """ PIPELINE for matching
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     """
     # tl_expt.set_experiment_logger(params['path_expt'])
     # tl_expt.create_subfolders(params['path_expt'], LIST_SUBDIRS)
@@ -123,19 +123,19 @@ def main(params):
     df_info = r_match.filter_table(df_info, params['path_images'])
     df_info.dropna(inplace=True)
     df_info = df_info[df_info['ellipse_Jaccard'] >= OVERLAP_THRESHOLD]
-    logging.info('filtered %i item in table' % len(df_info))
+    logging.info('filtered %i item in table', len(df_info))
 
     # execute over groups per stage
     path_dir_imgs = os.path.dirname(params['path_images'])
     for stage, df_stage in df_info.groupby('stage'):
-        perform_stage(df_stage, stage, path_dir_imgs, params['path_output'])
+        perform_stage(df_stage, stage, path_dir_imgs, params['path_output'], params['nb_workers'])
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = r_match.arg_parse_params(DEFAULT_PARAMS)
-    main(params)
+    cli_params = r_match.arg_parse_params(DEFAULT_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

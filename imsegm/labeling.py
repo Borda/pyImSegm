@@ -10,6 +10,7 @@ import numpy as np
 import skimage.segmentation as sk_segm
 from scipy import ndimage
 
+from imsegm.utilities import ImageDimensionError
 from imsegm.utilities.data_io import get_image2d_boundary_color
 
 
@@ -84,7 +85,7 @@ def contour_coords(seg, label=1, include_boundary=False):
     :param ndarray seg: integer images, typically a segmentation
     :param int label: selected singe label in segmentation
     :param bool include_boundary: assume that the object end with image boundary
-    :return [[int, int]]:
+    :return list(tuple(int,int)):
 
     >>> img = np.zeros((6, 6), dtype=int)
     >>> img[1:5, 2:] = 1
@@ -189,12 +190,13 @@ def segm_labels_assignment(segm, segm_gt):
      6: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
      7: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}
     """
-    assert segm_gt.shape == segm.shape, 'segm %r and annot %r should match' % (segm.shape, segm_gt.shape)
+    if segm_gt.shape != segm.shape:
+        raise ImageDimensionError('segm %r and annot %r should match' % (segm.shape, segm_gt.shape))
     labels = np.unique(segm)
     # label_hist = {}
     # for lb in labels:
     #     label_hist[lb] = (segm_gt[segm == lb].tolist())
-    label_hist = {lb: list() for lb in labels}
+    label_hist = {lb: [] for lb in labels}
     segm_gt_flat = segm_gt.ravel()
     segm_flat = segm.ravel()
     for i, lb in enumerate(segm_flat):
@@ -224,8 +226,10 @@ def histogram_regions_labels_counts(slic, segm):
            [  8.,   0.,   4.],
            [  0.,   0.,  12.]])
     """
-    assert slic.shape == segm.shape, 'dimension does not agree'
-    assert np.sum(np.unique(segm) < 0) == 0, 'only positive labels are allowed'
+    if slic.shape != segm.shape:
+        raise ImageDimensionError('dimension does not agree')
+    if np.sum(np.unique(segm) < 0) != 0:
+        raise ValueError('only positive labels are allowed')
     segm_flat = slic.ravel()
     annot_flat = segm.ravel()
     idx_max = slic.max()
@@ -259,9 +263,10 @@ def histogram_regions_labels_norm(slic, segm):
            [ 0.66666667,  0.        ,  0.33333333],
            [ 0.        ,  0.        ,  1.        ]])
     """
-    assert slic.shape == segm.shape, \
-        'dimension of SLIC %r and segm %r should match' % (slic.shape, segm.shape)
-    assert np.sum(np.unique(segm) < 0) == 0, 'only positive labels are allowed'
+    if slic.shape != segm.shape:
+        raise ImageDimensionError('dimension of SLIC %r and segm %r should match' % (slic.shape, segm.shape))
+    if np.sum(np.unique(segm) < 0) != 0:
+        raise ValueError('only positive labels are allowed')
     matrix_hist = histogram_regions_labels_counts(slic, segm)
     region_sums = np.tile(np.sum(matrix_hist, axis=1), (matrix_hist.shape[1], 1)).T
     # prevent dividing by 0
@@ -345,7 +350,7 @@ def convert_segms_2_list(segms):
     """ convert segmentation to a list tha can be simpy user for standard
     evaluation (classification or clustering metrics)
 
-    :param [ndarray] segms: list of segmentation
+    :param list(ndarray) segms: list of segmentation
     :return list(int):
 
     >>> seg_pipe = np.ones((2, 3), dtype=int)
@@ -400,7 +405,7 @@ def sequence_labels_merge(labels_stack, dict_colors, labels_free, change_label=-
     - 00000000 -> CHANGE_LABEL
 
     :param ndarray labels_stack: np.array<date, height, width> input stack of labeled images
-    :param {int: (int, int, int)} dict_colors: dictionary of labels-colors
+    :param dict(int,tuple(int,int,int)) dict_colors: dictionary of labels-colors
     :param list(int) labels_free: list of free labels
     :param int change_label: label that is set for non constant time series
     :return ndarray: np.array<height, width>
@@ -419,7 +424,8 @@ def sequence_labels_merge(labels_stack, dict_colors, labels_free, change_label=-
     im_labels = np.full(labels_stack.shape[1:], change_label, dtype=np.int)
     labels_used = [lb for lb in dict_colors if lb not in labels_free]
     lb_all = labels_used + labels_free + [change_label]
-    assert all(lb in lb_all for lb in np.unique(labels_stack)), 'some extra labels in image stack'
+    if not all(lb in lb_all for lb in np.unique(labels_stack)):
+        raise ValueError('some extra labels in image stack')
     # generate mask of free labels
     mask_free = mask_segm_labels(labels_stack, labels_free)
     for lb in labels_used:
@@ -441,7 +447,8 @@ def relabel_by_dict(labels, dict_labels):
     >>> relabel_by_dict(labels, {0: [1, 2], 1: [0, 3]}).tolist()
     [0, 0, 1, 1, 1, 1, 0, 1, 1, 1]
     """
-    assert dict_labels is not None, '"dict_labels" is required'
+    if not dict_labels:
+        raise ValueError('"dict_labels" is required')
     labels_new = np.zeros_like(labels)
     for lb_new in dict_labels:
         for lb_old in dict_labels[lb_new]:
@@ -467,8 +474,10 @@ def merge_probab_labeling_2d(proba, dict_labels):
     >>> proba_new[0, 0]
     array([ 0.6,  0.3])
     """
-    assert proba.ndim == 3
-    assert dict_labels is not None, '"dict_labels" is required'
+    if proba.ndim != 3:
+        raise ValueError
+    if not dict_labels:
+        raise ValueError('"dict_labels" is required')
     max_label = max(dict_labels.keys()) + 1
     size = proba.shape[:-1] + (max_label, )
     proba_new = np.zeros(size)
@@ -503,7 +512,8 @@ def compute_labels_overlap_matrix(seg1, seg2):
            [ 9,  6,  0,  0]])
     """
     logging.debug('computing overlap of two seg_pipe of shapes %r <-> %r', seg1.shape, seg2.shape)
-    assert seg1.shape == seg2.shape, 'segm %r and segm %r should match' % (seg1.shape, seg2.shape)
+    if seg1.shape != seg2.shape:
+        raise ImageDimensionError('segm %r and segm %r should match' % (seg1.shape, seg2.shape))
     maxims = [np.max(seg1) + 1, np.max(seg2) + 1]
     overlap = np.zeros(maxims, dtype=int)
     for lb1, lb2 in zip(seg1.ravel(), seg2.ravel()):
@@ -566,8 +576,10 @@ def relabel_max_overlap_unique(seg_ref, seg_relabel, keep_bg=False):
            [ 0,  3,  3,  3,  3,  3,  3,  2,  2,  2,  2,  2,  2,  2,  0],
            [ 0,  3,  3,  3,  3,  3,  3,  2,  2,  2,  2,  2,  2,  2,  0]])
     """
-    assert seg_ref.shape == seg_relabel.shape, \
-        'Reference segm. %r and input segm. %r should match' % (seg_ref.shape, seg_relabel.shape)
+    if seg_ref.shape != seg_relabel.shape:
+        raise ImageDimensionError(
+            'Reference segm. %r and input segm. %r should match' % (seg_ref.shape, seg_relabel.shape)
+        )
     overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
 
     lut = [-1] * (np.max(seg_relabel) + 1)
@@ -647,8 +659,8 @@ def relabel_max_overlap_merge(seg_ref, seg_relabel, keep_bg=False):
            [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0],
            [0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0]])
     """
-    assert seg_ref.shape == seg_relabel.shape, \
-        'Ref. segm %r and segm %r should match' % (seg_ref.shape, seg_relabel.shape)
+    if seg_ref.shape != seg_relabel.shape:
+        raise ImageDimensionError('Ref. segm %r and segm %r should match' % (seg_ref.shape, seg_relabel.shape))
     overlap = compute_labels_overlap_matrix(seg_ref, seg_relabel)
     # ref_ptn_size = np.bincount(seg_ref.ravel())
     # overlap = overlap.astype(float) / np.tile(ref_ptn_size, (overlap.shape[1], 1)).T
@@ -690,8 +702,8 @@ def compute_boundary_distances(segm_ref, segm):
     >>> dist.tolist()
     [2.0, 1.0, 2.0, 3.0, 2.0]
     """
-    assert segm_ref.shape == segm.shape, \
-        'Ref. segm %r and segm %r should match' % (segm_ref.shape, segm.shape)
+    if segm_ref.shape != segm.shape:
+        raise ImageDimensionError('Ref. segm %r and segm %r should match' % (segm_ref.shape, segm.shape))
     grid_y, grid_x = np.meshgrid(range(segm_ref.shape[1]), range(segm_ref.shape[0]))
     segr_boundary = sk_segm.find_boundaries(segm_ref, mode='thick')
     points = np.array([grid_x[segr_boundary].ravel(), grid_y[segr_boundary].ravel()]).T
@@ -699,7 +711,8 @@ def compute_boundary_distances(segm_ref, segm):
     segm_distance = ndimage.distance_transform_edt(~segm_boundary)
     dist = segm_distance[segr_boundary].ravel()
 
-    assert len(points) == len(dist), 'number of points and distances should be equal'
+    if len(points) != len(dist):
+        raise ValueError('number of points and distances should be equal')
     return points, dist
 
 

@@ -22,6 +22,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '' and matplotlib.rcParams['backend'] != 'agg':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -38,7 +40,7 @@ import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
 EXPORT_VUSIALISATION = False
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 NAME_DIR_VISUAL_1 = 'ALL_visualisation-1'
 NAME_DIR_VISUAL_2 = 'ALL_visualisation-2'
@@ -65,7 +67,7 @@ LUT_COLOR = np.array([
 def arg_parse_params(paths):
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return ({str: ...}, bool, int):
+    :return tuple(dict(str,...), bool, int):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -105,14 +107,15 @@ def arg_parse_params(paths):
     parser.add_argument('--visual', required=False, action='store_true', default=False, help='export visualisations')
     arg_params = vars(parser.parse_args())
     export_visual = arg_params['visual']
-    for k in (k for k in arg_params if k != 'nb_workers' and k != 'visual'):
+    for k in (k for k in arg_params if k not in ('nb_workers', 'visual')):
         if not isinstance(arg_params[k], str) or arg_params[k].lower() == 'none':
             paths[k] = None
             continue
         paths[k] = tl_data.update_path(arg_params[k], absolute=True)
         p = paths[k] if k == 'results' else os.path.dirname(paths[k])
-        assert os.path.exists(p), 'missing: %s' % p
-    logging.info('ARG PARAMETERS: \n %s', (paths))
+        if not os.path.exists(p):
+            raise FileNotFoundError('missing: %s' % p)
+    logging.info('ARG PARAMETERS: \n %s', paths)
     return paths, export_visual, arg_params['nb_workers']
 
 
@@ -120,13 +123,13 @@ def compute_metrics(row):
     """ load segmentation and compute similarity metrics
 
     :param dict row:
-    :return {str: float}:
+    :return dict(str,float):
     """
     logging.debug('loading annot "%s"\n and segm "%s"', row['path_annot'], row['path_egg-segm'])
     annot, _ = tl_data.load_image_2d(row['path_annot'])
     segm, _ = tl_data.load_image_2d(row['path_egg-segm'])
-    assert annot.shape == segm.shape, 'dimension do mot match %r - %r' % \
-                                      (annot.shape, segm.shape)
+    if annot.shape != segm.shape:
+        raise ImageDimensionError('dimension do mot match %r - %r' % (annot.shape, segm.shape))
     jacobs = []
     segm = seg_lbs.relabel_max_overlap_unique(annot, segm, keep_bg=True)
     for lb in np.unique(annot)[1:]:
@@ -213,9 +216,9 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
     against annotation and export some visualisations, return computed stat.
 
     :param str path_dir:
-    :param {str, str} dict_paths:
+    :param dict(str,str) dict_paths:
     :param bool export_visual:
-    :return {str: float}:
+    :return dict(str,float):
     """
     logging.info('evaluate folder: %s', path_dir)
     name = os.path.basename(path_dir)
@@ -266,7 +269,7 @@ def evaluate_folder(path_dir, dict_paths, export_visual=EXPORT_VUSIALISATION):
 def main(dict_paths, export_visual=EXPORT_VUSIALISATION, nb_workers=NB_WORKERS):
     """ evaluate all segmentations in experiment folder
 
-    :param {str: str} paths: path to all required directories
+    :param dict(str,str) paths: path to all required directories
     :param bool export_visual: export visualisations
     :param int nb_workers: number threads in parralel
     """

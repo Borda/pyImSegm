@@ -29,16 +29,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    # Note: This uses an internal pip API and may not always work
-    # https://github.com/actions/cache/blob/master/examples.md#multiple-oss-in-a-workflow
-    - name: Cache pip
-      uses: actions/cache@v2
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-py${{ matrix.python-version }}-
-
     - name: install ImSegm
       run: |
         python --version
@@ -75,10 +65,3 @@ jobs:
         DISPLAY: ""
       run: |
         bash experiments_ovary_detect/test_ovary_detect.sh
-
-    - name: remove ImSegm
-      env:
-        DISPLAY: ""
-      run: |
-        # just to not being cached
-        pip uninstall -y imsegm

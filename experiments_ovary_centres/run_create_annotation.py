@@ -67,9 +67,10 @@ def load_correct_segm(path_img):
     """ load segmentation and correct it with simple morphological operations
 
     :param str path_img:
-    :return (ndarray, ndarray):
+    :return tuple(ndarray, ndarray):
     """
-    assert os.path.isfile(path_img), 'missing: %s' % path_img
+    if not os.path.isfile(path_img):
+        raise FileNotFoundError('missing: %s' % path_img)
     logging.debug('loading image: %s', path_img)
     img = tl_data.io_imread(path_img)
     seg = (img > 0)
@@ -83,9 +84,9 @@ def load_correct_segm(path_img):
 def draw_circle(pos_center, radius, img_shape):
     """ create empty image and draw a circle with specific radius
 
-    :param [int, int] pos_center:
+    :param tuple(int,int) pos_center:
     :param int radius:
-    :param [int, int] img_shape:
+    :param tuple(int,int) img_shape:
     :return ndarray:
     """
     im = np.zeros(img_shape)
@@ -100,7 +101,7 @@ def segm_set_center_levels(name, seg_labels, path_out, levels=DISTANCE_LEVELS):
     :param str name: image name
     :param ndarray seg_labels:
     :param str path_out: path for output
-    :param [float] levels: distance levels fro segmentation levels
+    :param list(float) levels: distance levels fro segmentation levels
     """
     seg = np.zeros_like(seg_labels)
 
@@ -158,14 +159,15 @@ def main(path_segs, path_out, nb_workers):
     :param str path_out:
     :param int nb_workers: number of processes in parallel
     """
-    assert os.path.dirname(path_segs) != path_out, \
-        'the output dir has to be different then the input object segmentation'
+    if os.path.dirname(path_segs) == path_out:
+        raise RuntimeError('the output dir has to be different then the input object segmentation')
     list_imgs = glob.glob(path_segs)
     logging.info('found %i images', len(list_imgs))
 
     if not os.path.exists(path_out):
-        assert os.path.isdir(os.path.dirname(path_out)), \
-            'missing: %s' % path_out
+        dir_out = os.path.dirname(path_out)
+        if not os.path.isdir(dir_out):
+            raise FileNotFoundError('missing: %s' % path_out)
         os.mkdir(path_out)
 
     _wrapper_create_annot_centers = partial(
@@ -186,8 +188,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running...')
 
-    params = run_train.arg_parse_params(PARAMS)
-    path_out = os.path.join(params['path_output'], NAME_DIR)
-    main(params['path_segms'], path_out, params['nb_workers'])
+    cli_params = run_train.arg_parse_params(PARAMS)
+    path_output = os.path.join(cli_params['path_output'], NAME_DIR)
+    main(cli_params['path_segms'], path_output, cli_params['nb_workers'])
 
     logging.info('DONE')

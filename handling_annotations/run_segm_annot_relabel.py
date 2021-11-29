@@ -26,7 +26,7 @@ import imsegm.utilities.experiments as tl_expt
 
 PATH_IMAGES = os.path.join('data-images', 'drosophila_ovary_slice', 'center_levels', '*.png')
 PATH_OUTPUT = os.path.join('results', 'relabel_center_levels')
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 
 def parse_arg_params():
@@ -47,11 +47,13 @@ def parse_arg_params():
     args = vars(parser.parse_args())
     for k in ['path_images', 'path_output']:
         p_dir = tl_data.update_path(os.path.dirname(args[k]))
-        assert os.path.isdir(p_dir), 'missing folder: %s' % args[k]
+        if not os.path.isdir(p_dir):
+            raise FileNotFoundError('missing folder: %s' % args[k])
         args[k] = os.path.join(p_dir, os.path.basename(args[k]))
-    assert len(args['label_old']) == len(args['label_new']), \
-        'length of old (%i) and new (%i) labels should be same' \
-        % (len(args['label_old']), len(args['label_new']))
+    if len(args['label_old']) != len(args['label_new']):
+        raise ValueError(
+            'length of old (%i) and new (%i) labels should be same' % (len(args['label_old']), len(args['label_new']))
+        )
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args
 
@@ -87,16 +89,18 @@ def perform_image_relabel(path_img, path_out, labels_old, labels_new):
 def relabel_folder_images(path_images, path_out, labels_old, labels_new, nb_workers=1):
     """ perform single or multi thread image quantisation
 
-    :param [int] labels_old:
-    :param [int] labels_new:
+    :param list(int) labels_old:
+    :param list(int) labels_new:
     :param list(str) path_images: list of input images
     :param path_out: output directory
-    :param [int] labels_old: list of labels to be replaced
-    :param [int] labels_new: list of new labels
+    :param list(int) labels_old: list of labels to be replaced
+    :param list(int) labels_new: list of new labels
     :param int nb_workers:
     """
-    assert os.path.isdir(os.path.dirname(path_images)), 'missing folder: %s' % path_images
-    assert os.path.isdir(path_out), 'missing ouput folder: %s' % path_out
+    if not os.path.isdir(os.path.dirname(path_images)):
+        raise FileNotFoundError('missing folder: %s' % path_images)
+    if not os.path.isdir(path_out):
+        raise FileNotFoundError('missing output folder: %s' % path_out)
 
     path_imgs = sorted(glob.glob(path_images))
     logging.info('found %i images', len(path_imgs))
@@ -121,8 +125,9 @@ def main(params):
     logging.info('running...')
 
     if not os.path.exists(params['path_output']):
-        assert os.path.isdir(os.path.dirname(params['path_output'])), \
-            'missing folder: %s' % os.path.dirname(params['path_output'])
+        dir_out = os.path.dirname(params['path_output'])
+        if not os.path.isdir(dir_out):
+            raise FileNotFoundError('missing folder: %s' % dir_out)
         os.mkdir(params['path_output'])
 
     relabel_folder_images(
@@ -134,6 +139,5 @@ def main(params):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-
-    params = parse_arg_params()
-    main(params)
+    cli_params = parse_arg_params()
+    main(cli_params)

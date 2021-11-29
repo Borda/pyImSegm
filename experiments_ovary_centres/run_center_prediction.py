@@ -60,7 +60,7 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='', 
     :param obj classif:
     :param str path_classif:
     :param str path_output:
-    :return {str: float}:
+    :return dict(str,float):
     """
     _, row = idx_row
     dict_center = dict(row)
@@ -73,10 +73,9 @@ def load_compute_detect_centers(idx_row, params, classif=None, path_classif='', 
         path_show_in = os.path.join(path_output, FOLDER_INPUTS)
         name, img, segm, _ = run_train.load_image_segm_center((None, row), path_show_in, params['dict_relabel'])
         t_start = time.time()
-        _, slic, points, features, feature_names =\
-            run_train.estim_points_compute_features(name, img, segm, params)
+        _, slic, points, features, _ = run_train.estim_points_compute_features(name, img, segm, params)
         dict_detect = run_train.detect_center_candidates(
-            name, img, segm, None, slic, points, features, feature_names, params, path_output, classif
+            name, img, segm, None, slic, points, features, params, path_output, classif
         )
         dict_detect['time elapsed'] = time.time() - t_start
         dict_center.update(dict_detect)
@@ -123,7 +122,7 @@ def get_csv_triplets(path_csv, path_csv_out, path_imgs, path_segs, path_centers=
 def main(params):
     """ PIPELINE for new detections
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     """
     params = run_train.prepare_experiment_folder(params, FOLDER_EXPERIMENT)
 
@@ -166,11 +165,12 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running...')
 
-    params = run_train.arg_parse_params(DEFAULT_PARAMS)
+    cli_params = run_train.arg_parse_params(DEFAULT_PARAMS)
 
-    params['path_classif'] = params['path_centers']
-    assert os.path.isfile(params['path_classif']), 'missing classifier: %s' % params['path_classif']
+    cli_params['path_classif'] = cli_params['path_centers']
+    if not os.path.isfile(cli_params['path_classif']):
+        raise FileNotFoundError('missing classifier: %s' % cli_params['path_classif'])
 
-    main(params)
+    main(cli_params)
 
     logging.info('DONE')

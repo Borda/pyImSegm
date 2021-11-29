@@ -64,33 +64,13 @@ COLOR_FALSE_POSITIVE = '#FF5733'
 COLOR_FALSE_NEGATIVE = 'w'
 
 POINT_MARKERS = [
-    {
-        'change': 0,
-        'label': 1,
-        'marker': 'o',
-        'color': 'y',
-    },
-    {
-        'change': 0,
-        'label': 0,
-        'marker': 'x',
-        'color': 'y',
-    },
-    {
-        'change': 1,
-        'label': 1,
-        'marker': 'o',
-        'color': COLOR_FALSE_NEGATIVE,
-    },
-    {
-        'change': 1,
-        'label': 0,
-        'marker': 'o',
-        'color': COLOR_FALSE_POSITIVE,
-    },
+    dict(change=0, label=1, marker='o', color='y'),
+    dict(change=0, label=0, marker='x', color='y'),
+    dict(change=1, label=1, marker='o', color=COLOR_FALSE_NEGATIVE),
+    dict(change=1, label=0, marker='o', color=COLOR_FALSE_POSITIVE),
 ]
 
-df_center_labeled, fig = None, None
+df_center_labeled, fig, paths_img_csv, actual_idx, df_info_all, img, segm_eggs = [None] * 7
 
 # TODO: add - swapping group of points not only one by one
 
@@ -116,7 +96,8 @@ def arg_parse_params():
             continue
         params[k] = os.path.abspath(os.path.expanduser(params[k]))
         p = os.path.dirname(params[k]) if '*' in params[k] else params[k]
-        assert os.path.exists(p), 'missing: %s' % p
+        if not os.path.exists(p):
+            raise FileNotFoundError('missing: %s' % p)
     logging.info('ARG PARAMETERS: \n %r', params)
     return params
 
@@ -126,7 +107,7 @@ def load_paths_image_csv(params, skip_csv=POSIX_CSV_LABEL):
     of images and csv with centers, then it find the intersection between them
     according their unique names
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     :param str skip_csv: pattern in csv name that skips the file
     :return [(str, str)]:
     """
@@ -142,12 +123,11 @@ def load_paths_image_csv(params, skip_csv=POSIX_CSV_LABEL):
     list_names = [get_name(p) for p in list_imgs]
     # filter to have just paths with the  right names
     list_csv = sorted([p for p in list_csv if get_name(p) in list_names])
-    assert len(list_imgs) == len(list_csv), \
-        'the number of images (%i) and csv (%i) has to be same' % \
-        (len(list_imgs), len(list_csv))
+    if len(list_imgs) != len(list_csv):
+        raise RuntimeError('the number of images (%i) and csv (%i) has to be same' % (len(list_imgs), len(list_csv)))
     list_join_img_csv = zip(list_imgs, list_csv)
-    assert all(get_name(p1) == get_name(p2) for p1, p2 in list_join_img_csv), \
-        'names has to be same for %r' % list_join_img_csv
+    if not all(get_name(p1) == get_name(p2) for p1, p2 in list_join_img_csv):
+        raise ValueError('names has to be same for %r' % list_join_img_csv)
     return list_join_img_csv
 
 
@@ -230,7 +210,7 @@ def estimate_eggs_from_info(path_img):
 
 def canvas_load_image_centers():
     """ load image nad csv with centers and update canvas """
-    global paths_img_csv, actual_idx, df_center_labeled, img, mask_eggs
+    global paths_img_csv, actual_idx, df_center_labeled, img, segm_eggs
     path_img, path_csv = paths_img_csv[actual_idx]
     logging.info(
         'loading image (%i/%i): "%s"', actual_idx + 1, len(paths_img_csv),
@@ -238,20 +218,20 @@ def canvas_load_image_centers():
     )
 
     img = plt.imread(path_img)
-    mask_eggs = estimate_eggs_from_info(path_img)
-    df_center_labeled = load_csv_center_label(path_csv, mask_eggs)
+    segm_eggs = estimate_eggs_from_info(path_img)
+    df_center_labeled = load_csv_center_label(path_csv, segm_eggs)
 
     canvas_update_image_centers()
 
 
 def canvas_update_image_centers(marker_schema=POINT_MARKERS):
     """ according corredted points and loaded image update canvas """
-    global fig, df_center_labeled, img, mask_eggs
+    global fig, df_center_labeled, img, segm_eggs
 
     fig.clf()
     fig.gca().imshow(img)
-    if mask_eggs is not None:
-        fig.gca().contour(mask_eggs, colors='c', linestyles='dotted')
+    if segm_eggs is not None:
+        fig.gca().contour(segm_eggs, colors='c', linestyles='dotted')
 
     for dict_marker in marker_schema:
         filter_label = (df_center_labeled['change'] == dict_marker['change'])
@@ -332,7 +312,7 @@ def onclick(event):
     # fig.canvas.draw()
 
 
-def onkey_release(widget, event, data=None):
+def onkey_release(_, event, __):
     """ register key press for arrows to move back and forward
 
     :param widget:
@@ -374,8 +354,9 @@ def main(params):
 
     actual_idx = 0
     paths_img_csv = load_paths_image_csv(params)
+    if not paths_img_csv:
+        raise FileNotFoundError('missing paths image - csv')
     logging.info('loaded %i pairs (image & centers)', len(paths_img_csv))
-    assert paths_img_csv, 'missing paths image - csv'
 
     if params['path_info'] is not None and os.path.isfile(params['path_info']):
         df_info_all = pd.read_csv(params['path_info'], sep='\t', index_col=0)
@@ -395,6 +376,6 @@ def main(params):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     logging.info('running GUI...')
-    params = arg_parse_params()
-    main(params)
+    cli_params = arg_parse_params()
+    main(cli_params)
     logging.info('DONE')

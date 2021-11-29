@@ -92,7 +92,7 @@ def run_segm2d_gmm_gc(img2d, dir_name, params, types_edge=('model', 'const'), li
     params.pop('pca_coef', None)
 
     for edge in types_edge:
-        dict_imgs = dict()
+        dict_imgs = {}
         for regul in list_regul:
             seg, _ = segment_color2d_slic_features_model_graphcut(
                 img2d, model, gc_regul=regul, gc_edge_type=edge, debug_visual=dict_imgs, **params
@@ -118,7 +118,7 @@ class TestPipelinesGMM(unittest.TestCase):
         img = resize(self.img_obj, output_shape=(256, 256))
         logging.debug('dimension: {}'.format(img.shape))
 
-        dict_imgs = dict()
+        dict_imgs = {}
         path_dir = os.path.join(PATH_OUTPUT, 'temp_segm-gmm-gc-objects')
         if not os.path.isdir(path_dir):
             os.mkdir(path_dir)
@@ -192,13 +192,13 @@ class TestPipelinesClassif(unittest.TestCase):
         img2 = resize(self.img2, output_shape=(256, 256))
 
         path_dir = os.path.join(PATH_OUTPUT, 'temp_segm-supervised_gc')
-        if not os.path.exists(path_dir):
+        if not os.path.isdir(path_dir):
             os.mkdir(path_dir)
 
         sp_size = 10
         tp_edge = ['model', 'const']
         list_regul = [0, 1, 10]
-        dict_imgs = dict()
+        dict_imgs = {}
         name = 'fig-img%i_regul-%.2f_edge-%s.png'
 
         classif, _, _, _ = train_classif_color2d_slic_features([img], [annot],
@@ -211,7 +211,7 @@ class TestPipelinesClassif(unittest.TestCase):
         show_segm_debugs_2d(dict_imgs, path_dir, name % (1, 0, '_debug'))
 
         for edge in tp_edge:
-            dict_imgs = dict()
+            dict_imgs = {}
             for regul in list_regul:
                 seg, _ = segment_color2d_slic_features_model_graphcut(
                     img, classif, dict_features=FEATURES_TEXTURE, sp_size=sp_size, gc_regul=regul, gc_edge_type=edge

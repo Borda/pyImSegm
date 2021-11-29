@@ -30,7 +30,7 @@ import imsegm.utilities.data_io as tl_data
 import imsegm.utilities.experiments as tl_expt
 
 PATH_IMAGES = os.path.join('data-images', 'drosophila_ovary_slice', 'segm_rgb', '*.png')
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 THRESHOLD_INVALID_PIXELS = 5e-3
 
 
@@ -63,7 +63,8 @@ def parse_arg_params():
     parser.add_argument('--nb_workers', type=int, required=False, help='number of jobs in parallel', default=NB_WORKERS)
     args = vars(parser.parse_args())
     p_dir = tl_data.update_path(os.path.dirname(args['path_images']))
-    assert os.path.isdir(p_dir), 'missing folder: %s' % args['path_images']
+    if not os.path.isdir(p_dir):
+        raise FileNotFoundError('missing folder: %s' % args['path_images'])
     args['path_images'] = os.path.join(p_dir, os.path.basename(args['path_images']))
     logging.info(tl_expt.string_dict(args, desc='ARG PARAMETERS'))
     return args
@@ -89,7 +90,7 @@ def perform_quantize_image(path_image, list_colors, method='color'):
     """ perform the quantization together with loading and exporting
 
     :param str path_image:
-    :param [(int, int, int)] list_colors: list of possible colours
+    :param list(tuple(int,int,int)) list_colors: list of possible colours
     """
     logging.debug('quantize img: "%s"', path_image)
     im = tl_data.io_imread(path_image)
@@ -119,7 +120,7 @@ def quantize_folder_images(
     """ perform single or multi thread image quantisation
 
     :param str path_images:, input directory and image pattern for loading
-    :param colors: [(int, int, int)], list of possible colours
+    :param list(tuple(int,int,int)) colors: list of possible colours
     :param str method: interpolation method
     :param float px_threshold: pixel threshold
     :param int nb_workers: number of jobs
@@ -128,7 +129,7 @@ def quantize_folder_images(
     logging.info('found %i images', len(path_imgs))
     if colors is None:
         dict_colors = see_images_color_info(path_images, px_thr=px_threshold)
-        colors = [c for c in dict_colors]
+        colors = list(dict_colors)
 
     _wrapper_quantize_img = partial(perform_quantize_image, method=method, list_colors=colors)
     iterate = tl_expt.WrapExecuteSequence(
@@ -154,5 +155,5 @@ def main(params):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    params = parse_arg_params()
-    main(params)
+    cli_params = parse_arg_params()
+    main(cli_params)

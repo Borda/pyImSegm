@@ -39,7 +39,7 @@ NAME_NPZ_MODEL_MIXTURE = 'RG2SP_eggs_mixture-model.npz'
 def arg_parse_params():
     """
     SEE: https://docs.python.org/3/library/argparse.html
-    :return {str: str}:
+    :return dict(str,str):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -60,7 +60,8 @@ def arg_parse_params():
     for k in (k for k in params if 'path' in k):
         params[k] = tl_data.update_path(params[k], absolute=True)
         p = os.path.dirname(params[k]) if k == 'path_annot' else params[k]
-        assert os.path.exists(p), 'missing: %s' % p
+        if not os.path.exists(p):
+            raise FileNotFoundError('missing: %s' % p)
     # load saved configuration
     logging.info('ARG PARAMETERS: \n %r', params)
     return params
@@ -112,7 +113,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params()
-    main(params['path_annot'], params['path_out'], params['nb_comp'])
+    cli_params = arg_parse_params()
+    main(cli_params['path_annot'], cli_params['path_out'], cli_params['nb_comp'])
 
     logging.info('Done')

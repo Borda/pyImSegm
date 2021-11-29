@@ -127,7 +127,7 @@ def estim_class_model(features, nb_classes, estim_model='GMM', pca_coef=None, us
         if init_type == 'kmeans':
             mm.set_params(n_init=1)
             # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-            kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
+            kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++')
             y = kmeans.fit_predict(features)
         elif init_type == 'Otsu':
             mm.set_params(n_init=1)
@@ -199,9 +199,9 @@ def compute_multivarian_otsu(features):
 #     each cluster is a single class compute probability that each feature
 #     belongs to each class
 #
-#     :param [[float]] features: list of features per segment
+#     :param list(list(float)) features: list of features per segment
 #     :param int nb_classes: number of classes
-#     :return [[float]]: probabilities that each feature belongs to each class
+#     :return list(list(float)): probabilities that each feature belongs to each class
 #     """
 #     logging.debug('estimate GMM for all given features %s and %i component',
 #                   repr(features.shape), nb_classes)
@@ -209,7 +209,7 @@ def compute_multivarian_otsu(features):
 #     mm = mixture.GMM(n_components=nb_classes, covariance_type='full', n_iter=999)
 #     if init == 'kmeans':
 #         # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-#         kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
+#         kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++')
 #         y = kmeans.fit_predict(features)
 #         mm.fit(features, y)
 #     else:
@@ -223,10 +223,10 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     each cluster is a single class compute probability that each feature
     belongs to each class
 
-    :param [[float]] features: list of features per segment
+    :param list(list(float)) features: list of features per segment
     :param int nb_classes: number of classes
     :param int init: initialisation
-    :return [[float]]: probabilities that each feature belongs to each class
+    :return list(list(float)): probabilities that each feature belongs to each class
 
     >>> np.random.seed(0)
     >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
@@ -240,7 +240,7 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
     gmm = mixture.GaussianMixture(n_components=nb_classes, covariance_type='full', max_iter=99)
     if init == 'kmeans':
         # http://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-        kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++', n_jobs=-1)
+        kmeans = cluster.KMeans(n_clusters=nb_classes, init='k-means++')
         y = kmeans.fit_predict(features)
         gmm.fit(features, y)
     else:
@@ -252,11 +252,11 @@ def estim_class_model_gmm(features, nb_classes, init='kmeans'):
 def estim_class_model_kmeans(features, nb_classes, init_type='k-means++', max_iter=99):
     """ from all features estimate Gaussian from k-means clustering
 
-    :param [[float]] features: list of features per segment
+    :param list(list(float)) features: list of features per segment
     :param int nb_classes: number of classes
     :param str init_type: initialization
     :param int max_iter: maximal number of iterations
-    :return [[float]]: probabilities that each feature belongs to each class
+    :return list(list(float)): probabilities that each feature belongs to each class
 
     >>> np.random.seed(0)
     >>> fts = np.row_stack([np.random.random((50, 3)) - 1,
@@ -275,10 +275,10 @@ def estim_class_model_kmeans(features, nb_classes, init_type='k-means++', max_it
     if init_type == 'quantiles':
         quntiles = np.linspace(5, 95, nb_classes).tolist()
         init_perc = np.array(np.percentile(features, quntiles, axis=0))
-        kmeans = cluster.KMeans(nb_classes, init=init_perc, max_iter=2, n_jobs=-1)
+        kmeans = cluster.KMeans(nb_classes, init=init_perc, max_iter=2)
     else:
         nb_inits = max(1, int(np.sqrt(max_iter)))
-        kmeans = cluster.KMeans(nb_classes, init=init_type, max_iter=max_iter, n_init=nb_inits, n_jobs=-1)
+        kmeans = cluster.KMeans(nb_classes, init=init_type, max_iter=max_iter, n_init=nb_inits)
     y = kmeans.fit_predict(features)
     gmm = mixture.GaussianMixture(n_components=nb_classes, covariance_type='full', max_iter=1)
     gmm.fit(features, y)
@@ -303,8 +303,8 @@ def get_vertexes_edges(segments):
 def compute_spatial_dist(centres, edges, relative=False):
     """ compute spatial distance between all neighbouring segments
 
-    :param [[int, int]] centres: superpixel centres
-    :param [[int, int]] edges:
+    :param list(tuple(int,int)) centres: superpixel centres
+    :param list(tuple(int,int)) edges:
     :param bool relative: normalise the distances to mean distance
     :return:
 
@@ -318,8 +318,8 @@ def compute_spatial_dist(centres, edges, relative=False):
     >>> np.round(compute_spatial_dist(centres, edges, relative=True), 2)
     array([ 1.12,  1.57,  1.34,  1.34,  0.5 ,  0.63,  0.5 ])
     """
-    assert np.max(edges) < len(centres), \
-        'max vertex %i exceed size of centres %i' % (np.max(edges), len(centres))
+    if np.max(edges) >= len(centres):
+        raise ValueError('max vertex %i exceed size of centres %i' % (np.max(edges), len(centres)))
     ndim = np.max([len(c) for c in centres if c is not None])
     # replace empy segments by a empty vector
     for i, c in enumerate(centres):
@@ -391,11 +391,10 @@ def compute_edge_model(edges, proba, metric='l_T'):
      and 2. diff and zero in 3 leading to weights [0.5, 0.4, 0.9]
      and so we take the min values
 
-    :param [(int, int)] edges: edges
-    :param [[float]] proba: probablilitirs
+    :param list(tuple(int,int)) edges: edges
+    :param list(list(float)) proba: probablilitirs
     :param str metric: define metric
     :return list(float):
-
 
     >>> segments = np.array([[0] * 3 + [1] * 5 + [2] * 4,
     ...                      [4] * 4 + [5] * 5 + [6] * 3])
@@ -413,7 +412,8 @@ def compute_edge_model(edges, proba, metric='l_T'):
     >>> np.round(weights, 3).tolist()
     [0.0, 0.002, 0.0, 0.005, 0.0, 0.0, 0.101, 0.092, 0.001]
     """
-    assert np.max(edges) < len(proba), 'max vertex %i exceed size of proba %r' % (np.max(edges), proba.shape)
+    if np.max(edges) >= len(proba):
+        raise ValueError('max vertex %i exceed size of proba %r' % (np.max(edges), proba.shape))
     vertex_1 = proba[edges[:, 0]]
     vertex_2 = proba[edges[:, 1]]
     # pp 32, http://www.coe.utah.edu/~cs7640/readings/graph_cuts_intro.pdf
@@ -423,6 +423,8 @@ def compute_edge_model(edges, proba, metric='l_T'):
         edge_weights = np.exp(-dist / (2 * np.std(dist)**2))
     elif metric == 'l2':
         dist = metrics.pairwise.paired_euclidean_distances(vertex_1, vertex_2)
+        if dist is None:
+            raise ValueError('Unexpected `dist` of %r' % dist)
         edge_weights = np.exp(-dist / (2 * np.std(dist)**2))
     elif metric == 'lT':
         # exp(- norm value diff) * (geom dist vertex)**-1
@@ -505,8 +507,10 @@ def create_pairwise_matrix(gc_regul, nb_classes):
            [ 1.23,  0.97,  0.54]])
     """
     if isinstance(gc_regul, np.ndarray):
-        assert gc_regul.shape[0] == gc_regul.shape[1] == nb_classes, \
-            'GC regul matrix %r should match match number of classes (%i)' % (gc_regul.shape, nb_classes)
+        if not gc_regul.shape[0] == gc_regul.shape[1] == nb_classes:
+            raise ValueError(
+                'GC regul matrix %r should match match number of classes (%i)' % (gc_regul.shape, nb_classes)
+            )
         # sub_min = np.tile(np.min(gc_regul, axis=0), (gc_regul.shape[0], 1))
         pairwise = gc_regul - np.min(gc_regul)
     elif isinstance(gc_regul, list):
@@ -578,7 +582,7 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
     :param ndarry proba: probability of each superpixel and class
     :param str edge_type: contains edge type, if 'model', after '_' you can
         specify the metric, eg. 'model_l2'
-    :return [[int, int]], [float]:
+    :return list(tuple(int,int)), list(float):
 
     >>> segments = np.array([[0] * 3 + [1] * 5 + [2] * 4,
     ...                      [4] * 4 + [5] * 5 + [6] * 3])
@@ -611,11 +615,13 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
     logging.debug('graph edges %r', edges.shape)
 
     if edge_type.startswith('model'):
-        assert proba is not None, '"proba" is required'
+        if proba is None or len(proba) == 0:
+            raise ValueError('"proba" is required')
         metric = edge_type.split('_')[-1] if '_' in edge_type else 'lT'
         edge_weights = compute_edge_model(edges, proba, metric)
     elif edge_type == 'color':
-        assert image is not None, '"image" is required'
+        if image is None:
+            raise RuntimeError('"image" is required')
         image_float = np.array(image, dtype=float)
         if np.max(image) > 1:
             image_float /= 255.
@@ -626,7 +632,8 @@ def compute_edge_weights(segments, image=None, features=None, proba=None, edge_t
         weights = dist.astype(float) / (2 * np.std(dist)**2)
         edge_weights = np.exp(-weights)
     elif edge_type == 'features':
-        assert features is not None, '"features" is required'
+        if features is None:
+            raise RuntimeError('"features" is required')
         features_norm = preprocessing.StandardScaler().fit_transform(features)
         vertex_1 = features_norm[edges[:, 0]]
         vertex_2 = features_norm[edges[:, 1]]
@@ -700,7 +707,7 @@ def segment_graph_cut_general(
     >>> proba += np.random.random(proba.shape) / 2.
     >>> np.argmax(proba, axis=1)  # doctest: +ELLIPSIS
     array([0, 0, 0, 1, 1, 1]...)
-    >>> debug_visual = dict()
+    >>> debug_visual = {}
     >>> segment_graph_cut_general(
     ...     slic, proba, gc_regul=0., edge_type='', debug_visual=debug_visual)  # doctest: +ELLIPSIS
     array([0, 0, 0, 1, 1, 1]...)
@@ -769,9 +776,11 @@ def count_label_transitions_connected_segments(dict_slics, dict_labels, nb_label
         nb_labels = np.max(uq_labels) + 1
     transitions = np.zeros((nb_labels, nb_labels))
     for name in dict_slics:
-        assert (np.max(dict_slics[name]) + 1) == len(dict_labels[name]), \
-            'dims are not matching - max slic (%i) and label (%i)' \
-            % (np.max(dict_slics[name]), len(dict_labels[name]))
+        if (np.max(dict_slics[name]) + 1) != len(dict_labels[name]):
+            raise ValueError(
+                'dims are not matching - max slic (%i) and label (%i)' %
+                (np.max(dict_slics[name]), len(dict_labels[name]))
+            )
         _, edges = get_vertexes_edges(dict_slics[name])
         label_edges = np.asarray(dict_labels[name])[np.asarray(edges)]
         for lb1, lb2 in label_edges.tolist():

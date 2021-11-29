@@ -31,13 +31,13 @@ RESULTS_CSV = 'results.csv'
 FILE_LOGS = 'logging.txt'
 
 
-def nb_workers(ratio):
+def get_nb_workers(ratio):
     """get fraction of of available CPUs
 
     :param float ratio: range (0, 1)
     :return int: number of workers with lower bound 1
 
-    >>> nb_workers(0)
+    >>> get_nb_workers(0)
     1
     """
     return max(1, int(CPU_COUNT * ratio))
@@ -53,7 +53,7 @@ class Experiment(object):
     >>> expt = Experiment(params)
     Traceback (most recent call last):
     ...
-    Exception: given folder "./my_experiments" does not exist!
+    FileNotFoundError: given folder "./my_experiments" does not exist!
     >>> os.mkdir(params['path_out'])
     >>> expt = Experiment(params, time_stamp=False)
     >>> expt.run()
@@ -65,7 +65,7 @@ class Experiment(object):
     def __init__(self, params, time_stamp=True):
         """ constructor
 
-        :param dict params: define experimenatl parameters
+        :param dict params: define experimental parameters
         :param bool time_stamp: add to experiment unique time stamp
         """
         self.params = copy.deepcopy(params)
@@ -91,7 +91,7 @@ class Experiment(object):
 
         :param bool gt: try to load ground truth
         """
-        logging.warning('Not implemented yet...')
+        logging.warning('Not implemented yet with `gt=%s`...', gt)
 
     def _perform(self):
         logging.warning('Not implemented yet...')
@@ -106,10 +106,10 @@ class Experiment(object):
         """ Check all required paths in parameters whether they exist """
         for p in (self.params[n] for n in self.params if 'dir' in n.lower() or 'path' in n.lower()):
             if not os.path.exists(p):
-                raise Exception('given folder "%s" does not exist!' % p)
+                raise FileNotFoundError('given folder "%s" does not exist!' % p)
         for p in (self.params[n] for n in self.params if 'file' in n.lower()):
             if not os.path.exists(p):
-                raise Exception('given folder "%s" does not exist!' % p)
+                raise FileNotFoundError('given folder "%s" does not exist!' % p)
 
     def _create_folder(self, time_stamp=True):
         """ Create the experiment folder and iterate while there is no available
@@ -118,7 +118,7 @@ class Experiment(object):
         """
         # create results folder for experiments
         if not os.path.exists(self.params.get('path_out', 'NONE')):
-            raise ValueError('no results folder "%r"' % self.params.get('path_out', None))
+            raise FileNotFoundError('no results folder "%r"' % self.params.get('path_out', None))
         self.params = create_experiment_folder(self.params, self.__class__.__name__, time_stamp)
 
 
@@ -172,7 +172,7 @@ def create_experiment_folder(params, dir_name, stamp_unique=True, skip_load=True
         path_expt += '_' + time.strftime(FORMAT_DT, date)
         if os.path.isdir(path_expt):
             logging.warning('particular out folder already exists')
-            path_expt += ':' + str(uuid.uuid4().hex)
+            path_expt += '+' + str(uuid.uuid4().hex)
 
     logging.info('creating experiment folder "{}"'.format(path_expt))
     if not os.path.exists(path_expt):
@@ -229,8 +229,8 @@ def append_final_stat(out_dir, y_true, y_pred, time_sec, file_name=RESULTS_TXT):
     """ append (export) statistic to existing default file
 
     :param str out_dir:
-    :param [int] y_true: annotation
-    :param [int] y_pred: predictions
+    :param list(int) y_true: annotation
+    :param list(int) y_pred: predictions
     :param int time_sec:
     :param str file_name:
     :return str:
@@ -302,8 +302,7 @@ def extend_list_params(params, name_param, options):
             p_new.update({name_param: v})
             if p_new['param_idx']:
                 p_new['param_idx'] += '_'
-            p_new['param_idx'] += \
-                '%s-%i#%i' % (name_param, len(options), i + 1)
+            p_new['param_idx'] += '%s-%i#%i' % (name_param, len(options), i + 1)
             list_params_new.append(p_new)
     return list_params_new
 
@@ -343,7 +342,7 @@ def create_subfolders(path_out, folders):
     count = 0
     for dir_name in folders:
         path_dir = os.path.join(path_out, dir_name)
-        if not os.path.exists(path_dir):
+        if not os.path.isdir(path_dir):
             try:
                 os.mkdir(path_dir)
                 count += 1
@@ -397,16 +396,19 @@ class WrapExecuteSequence:
             pooling = pool.imap if self.ordered else pool.imap_unordered
 
             for out in pooling(self.wrap_func, self.iterate_vals):
-                tqdm_bar.update() if tqdm_bar is not None else None
+                if tqdm_bar:
+                    tqdm_bar.update()
                 yield out
             pool.close()
             pool.join()
         else:
             for out in map(self.wrap_func, self.iterate_vals):
-                tqdm_bar.update() if tqdm_bar is not None else None
+                if tqdm_bar:
+                    tqdm_bar.update()
                 yield out
 
-        tqdm_bar.close() if tqdm_bar is not None else None
+        if tqdm_bar:
+            tqdm_bar.close()
 
     def __len__(self):
         return len(self.iterate_vals)

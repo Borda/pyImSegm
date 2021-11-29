@@ -26,7 +26,7 @@ import imsegm.utilities.experiments as tl_expt
 
 IMAGE_CHANNEL = 0  # image channel for mass extraction
 
-NB_WORKERS = tl_expt.nb_workers(0.8)
+NB_WORKERS = tl_expt.get_nb_workers(0.8)
 PATH_IMAGES = os.path.join(tl_data.update_path('data-images'), 'drosophila_ovary_slice')
 PATH_RESULTS = tl_data.update_path('results', absolute=True)
 SWAP_CONDITION = 'cc'
@@ -85,9 +85,8 @@ def correlation_coefficient(patch1, patch2):
     stds = patch1.std() * patch2.std()
     if stds == 0:
         return 0
-    else:
-        product /= stds
-        return product
+    product /= stds
+    return product
 
 
 def compute_mean_image(list_img_paths):
@@ -102,12 +101,12 @@ def compute_mean_image(list_img_paths):
 def main(params):
     """ PIPELINE for rotation
 
-    :param {str: str} params:
+    :param dict(str,str) params:
     """
     logging.info(tl_expt.string_dict(params, desc='PARAMETERS'))
 
     list_img_paths = sorted([p for p in glob.glob(params['path_images']) if os.path.isfile(p)])
-    logging.info('found images: %i' % len(list_img_paths))
+    logging.info('found images: %i', len(list_img_paths))
 
     if not os.path.isdir(params['path_output']):
         os.mkdir(params['path_output'])
@@ -133,7 +132,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = r_match.arg_parse_params(DEFAULT_PARAMS)
-    main(params)
+    cli_params = r_match.arg_parse_params(DEFAULT_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

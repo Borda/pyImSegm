@@ -15,6 +15,7 @@ from PIL import Image
 from scipy import interpolate
 
 # sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
+from imsegm.utilities import ImageDimensionError
 from imsegm.utilities.data_io import io_imread
 
 #: names of annotated columns
@@ -46,7 +47,7 @@ def unique_image_colors(img):
     """ find all unique color in image and return its list
 
     :param ndarray img: np.array<height, width, 3>
-    :return: [(int, int, int)]
+    :return: list(tuple(int,int,int))
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (50, 50, 3))
@@ -72,7 +73,7 @@ def convert_img_colors_to_labels(img_rgb, lut_label_color):
     it returns relabels image according given dictionary
 
     :param ndarray img_rgb: np.array<height, width, 3> input RGB image
-    :param {int: (int, int, int)} lut_label_color:
+    :param dict(int,tuple(int,int,int)) lut_label_color:
     :return ndarray: np.array<height, width> labeling
 
     >>> np.random.seed(0)
@@ -86,7 +87,7 @@ def convert_img_colors_to_labels(img_rgb, lut_label_color):
            [1, 1, 0, 0, 1, 1, 1],
            [1, 0, 1, 0, 1, 0, 1]])
     """
-    dict_color_label = dict((lut_label_color[k], k) for k in lut_label_color)
+    dict_color_label = {lut_label_color[k]: k for k in lut_label_color}
     return convert_img_colors_to_labels_reverted(img_rgb, dict_color_label)
 
 
@@ -95,7 +96,7 @@ def convert_img_colors_to_labels_reverted(img_rgb, dict_color_label):
     it returns relabels image according given dictionary
 
     :param ndarray img_rgb: np.array<height, width, 3> input RGB image
-    :param {(int, int, int): int} dict_color_label:
+    :param {tuple(int,int,int): int} dict_color_label:
     :return ndarray: np.array<height, width> labeling
 
     >>> np.random.seed(0)
@@ -118,8 +119,8 @@ def convert_img_colors_to_labels_reverted(img_rgb, dict_color_label):
         changed = np.bincount(m_lb.flatten())
         if len(changed) == 2:
             converted_labels += np.bincount(m_lb.flatten())[1]
-    assert converted_labels == np.prod(img_labels.shape), \
-        'There is different number of pixels than number of converted labels.'
+    if converted_labels != np.prod(img_labels.shape):
+        raise ValueError('There is different number of pixels than number of converted labels.')
     img_labels = img_labels.astype(np.int, copy=False)
     return img_labels
 
@@ -128,7 +129,7 @@ def convert_img_labels_to_colors(segm, lut_label_colors):
     """ convert labeling according given dictionary of colors
 
     :param ndarray segm: np.array<height, width>
-    :param {int: (int, int, int)} lut_label_colors:
+    :param dict(int,tuple(int,int,int)) lut_label_colors:
     :return ndarray: np.array<height, width, 3>
 
     >>> np.random.seed(0)
@@ -142,8 +143,8 @@ def convert_img_labels_to_colors(segm, lut_label_colors):
            [ 0.9,  0.9,  0.2,  0.2,  0.9,  0.9,  0.9],
            [ 0.9,  0.2,  0.9,  0.2,  0.9,  0.2,  0.9]])
     """
-    assert all(lb in lut_label_colors.keys() for lb in np.unique(segm)), \
-        'some labels %r are missing in dictionary %r' % (np.unique(segm), lut_label_colors.keys())
+    if not all(lb in lut_label_colors.keys() for lb in np.unique(segm)):
+        raise ValueError('some labels %r are missing in dictionary %r' % (np.unique(segm), lut_label_colors.keys()))
     # init Look-Up-Table
     min_label = np.min(segm)
     nb_labels = np.max(segm) - min_label + 1
@@ -165,7 +166,7 @@ def image_frequent_colors(img, ratio_threshold=1e-3):
     :param ndarray img: np.array<height, width, 3>
     :param float ratio_threshold: percentage of nb color pixels to be assumed
         as important
-    :return {(int, int, int) int}:
+    :return {tuple(int,int,int) int}:
 
     >>> np.random.seed(0)
     >>> img = np.random.randint(0, 2, (50, 50, 3)).astype(np.uint8)
@@ -183,8 +184,8 @@ def image_frequent_colors(img, ratio_threshold=1e-3):
     image = Image.fromarray(img)
     img_colors = image.getcolors(maxcolors=nb_pixels)
     if not img_colors:
-        return dict()
-    dict_clrs = dict([(clr, nb) for nb, clr in img_colors if nb >= nb_px_min])
+        return {}
+    dict_clrs = {clr: nb for nb, clr in img_colors if nb >= nb_px_min}
     ration_main_colors = sum(dict_clrs.values()) / float(nb_pixels)
     logging.debug(
         'image main colors=%f and other=%f with colours: \n%r', ration_main_colors, 1. - ration_main_colors, dict_clrs
@@ -210,7 +211,7 @@ def group_images_frequent_colors(paths_img, ratio_threshold=1e-3):
     >>> os.remove(path_img)
     """
     logging.debug('passing %i images', len(paths_img))
-    dict_colors = dict()
+    dict_colors = {}
     for path_im in paths_img:
         img = io_imread(path_im)
         local_dict_colors = image_frequent_colors(img, ratio_threshold)
@@ -226,7 +227,7 @@ def image_color_2_labels(img, colors=None):
     """ quantize input image according given list of possible colours
 
     :param ndarray img: np.array<height, width, 3>, input image
-    :param [(int, int, int)] colors: list of possible colours
+    :param list(tuple(int,int,int)) colors: list of possible colours
     :return ndarray: np.array<height, width>
 
     >>> np.random.seed(0)
@@ -252,7 +253,7 @@ def quantize_image_nearest_color(img, colors):
     """ quantize input image according given list of possible colours
 
     :param ndarray img: np.array<height, width, 3>, input image
-    :param [(int, int, int)] colors: list of possible colours
+    :param list(tuple(int,int,int)) colors: list of possible colours
     :return ndarray: np.array<height, width, 3>
 
     >>> np.random.seed(0)
@@ -276,8 +277,8 @@ def quantize_image_nearest_color(img, colors):
 
 
 def image_inpaint_pixels(img, valid_mask):
-    assert img.shape == valid_mask.shape, \
-        'image size %r and mask size %r should be equal' % (img.shape, valid_mask.shape)
+    if img.shape != valid_mask.shape:
+        raise ImageDimensionError('image size %r and mask size %r should be equal' % (img.shape, valid_mask.shape))
     coords = np.array(np.nonzero(valid_mask)).T
     values = img[valid_mask]
     it = interpolate.NearestNDInterpolator(coords, values)
@@ -289,7 +290,7 @@ def quantize_image_nearest_pixel(img, colors):
     """ quantize input image according given list of possible colours
 
     :param ndarray img: np.array<height, width, 3>, input image
-    :param [(int, int, int)] colors: list of possible colours
+    :param list(tuple(int,int,int)) colors: list of possible colours
     :return ndarray: np.array<height, width, 3>
 
     >>> np.random.seed(0)

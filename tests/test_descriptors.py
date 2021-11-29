@@ -35,7 +35,7 @@ ANGULAR_STEP = 15
 SUBPLOT_SIZE_FILTER_BANK = 3
 PATH_FIGURES_RAY = os.path.join(PATH_OUTPUT, 'temp_ray-features')
 # create the folder for visualisations
-if not os.path.exists(PATH_FIGURES_RAY):
+if not os.path.isfile(PATH_FIGURES_RAY):
     os.mkdir(PATH_FIGURES_RAY)
 
 
@@ -44,7 +44,7 @@ def export_ray_results(seg, center, points, ray_dist_raw, ray_dist, name):
 
     :param ndarray seg: segmentation
     :param tuple(int,int) center: center of the Ray features
-    :param [[int, int]] points: list of reconstructed points
+    :param list(tuple(int,int)) points: list of reconstructed points
     :param list(list(int)) ray_dist_raw: list of raw Ray distances in regular step
     :param list(list(int)) ray_dist: list of normalised Ray distances in regular step
     :param str name: name of particular figure
@@ -98,7 +98,7 @@ class TestFeatures(unittest.TestCase):
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             plt.show()
         plt.close(fig)
-        self.assertTrue(os.path.exists(p_fig))
+        self.assertTrue(os.path.isfile(p_fig))
 
     def test_ray_features_circle(self):
         seg = np.ones((400, 600), dtype=bool)
@@ -111,7 +111,7 @@ class TestFeatures(unittest.TestCase):
             ray_dist, shift = shift_ray_features(ray_dist_raw)
             points = reconstruct_ray_features_2d(point, ray_dist, shift)
             p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist, 'circle-%i.png' % i)
-            self.assertTrue(os.path.exists(p_fig))
+            self.assertTrue(os.path.isfile(p_fig))
 
     def test_ray_features_ellipse(self):
         seg = np.ones((400, 600), dtype=bool)
@@ -124,7 +124,7 @@ class TestFeatures(unittest.TestCase):
             # ray_dist, shift = seg_fts.shift_ray_features(ray_dist_raw)
             points = reconstruct_ray_features_2d(point, ray_dist_raw)
             p_fig = export_ray_results(seg, point, points, ray_dist_raw, [], 'ellipse-%i.png' % i)
-            self.assertTrue(os.path.exists(p_fig))
+            self.assertTrue(os.path.isfile(p_fig))
 
     def test_ray_features_circle_down_edge(self):
         seg = np.zeros((400, 600), dtype=bool)
@@ -139,7 +139,7 @@ class TestFeatures(unittest.TestCase):
             p_fig = export_ray_results(
                 seg, point, points_rt, ray_dist_raw, ray_dist, 'circle-full_edge-down-%i.png' % i
             )
-            self.assertTrue(os.path.exists(p_fig))
+            self.assertTrue(os.path.isfile(p_fig))
 
         # insert white interior
         x, y = draw.circle(200, 250, 120, shape=seg.shape)
@@ -152,7 +152,7 @@ class TestFeatures(unittest.TestCase):
             p_fig = export_ray_results(
                 seg, point, points_rt, ray_dist_raw, ray_dist, 'circle-inter_edge-down-%i.png' % i
             )
-            self.assertTrue(os.path.exists(p_fig))
+            self.assertTrue(os.path.isfile(p_fig))
 
     def test_ray_features_polygon(self):
         seg = np.ones((400, 600), dtype=bool)
@@ -167,7 +167,7 @@ class TestFeatures(unittest.TestCase):
             ray_dist, shift = shift_ray_features(ray_dist_raw)
             points = reconstruct_ray_features_2d(point, ray_dist, shift)
             p_fig = export_ray_results(seg, point, points, ray_dist_raw, ray_dist, 'polygon-%i.png' % i)
-            self.assertTrue(os.path.exists(p_fig))
+            self.assertTrue(os.path.isfile(p_fig))
 
     def test_show_image_features_clr2d(self):
         img = load_sample_image(IMAGE_LENNA)
@@ -177,7 +177,7 @@ class TestFeatures(unittest.TestCase):
         features, names = compute_selected_features_color2d(img, slic, FEATURES_SET_ALL)
 
         path_dir = os.path.join(PATH_OUTPUT, 'temp_image-rgb2d-features')
-        if not os.path.exists(path_dir):
+        if not os.path.isdir(path_dir):
             os.mkdir(path_dir)
 
         for i in range(features.shape[1]):
@@ -185,7 +185,7 @@ class TestFeatures(unittest.TestCase):
             im_fts = fts[slic]
             p_fig = os.path.join(path_dir, names[i] + '.png')
             plt.imsave(p_fig, im_fts)
-            self.assertTrue(os.path.exists(p_fig))
+            self.assertTrue(os.path.isfile(p_fig))
 
 
 if __name__ == '__main__':

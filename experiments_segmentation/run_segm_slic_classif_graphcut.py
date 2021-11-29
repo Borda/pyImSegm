@@ -38,6 +38,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -71,7 +73,7 @@ import imsegm.utilities.drawing as tl_visu
 import imsegm.utilities.experiments as tl_expt
 
 NAME_EXPERIMENT = 'experiment_segm-Supervised'
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 
 TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_FIG_LABEL_HISTO = 'fig_histogram_annot_segments.png'
@@ -185,7 +187,7 @@ def load_image_annot_compute_features_labels(idx_row, params, show_debug_imgs=SH
     :param (int, {...}) idx_row: row from table with paths
     :param dict params: segmentation parameters
     :param bool show_debug_imgs: whether show debug images
-    :return (...):
+    :return tuple(...):
     """
 
     def _path_out_img(params, dir_name, name):
@@ -196,9 +198,11 @@ def load_image_annot_compute_features_labels(idx_row, params, show_debug_imgs=SH
     img = load_image(row['path_image'], params['img_type'])
     annot = load_image(row['path_annot'], '2d_segm')
     logging.debug('.. processing: %s', idx_name)
-    assert img.shape[:2] == annot.shape[:2], \
-        'individual size of image %r and seg_pipe %r for "%s" - "%s"' % \
-        (img.shape, annot.shape, row['path_image'], row['path_annot'])
+    if img.shape[:2] != annot.shape[:2]:
+        raise ImageDimensionError(
+            'individual size of image %r and seg_pipe %r for "%s" - "%s"' %
+            (img.shape, annot.shape, row['path_image'], row['path_annot'])
+        )
     if show_debug_imgs:
         plt.imsave(_path_out_img(params, FOLDER_IMAGE, idx_name), img, cmap=plt.cm.gray)
         plt.imsave(_path_out_img(params, FOLDER_ANNOT, idx_name), annot)
@@ -230,17 +234,17 @@ def dataset_load_images_annot_compute_features(params, show_debug_imgs=SHOW_DEBU
 
     :param dict params: segmentation parameters
     :param bool show_debug_imgs: whether show debug images
-    :return ({str: ndarray} * 6, list(str)):
+    :return tuple(dict(str,ndarray) * 6, list(str)):
     """
-    dict_images, dict_annots = dict(), dict()
-    dict_slics, dict_features, dict_labels, dict_label_hist = dict(), dict(), dict(), dict()
-    feature_names = list()
+    dict_images, dict_annots = {}, {}
+    dict_slics, dict_features, dict_labels, dict_label_hist = {}, {}, {}, {}
+    feature_names = []
 
     # compute features
     df_paths = pd.read_csv(params['path_train_list'], index_col=0)
     df_paths.reset_index(inplace=True)
-    assert all(n in df_paths.columns for n in ['path_image', 'path_annot']), \
-        'missing required columns in loaded csv file'
+    if not all(n in df_paths.columns for n in ['path_image', 'path_annot']):
+        raise ValueError('missing required columns in loaded csv file')
     _wrapper_load_compute = partial(
         load_image_annot_compute_features_labels,
         params=params,
@@ -268,7 +272,7 @@ def load_dump_data(path_dump_data):
     """ load dumped data from previous run of experiment
 
     :param str path_dump_data:
-    :return ({str: ndarray} * 6, list(str)):
+    :return tuple(dict(str,ndarray) * 6, list(str)):
     """
     logging.info('loading dumped data "%s"', path_dump_data)
     # with open(os.path.join(path_out, NAME_DUMP_TRAIN_DATA), 'r') as f:
@@ -288,12 +292,12 @@ def save_dump_data(path_dump_data, imgs, annot, slics, features, labels, label_h
     """
 
     :param str path_dump_data:
-    :param {str: ndarray} imgs: dictionary {name: data} of images
-    :param {str: ndarray} annot: dictionary {name: data} of annotation
-    :param {str: ndarray} slics: dictionary {name: data} of superpixels
-    :param {str: ndarray} features: dictionary {name: data} of features
-    :param {str: ndarray} labels: dictionary {name: data} of lables
-    :param {str: ndarray} label_hist: dictionary {name: data} of
+    :param dict(str,ndarray) imgs: dictionary {name: data} of images
+    :param dict(str,ndarray) annot: dictionary {name: data} of annotation
+    :param dict(str,ndarray) slics: dictionary {name: data} of superpixels
+    :param dict(str,ndarray) features: dictionary {name: data} of features
+    :param dict(str,ndarray) labels: dictionary {name: data} of lables
+    :param dict(str,ndarray) label_hist: dictionary {name: data} of
     :param list(str) feature_names: list of feature names
     """
     logging.info('save (dump) data to "%s"', path_dump_data)
@@ -326,14 +330,14 @@ def segment_image(imgs_idx_path, params, classif, path_out, path_visu=None, show
     :param str path_out: path for output
     :param str path_visu: the existing patch means export also visualisation
     :param bool show_debug_imgs: whether show debug images
-    :return (str, ndarray, ndarray):
+    :return tuple(str, ndarray, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
     idx_name = get_idx_name(idx, path_img)
     img = load_image(path_img, params['img_type'])
 
-    debug_visual = dict() if show_debug_imgs else None
+    debug_visual = {} if show_debug_imgs else None
 
     gc_regul = params['gc_regul']
     if params['gc_use_trans']:
@@ -392,21 +396,23 @@ def eval_segment_with_annot(
     """ evaluate the segmentation results according given annotation
 
     :param dict params:
-    :param {str: ndarray} dict_annot:
-    :param {str: ndarray} dict_segm:
-    :param {str: ndarray} dict_label_hist:
+    :param dict(str,ndarray) dict_annot:
+    :param dict(str,ndarray) dict_segm:
+    :param dict(str,ndarray) dict_label_hist:
     :param str name_csv:
     :param int nb_workers:
     :return:
     """
     if dict_label_hist is not None:
         visu_histogram_labels(params, dict_label_hist)
-    assert sorted(dict_annot.keys()) == sorted(dict_segm.keys()), \
-        'mismatch in dictionary keys: \n%s \n%s' % (sorted(dict_annot.keys()), sorted(dict_segm.keys()))
+    if sorted(dict_annot) != sorted(dict_segm):
+        raise ValueError(
+            'mismatch in dictionary keys: \n%s \n%s' % (sorted(dict_annot.keys()), sorted(dict_segm.keys()))
+        )
     list_annot = [dict_annot[n] for n in dict_annot]
     list_segm = [dict_segm[n] for n in dict_annot]
     df_stat = seg_clf.compute_stat_per_image(
-        list_segm, list_annot, [n for n in dict_annot], nb_workers, drop_labels=drop_labels
+        list_segm, list_annot, list(dict_annot), nb_workers, drop_labels=drop_labels
     )
 
     path_csv = os.path.join(params['path_exp'], name_csv)
@@ -433,7 +439,7 @@ def retrain_lpo_segment_image(
     :param str path_dump: path to dumped data
     :param, str path_out: path to segmentation outputs
     :param bool show_debug_imgs: whether show debug images
-    :return (str, ndarray, ndarray):
+    :return tuple(str, ndarray, ndarray):
     """
     dict_imgs, _, _, dict_features, dict_labels, _, _ = load_dump_data(path_dump)
     dict_classif = seg_clf.load_classifier(path_classif)
@@ -444,9 +450,11 @@ def retrain_lpo_segment_image(
         idx_name = get_idx_name(idx, path_img)
         _ = dict_features.pop(idx_name, None)
         _ = dict_labels.pop(idx_name, None)
-    assert (len(dict_imgs) - len(dict_features)) == len(list_imgs_idx_path), \
-        'subset of %i images was not dropped, training set %i from total %i' \
-        % (len(list_imgs_idx_path), len(dict_features), len(dict_imgs))
+    if (len(dict_imgs) - len(dict_features)) != len(list_imgs_idx_path):
+        raise ValueError(
+            'subset of %i images was not dropped, training set %i from total %i' %
+            (len(list_imgs_idx_path), len(dict_features), len(dict_imgs))
+        )
 
     features, labels, _ = seg_clf.convert_set_features_labels_2_dataset(
         dict_features,
@@ -474,7 +482,7 @@ def get_summary(df, name, list_stat=('mean', 'std', 'median')):
     :param df:
     :param str name:
     :param [] list_stat:
-    :return {str: float}:
+    :return dict(str,float):
     """
     df_summary = df.describe()
     cols = df.columns.tolist()
@@ -493,7 +501,7 @@ def perform_train_predictions(params, paths_img, classif, show_debug_imgs=SHOW_D
     logging.info('run prediction on training images...')
     imgs_idx_path = list(zip(range(1, len(paths_img) + 1), paths_img))
 
-    dict_segms, dict_segms_gc = dict(), dict()
+    dict_segms, dict_segms_gc = {}, {}
     path_out = os.path.join(params['path_exp'], FOLDER_TRAIN)
     path_visu = os.path.join(params['path_exp'], FOLDER_TRAIN_VISU)
     _wrapper_segment = partial(
@@ -523,7 +531,7 @@ def experiment_lpo(
 
     :param dict params:
     :param DF df_stat:
-    :param {str: ndarray} dict_annot:
+    :param dict(str,ndarray) dict_annot:
     :param list(str) paths_img:
     :param str path_classif:
     :param str path_dump:
@@ -532,7 +540,7 @@ def experiment_lpo(
     :return dict:
     """
     logging.info('run prediction on training images as Leave-%i-Out...', nb_holdout)
-    dict_segms, dict_segms_gc = dict(), dict()
+    dict_segms, dict_segms_gc = {}, {}
     cv = seg_clf.CrossValidate(len(idx_paths_img), nb_hold_out=nb_holdout)
     test_imgs_idx_path = [[idx_paths_img[i] for i in ids] for _, ids in cv]
     path_out = os.path.join(params['path_exp'], FOLDER_LPO)
@@ -682,13 +690,13 @@ def main_train(params):
         (dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, dict_label_hist,
          feature_names) = load_dump_data(path_dump)
     else:
-        (dict_imgs, dict_annot, dict_slics, dict_features, dict_labels,
-         dict_label_hist, feature_names) = \
+        dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, dict_label_hist, feature_names = \
             dataset_load_images_annot_compute_features(params, show_visual)
         save_dump_data(
             path_dump, dict_imgs, dict_annot, dict_slics, dict_features, dict_labels, dict_label_hist, feature_names
         )
-    assert len(dict_imgs) > 1, 'training require at least 2 images'
+    if len(dict_imgs) <= 1:
+        raise RuntimeError('training require at least 2 images')
 
     dict_annot_slic = {n: np.asarray(dict_labels[n])[dict_slics[n]] for n in dict_annot}
     df = eval_segment_with_annot(
@@ -700,9 +708,7 @@ def main_train(params):
     df_stat.set_index(['name']).to_csv(path_csv_stat)
 
     if params['gc_use_trans']:
-        params['label_transitions'] = \
-            seg_gc.count_label_transitions_connected_segments(dict_slics,
-                                                              dict_labels)
+        params['label_transitions'] = seg_gc.count_label_transitions_connected_segments(dict_slics, dict_labels)
         logging.info('summary on edge-label transitions: \n %r', params['label_transitions'])
 
     path_purity_visu = None
@@ -778,7 +784,7 @@ def prepare_output_dir(path_pattern_imgs, path_out, name, visual=True):
     :param str path_pattern_imgs:
     :param str path_out:
     :param str name:
-    :return (str, str):
+    :return tuple(str, str):
     """
     # add last 2 dir names
     name += '_'.join(path_pattern_imgs.split(os.sep)[-3:-1])
@@ -813,7 +819,8 @@ def main_predict(path_classif, path_pattern_imgs, path_out, name='SEGMENT___', p
     """
     logging.getLogger().setLevel(logging.INFO)
     logging.info('running PREDICTION...')
-    assert path_pattern_imgs is not None
+    if not path_pattern_imgs:
+        raise RuntimeError
 
     dict_classif = seg_clf.load_classifier(path_classif)
     classif = dict_classif['clf_pipeline']
@@ -856,10 +863,11 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params(SEGM_PARAMS)
+    cli_params = arg_parse_params(SEGM_PARAMS)
+    cli_params = main_train(cli_params)
 
-    params = main_train(params)
-
-    main_predict(params['path_classif'], params['path_predict_imgs'], params['path_exp'], params_local=params)
+    main_predict(
+        cli_params['path_classif'], cli_params['path_predict_imgs'], cli_params['path_exp'], params_local=cli_params
+    )
 
     logging.info('all DONE')

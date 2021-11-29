@@ -33,6 +33,8 @@ from functools import partial
 
 import matplotlib
 
+from imsegm.utilities import ImageDimensionError
+
 if os.environ.get('DISPLAY', '') == '':
     print('No display found. Using non-interactive Agg backend.')
     matplotlib.use('Agg')
@@ -56,7 +58,7 @@ import imsegm.utilities.experiments as tl_expt
 # sometimes it freeze in "Cython: computing Colour means for image"
 seg_fts.USE_CYTHON = False
 
-NB_WORKERS = tl_expt.nb_workers(0.9)
+NB_WORKERS = tl_expt.get_nb_workers(0.9)
 TYPES_LOAD_IMAGE = ['2d_rgb', '2d_split']
 NAME_DUMP_MODEL = 'estimated_model.npz'
 NAME_CSV_ARS_CORES = 'metric_ARS.csv'
@@ -184,11 +186,12 @@ def arg_parse_params(params):
     args = vars(parser.parse_args())
     logging.info('ARG PARAMETERS: \n %r', args)
     for k in (k for k in args if 'path' in k):
-        if args[k] == '' or args[k] == 'none':
+        if args[k] in ('', 'none'):
             continue
         args[k] = tl_data.update_path(args[k])
         p = os.path.dirname(args[k]) if k == 'path_predict_imgs' else args[k]
-        assert os.path.exists(p), 'missing: (%s) "%s"' % (k, p)
+        if not os.path.exists(p):
+            raise FileNotFoundError('missing: (%s) "%s"' % (k, p))
     # args['visual'] = bool(args['visual'])
     # if the config path is set load the it otherwise use default
     if os.path.isfile(args.get('path_config', '')):
@@ -206,10 +209,12 @@ def load_image(path_img, img_type=TYPES_LOAD_IMAGE[0]):
     :return ndarray:
     """
     path_img = tl_data.update_path(path_img)
-    assert os.path.isfile(path_img), 'missing: "%s"' % path_img
+    if not os.path.isfile(path_img):
+        raise FileNotFoundError('missing: "%s"' % path_img)
     if img_type == '2d_split':
         img, _ = tl_data.load_img_double_band_split(path_img)
-        assert img.ndim == 2, 'image dims: %r' % img.shape
+        if img.ndim != 2:
+            raise ImageDimensionError('image dims: %r' % img.shape)
         # img = np.rollaxis(np.tile(img, (3, 1, 1)), 0, 3)
         # if img.max() > 1:
         #     img = (img / 255.)
@@ -233,7 +238,7 @@ def load_model(path_model):
     """ load exported segmentation model
 
     :param str path_model:
-    :return (obj, obj, obj, {}, list(str)):
+    :return tuple(obj, obj, obj, {}, list(str)):
     """
     logging.info('loading dumped model "%s"', path_model)
     with open(path_model, 'rb') as f:
@@ -267,7 +272,7 @@ def parse_imgs_idx_path(imgs_idx_path):
     """ general parser for splitting all possible input combination
 
     :param imgs_idx_path: set of image index and path
-    :return (int, str): split index and name
+    :return tuple(int, str): split index and name
     """
     if isinstance(imgs_idx_path, tuple):
         idx, path_img = imgs_idx_path
@@ -289,8 +294,7 @@ def get_idx_name(idx, path_img):
     im_name = os.path.splitext(os.path.basename(path_img))[0]
     if idx is not None:
         return '%04d_%s' % (idx, im_name)
-    else:
-        return im_name
+    return im_name
 
 
 def export_visual(idx_name, img, segm, debug_visual=None, path_out=None, path_visu=None):
@@ -335,7 +339,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None, sh
     :param dict params: segmentation parameters
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
-    :return (str, ndarray):
+    :return tuple(str, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(img_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
@@ -345,7 +349,7 @@ def segment_image_independent(img_idx_path, params, path_out, path_visu=None, sh
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    debug_visual = dict() if show_debug_imgs else None
+    debug_visual = {} if show_debug_imgs else None
     try:
         segm, segm_soft = seg_pipe.pipe_color2d_slic_features_model_graphcut(
             img,
@@ -385,7 +389,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None, path_visu=N
     :param str path_out: path to dir with segmentation
     :param str path_visu: path to dir with debug images
     :param bool show_debug_imgs: whether show debug images
-    :return (str, ndarray):
+    :return tuple(str, ndarray):
     """
     idx, path_img = parse_imgs_idx_path(imgs_idx_path)
     logging.debug('segmenting image: "%s"', path_img)
@@ -395,7 +399,7 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None, path_visu=N
     path_img = os.path.join(params['path_exp'], FOLDER_IMAGE, idx_name + '.png')
     tl_data.io_imsave(path_img, img.astype(np.uint8))
 
-    debug_visual = dict() if show_debug_imgs else None
+    debug_visual = {} if show_debug_imgs else None
 
     try:
         segm, segm_soft = seg_pipe.segment_color2d_slic_features_model_graphcut(
@@ -426,8 +430,8 @@ def segment_image_model(imgs_idx_path, params, model, path_out=None, path_visu=N
 def compare_segms_metric_ars(dict_segm_a, dict_segm_b, suffix=''):
     """ compute ARS for each pair of segmentation
 
-    :param {str: ndarray} dict_segm_a:
-    :param {str: ndarray} dict_segm_b:
+    :param dict(str,ndarray) dict_segm_a:
+    :param dict(str,ndarray) dict_segm_b:
     :param str suffix:
     :return DF:
     """
@@ -530,7 +534,8 @@ def load_path_images(params):
 
 
 def write_skip_file(path_dir):
-    assert os.path.isdir(path_dir), 'missing: %s' % path_dir
+    if not os.path.isdir(path_dir):
+        raise FileNotFoundError('missing: %s' % path_dir)
     with open(os.path.join(path_dir, 'RESULTS'), 'w') as fp:
         fp.write('This particular experiment was skipped by user option.')
 
@@ -558,7 +563,8 @@ def main(params):
         tl_expt.create_subfolders(params['path_exp'], LIST_FOLDERS_DEBUG)
 
     paths_img = load_path_images(params)
-    assert paths_img, 'missing images'
+    if not paths_img:
+        raise FileNotFoundError('missing images')
 
     def _path_expt(n):
         return os.path.join(params['path_exp'], n)
@@ -594,8 +600,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('running...')
 
-    params = arg_parse_params(SEGM_PARAMS)
-
-    params = main(params)
+    cli_params = arg_parse_params(SEGM_PARAMS)
+    main(cli_params)
 
     logging.info('DONE')

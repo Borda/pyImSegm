@@ -34,3 +34,7 @@ except ImportError:
 else:
     # default display size was changed in pandas v0.23
     pd.set_option('display.max_columns', 20)
+
+
+class ImageDimensionError(TypeError):
+    pass
