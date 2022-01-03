@@ -38,8 +38,8 @@ jobs:
       - uses: pre-commit/action@v2.0.3
         # this action also provides an additional behaviour when used in private repositories
         # when configured with a github token, the action will push back fixes to the pull request branch
-        # with:
-        #   token: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   #typing-check-mypy:
   #  runs-on: ubuntu-20.04
