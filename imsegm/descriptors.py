@@ -1561,7 +1561,7 @@ def compute_ray_features_segm_2d_vectors(seg_binary, position, angle_step=5., sm
 
     >>> from skimage import draw
     >>> seg = np.ones((100, 100), dtype=bool)
-    >>> x, y = draw.circle(45, 55, 30, shape=seg.shape)
+    >>> x, y = draw.disk((45, 55), 30, shape=seg.shape)
     >>> seg[x, y] = False
     >>> compute_ray_features_segm_2d_vectors(seg, (50, 50), 45)
     array([35, 29, 25, 23, 24, 29, 34, 36])
@@ -1643,7 +1643,7 @@ def cython_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
     array([-1., -1., -1., -1.]...)
     >>> from skimage import draw
     >>> seg = np.ones((100, 150), dtype=bool)
-    >>> x, y = draw.circle(50, 75, 40, shape=seg.shape)
+    >>> x, y = draw.disk((50, 75), 40, shape=seg.shape)
     >>> seg[x, y] = False
     >>> cython_ray_features_seg2d(seg, (50, 75), 45).astype(int)  # doctest: +ELLIPSIS
     array([40, 41, 40, 41, 40, 41, 40, 41]...)
@@ -1675,7 +1675,7 @@ def numpy_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
     array([-1., -1., -1., -1.]...)
     >>> from skimage import draw
     >>> seg = np.ones((100, 150), dtype=bool)
-    >>> x, y = draw.circle(50, 75, 40, shape=seg.shape)
+    >>> x, y = draw.disk((50, 75), 40, shape=seg.shape)
     >>> seg[x, y] = False
     >>> numpy_ray_features_seg2d(seg, (50, 75), 45).astype(int)  # doctest: +ELLIPSIS
     array([40, 41, 40, 41, 40, 41, 40, 41]...)
@@ -1733,7 +1733,7 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5., smooth_coe
     array([-1., -1., -1., -1.]...)
     >>> from skimage import draw
     >>> seg = np.ones((100, 150), dtype=bool)
-    >>> x, y = draw.circle(50, 75, 40, shape=seg.shape)
+    >>> x, y = draw.disk((50, 75), 40, shape=seg.shape)
     >>> seg[x, y] = False
     >>> np.round(compute_ray_features_segm_2d(seg, (50, 75), 45))  # doctest: +ELLIPSIS
     array([ 40.,  41.,  40.,  41.,  40.,  41.,  40.,  41.]...)
@@ -1830,9 +1830,9 @@ def compute_ray_features_positions(
     >>> from skimage import draw
     >>> np.random.seed(0)
     >>> seg = np.zeros((100, 100), dtype=int)
-    >>> x, y = draw.circle(45, 55, 30, shape=seg.shape)
+    >>> x, y = draw.disk((45, 55), 30, shape=seg.shape)
     >>> seg[x, y] = 1
-    >>> x, y = draw.circle(55, 45, 10, shape=seg.shape)
+    >>> x, y = draw.disk((55, 45), 10, shape=seg.shape)
     >>> seg[x, y] = 2
     >>> points = [(50, 50), (60, 40), (44, 55)]
     >>> ray_dist, shift, _ = compute_ray_features_positions(seg, points, 20)

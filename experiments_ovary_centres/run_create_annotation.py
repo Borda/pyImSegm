@@ -32,6 +32,8 @@ import pandas as pd
 from scipy import ndimage
 from skimage import draw, measure, morphology
 
+from imsegm.utilities.drawing import _draw_disk
+
 sys.path += [os.path.abspath('.'), os.path.abspath('..')]  # Add path to root
 import run_center_candidate_training as run_train
 
@@ -90,7 +92,7 @@ def draw_circle(pos_center, radius, img_shape):
     :return ndarray:
     """
     im = np.zeros(img_shape)
-    x, y = draw.circle(pos_center[0], pos_center[1], radius, shape=im.shape[:2])
+    x, y = _draw_disk(pos_center[0], pos_center[1], radius, shape=im.shape[:2])
     im[x, y] = True
     return im
 
