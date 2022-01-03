@@ -316,8 +316,7 @@ def numpy_img2d_color_mean(img, seg):
            [ 0.2,  1.8,  1.6]])
     """
     logging.debug(
-        'computing Colour mean for image %r & segm %r with'
-        ' %i segments', img.shape, seg.shape, np.max(seg)
+        'computing Colour mean for image %r & segm %r with %i segments', img.shape, seg.shape, np.max(seg)
     )
     _check_color_image_segm(img, seg)
 
@@ -357,8 +356,7 @@ def numpy_img2d_color_std(img, seg, means=None):
     array([[ 0.48989795,  1.46969385,  0.8       ],
            [ 0.4       ,  1.46969385,  0.8       ]])
     """
-    logging.debug('computing Colour STD for image %r & segm %r with'
-                  ' %i segments', img.shape, seg.shape, np.max(seg))
+    logging.debug('computing Colour STD for image %r & segm %r with %i segments', img.shape, seg.shape, np.max(seg))
     _check_color_image_segm(img, seg)
 
     if means is None:

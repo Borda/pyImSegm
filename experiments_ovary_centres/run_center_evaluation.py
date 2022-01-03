@@ -150,8 +150,7 @@ def load_center_evaluate(idx_row, df_annot, path_annot, path_visu=None, col_pref
     dict_row['image'] = os.path.splitext(os.path.basename(dict_row['path_image']))[0]
 
     if idx not in df_annot.index:
-        logging.debug('particular image/slice "%s" does not contain eggs '
-                      'of selected stage %s', idx, col_prefix)
+        logging.debug('particular image/slice "%s" does not contain eggs of selected stage %s', idx, col_prefix)
         return dict_row
 
     name, img, segm, centres = run_train.load_image_segm_center((None, row))

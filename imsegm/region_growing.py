@@ -17,8 +17,7 @@ from sklearn import cluster, mixture
 try:
     from gco import cut_general_graph, cut_grid_graph
 except ImportError:
-    warn('Missing Grah-Cut (GCO) library,'
-         ' please install it from https://github.com/Borda/pyGCO.')
+    warn('Missing Grah-Cut (GCO) library, please install it from https://github.com/Borda/pyGCO.')
 
 from imsegm.descriptors import compute_ray_features_segm_2d, interpolate_ray_dist, shift_ray_features
 from imsegm.graph_cuts import compute_spatial_dist, get_vertexes_edges, MAX_PAIRWISE_COST
