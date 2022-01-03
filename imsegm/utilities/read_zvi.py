@@ -174,7 +174,8 @@ def read_item_storage_content(stream):
     return zvi_item
 
 
-ImageTuple = namedtuple('ImageTuple', 'Version Width Height Depth PixelWidth PIXEL_FORMAT ' 'ValidBitsPerPixel Array')
+ImageTuple = namedtuple('ImageTuple', 'Version Width Height Depth PixelWidth PIXEL_FORMAT '
+                        'ValidBitsPerPixel Array')
 
 
 def parse_image(data):
