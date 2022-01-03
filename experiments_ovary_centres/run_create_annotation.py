@@ -30,7 +30,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 from scipy import ndimage
-from skimage import draw, measure, morphology
+from skimage import measure, morphology
 
 from imsegm.utilities.drawing import _draw_disk
 

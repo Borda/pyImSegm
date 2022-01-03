@@ -26,7 +26,7 @@ from imsegm.descriptors import (
 )
 from imsegm.superpixels import segment_slic_img2d
 from imsegm.utilities.data_samples import IMAGE_LENNA, load_sample_image, sample_color_image_rand_segment
-from imsegm.utilities.drawing import figure_ray_feature, _draw_disk
+from imsegm.utilities.drawing import _draw_disk, figure_ray_feature
 from tests import PATH_OUTPUT
 
 # angular step for Ray features
