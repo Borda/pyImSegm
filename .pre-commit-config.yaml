@@ -9,12 +9,17 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.1.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: check-case-conflict
       - id: check-yaml
-      - id: pretty-format-json
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+      - id: check-docstring-first
+      - id: detect-private-key
 
   #- repo: https://github.com/pre-commit/mirrors-autopep8
   #  rev: v1.5.7
@@ -23,14 +28,14 @@ repos:
   #      name: fixing PEP8
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.9.3
+    rev: 5.10.1
     hooks:
       - id: isort
         name: imports
         require_serial: false
 
   - repo: https://github.com/pre-commit/mirrors-yapf
-    rev: v0.31.0
+    rev: v0.32.0
     hooks:
       - id: yapf
         name: formatting
@@ -38,7 +43,7 @@ repos:
         require_serial: false
 
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.10
+    rev: 0.7.11
     hooks:
       - id: mdformat
         additional_dependencies:
@@ -47,7 +52,7 @@ repos:
           - mdformat_frontmatter
 
   - repo: https://github.com/asottile/yesqa
-    rev: v1.2.3
+    rev: v1.3.0
     hooks:
       - id: yesqa
 

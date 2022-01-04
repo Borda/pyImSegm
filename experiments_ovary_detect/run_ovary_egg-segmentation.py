@@ -287,7 +287,7 @@ def create_circle_center(img_shape, centers, radius=10):
     mask_perimeter = np.zeros(img_shape, dtype=int)
     center_circles = []
     for i, pos in enumerate(centers):
-        rr, cc = draw.circle(int(pos[0]), int(pos[1]), radius, shape=img_shape[:2])
+        rr, cc = tl_visu._draw_disk(int(pos[0]), int(pos[1]), radius, shape=img_shape[:2])
         mask_circle[rr, cc] = i + 1
         rr, cc = draw.circle_perimeter(int(pos[0]), int(pos[1]), radius, shape=img_shape[:2])
         mask_perimeter[rr, cc] = i + 1

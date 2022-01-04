@@ -12,7 +12,7 @@ import numpy as np
 try:
     from gco import cut_general_graph
 except ImportError:
-    warn('Missing Grah-Cut (GCO) library,' ' please install it from https://github.com/Borda/pyGCO.')
+    warn('Missing Grah-Cut (GCO) library, please install it from https://github.com/Borda/pyGCO.')
 from skimage import filters
 from sklearn import cluster, decomposition, metrics, mixture, pipeline, preprocessing
 

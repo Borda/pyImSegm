@@ -871,6 +871,35 @@ def figure_image_segm_centres(img, segm, centers=None, cmap_contour=plt.cm.Blues
     return fig
 
 
+def _draw_disk(x, y, r, shape):
+    """Wrapper for drawing circle/disk invariant to scikit-image
+
+    :param x: center X
+    :param y: center Y
+    :param r: radius
+    :param shape: plane shape
+    :return: image
+
+    >>> im = np.zeros((8, 12), dtype=int)
+    >>> x, y = _draw_disk(4, 6, 5, shape=im.shape)
+    >>> im[x, y] = 1
+    >>> im
+    array([[0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+           [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+           [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+           [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+           [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+           [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+           [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0]])
+    """
+    if hasattr(draw, "disk"):
+        disk = draw.disk((x, y), radius=r, shape=shape[:2])
+    else:  # using legacy function
+        disk = draw.circle(x, y, radius=r, shape=shape[:2])
+    return disk
+
+
 def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights, img_bg=None, img_alpha=0.5):
     """ visualise the edges on the overlapping a background image
 
@@ -927,7 +956,7 @@ def draw_graphcut_weighted_edges(segments, centers, edges, edge_weights, img_bg=
         color_w = np.tile(val, (3, 1)).T
         img[rr, cc, :] = color_w * clrs(edge_ratio[i])[:3] + (1 - color_w) * img[rr, cc, :]
 
-        circle = draw.circle(y1, x1, radius=2, shape=img.shape[:2])
+        circle = _draw_disk(y1, x1, 2, shape=img.shape)
         img[circle] = 1., 1., 0.
     return img
 

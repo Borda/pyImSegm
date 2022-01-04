@@ -6,6 +6,7 @@ on:  # Trigger the workflow on push or pull request, but only for the master bra
   pull_request: {}
 
 jobs:
+
   pytest:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -15,12 +16,8 @@ jobs:
         python-version: [3.7, 3.9]
         requires: ['latest']
         include:
-          - os: ubuntu-18.04
-            python-version: 3.6
-            requires: 'minimal'
-          - os: macOS-10.15
-            python-version: 3.6
-            requires: 'minimal'
+          - {os: ubuntu-18.04, python-version: 3.6, requires: 'oldest'}
+          - {os: macOS-10.15, python-version: 3.6, requires: 'oldest'}
     # Timeout: https://stackoverflow.com/a/59076067/4521646
     timeout-minutes: 35
 
@@ -37,7 +34,7 @@ jobs:
         brew install gfortran zlib libjpeg
 
     - name: Set min. dependencies
-      if: matrix.requires == 'minimal'
+      if: matrix.requires == 'oldest'
       run: |
         for fpath in ('requirements.txt', 'tests/requirements.txt'):
             req = open(fpath).read().replace('>=', '==')
