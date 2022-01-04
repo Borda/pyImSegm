@@ -532,7 +532,8 @@ def convert_img_2_nifti_gray(path_img, path_out):
     logging.debug('Convert image to Nifti format "%s" ->  "%s"', path_img, path_img_out)
 
     img = io_imread(path_img)
-    img = color.rgb2gray(img)
+    if img.ndim == 3:
+        img = color.rgb2gray(img)
 
     img = np.swapaxes(img, 1, 0)
     nim = nibabel.Nifti1Pair(img, np.eye(4))

@@ -215,7 +215,7 @@ def superpixel_centers(segments):
     [[1.0, 0.5, 2.5], [1.0, 0.0, 8.0], [1.0, 1.0, 8.0]]
     """
     logging.debug('compute centers for %d superpixels', segments.max())
-    centers = [[] for _ in range(np.max(segments) + 1)]
+    centers = [[-1] * segments.ndim for _ in range(np.max(segments) + 1)]
 
     if segments.ndim <= 2:
         # regionprops works for labels from 1
@@ -229,10 +229,13 @@ def superpixel_centers(segments):
         #     centers[v] = [grids[g][segments == v].mean() for g in range(3)]
         segm_flat = segments.ravel()
         grids_flat = [g.ravel() for g in grids]
+        areas = [[] for _ in range(np.max(segments) + 1)]
         for i, lb in enumerate(segm_flat):
             vals = [grids_flat[g][i] for g in range(3)]
-            centers[lb].append(vals)
-        for lb, vals in enumerate(centers):
+            areas[lb].append(vals)
+        for lb, vals in enumerate(areas):
+            if not vals:
+                continue
             centers[lb] = np.mean(vals, axis=0).tolist()
     else:
         logging.error('not supported image dim: %r', segments.shape)
