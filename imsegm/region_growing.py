@@ -1424,7 +1424,7 @@ def prepare_graphcut_variables(
     """
     if np.max(candidates) >= len(slic_points):
         raise ValueError('max candidate idx: %d for %d centres' % (np.max(candidates), len(slic_points)))
-    max_slic_neighbours = max(max(lb) for lb in slic_neighbours)
+    max_slic_neighbours = max(max(lb) for lb in slic_neighbours if lb)
     if max_slic_neighbours >= len(slic_points):
         raise ValueError('max slic neighbours idx: %d for %d centres' % (max_slic_neighbours, len(slic_points)))
     unary = np.zeros((len(candidates), nb_centres + 1))

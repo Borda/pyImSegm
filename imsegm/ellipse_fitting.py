@@ -602,9 +602,10 @@ def filter_boundary_points(segm, slic):
     labels = segm[slic_centers[:, 0], slic_centers[:, 1]]
 
     vertices, edges = make_graph_segm_connect_grid2d_conn4(slic)
+    nb_vertices = np.max(vertices) + 1
     nb_labels = labels.max() + 1
 
-    neighbour_labels = np.zeros((len(vertices), nb_labels))
+    neighbour_labels = np.zeros((nb_vertices, nb_labels))
     for e1, e2 in edges:
         # print e1, labels[e2], e2, labels[e1]
         neighbour_labels[e1, labels[e2]] += 1
