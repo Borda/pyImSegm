@@ -102,7 +102,7 @@ class TestFeatures(unittest.TestCase):
 
     def test_ray_features_circle(self):
         seg = np.ones((400, 600), dtype=bool)
-        x, y = _draw_disk(200, 250, 100, im_shape=seg.shape)
+        x, y = _draw_disk(200, 250, 100, shape=seg.shape)
         seg[x, y] = False
 
         points = [(200, 250), (150, 200), (250, 200), (250, 300)]
@@ -128,7 +128,7 @@ class TestFeatures(unittest.TestCase):
 
     def test_ray_features_circle_down_edge(self):
         seg = np.zeros((400, 600), dtype=bool)
-        x, y = _draw_disk(200, 250, 150, im_shape=seg.shape)
+        x, y = _draw_disk(200, 250, 150, shape=seg.shape)
         seg[x, y] = True
         points = [(200, 250), (150, 200), (250, 200), (250, 300)]
 
@@ -142,7 +142,7 @@ class TestFeatures(unittest.TestCase):
             self.assertTrue(os.path.isfile(p_fig))
 
         # insert white interior
-        x, y = _draw_disk(200, 250, 120, im_shape=seg.shape)
+        x, y = _draw_disk(200, 250, 120, shape=seg.shape)
         seg[x, y] = False
 
         for i, point in enumerate(points):

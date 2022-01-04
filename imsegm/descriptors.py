@@ -1559,9 +1559,9 @@ def compute_ray_features_segm_2d_vectors(seg_binary, position, angle_step=5., sm
 
     .. note:: for more examples, see unittests
 
-    >>> from skimage import draw
+    >>> from imsegm.utilities.drawing import _draw_disk
     >>> seg = np.ones((100, 100), dtype=bool)
-    >>> x, y = draw.disk((45, 55), 30, shape=seg.shape)
+    >>> x, y = _draw_disk(45, 55, 30, shape=seg.shape)
     >>> seg[x, y] = False
     >>> compute_ray_features_segm_2d_vectors(seg, (50, 50), 45)
     array([35, 29, 25, 23, 24, 29, 34, 36])
@@ -1641,9 +1641,9 @@ def cython_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
     >>> cython_ray_features_seg2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
     array([-1., -1., -1., -1.]...)
-    >>> from skimage import draw
+    >>> from imsegm.utilities.drawing import _draw_disk
     >>> seg = np.ones((100, 150), dtype=bool)
-    >>> x, y = draw.disk((50, 75), 40, shape=seg.shape)
+    >>> x, y = _draw_disk(50, 75, 40, shape=seg.shape)
     >>> seg[x, y] = False
     >>> cython_ray_features_seg2d(seg, (50, 75), 45).astype(int)  # doctest: +ELLIPSIS
     array([40, 41, 40, 41, 40, 41, 40, 41]...)
@@ -1673,9 +1673,9 @@ def numpy_ray_features_seg2d(seg_binary, position, angle_step=5., edge='up'):
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
     >>> numpy_ray_features_seg2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
     array([-1., -1., -1., -1.]...)
-    >>> from skimage import draw
+    >>> from imsegm.utilities.drawing import _draw_disk
     >>> seg = np.ones((100, 150), dtype=bool)
-    >>> x, y = draw.disk((50, 75), 40, shape=seg.shape)
+    >>> x, y = _draw_disk(50, 75, 40, shape=seg.shape)
     >>> seg[x, y] = False
     >>> numpy_ray_features_seg2d(seg, (50, 75), 45).astype(int)  # doctest: +ELLIPSIS
     array([40, 41, 40, 41, 40, 41, 40, 41]...)
@@ -1731,9 +1731,9 @@ def compute_ray_features_segm_2d(seg_binary, position, angle_step=5., smooth_coe
     >>> seg_empty = np.zeros((100, 150), dtype=bool)
     >>> compute_ray_features_segm_2d(seg_empty, (50, 75), 90)  # doctest: +ELLIPSIS
     array([-1., -1., -1., -1.]...)
-    >>> from skimage import draw
+    >>> from imsegm.utilities.drawing import _draw_disk
     >>> seg = np.ones((100, 150), dtype=bool)
-    >>> x, y = draw.disk((50, 75), 40, shape=seg.shape)
+    >>> x, y = _draw_disk(50, 75, 40, shape=seg.shape)
     >>> seg[x, y] = False
     >>> np.round(compute_ray_features_segm_2d(seg, (50, 75), 45))  # doctest: +ELLIPSIS
     array([ 40.,  41.,  40.,  41.,  40.,  41.,  40.,  41.]...)
@@ -1827,12 +1827,12 @@ def compute_ray_features_positions(
 
     .. note:: for more examples, see unittests
 
-    >>> from skimage import draw
+    >>> from imsegm.utilities.drawing import _draw_disk
     >>> np.random.seed(0)
     >>> seg = np.zeros((100, 100), dtype=int)
-    >>> x, y = draw.disk((45, 55), 30, shape=seg.shape)
+    >>> x, y = _draw_disk(45, 55, 30, shape=seg.shape)
     >>> seg[x, y] = 1
-    >>> x, y = draw.disk((55, 45), 10, shape=seg.shape)
+    >>> x, y = _draw_disk(55, 45, 10, shape=seg.shape)
     >>> seg[x, y] = 2
     >>> points = [(50, 50), (60, 40), (44, 55)]
     >>> ray_dist, shift, _ = compute_ray_features_positions(seg, points, 20)
@@ -1844,8 +1844,8 @@ def compute_ray_features_positions(
      [31, 31, 31, 30, 30, 29, 30, 30, 29, 29, 30, 30, 29, 30, 30, 31, 31, 31]]
     >>> noise_pos = np.random.randint(10, 80, (2, 300))
     >>> seg[noise_pos[0], noise_pos[1]] = 0  # add random noise
-    >>> ray_dist, shift, names = compute_ray_features_positions(seg, points, 45,
-    ...                                                         segm_open=10)
+    >>> ray_dist, shift, names = compute_ray_features_positions(
+    ...     seg, points, 45, segm_open=10)
     >>> names  # doctest: +NORMALIZE_WHITESPACE
     ['ray-lb_0-agl_0', 'ray-lb_0-agl_45', 'ray-lb_0-agl_90',
      'ray-lb_0-agl_135', 'ray-lb_0-agl_180', 'ray-lb_0-agl_225',
